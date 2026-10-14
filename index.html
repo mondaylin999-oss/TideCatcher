@@ -38,7 +38,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .level-map-head{display:flex;align-items:end;justify-content:space-between;gap:12px}
 .level-map-head h2{font:800 clamp(21px,4vw,28px)/1 var(--display);color:var(--ink);margin:4px 0 0}
 .level-map-count{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
-.level-map-window{height:clamp(260px,36vh,420px);min-height:260px;position:relative;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;border:1px solid rgba(201,192,255,.23);border-radius:18px;background:radial-gradient(ellipse at 50% 42%,rgba(59,74,120,.5),transparent 64%),linear-gradient(180deg,#12182f,#171330 48%,#211735);scrollbar-color:rgba(169,139,255,.55) rgba(255,255,255,.06);scrollbar-width:thin}
+.level-map-window{height:clamp(280px,52vh,560px);min-height:280px;position:relative;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;border:1px solid rgba(201,192,255,.23);border-radius:18px;background:radial-gradient(ellipse at 50% 42%,rgba(59,74,120,.5),transparent 64%),linear-gradient(180deg,#12182f,#171330 48%,#211735);scrollbar-color:rgba(169,139,255,.55) rgba(255,255,255,.06);scrollbar-width:thin}
 .level-map-track{position:relative;width:100%;isolation:isolate}
 #levelMapViewport{overflow-x:hidden}
 .level-map-path{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:-1}
@@ -64,6 +64,13 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .level-map-key .key-open{background:var(--gold);box-shadow:0 0 8px rgba(246,196,83,.6)}
 .level-map-key .key-locked{background:#514b66}
 @keyframes map-pulse{50%{box-shadow:0 5px 0 rgba(20,53,48,.58),0 0 31px rgba(125,220,139,.95)}}
+.prologue-panel{max-width:680px;max-height:calc(100vh - 32px);overflow:auto;gap:17px}
+.prologue-art{width:100%;aspect-ratio:2.4/1;min-height:145px;max-height:285px;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#18203b;box-shadow:inset 0 0 30px rgba(167,139,255,.12)}
+.prologue-art svg{display:block;width:100%;height:100%}
+.prologue-story{display:grid;gap:10px;line-height:1.55}
+.prologue-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.prologue-actions .btn{justify-self:auto}
+@media (max-width:520px){.prologue-panel{gap:14px}.prologue-art{min-height:125px}}
 .stats{display:flex;gap:22px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
 .stat{display:grid;gap:2px}
 .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
@@ -130,19 +137,61 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   <div id="hint">Push the stick only halfway to sneak</div>
 </div>
 
-<div class="overlay" id="startScreen">
+<div class="overlay" id="prologueScreen" aria-labelledby="prologueTitle">
+  <div class="panel prologue-panel">
+    <p class="eyebrow">Before the Night Side</p>
+    <h1 id="prologueTitle">Mood Keepers</h1>
+    <div class="prologue-art">
+      <svg viewBox="0 0 720 300" role="img" aria-label="Thiri sleeps under a blanket while her cat Shwe watches over her in a moonlit bedroom">
+        <defs>
+          <linearGradient id="roomSky" x2="0" y2="1"><stop stop-color="#17213e"/><stop offset="1" stop-color="#3a315f"/></linearGradient>
+          <linearGradient id="blanket" x2="0" y2="1"><stop stop-color="#bd7292"/><stop offset="1" stop-color="#754969"/></linearGradient>
+          <radialGradient id="moonGlow"><stop stop-color="#fff0bd" stop-opacity=".8"/><stop offset="1" stop-color="#fff0bd" stop-opacity="0"/></radialGradient>
+        </defs>
+        <rect width="720" height="300" rx="18" fill="url(#roomSky)"/>
+        <path d="M0 240 Q180 215 330 245 T720 225 V300 H0Z" fill="#25213e"/>
+        <rect x="48" y="28" width="164" height="150" rx="9" fill="#10182f" stroke="#8b79ad" stroke-width="5"/>
+        <path d="M130 30V176M50 102H210" stroke="#796a9e" stroke-width="4"/>
+        <circle cx="165" cy="62" r="34" fill="url(#moonGlow)"/><circle cx="165" cy="62" r="16" fill="#ffeab3"/>
+        <path d="M54 53l5 10 11 2-8 7 2 11-10-6-10 6 2-11-8-7 11-2zM102 129l3 6 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#e3ddff" opacity=".75"/>
+        <rect x="273" y="126" width="375" height="125" rx="12" fill="#4c3550" stroke="#8d6377" stroke-width="6"/>
+        <rect x="300" y="158" width="382" height="74" rx="22" fill="#dfc8de"/>
+        <ellipse cx="540" cy="169" rx="72" ry="27" fill="#fff0df"/>
+        <path d="M386 215 Q412 177 480 176 Q552 167 624 208 L651 252 H350Z" fill="url(#blanket)" stroke="#e4a3bb" stroke-width="3"/>
+        <path d="M484 169 Q490 128 533 130 Q570 130 578 163 Q563 185 521 188Z" fill="#30243a"/>
+        <ellipse cx="529" cy="164" rx="29" ry="25" fill="#e7b995"/>
+        <path d="M501 160 Q500 132 527 134 Q552 131 561 149 Q539 144 519 153 Q511 160 501 160Z" fill="#30243a"/>
+        <path d="M511 166q5 5 10 0M532 166q5 5 10 0M520 177q5 4 10 0" fill="none" stroke="#493143" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M570 119h12v-21h18v21h12" fill="none" stroke="#e5d8ff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+        <text x="600" y="103" fill="#e5d8ff" font-family="Trebuchet MS,sans-serif" font-size="20" font-weight="700">z</text>
+        <ellipse cx="254" cy="237" rx="37" ry="21" fill="#efb44a"/>
+        <path d="M222 235 Q189 215 208 196 Q220 186 225 199" fill="none" stroke="#efb44a" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="279" cy="220" r="19" fill="#efb44a"/>
+        <path d="M264 207l2-17 12 13M280 203l14-12-1 21" fill="#efb44a"/>
+        <path d="M275 220q4 4 8 0" fill="none" stroke="#41303e" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="270" cy="219" r="2" fill="#c8ff8a"/><circle cx="284" cy="219" r="2" fill="#c8ff8a"/>
+        <path d="M239 228l5 7m7-10 4 8m7-8 4 8" stroke="#c98a2c" stroke-width="2" stroke-linecap="round"/>
+        <text x="225" y="278" fill="#f6dca2" font-family="Trebuchet MS,sans-serif" font-size="13" font-weight="700">SHWE</text>
+        <path d="M0 280H720" stroke="#695275" stroke-width="4"/>
+      </svg>
+    </div>
+    <div class="prologue-story">
+      <p>After a hard, tearful night, Thiri finally fell asleep—exhausted after tearing up a drawing she truly loved. While she sleeps, the feelings she could not sort through drift into the Night Side.</p>
+      <p>You are <b class="gold">Shwe</b>, Thiri’s cat. Follow the moonlit trail, find her lost feelings, and bring them home before morning so she can wake safe and begin again.</p>
+    </div>
+    <div class="prologue-actions"><span class="muted">A small story before the levels</span><button class="btn" id="introContinueBtn">Enter the Night Side</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="startScreen" hidden>
   <div class="panel">
-    <p class="eyebrow">Digit7 Jam 2026 · playable prototype</p>
-    <h1>Mood Keepers</h1>
-    <p>Thiri tore up her drawing, and her feelings ran away to the Night Side. You are <b class="gold">Shwe</b>, her cat. Bring home the Moodlings before time runs out, then lead them home and give them back to her.</p>
-    <p class="muted">Choose a chapter on the winding trail. Scroll upward to explore future levels; only the open chapters can be entered.</p>
     <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count">2 open · up to 1,000 levels</span></div>
+    <p class="level-map-hint">Choose an open chapter. Swipe or scroll upward on the path to explore higher, planned levels.</p>
     <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Scrollable level map; scroll upward for higher levels" tabindex="0">
       <div class="level-map-track" id="levelMapTrack">
         <svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg>
       </div>
     </div>
-    <p class="level-map-hint">Swipe or scroll up the path to see higher levels. Levels 1 and 7 are open now; other chapters are planned for later.</p>
     <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Planned / locked</span></div>
     <div class="cards">
       <div class="card"><b class="red">Frustrated</b>Charges when you get close. Dodge it, then pounce while it is dizzy.</div>
@@ -1540,10 +1589,17 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       }
       track.appendChild(entry);
     }
-    const currentY = (LEVEL_MAP_LIMIT - 7) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
-    viewport.scrollTop = Math.max(0, currentY - 34);
+  }
+  function focusLevelMap(level = 7) {
+    const viewport = $('#levelMapViewport');
+    const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
+    viewport.scrollTop = Math.max(0, y - 34);
   }
   buildLevelMap();
+  $('#introContinueBtn').addEventListener('click', () => {
+    $('#prologueScreen').hidden = true; $('#startScreen').hidden = false;
+    focusLevelMap(7); $('#night7Btn').focus();
+  });
   $('#playBtn').addEventListener('click', () => startGame('story', 1));
   $('#night7Btn').addEventListener('click', () => startGame('story', 7));
   $('#freeBtn').addEventListener('click', () => startGame('free'));
