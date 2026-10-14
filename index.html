@@ -143,6 +143,79 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .glowpill{font-family:var(--display);font-weight:800;font-size:22px;color:var(--gold)}
 #hint{position:absolute;left:16px;bottom:calc(10px + env(safe-area-inset-bottom,0px));font-size:12px;color:var(--muted)}
 @media (max-width:520px){.panel{padding:18px}.controls{grid-template-columns:1fr}}
+
+.prologue-panel{position:relative;padding-top:46px;max-width:760px;max-height:calc(100vh - 24px);overflow:auto}
+.prologue-art{aspect-ratio:2.25/1;min-height:190px;max-height:330px}
+.prologue-art svg{width:100%;height:100%;object-fit:cover}
+.intro-skip{position:absolute;top:10px;right:12px;z-index:2;border:1px solid rgba(255,255,255,.28);border-radius:999px;background:rgba(10,13,31,.86);color:#fff7e8;padding:9px 14px;font:600 14px var(--body);cursor:pointer;touch-action:manipulation}
+.intro-subtitle{min-height:72px;display:grid;place-items:center;padding:12px 18px;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(8,11,27,.92);color:#fffaf0;text-align:center;font:600 clamp(16px,2.2vw,20px)/1.45 var(--body);text-wrap:balance}
+.prologue-actions{align-items:center}
+.prologue-actions .muted{font-size:13px}
+#introCurtainL,#introCurtainR{transform-box:fill-box;transform-origin:top center;animation:curtain-sway 5s ease-in-out infinite alternate}
+#introCurtainR{animation-delay:-2.4s}
+#introMoonbeam{animation:beam-drift 8s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:top center}
+#introStars .twinkle{transform-box:fill-box;transform-origin:center;animation:star-twinkle 2.4s ease-in-out infinite alternate}
+#introStars .twinkle:nth-child(2n){animation-delay:-1.1s}
+#introDust circle{animation:dust-drift 5.5s ease-in-out infinite alternate}
+#introDust circle:nth-child(2n){animation-delay:-2.2s}
+#introHead{transform-box:fill-box;transform-origin:center bottom;transition:transform .7s ease}
+#introThiri{transform-box:fill-box;transform-origin:center bottom;animation:thiri-breathe 3.6s ease-in-out infinite alternate}
+#introArms,#introHand,#introTear,#introShweGlow,#introPaper,#introMouth{transition:transform .7s ease,opacity .7s ease}
+#introTear,#introShweGlow{opacity:0}
+#introPaper{transform-box:fill-box;transform-origin:center;animation:paper-float 3.4s ease-in-out infinite alternate}
+#introShweTail{transform-box:fill-box;transform-origin:left center;animation:tail-swish 1.8s ease-in-out infinite alternate}
+#introArt[data-anim="wake"] #introHead{transform:rotate(5deg) translateY(4px)}
+#introArt[data-anim="look-down"] #introHead{transform:rotate(8deg) translateY(5px)}
+#introArt[data-anim="hug"] #introArms{transform:translateY(5px) scale(.94)}
+#introArt[data-anim="window"] #introHand{transform:translate(-22px,-20px)}
+#introArt[data-anim="camera"] #introHead{transform:rotate(-7deg) translate(4px,-5px)}
+#introArt[data-anim="wipe"] #introHand{transform:translate(-13px,-41px)}
+#introArt[data-anim="comfort"] #introHand{opacity:0}
+#introComfortArm{opacity:0;transition:opacity .7s ease}
+#introArt[data-anim="comfort"] #introComfortArm{opacity:1}
+#introArt[data-anim="comfort"] #introHand{transform:translate(-153px,28px)}
+#introArt[data-anim="comfort"] #introMouth{transform:translateY(-1px) scaleY(.7)}
+#introArt[data-anim="trail"] #introHead{transform:rotate(-5deg) translate(3px,-3px)}
+#introShwe{transform-box:fill-box;transform-origin:center;animation:shwe-look 4.2s ease-in-out infinite alternate}
+#introArt[data-anim="wipe"] #introTear{opacity:.9;transform:translateY(7px)}
+#introArt[data-anim="rest"] #introHead{transform:rotate(12deg) translateY(8px)}
+#introArt[data-anim="rest"] #introEyes{opacity:.3}
+#introArt[data-anim="trail"] #introShweGlow{opacity:.8}
+#introArt[data-anim="trail"] #introShwe{animation:none;transform:translateY(-5px) scale(1.05)}
+.night-storyline{display:grid;grid-template-columns:142px minmax(0,1fr);gap:14px;align-items:center;padding:12px;border:1px solid rgba(243,236,255,.18);border-radius:14px;background:rgba(255,255,255,.035)}
+.thiri-mini{border-radius:11px;overflow:hidden;background:#18203b;aspect-ratio:1.5/1}
+.thiri-mini svg{display:block;width:100%;height:100%}
+.night-story-copy{display:grid;gap:8px}
+#endUnlockBadge{width:max-content;max-width:100%;padding:5px 10px;border-radius:999px;background:rgba(246,196,83,.18);border:1px solid rgba(246,196,83,.6);color:#ffe29b;font:800 13px var(--display)}
+#endDiaryLine{font-size:15px;line-height:1.5;color:#f5efff}
+#endStageLine{font-size:12px;color:var(--muted)}
+.awakening-panel{position:relative;width:min(920px,100%);max-width:920px;max-height:calc(100vh - 24px);overflow:auto;gap:14px;padding:22px}
+.awakening-panel h1{font-size:clamp(28px,5vw,42px)}
+.awakening-art{aspect-ratio:2.25/1;min-height:190px;max-height:390px;overflow:hidden;border-radius:16px;border:1px solid rgba(255,255,255,.2);background:#253b55}
+.awakening-art svg{width:100%;height:100%;display:block}
+.awakening-subtitle{min-height:58px;display:grid;place-items:center;text-align:center;padding:10px 16px;border-radius:13px;background:rgba(8,11,27,.88);color:#fffaf0;font:600 clamp(16px,2vw,19px)/1.45 var(--body)}
+.awakening-skip{position:absolute;right:14px;top:14px;z-index:3}
+#awakeSun{opacity:.3;transition:opacity 2s ease,transform 2s ease;transform:translateY(35px)}
+#awakeCurtains{transition:transform 2s ease}
+#awakeThiri{transform-box:fill-box;transform-origin:center bottom;transition:transform 1.2s ease}
+#awakeDrawing{opacity:.25;transition:opacity 1s ease,transform 1s ease;transform:translateY(8px)}
+#awakePhone{opacity:.35;transition:opacity .8s ease}
+#awakeningArt[data-anim="sunrise"] #awakeSun,#awakeningArt[data-anim="stretch"] #awakeSun,#awakeningArt[data-anim="drawing"] #awakeSun,#awakeningArt[data-anim="message"] #awakeSun,#awakeningArt[data-anim="window"] #awakeSun{opacity:1;transform:translateY(0)}
+#awakeningArt[data-anim="stretch"] #awakeThiri{transform:translateY(-8px) scale(1.02)}
+#awakeningArt[data-anim="window"] #awakeThiri{transform:translate(-270px,-62px) scale(.88)}
+#awakeningArt[data-anim="drawing"] #awakeDrawing,#awakeningArt[data-anim="message"] #awakeDrawing,#awakeningArt[data-anim="window"] #awakeDrawing{opacity:1;transform:translateY(0)}
+#awakeningArt[data-anim="message"] #awakePhone,#awakeningArt[data-anim="window"] #awakePhone{opacity:1}
+#awakeningArt[data-anim="window"] #awakeCurtains{transform:scaleX(1.3)}
+@keyframes curtain-sway{from{transform:rotate(-1.2deg)}to{transform:rotate(1.2deg)}}
+@keyframes beam-drift{from{transform:translateX(-4px);opacity:.24}to{transform:translateX(8px);opacity:.45}}
+@keyframes star-twinkle{from{opacity:.35;transform:scale(.8)}to{opacity:1;transform:scale(1.15)}}
+@keyframes dust-drift{from{transform:translate(0,8px);opacity:.25}to{transform:translate(12px,-15px);opacity:.8}}
+@keyframes paper-float{from{transform:rotate(-1deg)}to{transform:rotate(1deg)}}
+@keyframes tail-swish{from{transform:rotate(-12deg)}to{transform:rotate(15deg)}}
+@keyframes shwe-look{from{transform:rotate(-2deg)}to{transform:rotate(2deg) translateY(-2px)}}
+@keyframes thiri-breathe{from{transform:translateY(0)}to{transform:translateY(-2px)}}
+@media(max-width:560px){.prologue-panel{padding:42px 14px 16px;gap:12px}.prologue-art{min-height:160px;aspect-ratio:1.65/1}.night-storyline{grid-template-columns:96px minmax(0,1fr);gap:10px}.awakening-panel{padding:42px 14px 16px}.awakening-art{min-height:155px;aspect-ratio:1.6/1}.intro-skip{top:8px;right:8px;padding:8px 11px}.level-caption{width:112px}.level-caption strong{font-size:11px}.level-caption span{font-size:9px}}
+@media(prefers-reduced-motion:reduce){#introCurtainL,#introCurtainR,#introMoonbeam,#introStars .twinkle,#introDust circle,#introPaper,#introShweTail,#introShwe,#introThiri,.level-node.is-current{animation:none!important}#introHead,#introArms,#introHand,#introTear,#introShweGlow,#introComfortArm,#introMouth,#awakeSun,#awakeCurtains,#awakeThiri,#awakeDrawing,#awakePhone{transition-duration:.08s!important}}
 </style>
 
 <canvas id="game" aria-label="Mood Keepers prototype game" hidden></canvas>
@@ -159,54 +232,68 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 
 <div class="overlay" id="prologueScreen" hidden aria-labelledby="prologueTitle">
   <div class="panel prologue-panel">
+    <button class="intro-skip" id="introSkipBtn" type="button">Skip intro →</button>
     <p class="eyebrow">Before the Night Side</p>
     <h1 id="prologueTitle">Mood Keepers</h1>
-    <div class="prologue-art">
-      <svg viewBox="0 0 720 300" role="img" aria-label="Thiri sleeps under a blanket while her cat Shwe watches over her in a moonlit bedroom">
+    <div class="prologue-art" id="introArt" data-anim="wake">
+      <svg viewBox="0 0 720 320" role="img" aria-label="Thiri sits awake in her moonlit bedroom while Shwe watches beside her">
         <defs>
-          <linearGradient id="roomSky" x2="0" y2="1"><stop stop-color="#17213e"/><stop offset="1" stop-color="#3a315f"/></linearGradient>
-          <linearGradient id="blanket" x2="0" y2="1"><stop stop-color="#bd7292"/><stop offset="1" stop-color="#754969"/></linearGradient>
-          <radialGradient id="moonGlow"><stop stop-color="#fff0bd" stop-opacity=".8"/><stop offset="1" stop-color="#fff0bd" stop-opacity="0"/></radialGradient>
+          <linearGradient id="introSky" x2="0" y2="1"><stop stop-color="#151b38"/><stop offset="1" stop-color="#3d4160"/></linearGradient>
+          <linearGradient id="introBlanket" x2="0" y2="1"><stop stop-color="#c37b9c"/><stop offset="1" stop-color="#704967"/></linearGradient>
+          <linearGradient id="introBeam" x2="0" y2="1"><stop stop-color="#fff1c5" stop-opacity=".42"/><stop offset="1" stop-color="#fff1c5" stop-opacity="0"/></linearGradient>
+          <radialGradient id="introMoonGlow"><stop stop-color="#fff0bd" stop-opacity=".85"/><stop offset="1" stop-color="#fff0bd" stop-opacity="0"/></radialGradient>
         </defs>
-        <rect width="720" height="300" rx="18" fill="url(#roomSky)"/>
-        <path d="M0 240 Q180 215 330 245 T720 225 V300 H0Z" fill="#25213e"/>
-        <rect x="48" y="28" width="164" height="150" rx="9" fill="#10182f" stroke="#8b79ad" stroke-width="5"/>
-        <path d="M130 30V176M50 102H210" stroke="#796a9e" stroke-width="4"/>
-        <circle cx="165" cy="62" r="34" fill="url(#moonGlow)"/><circle cx="165" cy="62" r="16" fill="#ffeab3"/>
-        <path d="M54 53l5 10 11 2-8 7 2 11-10-6-10 6 2-11-8-7 11-2zM102 129l3 6 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#e3ddff" opacity=".75"/>
-        <rect x="273" y="126" width="375" height="125" rx="12" fill="#4c3550" stroke="#8d6377" stroke-width="6"/>
-        <rect x="300" y="158" width="382" height="74" rx="22" fill="#dfc8de"/>
-        <ellipse cx="540" cy="169" rx="72" ry="27" fill="#fff0df"/>
-        <path d="M386 215 Q412 177 480 176 Q552 167 624 208 L651 252 H350Z" fill="url(#blanket)" stroke="#e4a3bb" stroke-width="3"/>
-        <path d="M484 169 Q490 128 533 130 Q570 130 578 163 Q563 185 521 188Z" fill="#30243a"/>
-        <ellipse cx="529" cy="164" rx="29" ry="25" fill="#e7b995"/>
-        <path d="M501 160 Q500 132 527 134 Q552 131 561 149 Q539 144 519 153 Q511 160 501 160Z" fill="#30243a"/>
-        <path d="M511 166q5 5 10 0M532 166q5 5 10 0M520 177q5 4 10 0" fill="none" stroke="#493143" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M570 119h12v-21h18v21h12" fill="none" stroke="#e5d8ff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
-        <text x="600" y="103" fill="#e5d8ff" font-family="Trebuchet MS,sans-serif" font-size="20" font-weight="700">z</text>
-        <ellipse cx="254" cy="237" rx="37" ry="21" fill="#efb44a"/>
-        <path d="M222 235 Q189 215 208 196 Q220 186 225 199" fill="none" stroke="#efb44a" stroke-width="8" stroke-linecap="round"/>
-        <circle cx="279" cy="220" r="19" fill="#efb44a"/>
-        <path d="M264 207l2-17 12 13M280 203l14-12-1 21" fill="#efb44a"/>
-        <path d="M275 220q4 4 8 0" fill="none" stroke="#41303e" stroke-width="2.5" stroke-linecap="round"/>
-        <circle cx="270" cy="219" r="2" fill="#c8ff8a"/><circle cx="284" cy="219" r="2" fill="#c8ff8a"/>
-        <path d="M239 228l5 7m7-10 4 8m7-8 4 8" stroke="#c98a2c" stroke-width="2" stroke-linecap="round"/>
-        <text x="225" y="278" fill="#f6dca2" font-family="Trebuchet MS,sans-serif" font-size="13" font-weight="700">SHWE</text>
-        <path d="M0 280H720" stroke="#695275" stroke-width="4"/>
+        <rect width="720" height="320" rx="18" fill="url(#introSky)"/>
+        <path d="M0 250Q150 226 310 250T720 230V320H0Z" fill="#25213e"/>
+        <rect x="48" y="26" width="174" height="156" rx="9" fill="#10182f" stroke="#887ba7" stroke-width="5"/>
+        <path d="M135 28V180M50 104H220" stroke="#796a9e" stroke-width="4"/>
+        <circle cx="174" cy="63" r="48" fill="url(#introMoonGlow)"/><circle cx="174" cy="63" r="18" fill="#ffeab3"/>
+        <g id="introStars" fill="#e3ddff"><path class="twinkle" d="M91 56l4 9 10 2-8 7 2 10-8-5-9 5 2-10-8-7 10-2z"/><path class="twinkle" d="M119 128l3 6 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z"/><circle class="twinkle" cx="195" cy="135" r="2.5"/><circle class="twinkle" cx="76" cy="151" r="2"/></g>
+        <path id="introMoonbeam" d="M203 120L270 126L402 302L220 302Z" fill="url(#introBeam)"/>
+        <g id="introCurtainL"><path d="M42 22Q69 40 91 30L89 184Q67 163 42 184Z" fill="#78627e"/><path d="M52 36L59 170M72 36L75 174" stroke="#a48698" stroke-width="4" opacity=".48"/></g>
+        <g id="introCurtainR"><path d="M225 22Q200 40 179 30L181 184Q204 163 226 184Z" fill="#78627e"/><path d="M215 36L208 170M195 36L191 174" stroke="#a48698" stroke-width="4" opacity=".48"/></g>
+        <g id="introDust" fill="#fff2c9"><circle cx="252" cy="195" r="2.4"/><circle cx="284" cy="226" r="1.8"/><circle cx="238" cy="268" r="2"/><circle cx="320" cy="247" r="1.6"/><circle cx="290" cy="177" r="1.4"/></g>
+        <rect x="294" y="138" width="366" height="128" rx="13" fill="#4c3550" stroke="#8d6377" stroke-width="6"/>
+        <rect x="314" y="158" width="374" height="91" rx="22" fill="#dfc8de"/>
+        <ellipse cx="536" cy="180" rx="66" ry="24" fill="#fff0df"/>
+        <path d="M336 222Q385 183 452 187Q507 179 574 202L649 239H328Z" fill="url(#introBlanket)" stroke="#e4a3bb" stroke-width="3"/>
+        <g id="introThiri">
+          <path d="M488 204Q488 163 511 151Q536 139 559 157Q576 173 574 205Z" fill="#9b6e91" stroke="#efc4d7" stroke-width="2"/>
+          <path d="M502 186Q512 165 532 169Q550 171 566 187" fill="none" stroke="#e8b9a8" stroke-width="13" stroke-linecap="round"/>
+          <g id="introArms"><path d="M503 185Q516 174 529 183Q543 193 562 181" fill="none" stroke="#f0c19e" stroke-width="9" stroke-linecap="round"/><path d="M512 188Q535 199 558 190" fill="none" stroke="#e9b995" stroke-width="7" stroke-linecap="round"/></g><path id="introComfortArm" d="M516 183Q476 186 435 204" fill="none" stroke="#efb995" stroke-width="9" stroke-linecap="round"/><circle cx="434" cy="204" r="6" fill="#efb995"/>
+          <g id="introHead">
+            <path d="M495 141Q491 105 521 96Q553 91 568 119L560 158Q539 172 510 155Z" fill="#30243a"/>
+            <ellipse cx="531" cy="130" rx="29" ry="30" fill="#e7b995"/>
+            <path d="M503 126Q498 97 528 99Q552 96 561 117Q544 111 524 119Q514 126 503 126Z" fill="#30243a"/>
+            <g id="introEyes" fill="#493143"><ellipse cx="521" cy="133" rx="3.5" ry="4.2"/><ellipse cx="541" cy="133" rx="3.5" ry="4.2"/><circle cx="522" cy="134" r="1.4" fill="#fff0dc"/><circle cx="542" cy="134" r="1.4" fill="#fff0dc"/></g>
+            <path id="introMouth" d="M526 148Q532 152 539 147" fill="none" stroke="#744555" stroke-width="2.5" stroke-linecap="round"/>
+            <path id="introTear" d="M548 138Q554 146 548 152Q542 147 548 138Z" fill="#a8dfff"/>
+          </g>
+          <path id="introHand" d="M557 183Q579 180 588 193" fill="none" stroke="#efb995" stroke-width="8" stroke-linecap="round"/>
+        </g>
+        <g id="introShwe">
+          <ellipse cx="397" cy="232" rx="38" ry="21" fill="#efb44a"/>
+          <path id="introShweTail" d="M366 230Q335 215 351 194Q364 185 370 202" fill="none" stroke="#efb44a" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="425" cy="214" r="20" fill="#efb44a"/><path d="M410 201l2-18 13 14M427 196l15-13-2 23" fill="#efb44a"/>
+          <path d="M418 214q4 4 8 0" fill="none" stroke="#41303e" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="415" cy="212" r="2" fill="#c8ff8a"/><circle cx="427" cy="212" r="2" fill="#c8ff8a"/>
+          <path d="M380 225l5 7m7-10 4 8m7-8 4 8" stroke="#c98a2c" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <circle id="introShweGlow" cx="397" cy="219" r="42" fill="none" stroke="#ffe39b" stroke-width="5"/>
+        <g id="introPaper"><path d="M226 263l32-7 7 31-34 4Z" fill="#e9dfd5"/><path d="M235 270l19-4m-17 10 14-3" stroke="#8d8797" stroke-width="2"/><path d="M269 270l17 3-3 19-16-4Z" fill="#c9c2d3"/></g>
+        <text x="370" y="293" fill="#f6dca2" font-family="Trebuchet MS,sans-serif" font-size="13" font-weight="700">SHWE</text>
+        <path d="M0 294H720" stroke="#695275" stroke-width="4"/>
       </svg>
     </div>
-    <div class="prologue-story">
-      <p>After a hard, tearful night, Thiri finally fell asleep—exhausted after tearing up a drawing she truly loved. While she sleeps, the feelings she could not sort through drift into the Night Side.</p>
-      <p>You are <b class="gold">Shwe</b>, Thiri’s cat. Follow the moonlit trail, find her lost feelings, and bring them home before morning so she can wake safe and begin again.</p>
-    </div>
-    <div class="prologue-actions"><span class="muted">A small story before the levels</span><button class="btn" id="introContinueBtn">Enter the Night Side</button></div>
+    <div class="intro-subtitle" id="introSubtitle" aria-live="polite">Thiri is waking in the quiet of the night…</div>
+    <div class="prologue-actions"><span class="muted">A short, skippable story · subtitles always on</span><button class="btn" id="introContinueBtn" type="button" hidden>Follow the moonlit trail →</button></div>
   </div>
 </div>
 
 <div class="overlay" id="startScreen">
   <div class="panel">
-    <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count">2 open · up to 1,000 levels</span></div>
-    <p class="level-map-hint">Choose an open chapter. Swipe or scroll upward on the path to explore higher, planned levels.</p>
+    <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count" id="levelMapCount">1 / 7 nights unlocked</span></div>
+    <p class="level-map-hint">Choose the lit night. Each completed story night opens the next chapter.</p>
     <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Scrollable level map; scroll upward for higher levels" tabindex="0">
       <div class="level-map-track" id="levelMapTrack">
         <svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg>
@@ -216,8 +303,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     <div class="cards">
       <div class="card"><b class="red">Frustrated</b>Charges when you get close. Dodge it, then pounce while it is dizzy.</div>
       <div class="card"><b class="violet">Nervous</b>Panics if you run or jump nearby. Sneak up slowly, then pounce.</div>
-      <div class="card"><b class="blue">Lonely</b>Look for a pawprint near a hiding spot. Night Eyes reveal the clues; scratch with S, then sit still beside Lonely. Never pounce.</div>
-      <div class="card"><b style="color:#7ddc8b">Calm · Night 7</b>Find a marked cave-side hiding spot with Night Eyes, scratch to reveal Calm, then sit quietly beside it. Never pounce.</div>
+      <div class="card"><b class="blue">Lonely</b>Night 1: Lonely is visible—sit nearby. From Night 2, use Night Eyes to find pawprints, scratch with S, then sit still beside Lonely. Never pounce.</div>
+      <div class="card"><b style="color:#7ddc8b">Calm · Nights 6–7</b>Find a marked cave-side hiding spot with Night Eyes, scratch to reveal Calm, then sit quietly beside it. Never pounce.</div>
       <div class="card"><b class="gold">Golden</b>Rare and fast. Worth 500 points and 5 extra seconds.</div>
     </div>
     <div class="actions">
@@ -225,7 +312,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <button class="btn ghost" id="shopBtn">Upgrade Shwe</button>
       <button class="btn ghost" id="bookBtn">Mood Book</button>
       <button class="btn ghost" id="previewBtn">Watch the Coming Home scene</button>
-      <button class="btn ghost" id="storyBtn">Read the story</button>
+      <button class="btn ghost" id="storyBtn">Replay intro</button>
     </div>
     <section class="missions" aria-labelledby="mTitle">
       <div class="mhead"><b id="mTitle">Today's missions</b><span class="muted" id="mReset"></span></div>
@@ -254,6 +341,10 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     <p class="eyebrow" id="endEyebrow">Night 1 complete</p>
     <h1 id="endTitle">Thiri's curtains open a little</h1>
     <div class="stars" id="endStars" aria-label="Stars"></div>
+    <div class="night-storyline" id="nightStoryline" hidden>
+      <div class="thiri-mini" id="endThiriArt" data-stage="0" aria-hidden="true"><svg viewBox="0 0 180 120"><defs><linearGradient id="miniRoom" x2="0" y2="1"><stop stop-color="#1a1e3c"/><stop offset="1" stop-color="#55455c"/></linearGradient></defs><rect width="180" height="120" fill="url(#miniRoom)"/><rect x="14" y="12" width="39" height="42" rx="3" fill="#233453" stroke="#9c91b7" stroke-width="2"/><path class="mini-curtain" d="M11 9h13v49H11zm33 0h13v49H44z" fill="#6a5575"/><rect x="70" y="59" width="97" height="43" rx="7" fill="#7f6280"/><rect x="75" y="54" width="88" height="21" rx="7" fill="#e6d2df"/><path class="mini-blanket" d="M78 73Q111 54 145 72l12 23H75Z" fill="#94647e"/><circle cx="126" cy="56" r="13" fill="#e6b995"/><path d="M113 53q0-14 14-14 13 0 14 12-11-7-28 2" fill="#32263c"/><path class="mini-eyes" d="M120 57q3 3 5 0m5 0q3 3 5 0" fill="none" stroke="#4c3748" stroke-width="1.5"/><path d="M96 94h36" stroke="#f0cf88" stroke-width="3" opacity=".55"/></svg></div>
+      <div class="night-story-copy"><strong id="endUnlockBadge" hidden></strong><p id="endDiaryLine"></p><span id="endStageLine"></span></div>
+    </div>
     <p id="endMsg"></p>
     <div class="stats">
       <div class="stat"><span>Score</span><strong id="sScore">0</strong></div>
@@ -269,6 +360,31 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <button class="btn ghost" id="endShopBtn">Upgrade Shwe</button>
       <button class="btn ghost" id="menuBtn">Main menu</button>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="awakeningScreen" hidden aria-labelledby="awakeningTitle">
+  <div class="panel awakening-panel">
+    <button class="intro-skip awakening-skip" id="awakeningSkipBtn" type="button">Skip to ending</button>
+    <p class="eyebrow">The last night gives way to morning</p>
+    <h1 id="awakeningTitle">A New Morning</h1>
+    <div class="awakening-art" id="awakeningArt" data-anim="sunrise">
+      <svg viewBox="0 0 800 350" role="img" aria-label="Thiri wakes in her brightening room beside Shwe, with her restored drawing and Hnin’s message">
+        <defs><linearGradient id="awakeRoom" x2="0" y2="1"><stop stop-color="#7a8eaa"/><stop offset="1" stop-color="#f6c88b"/></linearGradient><linearGradient id="awakeSunGlow" x2="0" y2="1"><stop stop-color="#fff6c9" stop-opacity=".95"/><stop offset="1" stop-color="#ffc66f" stop-opacity="0"/></linearGradient></defs>
+        <rect width="800" height="350" rx="18" fill="url(#awakeRoom)"/><rect x="36" y="35" width="210" height="205" rx="9" fill="#617d9f" stroke="#f4e5c2" stroke-width="8"/><path d="M141 38v199M39 136h204" stroke="#dae7ea" stroke-width="5"/>
+        <circle id="awakeSun" cx="185" cy="98" r="95" fill="url(#awakeSunGlow)"/><circle cx="190" cy="107" r="30" fill="#fff0b2"/>
+        <g id="awakeCurtains"><path d="M24 26Q82 50 105 34V247Q60 216 24 251Z" fill="#cf8194"/><path d="M258 26Q214 51 187 34V247Q224 216 258 251Z" fill="#cf8194"/><path d="M47 49v170m31-168v170m153-169v170" stroke="#edb4ae" stroke-width="6" opacity=".55"/></g>
+        <path d="M0 286Q230 267 440 288T800 275V350H0Z" fill="#d9aa8b"/>
+        <rect x="302" y="173" width="396" height="121" rx="15" fill="#805979"/><rect x="326" y="191" width="380" height="76" rx="22" fill="#fff0e5"/><rect x="364" y="213" width="286" height="83" rx="12" fill="#c4809a"/>
+        <g id="awakeThiri"><path d="M455 225Q454 167 490 154Q526 144 556 177L570 236Z" fill="#a46d93"/><path d="M474 182Q491 164 513 172Q536 177 548 198" fill="none" stroke="#e8b798" stroke-width="14" stroke-linecap="round"/><ellipse cx="512" cy="146" rx="33" ry="36" fill="#edbd9c"/><path d="M480 145Q476 104 513 105Q549 107 552 137Q523 125 502 140Z" fill="#332640"/><path d="M500 147q4 4 8 0m10 0q4 4 8 0" fill="none" stroke="#493143" stroke-width="3" stroke-linecap="round"/><path d="M505 162q8 8 17 0" fill="none" stroke="#9a5665" stroke-width="3" stroke-linecap="round"/><path d="M487 191Q506 212 536 194" fill="none" stroke="#f0c29e" stroke-width="10" stroke-linecap="round"/></g>
+        <g id="awakeDrawing"><rect x="578" y="48" width="116" height="86" rx="4" fill="#f7eddc" stroke="#8e7657" stroke-width="5"/><circle cx="667" cy="67" r="10" fill="#ffc953"/><path d="M584 121q23-39 46-17 17-30 60 2v23H584Z" fill="#72a983"/><path d="M600 105q18-23 34 0" fill="none" stroke="#dc986e" stroke-width="6"/></g>
+        <g id="awakePhone"><rect x="280" y="228" width="70" height="40" rx="7" fill="#2d3f58"/><rect x="287" y="234" width="56" height="26" rx="4" fill="#c3e7ff"/><text x="315" y="251" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#30415b">Hnin: Art club?</text></g>
+        <g id="awakeShwe"><ellipse cx="383" cy="274" rx="34" ry="18" fill="#efa93f"/><circle cx="408" cy="256" r="17" fill="#efa93f"/><path d="M396 244l3-17 11 14m4 0 13-13-2 20" fill="#efa93f"/><path d="M377 270q-25-9-12-27" fill="none" stroke="#efa93f" stroke-width="7" stroke-linecap="round"/><circle cx="404" cy="255" r="2.2" fill="#c8ff8a"/><circle cx="414" cy="255" r="2.2" fill="#c8ff8a"/></g>
+        <text x="76" y="319" fill="#fff5dc" font-family="Trebuchet MS,sans-serif" font-size="16" font-weight="700">A NEW MORNING</text>
+      </svg>
+    </div>
+    <div class="awakening-subtitle" id="awakeningSubtitle" aria-live="polite">Sunrise light spills across the room…</div>
+    <div class="actions" id="awakeningActions" hidden><button class="btn" id="awakeningReplayBtn" type="button">Play again</button><button class="btn ghost" id="awakeningBookBtn" type="button">View Mood Book</button><button class="btn alt" id="awakeningFreeBtn" type="button">Free Mode</button></div>
   </div>
 </div>
 
@@ -405,6 +521,23 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   }
   let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0;
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
+  const NIGHT_CHAPTERS = [
+    { night: 1, name: 'First Night', sub: 'Meet visible Lonely; no scratching yet', theme: '#7893bb', musicRoot: 196, timeLimit: 105, rareChance: .08, feelingsNeeded: { F: 4, N: 4, L: 2 }, newMoodling: 'Lonely is visible; sit quietly beside it', diary: 'She stopped crying in her sleep. That is something.' },
+    { night: 2, name: 'Lantern Path', sub: 'Learn to find Lonely in hiding spots', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 110, rareChance: .1, feelingsNeeded: { F: 4, N: 4, L: 2 }, newMoodling: 'Scratch a marked spot to reveal Lonely', diary: 'She turned a little toward the window.' },
+    { night: 3, name: 'The Long Hallway', sub: 'Move gently through the quiet', theme: '#628aa0', musicRoot: 220, timeLimit: 112, rareChance: .12, feelingsNeeded: { F: 4, N: 4, L: 3 }, newMoodling: null, diary: 'Her hand found Shwe in the dark.' },
+    { night: 4, name: 'Night Market', sub: 'Rare feelings sparkle in the crowd', theme: '#c17679', musicRoot: 233.08, timeLimit: 115, rareChance: .22, feelingsNeeded: { F: 5, N: 5, L: 2 }, newMoodling: 'Rare Moodling forms appear more often', diary: 'She dreamed of the drawing, not the tearing.' },
+    { night: 5, name: 'Storm Peak', sub: 'Keep steady while the sky turns', theme: '#7181aa', musicRoot: 246.94, timeLimit: 118, rareChance: .26, feelingsNeeded: { F: 6, N: 5, L: 2 }, newMoodling: 'More rare feelings and Golden visitors', diary: 'Almost a smile.' },
+    { night: 6, name: 'Quiet Field', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 5, N: 5, L: 3, C: 1 }, newMoodling: 'Calm waits in a marked cave-side spot', diary: 'She murmured something kind.' },
+    { night: 7, name: 'Moon Hollow', sub: 'Bring every feeling home before dawn', theme: '#d6a866', musicRoot: 293.66, timeLimit: 135, rareChance: .28, feelingsNeeded: { F: 2, N: 2, L: 2, C: 3 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.' }
+  ];
+  const chapterFor = night => NIGHT_CHAPTERS[clamp(night - 1, 0, NIGHT_CHAPTERS.length - 1)];
+  let unlockedLevel = 1, thiriSleepStage = 0, finalAwakeningSeen = false;
+  try { unlockedLevel = clamp(Math.floor(+localStorage.getItem('mk-progress') || 1), 1, 7); } catch (e) {}
+  try { thiriSleepStage = clamp(Math.floor(+localStorage.getItem('mk-thiri') || 0), 0, 7); } catch (e) {}
+  try { finalAwakeningSeen = localStorage.getItem('mk-awakening-seen') === '1'; } catch (e) {}
+  function saveStoryProgress() {
+    try { localStorage.setItem('mk-progress', String(unlockedLevel)); localStorage.setItem('mk-thiri', String(thiriSleepStage)); } catch (e) {}
+  }
   const moonHollow = () => mode === 'story' && storyNight === 7;
 
   // ---------- upgrades (Glow treats) ----------
@@ -443,8 +576,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       { n: 'Rainy Lonely', c: '#4fd1c5', r: 'Rare', d: 'Tiny raindrops fall around it.', line: '“Rainy days feel lonely. Rainy days with friends don’t.”' }
     ],
     G: [{ n: 'Golden', c: '#f6c453', r: 'Special', d: 'Rare and fast. Worth 500 points and 5 extra seconds.', line: '“Some days have one small good thing. That counts.”' }],
-    E: [{ n: 'Excited', c: '#ffd84d', r: 'Story', d: 'Bounces across the night market.', lock: 'Meet it on Night 5 (not in this prototype yet)' }],
-    C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Scratch a marked cave-side spot, then sit quietly beside Calm.', lock: 'Meet it inside a Moon Hollow cave on Level 7.' }]
+    E: [{ n: 'Excited', c: '#ffd84d', r: 'Story', d: 'Bounces across the night market.', lock: 'A storybook visitor beyond these seven playable nights.' }],
+    C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Scratch a marked cave-side spot, then sit quietly beside Calm.', lock: 'Meet it in a cave on Night 6.' }]
   };
   const BOOK_ORDER = ['F0', 'F1', 'F2', 'N0', 'N1', 'N2', 'L0', 'L1', 'L2', 'G0', 'E0', 'C0'];
   let book = {};
@@ -509,44 +642,58 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     return pool[Math.floor(Math.random() * pool.length)];
   }
   function makeScratchSpot(x, type) {
-    const variants = moonHollow() && type === 'C' ? ['cracked rock', 'loose dirt', 'under bush'] : ['loose dirt', 'cracked rock', 'leaf pile', 'under bush'];
+    const caveCalm = mode === 'story' && storyNight >= 6 && type === 'C';
+    const variants = caveCalm ? ['cracked rock', 'loose dirt', 'under bush'] : ['loose dirt', 'cracked rock', 'leaf pile', 'under bush'];
     const spot = { x, y: terrainY(x), kind: variants[Math.floor(Math.random() * variants.length)], moodType: type, used: false, usedAt: 0, scratching: false, phase: Math.random() * Math.PI * 2 };
     scratchSpots.push(spot);
     return spot;
   }
   function hideFeeling(m, x) {
     if (m.spot) { m.spot.used = true; m.spot.usedAt = t; m.spot.scratching = false; }
-    const inCave = moonHollow() && (m.type === 'C' || m.type === 'L');
+    const inCave = mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight === 7));
     m.x = x ?? (inCave ? pickCaveX() : pickX()); m.caveX = inCave ? m.x : null;
-    m.y = terrainY(m.x) - (m.type === 'C' ? 46 : 30); m.alpha = 0; m.state = 'hide'; m.st = 0; m.sit = 0; m.rev = 0; m.fleeAlarm = 0;
-    m.spot = makeScratchSpot(m.x, m.type);
+    m.y = terrainY(m.x) - (m.type === 'C' ? 46 : 30); m.st = 0; m.sit = 0; m.rev = 0; m.fleeAlarm = 0;
+    const tutorialLonely = m.type === 'L' && mode === 'story' && storyNight === 1;
+    m.alpha = tutorialLonely ? 1 : 0; m.state = tutorialLonely ? 'revealed' : 'hide';
+    m.spot = tutorialLonely ? null : makeScratchSpot(m.x, m.type);
   }
   function spawn(type, x) {
     const hidesInCave = type === 'C' || (type === 'L' && moonHollow());
     x = x ?? (hidesInCave ? pickCaveX() : pickX());
     const m = { type, x, y: 0, dir: Math.random() < .5 ? -1 : 1, phase: Math.random() * 6, alpha: 1, cd: 1 + Math.random(), st: 0, alarm: 0, state: '', home: x, dead: false, life: 0, caveX: hidesInCave ? x : null };
-    m.v = (type === 'F' || type === 'N' || type === 'L') && Math.random() < 1 / 10 ? (Math.random() < .5 ? 1 : 2) : 0;
+    const rareChance = mode === 'story' ? chapterFor(storyNight).rareChance : .1;
+    m.v = (type === 'F' || type === 'N' || type === 'L') && Math.random() < rareChance ? (Math.random() < .5 ? 1 : 2) : 0;
     if (type === 'F') { m.y = terrainY(x) - 20; m.state = 'patrol'; }
     if (type === 'N') { m.y = terrainY(x) - 46; m.state = 'wander'; }
     if (type === 'G') { m.y = 200; m.state = 'fly'; m.life = 6.5; }
-    if (type === 'L' || type === 'C') { m.y = terrainY(x) - (type === 'C' ? 46 : 30); m.state = 'hide'; m.st = 0; m.rev = 0; m.sit = 0; m.chime = 0; m.alpha = 0; m.fleeAlarm = 0; m.spot = makeScratchSpot(x, type); }
+    if (type === 'L' || type === 'C') {
+      m.y = terrainY(x) - (type === 'C' ? 46 : 30); m.st = 0; m.rev = 0; m.sit = 0; m.chime = 0; m.fleeAlarm = 0;
+      const tutorialLonely = type === 'L' && mode === 'story' && storyNight === 1;
+      m.state = tutorialLonely ? 'revealed' : 'hide'; m.alpha = tutorialLonely ? 1 : 0; m.spot = tutorialLonely ? null : makeScratchSpot(x, type);
+    }
     mood.push(m); return m;
   }
   function reset() {
-    t = 0; timeLeft = mode === 'free' ? 60 : storyNight === 7 ? 120 : 90; score = 0; freeT = 0; level = 0; nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false; combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
-    need = storyNight === 7 ? { F: 2, N: 2, L: 2, C: 3 } : { F: 4, N: 4, L: 2 };
-    got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0; goldDone = { a: false, b: false }; lastTick = 99;
-    cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0; scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false;
-    if (mode === 'free') { goldDone = { a: true, b: true }; chaos = true; }
-    if (mode === 'story' && storyNight === 7) {
-      [720, 1830].forEach(x => spawn('F', x));
-      [1210, 2240].forEach(x => spawn('N', x));
-      for (let i = 0; i < 2; i++) spawn('L');
-      for (let i = 0; i < 3; i++) spawn('C');
-    } else {
-      [700, 1350, 2050].forEach(x => spawn('F', x));
-      [1000, 1650, 2300].forEach(x => spawn('N', x));
+    const chapter = mode === 'story' ? chapterFor(storyNight) : null;
+    t = 0; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0;
+    nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
+    combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
+    need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
+    got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
+    goldDone = { a: false, b: false }; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
+    scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false;
+    if (mode === 'free') {
+      goldDone = { a: true, b: true }; chaos = true;
+      [700, 1000, 1350, 1650, 2050, 2300].forEach((x, i) => spawn(i % 2 ? 'N' : 'F', x));
       [1180, 2480].forEach(x => spawn('L', x));
+      return;
+    }
+    const positions = { F: [650, 1010, 1370, 1730, 2090, 2410], N: [820, 1180, 1540, 1900, 2260, 2490], L: [1120, 2380, 1650], C: [930, 1900, 2440] };
+    for (const [type, count] of Object.entries(need)) {
+      for (let i = 0; i < count; i++) {
+        const caveBound = type === 'C' || (type === 'L' && moonHollow());
+        spawn(type, caveBound ? undefined : positions[type][i]);
+      }
     }
   }
   reset();
@@ -728,6 +875,10 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 300; cat.pounce = 0; float(m.x, m.y - 40, "Wait until it's dizzy", RED); tone(150, .12, 'square', .05); }
         continue;
       }
+      if (m.type === 'L' && mode === 'story' && storyNight === 1) {
+        m.state = 'revealed'; m.alpha = 1; m.sit = 0; cat.pounce = 0;
+        float(cat.x, cat.y - 70, 'Sit quietly beside Lonely', BLUE); tone(330, .15, 'sine', .035); continue;
+      }
       if (m.type === 'L' || m.type === 'C') {
         hideFeeling(m);
         float(cat.x, cat.y - 70, m.type === 'C' ? 'Too quick. Calm slipped back into a cave' : 'Too fast. It hid again', m.type === 'C' ? CALM : BLUE); tone(300, .2, 'sine', .04, -100);
@@ -868,6 +1019,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     const sky = ctx.createLinearGradient(0, y0, 0, y0 + h);
     sky.addColorStop(0, '#0a1128'); sky.addColorStop(.55, '#14213c'); sky.addColorStop(1, '#1a2a4a');
     ctx.fillStyle = sky; ctx.fillRect(0, y0, VW, h);
+    if (mode === 'story') { ctx.save(); ctx.globalAlpha = .11; ctx.fillStyle = chapterFor(storyNight).theme; ctx.fillRect(0, y0, VW, h); ctx.restore(); }
     const moonX = VW * .77 - (camX * .035 % (VW + 140)), moonY = 102 - OY * .12;
     const halo = ctx.createRadialGradient(moonX, moonY, 8, moonX, moonY, 115);
     halo.addColorStop(0, 'rgba(222,233,230,.2)'); halo.addColorStop(.38, 'rgba(164,193,211,.09)'); halo.addColorStop(1, 'rgba(128,164,196,0)');
@@ -1174,18 +1326,11 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       }
     }
     if (mode === 'story') {
-      if (storyNight === 7) {
-        chip(VW - 408, top + 6, 'F', got.F, need.F, 92);
-        chip(VW - 308, top + 6, 'N', got.N, need.N, 92);
-        chip(VW - 208, top + 6, 'L', got.L, need.L, 92);
-        chip(VW - 108, top + 6, 'C', got.C, need.C, 92);
-      } else {
-        chip(VW - 348, top + 6, 'F', got.F, need.F);
-        chip(VW - 236, top + 6, 'L', got.L, need.L);
-        chip(VW - 124, top + 6, 'N', got.N, need.N);
-      }
+      const types = Object.keys(need).filter(type => need[type] > 0), width = types.length === 4 ? 88 : 96, gap = 8;
+      let x = VW - 22 - types.length * (width + gap) + gap;
+      for (const type of types) { chip(x, top + 6, type, got[type] || 0, need[type], width); x += width + gap; }
       ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.textAlign = 'right';
-      ctx.fillText(storyNight === 7 ? 'NIGHT 7 · MOON HOLLOW' : 'Tonight Thiri needs', VW - 22, top + 64);
+      ctx.fillText(`NIGHT ${storyNight} · ${chapterFor(storyNight).name.toUpperCase()}`, VW - 22, top + 64);
     } else {
       ctx.textAlign = 'right'; ctx.font = `800 28px ${DISP}`; ctx.fillStyle = INK;
       ctx.fillText(`${caughtN} caught`, VW - 22, top + 34);
@@ -1234,6 +1379,13 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     state = 'over'; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
     if (mode === 'story' && storyNight === 1 && won && hits === 0) bump('nohit');
+    let unlockedNow = false;
+    if (mode === 'story' && won) {
+      const before = unlockedLevel;
+      unlockedLevel = clamp(Math.max(unlockedLevel, storyNight + 1), 1, 7);
+      thiriSleepStage = clamp(Math.max(thiriSleepStage, storyNight), 0, 7);
+      unlockedNow = unlockedLevel > before; saveStoryProgress();
+    }
     lastGlow = glowRun; glow += glowRun; glowRun = 0; saveUpg(); refreshShopBtns();
     if (mode === 'free') {
       const best = Math.max(getBest('mk-best-free'), score); setBest('mk-best-free', best);
@@ -1248,7 +1400,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (won) final += Math.round(left) * 20;
     const best = Math.max(getBest(bestKey), final); setBest(bestKey, best);
     R = {
-      won, night: storyNight, total: requiredTotal(), left, final, best, combo: bestCombo, home: caughtTotal(),
+      won, night: storyNight, total: requiredTotal(), left, final, best, combo: bestCombo, home: caughtTotal(), unlocked: unlockedNow, stage: thiriSleepStage,
       starsN: won ? (left >= 30 ? 3 : left >= 10 ? 2 : 1) : 0,
       tip: hits > 0
         ? 'Tip: Frustrated charges when you get close. Let the charge miss, then pounce while it is dizzy.'
@@ -1257,8 +1409,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
           : 'Tip: catch again within 4 seconds to grow your combo up to ×5.'
     };
     tone(won ? 784 : 330, .35, 'triangle', .08, won ? 260 : -80);
-    const types = trail.map(l => l.type);
-    if (types.length) setTimeout(() => startHome(won, types, false), 500);
+    const types = trail.map(l => l.type), completedNight = storyNight;
+    if (types.length) setTimeout(() => startHome(won, types, false, completedNight), 500);
     else showEnd();
   }
   function refreshShopBtns() {
@@ -1315,7 +1467,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     }).join('');
   }
   $('#bookBtn').addEventListener('click', () => { $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
-  $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; $('#startScreen').hidden = false; refreshShopBtns(); });
+  $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; $('#startScreen').hidden = false; refreshShopBtns(); buildLevelMap(); focusLevelMap(unlockedLevel); });
   let shopFrom = null;
   function renderShop() {
     $('#glowAmt').textContent = glow;
@@ -1345,6 +1497,20 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   $('#endShopBtn').addEventListener('click', () => openShop('end'));
   refreshShopBtns();
 
+  function playNightComplete(night) {
+    const chapter = chapterFor(night), next = Math.min(7, night + 1);
+    $('#nightStoryline').hidden = false;
+    $('#endThiriArt').dataset.stage = String(Math.min(6, thiriSleepStage));
+    $('#endDiaryLine').textContent = `“${chapter.diary}”`;
+    $('#endStageLine').textContent = `Thiri’s room is changing · sleep stage ${thiriSleepStage} of 7`;
+    $('#endUnlockBadge').hidden = !R.unlocked;
+    $('#endUnlockBadge').textContent = R.unlocked ? `NIGHT ${next} UNLOCKED` : '';
+    $('#endEyebrow').textContent = `Night ${night} complete · ${chapter.name}`;
+    $('#endTitle').textContent = R.unlocked ? `Night ${night} complete — Night ${next} unlocked!` : night === 7 ? 'Moon Hollow is quiet' : 'A little more of Thiri returns';
+    $('#endMsg').textContent = `You brought all ${R.total} feelings home. ${R.unlocked ? `Night ${next} is now playable from the map.` : 'Your story progress is saved.'}`;
+    $('#againBtn').textContent = night < 7 ? `Play Night ${night + 1}` : 'Replay Night 7';
+  }
+
   function showEnd() {
     state = 'over'; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     $('#sGlow').textContent = '+' + lastGlow;
@@ -1352,6 +1518,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (runDone.length) extra.push(`Mission complete: ${runDone.join('; ')}. Claim the reward on the main menu.`);
     if (runNew.length) extra.push(`New in the Mood Book: ${runNew.join(', ')}.`);
     $('#endMissions').textContent = extra.join(' '); $('#endMissions').hidden = !extra.length;
+    $('#nightStoryline').hidden = true;
     if (R.free) {
       const mm = Math.floor(R.survived / 60), ss = Math.floor(R.survived % 60);
       $('#endEyebrow').textContent = 'Free Mode · run over';
@@ -1366,8 +1533,9 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       setTimeout(() => { $('#endScreen').hidden = false; $('#againBtn').focus(); }, 280);
       return;
     }
-    $('#endEyebrow').textContent = R.won ? (R.night === 7 ? 'Night 7 · Moon Hollow complete' : 'Night 1 complete') : "Time's up";
-    $('#endTitle').textContent = R.won ? (R.night === 7 ? 'Calm returns to Moon Hollow' : "Thiri's curtains are open") : 'Some feelings need more time';
+    $('#nightStoryline').hidden = true;
+    $('#endEyebrow').textContent = R.won ? `Night ${R.night} complete` : `Night ${R.night} · time's up`;
+    $('#endTitle').textContent = R.won ? 'A little more of Thiri returns' : 'Some feelings need more time';
     $('#endStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < R.starsN ? '' : 'off'}">★</span>`).join('');
     $('#endStars').hidden = !R.won;
     $('#endMsg').textContent = R.won
@@ -1377,8 +1545,9 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     $('#sBest').textContent = R.best.toLocaleString();
     $('#sCombo').textContent = '×' + R.combo;
     $('#sHome').textContent = `${R.home}/${R.total}`;
-    $('#againBtn').textContent = R.night === 7 ? 'Replay Level 7' : 'Play again';
+    $('#againBtn').textContent = R.won ? (R.night < 7 ? `Play Night ${R.night + 1}` : 'Replay Night 7') : `Retry Night ${R.night}`;
     $('#endTip').textContent = R.tip;
+    if (R.won) playNightComplete(R.night);
     setTimeout(() => { $('#endScreen').hidden = false; $('#againBtn').focus(); }, 280);
   }
 
@@ -1402,11 +1571,11 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   const THIRI = { x: 650, y: 300 };
   let H = null;
 
-  function startHome(won, types, preview) {
+  function startHome(won, types, preview, night = storyNight) {
     const n = types.length;
     const floorP = [[300, 452, -.5], [388, 470, .4], [470, 450, -.25], [548, 468, .7]];
     H = {
-      won, preview, phase: 'enter', pt: 0, p: 0, m: 0, capT: 0, total: n, given: { F: 0, N: 0, L: 0, C: 0 },
+      won, preview, night, stage: Math.min(6, thiriSleepStage), diary: chapterFor(night).diary, phase: 'enter', pt: 0, p: 0, m: 0, capT: 0, total: n, given: { F: 0, N: 0, L: 0, C: 0 },
       nF: types.filter(x => x === 'F').length, nN: types.filter(x => x === 'N').length,
       lights: types.map((ty, i) => ({ type: ty, x: 120, y: 190, sx: 440 - (n - 1) * 20 + i * 40, sy: 222, state: 'wait', delay: .55 + i * .12, ft: 0, fx: 0, fy: 0 })),
       cat: { x: 120, y: 262 },
@@ -1443,7 +1612,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   }
   function finishHome() {
     if (!H || H.finished) return; H.finished = true;
-    if (H.preview) { state = 'menu'; cv.hidden = true; $('#startScreen').hidden = false; setTimeout(() => $('#playBtn').focus(), 50); }
+    if (H.preview) { state = 'menu'; cv.hidden = true; $('#startScreen').hidden = false; buildLevelMap(); focusLevelMap(unlockedLevel); setTimeout(() => $('#playBtn').focus(), 50); }
+    else if (H.won && H.night === 7 && !finalAwakeningSeen) playFinalAwakening();
     else showEnd();
   }
   function homeUpdate(dt) {
@@ -1535,33 +1705,33 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   function rrect(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
 
   function drawHome() {
-    const h = H, rx = (VW - 760) / 2, p = h.p, m = h.m, y0 = -OY, fullH = VH + OY * 2;
-    // wall + floor
-    ctx.fillStyle = mix('#34313d', '#4b3b6b', p); ctx.fillRect(0, y0, VW, fullH);
+    const h = H, rx = (VW - 760) / 2, p = h.p, m = h.m, stage = h.stage || 0, roomLight = Math.max(m, stage / 6 * .48), y0 = -OY, fullH = VH + OY * 2;
+    // Wall and room light gradually change with each completed night.
+    ctx.fillStyle = mix('#34313d', '#72627a', roomLight); ctx.fillRect(0, y0, VW, fullH);
     ctx.fillStyle = 'rgba(255,255,255,.035)'; for (let x = 0; x < VW; x += 44) ctx.fillRect(x, y0, 20, 430 - y0);
-    ctx.fillStyle = mix('#2a2830', '#5b3f3c', p); ctx.fillRect(0, 430, VW, VH + OY - 420);
+    ctx.fillStyle = mix('#2a2830', '#6b5148', roomLight); ctx.fillRect(0, 430, VW, VH + OY - 420);
     ctx.strokeStyle = 'rgba(0,0,0,.18)'; ctx.lineWidth = 1;
     for (let y = 452; y < VH + OY; y += 26) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(VW, y); ctx.stroke(); }
 
     ctx.save(); ctx.translate(rx, 0);
     // window
     const sky = ctx.createLinearGradient(0, 70, 0, 270);
-    sky.addColorStop(0, mix('#120c2a', '#8fc2ef', m)); sky.addColorStop(1, mix('#2a1f55', '#ffd2a1', m));
+    sky.addColorStop(0, mix('#120c2a', '#8fc2ef', roomLight)); sky.addColorStop(1, mix('#2a1f55', '#ffd2a1', roomLight));
     ctx.fillStyle = sky; ctx.fillRect(40, 70, 160, 200);
-    ctx.fillStyle = `rgba(255,255,255,${.7 * (1 - m)})`;
+    ctx.fillStyle = `rgba(255,255,255,${.7 * (1 - roomLight)})`;
     [[62, 92], [150, 84], [178, 130], [96, 140], [70, 200]].forEach(s => ctx.fillRect(s[0], s[1], 2, 2));
-    ctx.fillStyle = `rgba(255,244,214,${.75 * (1 - m)})`; ctx.beginPath(); ctx.arc(160, 112, 14, 0, 7); ctx.fill();
+    ctx.fillStyle = `rgba(255,244,214,${.75 * (1 - roomLight)})`; ctx.beginPath(); ctx.arc(160, 112, 14, 0, 7); ctx.fill();
     if (m > 0) { ctx.fillStyle = `rgba(255,226,150,${m})`; ctx.shadowColor = '#ffd27a'; ctx.shadowBlur = 30 * m; ctx.beginPath(); ctx.arc(110, 268 - 80 * m, 20, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }
     ctx.strokeStyle = mix('#5a5662', '#f3e7d0', p); ctx.lineWidth = 6; ctx.strokeRect(40, 70, 160, 200);
     ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(120, 70); ctx.lineTo(120, 270); ctx.moveTo(40, 170); ctx.lineTo(200, 170); ctx.stroke();
     // curtains
-    const cw = 84 - 64 * m, curt = mix('#4a4752', '#e0798e', p);
+    const curtainOpen = Math.max(m, stage / 6 * .55), cw = 84 - 64 * curtainOpen, curt = mix('#4a4752', '#e0798e', roomLight);
     ctx.fillStyle = curt; ctx.fillRect(28, 60, cw, 222); ctx.fillRect(212 - cw, 60, cw, 222);
     ctx.fillStyle = 'rgba(0,0,0,.12)'; for (let i = 1; i < 4; i++) { ctx.fillRect(28 + cw * i / 4, 60, 2, 222); ctx.fillRect(212 - cw * i / 4, 60, 2, 222); }
     ctx.fillStyle = mix('#3e3b46', '#8a5a44', p); ctx.fillRect(22, 54, 196, 6);
     ctx.fillStyle = mix('#46434e', '#a26f52', p); ctx.fillRect(30, 270, 180, 12);
     // plant
-    const health = Math.max(p * .6, m);
+    const health = Math.max(p * .25, roomLight, stage / 6);
     ctx.strokeStyle = mix('#5e5b66', '#5fbf72', health); ctx.lineWidth = 4; ctx.lineCap = 'round';
     [-1, 0, 1].forEach(s => { const a = -Math.PI / 2 + s * (.5 + (1 - health) * .9); ctx.beginPath(); ctx.moveTo(176, 250); ctx.quadraticCurveTo(176 + Math.cos(a) * 14, 250 + Math.sin(a) * 14 - 4, 176 + Math.cos(a) * 26, 250 + Math.sin(a) * 26 + (1 - health) * 14); ctx.stroke(); });
     if (m > .5) { ctx.fillStyle = `rgba(255,120,160,${(m - .5) * 2})`; ctx.beginPath(); ctx.arc(176, 222, 6, 0, 7); ctx.fill(); }
@@ -1591,7 +1761,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       ctx.restore();
     }
     // nightstand and phone (lights up when loneliness comes home)
-    const ph = h.phone || 0;
+    const ph = Math.max(h.phone || 0, stage >= 3 ? .65 : 0);
     ctx.fillStyle = mix('#3e3b46', '#8a5a44', p); rrect(236, 384, 58, 46, 6); ctx.fill();
     ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(244, 402, 42, 2);
     ctx.fillStyle = ph > 0 ? mix('#2a2832', '#9fd0ff', ph) : '#2a2832'; rrect(250, 377, 30, 7, 2); ctx.fill();
@@ -1610,21 +1780,22 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     ctx.fillStyle = mix('#6a6672', '#efe6ff', p); rrect(300, 330, 420, 44, 8); ctx.fill();
     ctx.fillStyle = mix('#77737f', '#fff4fb', p); ctx.beginPath(); ctx.ellipse(662, 324, 42, 14, 0, 0, 7); ctx.fill();
     // Thiri
-    const skin = mix('#8c8794', '#e9b993', p);
+    const skin = mix('#8c8794', '#e9b993', roomLight);
     ctx.fillStyle = '#2a2532'; ctx.beginPath(); ctx.ellipse(676, 320, 22, 9, 0, 0, 7); ctx.fill();
     ctx.beginPath(); ctx.arc(656, 302, 21, 0, 7); ctx.fill();
     ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(645, 309, 16, 0, 7); ctx.fill();
     ctx.fillStyle = '#2a2532'; ctx.beginPath(); ctx.arc(650, 300, 15, Math.PI * 1.05, Math.PI * 1.9); ctx.fill();
     ctx.strokeStyle = '#2a2532'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(639, 305, 3.5, .15 * Math.PI, .85 * Math.PI); ctx.stroke();
-    const smile = clamp(-2.6 + 6.2 * p + 1.5 * m, -2.6, 4.2);
+    if (stage >= 6 && Math.sin(t * 2.4) <= .94) { ctx.fillStyle = '#372b3b'; ctx.beginPath(); ctx.ellipse(639, 305, 2.1, 2.7, 0, 0, 7); ctx.fill(); }
+    else { ctx.beginPath(); ctx.moveTo(636, 305); ctx.quadraticCurveTo(639, 308, 642, 305); ctx.stroke(); }
+    const smile = clamp(-2.6 - .42 * stage - 1.5 * m, -5.2, -2.6);
     ctx.beginPath(); ctx.moveTo(632, 317); ctx.quadraticCurveTo(637, 317 + smile, 642, 317); ctx.stroke();
     if (p > .5) { ctx.fillStyle = `rgba(255,130,150,${(p - .5) * .6})`; ctx.beginPath(); ctx.arc(633, 312, 3.5, 0, 7); ctx.fill(); }
     // blanket (breathing)
-    const share = h.nN ? h.given.N / h.nN : 1, amp = 3.4 - 2 * share, spd = 3.4 - 1.8 * share, br = Math.sin(t * spd) * amp;
-    ctx.fillStyle = mix('#55525e', '#d98aa6', p);
-    ctx.beginPath(); ctx.moveTo(312, 380); ctx.lineTo(312, 336);
-    ctx.bezierCurveTo(380, 318, 430, 296 + br, 500, 298 + br); ctx.bezierCurveTo(570, 300 + br, 600, 306, 632, 324);
+    const share = h.nN ? h.given.N / h.nN : 1, amp = 3.4 - 2 * share, spd = 3.4 - 1.8 * share, br = Math.sin(t * spd) * amp, blanketLift = stage >= 6 ? 7 : 0;
+    ctx.fillStyle = mix('#55525e', '#d98aa6', Math.max(p * .25, stage / 6));
+    ctx.beginPath(); ctx.moveTo(312, 380); ctx.lineTo(312, 336 - blanketLift);
+    ctx.bezierCurveTo(380, 318 - blanketLift, 430, 296 + br - blanketLift, 500, 298 + br - blanketLift); ctx.bezierCurveTo(570, 300 + br - blanketLift, 600, 306 - blanketLift, 632, 324);
     ctx.lineTo(640, 380); ctx.closePath(); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,.12)';
     for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.arc(340 + i * 32, 352 - (i % 2) * 14, 3, 0, 7); ctx.fill(); }
@@ -1681,15 +1852,15 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       const a = clamp(h.capT / .5, 0, 1), w = Math.min(560, VW - 32), x = cx - w / 2, y = 432;
       ctx.globalAlpha = a; ctx.fillStyle = 'rgba(22,15,44,.9)'; rrect(x, y, w, 100, 14); ctx.fill();
       ctx.strokeStyle = 'rgba(243,236,255,.16)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.font = `600 12px ${BODY}`; ctx.fillStyle = GOLD; ctx.fillText(h.won ? 'MONDAY MORNING' : 'BEFORE SUNRISE', cx, y + 24);
-      ctx.font = `800 26px ${DISP}`; ctx.fillStyle = INK; ctx.fillText(h.won ? 'Thiri opened her curtains.' : 'Some feelings are still out there.', cx, y + 56);
+      ctx.font = `600 12px ${BODY}`; ctx.fillStyle = GOLD; ctx.fillText(h.won ? `AFTER NIGHT ${h.night}` : 'BEFORE SUNRISE', cx, y + 24);
+      ctx.font = `800 26px ${DISP}`; ctx.fillStyle = INK; ctx.fillText(h.won ? 'The room feels a little lighter.' : 'Some feelings are still out there.', cx, y + 56);
       ctx.font = `italic 400 15px ${BODY}`; ctx.fillStyle = MUTED;
-      ctx.fillText(h.won ? '“I was angry because I really cared about that drawing.”  Thiri’s diary' : 'Shwe will look for them again tomorrow night.', cx, y + 82);
+      ctx.fillText(h.won ? `“${h.diary}”` : 'Shwe will look for them again tomorrow night.', cx, y + 82);
       ctx.globalAlpha = 1;
     }
     if (h.canContinue) {
       ctx.globalAlpha = .6 + .4 * Math.sin(t * 3); ctx.font = `600 15px ${BODY}`; ctx.fillStyle = INK;
-      ctx.fillText(h.preview ? 'Tap anywhere to go back' : 'Tap anywhere to see your score', cx, top);
+      ctx.fillText(h.preview ? 'Tap anywhere to go back' : 'Tap anywhere to continue the story', cx, top);
       ctx.globalAlpha = 1;
     }
   }
@@ -1700,21 +1871,21 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   }
   function startGame(m, night = storyNight) {
     if (typeof m === 'string') mode = m;
-    storyNight = mode === 'story' && night === 7 ? 7 : 1;
+    storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 7) : 1;
     initAudio();
     cv.hidden = false;
+    $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#bPurr').hidden = upg.purr === 0; $('#bScratch').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; reset(); state = 'play';
     $('#startScreen').hidden = true; $('#endScreen').hidden = true;
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
-    announce(mode === 'free' ? 'Free Mode · every catch adds time' : storyNight === 7 ? 'Moon Hollow · scratch for Calm' : 'Night 1 · Bring them home', INK, 1.8);
+    const chapter = mode === 'story' ? chapterFor(storyNight) : null;
+    announce(mode === 'free' ? 'Free Mode · every catch adds time' : `${chapter.name} · ${chapter.sub}`, INK, 2.1);
+    if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); }
     cv.focus?.();
   }
-  const LEVEL_MAP_LIMIT = 1000, LEVEL_MAP_STEP = 56;
-  const LEVEL_MAP_CHAPTERS = new Map([
-    [1, { name: 'First Night', sub: 'Bring the first feelings home', night: 1 }],
-    [7, { name: 'Moon Hollow', sub: 'Mountain caves · Calm returns', night: 7 }]
-  ]);
+  const LEVEL_MAP_LIMIT = 7, LEVEL_MAP_STEP = 92;
+  const LEVEL_MAP_CHAPTERS = new Map(NIGHT_CHAPTERS.map(chapter => [chapter.night, chapter]));
   const levelMapX = level => 50 + Math.sin(level * .72) * 24;
   const mapRandom = seed => { const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
   function buildMapScenery(height) {
@@ -1789,6 +1960,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   }
   function buildLevelMap() {
     const track = $('#levelMapTrack'), path = $('#levelMapPath'), route = $('#levelMapRoute'), svg = $('#levelMapSvg');
+    track.querySelectorAll('.level-entry').forEach(entry => entry.remove());
     const height = LEVEL_MAP_LIMIT * LEVEL_MAP_STEP;
     track.style.height = `${height}px`; svg.setAttribute('viewBox', `0 0 100 ${height}`);
     buildMapScenery(height);
@@ -1801,6 +1973,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     }
     route.setAttribute('d', d); path.setAttribute('d', d);
     svg.querySelector('.path-halo').setAttribute('d', d);
+    $('#levelMapCount').textContent = `${unlockedLevel} / 7 nights unlocked`;
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const chapter = LEVEL_MAP_CHAPTERS.get(level), x = levelMapX(level);
       const entry = document.createElement('div');
@@ -1808,12 +1981,13 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       entry.style.left = `${x}%`;
       entry.style.top = `${(LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2}px`;
       const button = document.createElement('button');
-      button.type = 'button'; button.className = `level-node${chapter ? ' is-playable' : ''}${level === 7 ? ' is-current' : ''}`;
-      button.textContent = String(level); button.disabled = !chapter;
-      button.setAttribute('aria-label', chapter ? `Level ${level}, ${chapter.name}, playable` : `Level ${level}, planned and locked`);
-      button.title = chapter ? `Play Level ${level} · ${chapter.name}` : `Level ${level} · planned for later`;
-      if (level === 1) button.id = 'playBtn';
-      if (level === 7) button.id = 'night7Btn';
+      const playable = level <= unlockedLevel;
+      button.type = 'button'; button.dataset.level = String(level);
+      button.className = `level-node${playable ? ' is-playable' : ''}${level === unlockedLevel ? ' is-current' : ''}`;
+      button.textContent = String(level); button.disabled = !playable;
+      button.setAttribute('aria-label', playable ? `Night ${level}, ${chapter.name}, playable${level === unlockedLevel ? ', current night' : ''}` : `Night ${level}, ${chapter.name}, locked until Night ${level - 1} is complete`);
+      button.title = playable ? `Play Night ${level} · ${chapter.name}` : `Night ${level} · complete Night ${level - 1} to unlock`;
+      if (level === unlockedLevel) button.id = 'playBtn';
       entry.appendChild(button);
       if (chapter) {
         const caption = document.createElement('span'); caption.className = 'level-caption';
@@ -1824,32 +1998,127 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       track.appendChild(entry);
     }
   }
-  function focusLevelMap(level = 7) {
+  function focusLevelMap(level = unlockedLevel) {
     const viewport = $('#levelMapViewport');
     const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
     viewport.scrollTop = Math.max(0, y - 34);
   }
-  buildLevelMap();
-  focusLevelMap(1);
-  $('#playBtn').focus({ preventScroll: true });
-  $('#storyBtn').addEventListener('click', () => {
-    $('#startScreen').hidden = true; $('#prologueScreen').hidden = false; $('#introContinueBtn').focus();
+  function showMainMenu(focusCurrent = true) {
+    state = 'menu'; cv.hidden = true; $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
+    $('#endScreen').hidden = true; $('#startScreen').hidden = false; buildLevelMap(); focusLevelMap(unlockedLevel);
+    const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`);
+    if (focusCurrent && current) current.focus({ preventScroll: true });
+  }
+
+  const INTRO_BEATS = [
+    { t: 0, dur: 3, anim: 'wake', text: '…It’s still night.' },
+    { t: 3, dur: 3.5, anim: 'look-down', text: 'I tore my drawing. The one I loved.' },
+    { t: 6.5, dur: 3.5, anim: 'hug', text: 'I couldn’t stop crying. Everything felt… scattered.' },
+    { t: 10, dur: 3.5, anim: 'window', text: 'When I fell asleep, my feelings drifted into the Night Side.' },
+    { t: 13.5, dur: 3.5, anim: 'camera', text: 'You’re Shwe, aren’t you? My brave little cat.' },
+    { t: 17, dur: 2, anim: 'wipe', text: 'I tried to wipe my tears…' },
+    { t: 19, dur: 1.5, anim: 'comfort', text: 'Please bring them home. I need to feel like myself again.' },
+    { t: 20.5, dur: 3, anim: 'rest', text: 'I’ll wait here. Wake me when morning comes…' },
+    { t: 23.5, dur: 4, anim: 'trail', text: 'Follow the moonlit trail.' }
+  ];
+  const introNotes = [392, 440, 494, 523, 587, 587, 523, 440, 659];
+  let introRaf = 0;
+  function leaveIntro() {
+    cancelAnimationFrame(introRaf); $('#prologueScreen').hidden = true; $('#startScreen').hidden = false;
+    state = 'menu'; cv.hidden = true; buildLevelMap(); focusLevelMap(unlockedLevel);
+    const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`); if (current) current.focus({ preventScroll: true });
+  }
+  function playIntro() {
+    initAudio(); state = 'intro'; cv.hidden = true; $('#startScreen').hidden = true; $('#endScreen').hidden = true;
+    $('#awakeningScreen').hidden = true; $('#prologueScreen').hidden = false; $('#introContinueBtn').hidden = true;
+    $('#introSubtitle').textContent = 'Thiri is waking in the quiet of the night…'; $('#introArt').dataset.anim = 'wake'; $('#introSkipBtn').focus({ preventScroll: true });
+    tone(196, 2.4, 'sine', .018, 12);
+    const started = performance.now(), scale = reduce ? .77 : 1, duration = 27.5;
+    let active = -1;
+    const tick = now => {
+      if (state !== 'intro') return;
+      const elapsed = (now - started) / 1000 / scale;
+      let index = INTRO_BEATS.findIndex((beat, i) => elapsed >= beat.t && elapsed < beat.t + beat.dur);
+      if (index < 0 && elapsed >= duration) index = INTRO_BEATS.length - 1;
+      if (index !== active && index >= 0) {
+        active = index; const beat = INTRO_BEATS[index];
+        $('#introArt').dataset.anim = beat.anim; $('#introSubtitle').textContent = beat.text;
+        tone(introNotes[index], .48, 'sine', .026); setTimeout(() => tone(introNotes[index] * 1.5, .35, 'triangle', .016), 110);
+      }
+      if (elapsed >= duration) { $('#introContinueBtn').hidden = false; $('#introContinueBtn').focus({ preventScroll: true }); return; }
+      introRaf = requestAnimationFrame(tick);
+    };
+    introRaf = requestAnimationFrame(tick);
+  }
+  $('#storyBtn').addEventListener('click', playIntro);
+  $('#introSkipBtn').addEventListener('click', leaveIntro);
+  $('#introContinueBtn').addEventListener('click', leaveIntro);
+
+  const AWAKENING_BEATS = [
+    { t: 0, dur: 2.5, anim: 'sunrise', text: 'Sunrise light floods the room, warm and gold.' },
+    { t: 2.5, dur: 2.5, anim: 'stretch', text: 'Thiri sits up and stretches into the morning.' },
+    { t: 5, dur: 2.5, anim: 'drawing', text: 'The scattered pieces are together again. Her drawing is whole.' },
+    { t: 7.5, dur: 2.5, anim: 'message', text: 'Her phone lights up: Hnin is waiting at art club.' },
+    { t: 10, dur: 3, anim: 'message', text: '“Thank you. I think I’m ready to try again.”' },
+    { t: 13, dur: 2.5, anim: 'window', text: 'Morning. She opens the curtains. Day 7 — Thiri woke up.' }
+  ];
+  let awakeningRaf = 0;
+  function revealAwakeningActions() {
+    cancelAnimationFrame(awakeningRaf); $('#awakeningArt').dataset.anim = 'window';
+    $('#awakeningTitle').textContent = 'Day 7 — Thiri woke up.';
+    $('#awakeningSubtitle').textContent = 'Thiri smiles at Shwe. Tomorrow is something she can try again.';
+    $('#awakeningActions').hidden = false; $('#awakeningReplayBtn').focus({ preventScroll: true });
+  }
+  function playFinalAwakening() {
+    if (finalAwakeningSeen) { showEnd(); return; }
+    finalAwakeningSeen = true;
+    try { localStorage.setItem('mk-awakening-seen', '1'); } catch (e) {}
+    state = 'awakening'; cv.hidden = true; $('#endScreen').hidden = true; $('#startScreen').hidden = true;
+    $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = false; $('#awakeningActions').hidden = true;
+    $('#awakeningArt').dataset.anim = 'sunrise'; $('#awakeningSubtitle').textContent = 'Sunrise light spills across the room…';
+    $('#awakeningSkipBtn').focus({ preventScroll: true });
+    const started = performance.now(), scale = reduce ? .72 : 1, duration = 15.5;
+    let active = -1;
+    const tick = now => {
+      if (state !== 'awakening') return;
+      const elapsed = (now - started) / 1000 / scale;
+      let index = AWAKENING_BEATS.findIndex((beat, i) => elapsed >= beat.t && elapsed < beat.t + beat.dur);
+      if (index < 0 && elapsed >= duration) index = AWAKENING_BEATS.length - 1;
+      if (index !== active && index >= 0) {
+        active = index; const beat = AWAKENING_BEATS[index];
+        if (index === AWAKENING_BEATS.length - 1) $('#awakeningTitle').textContent = 'Day 7 — Thiri woke up.';
+        $('#awakeningArt').dataset.anim = beat.anim; $('#awakeningSubtitle').textContent = beat.text;
+        const root = [392, 440, 523, 587, 659, 784][index]; tone(root, .9, 'sine', .03); setTimeout(() => tone(root * 1.5, .8, 'triangle', .018), 150);
+      }
+      if (elapsed >= duration) { revealAwakeningActions(); return; }
+      awakeningRaf = requestAnimationFrame(tick);
+    };
+    awakeningRaf = requestAnimationFrame(tick);
+  }
+  $('#awakeningSkipBtn').addEventListener('click', revealAwakeningActions);
+  $('#awakeningReplayBtn').addEventListener('click', () => startGame('story', 7));
+  $('#awakeningBookBtn').addEventListener('click', () => { $('#awakeningScreen').hidden = true; state = 'menu'; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
+  $('#awakeningFreeBtn').addEventListener('click', () => startGame('free'));
+
+  buildLevelMap(); focusLevelMap(unlockedLevel);
+  $(`#levelMapTrack button[data-level="${unlockedLevel}"]`)?.focus({ preventScroll: true });
+  $('#levelMapTrack').addEventListener('click', e => {
+    const button = e.target.closest('button[data-level]'); if (!button || button.disabled) return;
+    const night = +button.dataset.level; if (night <= unlockedLevel) startGame('story', night);
   });
-  $('#introContinueBtn').addEventListener('click', () => {
-    $('#prologueScreen').hidden = true; $('#startScreen').hidden = false;
-    focusLevelMap(1); $('#playBtn').focus({ preventScroll: true });
-  });
-  $('#playBtn').addEventListener('click', () => startGame('story', 1));
-  $('#night7Btn').addEventListener('click', () => startGame('story', 7));
   $('#freeBtn').addEventListener('click', () => startGame('free'));
-  $('#againBtn').addEventListener('click', () => startGame(mode, storyNight));
-  $('#menuBtn').addEventListener('click', () => { state = 'menu'; cv.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns(); $('#endScreen').hidden = true; $('#startScreen').hidden = false; $('#playBtn').focus(); });
+  $('#againBtn').addEventListener('click', () => {
+    if (R && R.won && !R.free && R.night < 7) startGame('story', R.night + 1);
+    else startGame(mode, storyNight);
+  });
+  $('#menuBtn').addEventListener('click', () => { mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns(); showMainMenu(true); });
   $('#previewBtn').addEventListener('click', () => { initAudio(); startHome(true, ['F', 'F', 'F', 'F', 'L', 'N', 'N', 'N', 'N', 'L'], true); });
 
   let last = performance.now();
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(.033, (now - last) / 1000); last = now;
+    if (state === 'intro' || state === 'awakening') { t += dt; return; }
     if (state === 'play' || state === 'ending') {
       if (hitstop > 0) hitstop -= dt;
       else { let sdt = dt; if (slowmo > 0) { slowmo -= dt; sdt = dt * .35; } update(sdt); }
