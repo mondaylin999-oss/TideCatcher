@@ -154,7 +154,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   <button class="tbtn" id="bPurr" aria-label="Purr" hidden>Purr</button>
   <button class="tbtn" id="bEyes" aria-label="Night eyes">Eyes</button>
   <button class="tbtn" id="bScratch" aria-label="Scratch nearby hiding spot" hidden>Scratch</button>
-  <div id="hint">Hold Shift or the left mouse button while moving to sneak · S to scratch</div>
+  <div id="hint">Hold Shift or left mouse to sneak · quick left-click or X to pounce · S to scratch</div>
 </div>
 
 <div class="overlay" id="prologueScreen" hidden aria-labelledby="prologueTitle">
@@ -239,11 +239,11 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <span><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd></span><span>Run</span>
       <span>Hold <kbd>Shift</kbd> or the left mouse button while moving</span><span>Sneak</span>
       <span><kbd>Space</kbd> or <kbd>↑</kbd></span><span>Jump</span>
-      <span><kbd>J</kbd> or <kbd>X</kbd></span><span>Pounce</span>
+      <span><kbd>J</kbd>, <kbd>X</kbd>, or quick left-click</span><span>Pounce</span>
       <span><kbd>E</kbd></span><span>Night eyes: highlight nearby hiding spots</span>
       <span><kbd>S</kbd></span><span>Scratch a nearby hiding spot</span>
       <span><kbd>K</kbd></span><span>Purr, once you buy it: slows nearby Moodlings</span>
-      <span>On a phone</span><span>Stick on the left (push halfway to sneak). Hold Shift or the left mouse button while moving on desktop. Landscape works best.</span>
+      <span>On a phone</span><span>Stick on the left (push halfway to sneak). On desktop, hold Shift or left mouse to sneak; quick left-click pounces like X. Landscape works best.</span>
     </div>
     </details>
   </div>
@@ -329,7 +329,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 
   // ---------- input ----------
   const keys = {};
-  let jumpQ = false, pounceQ = false, scratchQ = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null;
+  let jumpQ = false, pounceQ = false, scratchQ = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
   addEventListener('keydown', e => {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
@@ -342,7 +342,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (e.code === 'KeyS') scratchQ = true;
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
-  addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouseSneakHeld = false; mouseSneakPointerId = null; });
+  addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
   function axisNow() {
     const kb = ((keys.ArrowRight || keys.KeyD) ? 1 : 0) - ((keys.ArrowLeft || keys.KeyA) ? 1 : 0);
     const scale = (keys.ShiftLeft || keys.ShiftRight || mouseSneakHeld) ? .4 : 1;
@@ -352,11 +352,21 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   const touchUI = $('#touch'), zone = $('#stickZone'), stick = $('#stick'), knob = $('#knob');
   cv.addEventListener('pointerdown', e => {
     if (state !== 'play' || e.pointerType !== 'mouse' || e.button !== 0 || mouseSneakPointerId !== null) return;
-    e.preventDefault(); mouseSneakPointerId = e.pointerId; mouseSneakHeld = true;
+    e.preventDefault(); mouseSneakPointerId = e.pointerId; mouseSneakHeld = true; mouseSneakPress = { x: e.clientX, y: e.clientY, at: performance.now(), moved: false };
     try { cv.setPointerCapture(e.pointerId); } catch (err) {}
   });
-  const mouseSneakEnd = e => { if (e.pointerId !== mouseSneakPointerId) return; mouseSneakPointerId = null; mouseSneakHeld = false; };
-  addEventListener('pointerup', mouseSneakEnd); addEventListener('pointercancel', mouseSneakEnd);
+  cv.addEventListener('pointermove', e => {
+    if (e.pointerId !== mouseSneakPointerId || !mouseSneakPress) return;
+    if (Math.hypot(e.clientX - mouseSneakPress.x, e.clientY - mouseSneakPress.y) > 9) mouseSneakPress.moved = true;
+  });
+  const mouseSneakEnd = e => {
+    if (e.pointerId !== mouseSneakPointerId) return;
+    const quickClick = state === 'play' && mouseSneakPress && !mouseSneakPress.moved && performance.now() - mouseSneakPress.at <= 300;
+    mouseSneakPointerId = null; mouseSneakHeld = false; mouseSneakPress = null;
+    if (quickClick) pounceQ = true;
+  };
+  const mouseSneakCancel = e => { if (e.pointerId !== mouseSneakPointerId) return; mouseSneakPointerId = null; mouseSneakHeld = false; mouseSneakPress = null; };
+  addEventListener('pointerup', mouseSneakEnd); addEventListener('pointercancel', mouseSneakCancel);
   let sid = null, sx = 0, sy = 0;
   function stickMove(e) {
     let dx = clamp(e.clientX - sx, -58, 58);
@@ -1221,7 +1231,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   let R = null;
   function finish(won) {
     if (state === 'over' || state === 'home') return;
-    state = 'over'; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null;
+    state = 'over'; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
     if (mode === 'story' && storyNight === 1 && won && hits === 0) bump('nohit');
     lastGlow = glowRun; glow += glowRun; glowRun = 0; saveUpg(); refreshShopBtns();
@@ -1336,7 +1346,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   refreshShopBtns();
 
   function showEnd() {
-    state = 'over'; mouseSneakHeld = false; mouseSneakPointerId = null;
+    state = 'over'; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     $('#sGlow').textContent = '+' + lastGlow;
     const extra = [];
     if (runDone.length) extra.push(`Mission complete: ${runDone.join('; ')}. Claim the reward on the main menu.`);
@@ -1404,7 +1414,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       papers: [[150, 462, .3], [186, 452, -.6], [140, 446, 1.1], [208, 470, -.2]].map(a => ({ x: a[0], y: a[1], r: a[2], on: false, k: 0 })),
       parts: [], floats: [], react: 0, reactCol: INK, drag: null, canContinue: false, caption: false, finished: false
     };
-    cv.hidden = false; mouseSneakHeld = false; mouseSneakPointerId = null; state = 'home'; touchUI.hidden = true;
+    cv.hidden = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; state = 'home'; touchUI.hidden = true;
     $('#startScreen').hidden = true; $('#endScreen').hidden = true;
     tone(523, .25, 'sine', .05); setTimeout(() => tone(659, .3, 'sine', .04), 120);
   }
@@ -1694,7 +1704,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     initAudio();
     cv.hidden = false;
     $('#bPurr').hidden = upg.purr === 0; $('#bScratch').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
-    mouseSneakHeld = false; mouseSneakPointerId = null; reset(); state = 'play';
+    mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; reset(); state = 'play';
     $('#startScreen').hidden = true; $('#endScreen').hidden = true;
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     announce(mode === 'free' ? 'Free Mode · every catch adds time' : storyNight === 7 ? 'Moon Hollow · scratch for Calm' : 'Night 1 · Bring them home', INK, 1.8);
@@ -1833,7 +1843,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   $('#night7Btn').addEventListener('click', () => startGame('story', 7));
   $('#freeBtn').addEventListener('click', () => startGame('free'));
   $('#againBtn').addEventListener('click', () => startGame(mode, storyNight));
-  $('#menuBtn').addEventListener('click', () => { state = 'menu'; cv.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; refreshShopBtns(); $('#endScreen').hidden = true; $('#startScreen').hidden = false; $('#playBtn').focus(); });
+  $('#menuBtn').addEventListener('click', () => { state = 'menu'; cv.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns(); $('#endScreen').hidden = true; $('#startScreen').hidden = false; $('#playBtn').focus(); });
   $('#previewBtn').addEventListener('click', () => { initAudio(); startHome(true, ['F', 'F', 'F', 'F', 'L', 'N', 'N', 'N', 'N', 'L'], true); });
 
   let last = performance.now();
