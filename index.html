@@ -858,30 +858,38 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     const px = camX * scrollSpeed, left = Math.floor(px / 360) * 360 - 720, right = px + VW + 720;
     ctx.save(); ctx.translate(camX * (1 - scrollSpeed), 0);
     if (layerIndex === 0) {
-      ctx.save(); if ('filter' in ctx) ctx.filter = 'blur(2px)';
-      ctx.fillStyle = '#1c2e4a'; ctx.beginPath(); ctx.moveTo(left, GROUND);
-      for (let x = left; x < right; x += 360) {
-        const peak = 238 + Math.sin(x * .0031) * 31 + Math.sin(x * .007) * 12;
-        ctx.bezierCurveTo(x + 66, peak + 60, x + 102, peak - 18, x + 182, peak);
-        ctx.bezierCurveTo(x + 248, peak + 2, x + 285, peak + 78, x + 360, 360);
+      ctx.save(); if ('filter' in ctx) ctx.filter = 'blur(1px)';
+      ctx.fillStyle = '#294763'; ctx.beginPath(); ctx.moveTo(left, GROUND);
+      for (let x = left; x < right; x += 420) {
+        const peak = 96 + Math.sin(x * .0024) * 25 + Math.sin(x * .006) * 10;
+        ctx.lineTo(x + 32, peak + 136);
+        ctx.bezierCurveTo(x + 76, peak + 72, x + 118, peak + 8, x + 174, peak);
+        ctx.bezierCurveTo(x + 220, peak + 1, x + 263, peak + 82, x + 307, peak + 112);
+        ctx.lineTo(x + 420, GROUND);
       }
       ctx.lineTo(right, GROUND); ctx.closePath(); ctx.fill(); ctx.restore();
-      ctx.fillStyle = 'rgba(34,52,72,.75)'; ctx.beginPath(); ctx.moveTo(left, GROUND);
-      for (let x = left; x < right; x += 470) {
-        const peak = 294 + Math.sin(x * .0025 + 1.5) * 38;
-        ctx.bezierCurveTo(x + 90, peak + 12, x + 120, peak - 36, x + 236, peak);
-        ctx.bezierCurveTo(x + 330, peak + 4, x + 368, peak + 82, x + 470, 385);
+      ctx.strokeStyle = 'rgba(174,199,211,.58)'; ctx.lineWidth = 2; ctx.beginPath();
+      for (let x = left; x < right; x += 420) { const peak = 96 + Math.sin(x * .0024) * 25 + Math.sin(x * .006) * 10; ctx.moveTo(x+150,peak+24);ctx.lineTo(x+174,peak+2);ctx.lineTo(x+188,peak+24);ctx.moveTo(x+166,peak+12);ctx.lineTo(x+175,peak+4);ctx.lineTo(x+184,peak+14); }
+      ctx.stroke();
+      ctx.fillStyle = '#203954'; ctx.beginPath(); ctx.moveTo(left, GROUND);
+      for (let x = left; x < right; x += 360) {
+        const peak = 197 + Math.sin(x * .0033 + 1.2) * 29;
+        ctx.lineTo(x+26,peak+107);ctx.bezierCurveTo(x+72,peak+62,x+99,peak-3,x+151,peak);
+        ctx.bezierCurveTo(x+205,peak+4,x+230,peak+75,x+286,peak+103);ctx.lineTo(x+360,GROUND);
       }
-      ctx.lineTo(right, GROUND); ctx.closePath(); ctx.fill();
-      const fog = ctx.createLinearGradient(0, 350, 0, GROUND); fog.addColorStop(0, 'rgba(145,177,195,0)'); fog.addColorStop(1, 'rgba(145,177,195,.17)'); ctx.fillStyle = fog; ctx.fillRect(left, 350, right-left, GROUND-350);
+      ctx.lineTo(right,GROUND);ctx.closePath();ctx.fill();
+      const fog = ctx.createLinearGradient(0, 325, 0, GROUND); fog.addColorStop(0, 'rgba(145,177,195,0)'); fog.addColorStop(1, 'rgba(145,177,195,.13)'); ctx.fillStyle = fog; ctx.fillRect(left, 325, right-left, GROUND-325);
     } else if (layerIndex === 1) {
-      for (let x = left; x < right; x += 300) {
-        const ridge = 356 + Math.sin(x * .004) * 24;
-        ctx.fillStyle = x % 2 ? '#202d3b' : '#263643'; ctx.beginPath(); ctx.moveTo(x, GROUND); ctx.lineTo(x, ridge + 24);
-        ctx.bezierCurveTo(x + 52, ridge - 2, x + 97, ridge + 4, x + 137, ridge - 30);
-        ctx.bezierCurveTo(x + 179, ridge - 44, x + 222, ridge + 17, x + 300, ridge + 25); ctx.lineTo(x + 300, GROUND); ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = 'rgba(151,177,174,.2)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x+42,ridge+16); ctx.lineTo(x+78,ridge+10); ctx.lineTo(x+94,ridge-2); ctx.stroke();
-        ctx.fillStyle = 'rgba(43,73,54,.65)'; ctx.beginPath(); ctx.ellipse(x+139,ridge-23,22,5,-.08,0,Math.PI*2); ctx.fill();
+      for (let x = left; x < right; x += 360) {
+        const ridge = 270 + Math.sin(x * .0031) * 28;
+        ctx.fillStyle = x % 2 ? '#344b58' : '#2d414f'; ctx.beginPath(); ctx.moveTo(x,GROUND);ctx.lineTo(x,ridge+76);
+        ctx.lineTo(x+48,ridge+38);ctx.lineTo(x+73,ridge+43);ctx.lineTo(x+111,ridge-7);
+        ctx.lineTo(x+148,ridge+7);ctx.lineTo(x+186,ridge-61);ctx.lineTo(x+211,ridge-76);
+        ctx.lineTo(x+238,ridge-24);ctx.lineTo(x+275,ridge+2);ctx.lineTo(x+318,ridge-13);
+        ctx.lineTo(x+360,ridge+62);ctx.lineTo(x+360,GROUND);ctx.closePath();ctx.fill();
+        ctx.strokeStyle='rgba(174,193,184,.43)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+108,ridge-5);ctx.lineTo(x+148,ridge+7);ctx.lineTo(x+185,ridge-59);ctx.lineTo(x+211,ridge-74);ctx.lineTo(x+237,ridge-22);ctx.stroke();
+        ctx.strokeStyle='rgba(11,23,31,.65)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+81,ridge+50);ctx.lineTo(x+94,ridge+81);ctx.lineTo(x+87,ridge+110);ctx.moveTo(x+268,ridge+16);ctx.lineTo(x+250,ridge+58);ctx.stroke();
+        ctx.fillStyle='rgba(67,103,69,.8)';ctx.beginPath();ctx.ellipse(x+139,ridge+2,25,5,-.08,0,Math.PI*2);ctx.ellipse(x+305,ridge+3,19,4,.08,0,Math.PI*2);ctx.fill();
       }
       const treeStart = Math.floor(left / 176) * 176;
       for (let x = treeStart; x < right; x += 176) {
@@ -896,9 +904,10 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         for(let k=0;k<3;k++){const mx=x+20+k*8+Math.sin(t*1.8+k)*4;ctx.globalAlpha=.22+.12*Math.sin(t*2+k);ctx.fillStyle='#c7e1df';ctx.beginPath();ctx.arc(mx,GROUND-5-k*3,2+k%2,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
       }
     } else {
-      ctx.fillStyle = 'rgba(13,24,33,.34)'; ctx.beginPath(); ctx.moveTo(left, GROUND);
-      for(let x=left;x<right;x+=240){const y=414+Math.sin(x*.008)*13;ctx.bezierCurveTo(x+44,y-18,x+86,y+9,x+120,y-3);ctx.bezierCurveTo(x+164,y-14,x+196,y+4,x+240,y);}
+      ctx.fillStyle = 'rgba(12,23,31,.72)'; ctx.beginPath(); ctx.moveTo(left, GROUND);
+      for(let x=left;x<right;x+=280){const y=438+Math.sin(x*.008)*12;ctx.lineTo(x,y+25);ctx.lineTo(x+31,y-3);ctx.lineTo(x+62,y+7);ctx.lineTo(x+105,y-25);ctx.lineTo(x+139,y-12);ctx.lineTo(x+181,y+11);ctx.lineTo(x+219,y-17);ctx.lineTo(x+248,y-8);ctx.lineTo(x+280,y+18);}
       ctx.lineTo(right,GROUND);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(123,146,145,.32)';ctx.lineWidth=2;for(let x=left;x<right;x+=280){const y=438+Math.sin(x*.008)*12;ctx.beginPath();ctx.moveTo(x+63,y+15);ctx.lineTo(x+104,y-16);ctx.lineTo(x+130,y-7);ctx.moveTo(x+185,y+16);ctx.lineTo(x+217,y-9);ctx.stroke();}
     }
     ctx.restore();
   }
@@ -952,11 +961,12 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     drawParallaxLayer(0,.10);drawParallaxLayer(1,.38);drawParallaxLayer(2,.78);
     const ground=ctx.createLinearGradient(0,GROUND-4,0,VH+OY+60);ground.addColorStop(0,'#303d3c');ground.addColorStop(.14,'#293633');ground.addColorStop(1,'#151f27');
     ctx.fillStyle=ground;ctx.beginPath();ctx.moveTo(x0,GROUND+8);ctx.lineTo(x0,GROUND-8);
-    for(let x=x0;x<x1+18;x+=58){const y=GROUND-5+Math.sin(x*.12)*3;ctx.bezierCurveTo(x+12,y-4,x+25,y+4,x+38,y);ctx.bezierCurveTo(x+47,y-3,x+52,y+2,x+58,y+2);}
+    for(let x=x0;x<x1+18;x+=58){const y=GROUND-6+Math.sin(x*.026)*8+Math.sin(x*.078+1.2)*3;ctx.lineTo(x+8,y+2);ctx.lineTo(x+18,y-4);ctx.lineTo(x+31,y+3);ctx.lineTo(x+43,y-6);ctx.lineTo(x+58,y+1);}
     ctx.lineTo(x1,VH+OY+60);ctx.lineTo(x0,VH+OY+60);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='rgba(142,164,128,.65)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x0,GROUND-5);for(let x=x0;x<x1+18;x+=46){const y=GROUND-5+Math.sin(x*.12)*3;ctx.quadraticCurveTo(x+15,y-3,x+46,y);}ctx.stroke();
+    ctx.strokeStyle='rgba(174,185,151,.72)';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(x0,GROUND-6+Math.sin(x0*.026)*8+Math.sin(x0*.078+1.2)*3);for(let x=x0;x<x1+18;x+=46){const y=GROUND-6+Math.sin(x*.026)*8+Math.sin(x*.078+1.2)*3;ctx.quadraticCurveTo(x+12,y-4,x+24,y+1);ctx.quadraticCurveTo(x+35,y+4,x+46,GROUND-6+Math.sin((x+46)*.026)*8+Math.sin((x+46)*.078+1.2)*3);}ctx.stroke();
     // Loose scree, pebbles and fine fracture lines add texture without affecting collision.
-    for(let x=Math.floor(x0/31)*31;x<x1;x+=31){const seed=Math.sin(x*12.9898)*43758.5453, f=seed-Math.floor(seed), yy=GROUND+12+f*35;ctx.fillStyle=f>.5?'rgba(165,163,142,.3)':'rgba(9,16,21,.38)';ctx.beginPath();ctx.ellipse(x+f*12,yy,1.4+f*2,.8+f, f,0,Math.PI*2);ctx.fill();}
+    for(let x=Math.floor(x0/31)*31;x<x1;x+=31){const seed=Math.sin(x*12.9898)*43758.5453, f=seed-Math.floor(seed), yy=GROUND+12+f*47;ctx.fillStyle=f>.5?'rgba(175,184,163,.48)':'rgba(8,15,21,.54)';ctx.beginPath();ctx.ellipse(x+f*12,yy,2+f*3.4,1+f*1.7,f,0,Math.PI*2);ctx.fill();}
+    ctx.strokeStyle='rgba(143,159,151,.18)';ctx.lineWidth=1;for(let x=Math.floor(x0/175)*175;x<x1;x+=175){const y=GROUND+50+Math.sin(x*.04)*13;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+24,y-5);ctx.lineTo(x+42,y+1);ctx.moveTo(x+90,y+34);ctx.lineTo(x+108,y+24);ctx.lineTo(x+126,y+29);ctx.stroke();}
     drawMoonHollowWorld(x0,x1);
     for(const spot of scratchSpots){if(spot.x<x0-60||spot.x>x1+60)continue;drawScratchSpot(spot.x,spot.y,spot.moodType,spot);}
     for(const p of plats){if(p[0]+p[2]<x0||p[0]>x1)continue;
