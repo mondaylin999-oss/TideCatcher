@@ -38,21 +38,39 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .level-map-head{display:flex;align-items:end;justify-content:space-between;gap:12px}
 .level-map-head h2{font:800 clamp(21px,4vw,28px)/1 var(--display);color:var(--ink);margin:4px 0 0}
 .level-map-count{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
-.level-map-window{height:clamp(280px,52vh,560px);min-height:280px;position:relative;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;border:1px solid rgba(201,192,255,.23);border-radius:18px;background:radial-gradient(ellipse at 50% 42%,rgba(59,74,120,.5),transparent 64%),linear-gradient(180deg,#12182f,#171330 48%,#211735);scrollbar-color:rgba(169,139,255,.55) rgba(255,255,255,.06);scrollbar-width:thin}
+.level-map-window{height:clamp(280px,52vh,560px);min-height:280px;position:relative;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;border:1px solid rgba(190,200,211,.28);border-radius:18px;background:radial-gradient(ellipse at 54% 10%,rgba(148,184,210,.14),transparent 38%),linear-gradient(180deg,#0a111d,#111a28 48%,#111520);box-shadow:inset 0 0 42px rgba(0,0,0,.38);scrollbar-color:rgba(184,162,115,.62) rgba(255,255,255,.05);scrollbar-width:thin}
 .level-map-track{position:relative;width:100%;isolation:isolate}
 #levelMapViewport{overflow-x:hidden}
 .level-map-path{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:-1}
-.level-map-path .path-halo{fill:none;stroke:rgba(169,139,255,.16);stroke-width:12;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-.level-map-path .path-line{fill:none;stroke:rgba(205,185,255,.48);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:2 7}
+.level-map-path .map-ridge-far{fill:#1b2637;opacity:.64}
+.level-map-path .map-ridge-mid{fill:#121b29;opacity:.78}
+.level-map-path .map-ridge-near{fill:#0b111a;opacity:.94}
+.level-map-path .map-range-far{fill:#334357;opacity:.32}
+.level-map-path .map-range-mid{fill:#202e40;opacity:.53}
+.level-map-path .map-ridge-edge{fill:none;stroke:rgba(154,175,186,.17);stroke-width:.55;vector-effect:non-scaling-stroke}
+.level-map-path .map-stars{fill:#d7e4e7}
+.level-map-path .map-fog{fill:url(#mapMist);opacity:.15}
+.level-map-path .map-tree{fill:#0b131d;stroke:#657589;stroke-width:.72}
+.level-map-path .map-shrine{fill:#0b111a;stroke:#465363;stroke-width:.55}
+.level-map-path .map-shrine-light{fill:none;stroke:#b09161;stroke-width:.7;opacity:.68}
+.level-map-path .map-ledge{fill:#333d47;stroke:#7b807e;stroke-width:.65}
+.level-map-path .map-ledge-top{fill:#9a927f;opacity:.55}
+.level-map-path .map-cave{fill:#080d14;stroke:#6d7180;stroke-width:1.1}
+.level-map-path .map-cave-inner{fill:#121c2b;stroke:#ccb47c;stroke-width:.65}
+.level-map-path .map-cave-light{fill:#ffe0a0;filter:drop-shadow(0 0 5px #ffe0a0)}
+.level-map-path .map-moon{fill:#f5e5bb;filter:drop-shadow(0 0 9px rgba(245,229,187,.7))}
+.level-map-path .path-route{fill:none;stroke:rgba(5,10,16,.82);stroke-width:10;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.level-map-path .path-halo{fill:none;stroke:rgba(216,190,129,.22);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.level-map-path .path-line{fill:none;stroke:rgba(224,194,125,.7);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1 8}
 .level-entry{position:absolute;width:0;height:0;z-index:1}
-.level-node{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.82);display:grid;place-items:center;font:800 19px/1 var(--display);color:#201736;background:linear-gradient(145deg,#e9b0e2,#c879c9);box-shadow:0 5px 0 rgba(37,17,54,.42),0 0 14px rgba(236,146,229,.35);cursor:pointer;touch-action:manipulation}
+.level-node{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;border:3px solid rgba(218,211,190,.88);display:grid;place-items:center;font:800 19px/1 var(--display);color:#f4ead3;background:radial-gradient(circle at 33% 25%,rgba(255,255,255,.3),transparent 32%),linear-gradient(145deg,#71808a,#293541 68%,#1a2531);box-shadow:0 5px 0 rgba(4,9,15,.82),0 0 12px rgba(137,159,170,.28),inset 0 1px 5px rgba(255,255,255,.2);cursor:pointer;touch-action:manipulation}
 .level-node:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
-.level-node.is-playable{background:linear-gradient(145deg,#ffe38b,#f2ad46);box-shadow:0 5px 0 rgba(37,17,54,.42),0 0 18px rgba(246,196,83,.62)}
-.level-node.is-current{width:56px;height:56px;font-size:23px;background:linear-gradient(145deg,#c7f7c7,#71cf93);box-shadow:0 5px 0 rgba(20,53,48,.58),0 0 24px rgba(125,220,139,.8);animation:map-pulse 2.4s ease-in-out infinite}
-.level-node:disabled{cursor:default;color:#d0c9dd;background:linear-gradient(145deg,#625c78,#39334d);border-color:rgba(237,230,255,.42);box-shadow:0 4px 0 rgba(10,8,24,.46);opacity:.82}
+.level-node.is-playable{color:#37270f;border-color:#f3d99b;background:radial-gradient(circle at 31% 22%,#fff5cf 0,transparent 34%),linear-gradient(145deg,#d8b879,#94713d 72%,#584329);box-shadow:0 5px 0 rgba(10,12,15,.82),0 0 20px rgba(228,190,110,.5),inset 0 1px 7px rgba(255,244,204,.46)}
+.level-node.is-current{width:60px;height:60px;font-size:23px;color:#10281d;border-color:#e0f1cb;background:radial-gradient(circle at 31% 22%,#f4ffd9 0,transparent 34%),linear-gradient(145deg,#9fc9a3,#496f57 72%,#294538);box-shadow:0 5px 0 rgba(5,13,16,.88),0 0 26px rgba(180,222,166,.72),inset 0 1px 8px rgba(245,255,223,.55);animation:map-pulse 3s ease-in-out infinite}
+.level-node:disabled{cursor:default;color:#c3c8c8;background:radial-gradient(circle at 30% 22%,rgba(255,255,255,.13),transparent 34%),linear-gradient(145deg,#59636a,#29313a 74%,#1a222b);border-color:rgba(191,198,192,.52);box-shadow:0 4px 0 rgba(3,7,11,.82),inset 0 1px 4px rgba(255,255,255,.1);opacity:.9}
 .level-node:disabled::after{content:"";position:absolute;right:-4px;top:-3px;width:10px;height:8px;border-radius:2px;background:#c7bfd7;border:1px solid #39334d}
 .level-node:disabled::before{content:"";position:absolute;right:-2px;top:-8px;width:6px;height:7px;border:1.5px solid #c7bfd7;border-bottom:0;border-radius:5px 5px 0 0}
-.level-caption{position:absolute;top:0;transform:translateY(-50%);width:135px;display:grid;gap:2px;pointer-events:none;text-shadow:0 2px 8px #0c0a1b}
+.level-caption{position:absolute;top:0;transform:translateY(-50%);width:135px;display:grid;gap:2px;pointer-events:none;text-shadow:0 2px 8px #050b12}
 .level-entry.caption-left .level-caption{right:34px;text-align:right}
 .level-entry.caption-right .level-caption{left:34px;text-align:left}
 .level-caption strong{font:800 13px/1.15 var(--display);color:#fff3c4}
@@ -189,7 +207,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     <p class="level-map-hint">Choose an open chapter. Swipe or scroll upward on the path to explore higher, planned levels.</p>
     <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Scrollable level map; scroll upward for higher levels" tabindex="0">
       <div class="level-map-track" id="levelMapTrack">
-        <svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg>
+        <svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg>
       </div>
     </div>
     <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Planned / locked</span></div>
@@ -1554,10 +1572,82 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     [7, { name: 'Moon Hollow', sub: 'Mountain caves · Calm returns', night: 7 }]
   ]);
   const levelMapX = level => 50 + Math.sin(level * .72) * 24;
+  const mapRandom = seed => { const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
+  function buildMapScenery(height) {
+    const parts = [`<rect x="0" y="0" width="100" height="${height}" fill="url(#mapNightFill)"/>`];
+    const y7 = (LEVEL_MAP_LIMIT - 7) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
+    for (let i = 0; i < 280; i++) {
+      const x = 2 + mapRandom(i + 11) * 96, y = mapRandom(i + 901) * height;
+      const rx = .12 + mapRandom(i + 1901) * .2, ry = .45 + mapRandom(i + 2901) * 1.15;
+      const alpha = .18 + mapRandom(i + 3901) * .48;
+      parts.push(`<ellipse class="map-stars" cx="${x.toFixed(2)}" cy="${y.toFixed(1)}" rx="${rx.toFixed(2)}" ry="${ry.toFixed(2)}" opacity="${alpha.toFixed(2)}"/>`);
+    }
+    const ridge = (side, base, spread, seed, className) => {
+      const pts = [], step = 720, count = Math.ceil(height / step);
+      for (let i = 0; i <= count; i++) {
+        const y = Math.min(height, i * step);
+        let x = base + mapRandom(seed + i * 7.31) * spread + Math.sin(i * .43 + seed) * 2.4 + Math.sin(i * .13 + seed * .7) * 3.2;
+        x = Math.max(2, Math.min(43, x)); if (side === 'right') x = 100 - x;
+        pts.push({ x, y });
+      }
+      const edge = pts.map(p => `${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join(' L ');
+      const boundary = side === 'left' ? `M 0 0 L 0 ${height} L ${pts[pts.length - 1].x.toFixed(2)} ${height} L ${pts.slice(0, -1).reverse().map(p => `${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join(' L ')}` : `M 100 0 L 100 ${height} L ${pts[pts.length - 1].x.toFixed(2)} ${height} L ${pts.slice(0, -1).reverse().map(p => `${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join(' L ')}`;
+      return `<path class="${className}" d="${boundary} Z"/><path class="map-ridge-edge" d="M ${edge}"/>`;
+    };
+    for (const side of ['left', 'right']) {
+      parts.push(ridge(side, 18, 13, side === 'left' ? 4 : 29, 'map-ridge-far'));
+      parts.push(ridge(side, 9, 12, side === 'left' ? 51 : 76, 'map-ridge-mid'));
+    }
+    const mountainBand = (y, seed, className, peakHeight, depth) => {
+      let peaks = '';
+      for (let i = 0; i <= 25; i++) {
+        const x = i * 4, peak = y + 10 + mapRandom(seed + i * 3.71) * peakHeight + Math.sin(i * .9 + seed) * 10;
+        peaks += `L${x.toFixed(1)} ${peak.toFixed(1)} `;
+      }
+      const baseline = y + depth, bottom = baseline + 120;
+      return `<path class="${className}" d="M0 ${bottom}L0 ${baseline}${peaks}L100 ${baseline}L100 ${bottom}Z"/>`;
+    };
+    for (let i = 0, y = 160; y < height; i++, y += 1120) {
+      parts.push(mountainBand(y, i + 401, 'map-range-far', 170, 250));
+      parts.push(mountainBand(y + 360, i + 709, 'map-range-mid', 110, 150));
+    }
+    parts.push(mountainBand(y7 + 35, 3217, 'map-range-far', 165, 230));
+    parts.push(mountainBand(y7 + 120, 4217, 'map-range-mid', 110, 145));
+    for (let i = 0; i < 20; i++) {
+      const y = 500 + i * 2780 + mapRandom(i + 8001) * 800;
+      parts.push(`<ellipse class="map-fog" cx="${(34 + mapRandom(i + 8101) * 32).toFixed(1)}" cy="${y.toFixed(1)}" rx="${(28 + mapRandom(i + 8201) * 14).toFixed(1)}" ry="${(42 + mapRandom(i + 8301) * 46).toFixed(1)}"/>`);
+    }
+    for (const side of ['left', 'right']) parts.push(ridge(side, 2, 8, side === 'left' ? 103 : 128, 'map-ridge-near'));
+    for (let i = 0, y = 170; y < height - 36; i++, y += 480 + mapRandom(i + 9001) * 390) {
+      const tree = (x, py, seed) => {
+        const h = 18 + mapRandom(seed) * 12, w = 1.55 + mapRandom(seed + 1) * .75;
+        const d = `M 0 0 L ${-w} ${h * .35} L ${-w * .35} ${h * .35} L ${-w * 1.25} ${h * .68} L ${-w * .55} ${h * .68} L ${-w * 1.75} ${h} L ${w * 1.75} ${h} L ${w * .55} ${h * .68} L ${w * 1.25} ${h * .68} L ${w * .35} ${h * .35} L ${w} ${h * .35} Z M -.45 ${h} L -.45 ${h + 4} L .45 ${h + 4} L .45 ${h} Z`;
+        return `<path class="map-tree" transform="translate(${x.toFixed(2)} ${py.toFixed(1)})" d="${d}"/>`;
+      };
+      parts.push(tree(3 + mapRandom(i + 9101) * 14, y, i + 9201));
+      parts.push(tree(83 + mapRandom(i + 9301) * 14, y + 35 + mapRandom(i + 9401) * 65, i + 9501));
+    }
+    for (let i = 0, level = 120; level < LEVEL_MAP_LIMIT; i++, level += 145) {
+      const x = i % 2 ? 21 + mapRandom(i + 9701) * 8 : 71 + mapRandom(i + 9801) * 8;
+      const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 24;
+      parts.push(`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><path class="map-shrine" d="M-9 0V-39H9V0 M-14 -39H14L12 -44H-12Z M-10 -25H10L9 -29H-9Z M-4 -39V-51H4V-39Z M-6 -51H6L5 -55H-5Z"/><path class="map-shrine-light" d="M-14 -39H14 M-10 -25H10 M-7 -5H7"/></g>`);
+    }
+    parts.push(`<ellipse class="map-fog" cx="82" cy="${(y7 + 62).toFixed(1)}" rx="10" ry="45" opacity=".5"/><ellipse class="map-moon" cx="82" cy="${(y7 + 25).toFixed(1)}" rx="4.8" ry="26"/><g transform="translate(80 ${(y7 + 115).toFixed(1)})"><path class="map-cave" d="M-8 26V-7Q-8 -27 0 -29Q8 -27 8 -7V26Z"/><path class="map-cave-inner" d="M-5 26V-6Q-5 -19 0 -21Q5 -19 5 -6V26Z"/><ellipse class="map-cave-light" cx="-6.7" cy="8" rx=".55" ry="2.2"/></g>`);
+    for (let level = 25; level <= LEVEL_MAP_LIMIT; level += 25) {
+      const x = levelMapX(level), y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 19;
+      parts.push(`<path class="map-ledge" d="M${(x - 7.5).toFixed(2)} ${y.toFixed(1)}l1.8-5h11.4l1.8 5-2 3h-11Z"/><path class="map-ledge-top" d="M${(x - 5.8).toFixed(2)} ${(y - 4.8).toFixed(1)}h11.6l1.4 3h-14.4Z"/>`);
+    }
+    for (const level of LEVEL_MAP_CHAPTERS.keys()) {
+      const x = levelMapX(level), y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 19;
+      parts.push(`<path class="map-ledge" d="M${(x - 8.5).toFixed(2)} ${y.toFixed(1)}l2-5h13l2 5-2 3h-15Z"/><path class="map-ledge-top" d="M${(x - 6.5).toFixed(2)} ${(y - 4.8).toFixed(1)}h13l1.5 3h-16Z"/>`);
+    }
+    $('#mapScenery').innerHTML = parts.join('');
+  }
   function buildLevelMap() {
-    const track = $('#levelMapTrack'), path = $('#levelMapPath'), svg = $('#levelMapSvg'), viewport = $('#levelMapViewport');
+    const track = $('#levelMapTrack'), path = $('#levelMapPath'), route = $('#levelMapRoute'), svg = $('#levelMapSvg');
     const height = LEVEL_MAP_LIMIT * LEVEL_MAP_STEP;
     track.style.height = `${height}px`; svg.setAttribute('viewBox', `0 0 100 ${height}`);
+    buildMapScenery(height);
     let d = '', prev = null;
     for (let level = LEVEL_MAP_LIMIT; level >= 1; level--) {
       const point = { x: levelMapX(level), y: (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2 };
@@ -1565,7 +1655,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       else d += ` Q ${((prev.x + point.x) / 2 + Math.sin(level * .29) * 3).toFixed(2)} ${((prev.y + point.y) / 2).toFixed(1)} ${point.x.toFixed(2)} ${point.y}`;
       prev = point;
     }
-    path.setAttribute('d', d);
+    route.setAttribute('d', d); path.setAttribute('d', d);
     svg.querySelector('.path-halo').setAttribute('d', d);
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const chapter = LEVEL_MAP_CHAPTERS.get(level), x = levelMapX(level);
