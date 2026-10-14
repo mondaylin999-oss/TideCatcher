@@ -154,7 +154,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   <button class="tbtn" id="bPurr" aria-label="Purr" hidden>Purr</button>
   <button class="tbtn" id="bEyes" aria-label="Night eyes">Eyes</button>
   <button class="tbtn" id="bScratch" aria-label="Scratch nearby hiding spot" hidden>Scratch</button>
-  <div id="hint">Push halfway to sneak · S to scratch</div>
+  <div id="hint">Hold Shift or push halfway to sneak · S to scratch</div>
 </div>
 
 <div class="overlay" id="prologueScreen" hidden aria-labelledby="prologueTitle">
@@ -243,7 +243,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <span><kbd>E</kbd></span><span>Night eyes: highlight nearby hiding spots</span>
       <span><kbd>S</kbd></span><span>Scratch a nearby hiding spot</span>
       <span><kbd>K</kbd></span><span>Purr, once you buy it: slows nearby Moodlings</span>
-      <span>On a phone</span><span>Stick on the left (push halfway to sneak), buttons on the right. Landscape works best.</span>
+      <span>On a phone</span><span>Stick on the left (push halfway to sneak); Shift also sneaks during pointer movement when a keyboard is connected. Landscape works best.</span>
     </div>
     </details>
   </div>
@@ -345,8 +345,9 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
   function axisNow() {
     const kb = ((keys.ArrowRight || keys.KeyD) ? 1 : 0) - ((keys.ArrowLeft || keys.KeyA) ? 1 : 0);
-    if (kb) return kb * ((keys.ShiftLeft || keys.ShiftRight) ? .4 : 1);
-    return touchAxis;
+    const scale = (keys.ShiftLeft || keys.ShiftRight) ? .4 : 1;
+    if (kb) return kb * scale;
+    return touchAxis * scale;
   }
   const touchUI = $('#touch'), zone = $('#stickZone'), stick = $('#stick'), knob = $('#knob');
   let sid = null, sx = 0, sy = 0;
