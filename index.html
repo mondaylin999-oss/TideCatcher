@@ -1189,16 +1189,17 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 
   function render(dt) {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#120c24'; ctx.fillRect(0, 0, cv.width, cv.height);
-    let ox = 0, oy = 0;
-    if (shake > 0 && !reduce) { ox = (Math.random() - .5) * shake; oy = (Math.random() - .5) * shake; }
+    let catOx = 0, catOy = 0;
+    if (shake > 0 && !reduce) { catOx = (Math.random() - .5) * shake; catOy = (Math.random() - .5) * shake; }
     shake = Math.max(0, shake - dt * 40);
     ctx.setTransform(dpr * S, 0, 0, dpr * S, 0, dpr * S * OY);
     drawBG();
-    ctx.save(); ctx.translate(-camX + ox, oy);
-    drawWorld(); drawMoods(); drawTrail(); drawCat(); drawParts();
+    ctx.save(); ctx.translate(-camX, 0);
+    drawWorld(); drawMoods(); drawTrail();
+    ctx.save(); ctx.translate(catOx, catOy); drawCat(); ctx.restore(); drawParts();
     ctx.restore();
     if (eyesT > 0) {
-      const sx = cat.x - camX + ox, sy = cat.y - 24 + oy, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (4 - eyesT) / .25);
+      const sx = cat.x - camX + catOx, sy = cat.y - 24 + catOy, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (4 - eyesT) / .25);
       const g = ctx.createRadialGradient(sx, sy, r * .75, sx, sy, r * 1.15);
       g.addColorStop(0, 'rgba(6,12,24,0)'); g.addColorStop(1, `rgba(6,12,24,${.6 * fade})`);
       ctx.fillStyle = g; ctx.fillRect(0, -OY, VW, VH + OY * 2);
