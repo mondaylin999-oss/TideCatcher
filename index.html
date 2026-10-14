@@ -105,9 +105,10 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 #bPurr{right:calc(36px + env(safe-area-inset-right,0px));bottom:calc(140px + env(safe-area-inset-bottom,0px));width:64px;height:64px;font-size:14px;border-color:#c8ff8a}
 #bEyes{right:calc(132px + env(safe-area-inset-right,0px));bottom:calc(104px + env(safe-area-inset-bottom,0px));width:64px;height:64px;font-size:14px;border-color:var(--blue)}
 #bScratch{right:calc(32px + env(safe-area-inset-right,0px));bottom:calc(220px + env(safe-area-inset-bottom,0px));width:76px;height:76px;font-size:14px;border-color:var(--gold);background:rgba(246,196,83,.28)}
-#pointerSneak{position:fixed;z-index:3;right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(310px + env(safe-area-inset-bottom,0px));min-width:88px;height:58px;padding:0 12px;border:2px solid var(--gold);border-radius:18px;background:rgba(246,196,83,.32);color:var(--ink);font:800 14px var(--display);touch-action:none;cursor:pointer}
+#pointerSneak{position:fixed;z-index:3;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));min-width:88px;height:58px;padding:0 12px;border:2px solid var(--gold);border-radius:18px;background:rgba(246,196,83,.32);color:var(--ink);font:800 14px var(--display);touch-action:none;cursor:pointer}
 #pointerSneak[aria-pressed="true"]{background:rgba(246,196,83,.72);color:#211705;transform:scale(.96)}
-@media(max-height:360px){#pointerSneak{right:calc(220px + env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px))}}
+@media(pointer:coarse){#pointerSneak{right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(310px + env(safe-area-inset-bottom,0px))}}
+@media(pointer:coarse) and (max-height:360px){#pointerSneak{right:calc(220px + env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px))}}
 .panel.wide{max-width:760px}
 .howto summary{cursor:pointer;color:var(--muted);font-size:13px;padding:4px 0}
 .howto[open]{display:grid;gap:10px}
@@ -157,9 +158,9 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   <button class="tbtn" id="bPurr" aria-label="Purr" hidden>Purr</button>
   <button class="tbtn" id="bEyes" aria-label="Night eyes">Eyes</button>
   <button class="tbtn" id="bScratch" aria-label="Scratch nearby hiding spot" hidden>Scratch</button>
-  <div id="hint">Hold Shift or the Sneak button to sneak · S to scratch</div>
+  <div id="hint">Hold Shift · click Sneak to toggle · S to scratch</div>
 </div>
-<button id="pointerSneak" aria-label="Hold to sneak while moving" aria-pressed="false" hidden>Sneak</button>
+<button id="pointerSneak" aria-label="Toggle sneak while moving" aria-pressed="false" hidden>Sneak</button>
 
 <div class="overlay" id="prologueScreen" hidden aria-labelledby="prologueTitle">
   <div class="panel prologue-panel">
@@ -241,13 +242,13 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     <p class="muted"><b class="violet">Free Mode</b> is endless: every catch adds 2 seconds, getting hit costs 3, and more feelings appear every 20 seconds. How long can you last?</p>
     <div class="controls">
       <span><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd></span><span>Run</span>
-      <span>Hold <kbd>Shift</kbd> or the on-screen Sneak button</span><span>Sneak while moving</span>
+      <span>Hold <kbd>Shift</kbd> or click Sneak to toggle</span><span>Sneak while moving</span>
       <span><kbd>Space</kbd> or <kbd>↑</kbd></span><span>Jump</span>
       <span><kbd>J</kbd> or <kbd>X</kbd></span><span>Pounce</span>
       <span><kbd>E</kbd></span><span>Night eyes: highlight nearby hiding spots</span>
       <span><kbd>S</kbd></span><span>Scratch a nearby hiding spot</span>
       <span><kbd>K</kbd></span><span>Purr, once you buy it: slows nearby Moodlings</span>
-      <span>On a phone</span><span>Stick on the left (push halfway to sneak), or hold the Sneak button while moving. Shift works as the keyboard alternative. Landscape works best.</span>
+      <span>On a phone</span><span>Stick on the left (push halfway to sneak), or tap Sneak to toggle. Shift works as the keyboard alternative. Landscape works best.</span>
     </div>
     </details>
   </div>
@@ -333,7 +334,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 
   // ---------- input ----------
   const keys = {};
-  let jumpQ = false, pounceQ = false, scratchQ = false, touchAxis = 0, pointerSneakHeld = false, pointerSneakId = null;
+  let jumpQ = false, pounceQ = false, scratchQ = false, touchAxis = 0, pointerSneakToggled = false;
   addEventListener('keydown', e => {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
@@ -346,21 +347,23 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (e.code === 'KeyS') scratchQ = true;
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
-  addEventListener('blur', () => { for (const k in keys) keys[k] = false; pointerSneakHeld = false; pointerSneakId = null; $('#pointerSneak').setAttribute('aria-pressed', 'false'); });
+  addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
   function axisNow() {
     const kb = ((keys.ArrowRight || keys.KeyD) ? 1 : 0) - ((keys.ArrowLeft || keys.KeyA) ? 1 : 0);
-    const scale = (keys.ShiftLeft || keys.ShiftRight || pointerSneakHeld) ? .4 : 1;
+    const scale = (keys.ShiftLeft || keys.ShiftRight || pointerSneakToggled) ? .4 : 1;
     if (kb) return kb * scale;
     return touchAxis * scale;
   }
   const touchUI = $('#touch'), zone = $('#stickZone'), stick = $('#stick'), knob = $('#knob'), pointerSneakBtn = $('#pointerSneak');
-  pointerSneakBtn.addEventListener('pointerdown', e => {
-    if (state !== 'play' || pointerSneakId !== null) return;
-    e.preventDefault(); pointerSneakId = e.pointerId; pointerSneakHeld = true; pointerSneakBtn.setAttribute('aria-pressed', 'true');
-    try { pointerSneakBtn.setPointerCapture(e.pointerId); } catch (err) {}
+  function setPointerSneak(active) {
+    pointerSneakToggled = active;
+    pointerSneakBtn.setAttribute('aria-pressed', String(active));
+    pointerSneakBtn.textContent = active ? 'Sneak ON' : 'Sneak';
+  }
+  pointerSneakBtn.addEventListener('click', () => {
+    if (state !== 'play') return;
+    setPointerSneak(!pointerSneakToggled);
   });
-  const pointerSneakEnd = e => { if (e.pointerId !== pointerSneakId) return; pointerSneakId = null; pointerSneakHeld = false; pointerSneakBtn.setAttribute('aria-pressed', 'false'); };
-  pointerSneakBtn.addEventListener('pointerup', pointerSneakEnd); pointerSneakBtn.addEventListener('pointercancel', pointerSneakEnd); pointerSneakBtn.addEventListener('lostpointercapture', pointerSneakEnd);
   let sid = null, sx = 0, sy = 0;
   function stickMove(e) {
     let dx = clamp(e.clientX - sx, -58, 58);
@@ -1225,7 +1228,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   let R = null;
   function finish(won) {
     if (state === 'over' || state === 'home') return;
-    state = 'over'; touchUI.hidden = true; pointerSneakBtn.hidden = true; pointerSneakHeld = false; pointerSneakId = null; pointerSneakBtn.setAttribute('aria-pressed', 'false');
+    state = 'over'; touchUI.hidden = true; pointerSneakBtn.hidden = true; setPointerSneak(false);
     if (runN >= 3 && startles === 0) bump('quietN');
     if (mode === 'story' && storyNight === 1 && won && hits === 0) bump('nohit');
     lastGlow = glowRun; glow += glowRun; glowRun = 0; saveUpg(); refreshShopBtns();
@@ -1340,7 +1343,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   refreshShopBtns();
 
   function showEnd() {
-    state = 'over'; pointerSneakBtn.hidden = true; pointerSneakHeld = false; pointerSneakId = null; pointerSneakBtn.setAttribute('aria-pressed', 'false');
+    state = 'over'; pointerSneakBtn.hidden = true; setPointerSneak(false);
     $('#sGlow').textContent = '+' + lastGlow;
     const extra = [];
     if (runDone.length) extra.push(`Mission complete: ${runDone.join('; ')}. Claim the reward on the main menu.`);
@@ -1408,7 +1411,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       papers: [[150, 462, .3], [186, 452, -.6], [140, 446, 1.1], [208, 470, -.2]].map(a => ({ x: a[0], y: a[1], r: a[2], on: false, k: 0 })),
       parts: [], floats: [], react: 0, reactCol: INK, drag: null, canContinue: false, caption: false, finished: false
     };
-    cv.hidden = false; pointerSneakBtn.hidden = true; pointerSneakHeld = false; pointerSneakId = null; pointerSneakBtn.setAttribute('aria-pressed', 'false'); state = 'home'; touchUI.hidden = true;
+    cv.hidden = false; pointerSneakBtn.hidden = true; setPointerSneak(false); state = 'home'; touchUI.hidden = true;
     $('#startScreen').hidden = true; $('#endScreen').hidden = true;
     tone(523, .25, 'sine', .05); setTimeout(() => tone(659, .3, 'sine', .04), 120);
   }
@@ -1697,7 +1700,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     storyNight = mode === 'story' && night === 7 ? 7 : 1;
     initAudio();
     cv.hidden = false;
-    pointerSneakBtn.hidden = false; pointerSneakHeld = false; pointerSneakId = null; pointerSneakBtn.setAttribute('aria-pressed', 'false');
+    pointerSneakBtn.hidden = false; setPointerSneak(false);
     $('#bPurr').hidden = upg.purr === 0; $('#bScratch').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
     reset(); state = 'play';
     $('#startScreen').hidden = true; $('#endScreen').hidden = true;
@@ -1838,7 +1841,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   $('#night7Btn').addEventListener('click', () => startGame('story', 7));
   $('#freeBtn').addEventListener('click', () => startGame('free'));
   $('#againBtn').addEventListener('click', () => startGame(mode, storyNight));
-  $('#menuBtn').addEventListener('click', () => { state = 'menu'; cv.hidden = true; pointerSneakBtn.hidden = true; pointerSneakHeld = false; pointerSneakId = null; pointerSneakBtn.setAttribute('aria-pressed', 'false'); refreshShopBtns(); $('#endScreen').hidden = true; $('#startScreen').hidden = false; $('#playBtn').focus(); });
+  $('#menuBtn').addEventListener('click', () => { state = 'menu'; cv.hidden = true; pointerSneakBtn.hidden = true; setPointerSneak(false); refreshShopBtns(); $('#endScreen').hidden = true; $('#startScreen').hidden = false; $('#playBtn').focus(); });
   $('#previewBtn').addEventListener('click', () => { initAudio(); startHome(true, ['F', 'F', 'F', 'F', 'L', 'N', 'N', 'N', 'N', 'L'], true); });
 
   let last = performance.now();
