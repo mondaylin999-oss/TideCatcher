@@ -384,7 +384,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     }
     return TRAIL_PROFILE[TRAIL_PROFILE.length-1][1];
   }
-  let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, shake = 0, slowmo = 0, chaos = false, endT = 0;
+  let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0;
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
   const moonHollow = () => mode === 'story' && storyNight === 7;
 
@@ -514,7 +514,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     mood.push(m); return m;
   }
   function reset() {
-    t = 0; timeLeft = mode === 'free' ? 60 : storyNight === 7 ? 120 : 90; score = 0; freeT = 0; level = 0; nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false; combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; shake = 0; slowmo = 0; chaos = false; endT = 0;
+    t = 0; timeLeft = mode === 'free' ? 60 : storyNight === 7 ? 120 : 90; score = 0; freeT = 0; level = 0; nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false; combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
     need = storyNight === 7 ? { F: 2, N: 2, L: 2, C: 3 } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0; goldDone = { a: false, b: false }; lastTick = 99;
     cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0; scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false;
@@ -548,7 +548,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   }
   function hitCat(m) {
     hits++; cat.inv = 1.2; cat.vx = m.dir * 420; cat.vy = -420; cat.on = false; cat.pounce = 0;
-    shake = Math.max(shake, 14); combo = 0; comboT = 0; tone(90, .3, 'sawtooth', .08, -40);
+    combo = 0; comboT = 0; tone(90, .3, 'sawtooth', .08, -40);
     if (mode === 'free') { timeLeft = Math.max(0, timeLeft - 3); float(cat.x, cat.y - 88, '−3s', RED); }
     if (trail.length) {
       const l = trail.pop(); got[l.type]--;
@@ -586,7 +586,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (m.type === 'G') bump('golden');
     if (m.v) bump('rare');
     if (combo >= 4) bump('combo4');
-    m.dead = true; hitstop = .07; shake = Math.max(shake, m.type === 'G' ? 12 : 7);
+    m.dead = true; hitstop = .07;
     burst(m.x, m.y, col(m.type), m.type === 'G' ? 40 : 22);
     float(m.x, m.y - 36, `+${pts}${combo > 1 ? '  ×' + combo : ''}${mode === 'free' && m.type !== 'G' ? '  +2s' : ''}`, col(m.type));
     const f = 523.25 * Math.pow(2, (combo - 1) * 2 / 12);
@@ -706,7 +706,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       if (m.dead || m.alpha < .5) continue;
       if (Math.hypot(m.x - cx, m.y - cy) > uv('pounce')) continue;
       if (m.type === 'F' && m.state !== 'dizzy') {
-        if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 300; cat.pounce = 0; float(m.x, m.y - 40, "Wait until it's dizzy", RED); tone(150, .12, 'square', .05); shake = Math.max(shake, 6); }
+        if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 300; cat.pounce = 0; float(m.x, m.y - 40, "Wait until it's dizzy", RED); tone(150, .12, 'square', .05); }
         continue;
       }
       if (m.type === 'L' || m.type === 'C') {
@@ -1189,17 +1189,14 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 
   function render(dt) {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#120c24'; ctx.fillRect(0, 0, cv.width, cv.height);
-    let catOx = 0, catOy = 0;
-    if (shake > 0 && !reduce) { catOx = (Math.random() - .5) * shake; catOy = (Math.random() - .5) * shake; }
-    shake = Math.max(0, shake - dt * 40);
     ctx.setTransform(dpr * S, 0, 0, dpr * S, 0, dpr * S * OY);
     drawBG();
     ctx.save(); ctx.translate(-camX, 0);
     drawWorld(); drawMoods(); drawTrail();
-    ctx.save(); ctx.translate(catOx, catOy); drawCat(); ctx.restore(); drawParts();
+    drawCat(); drawParts();
     ctx.restore();
     if (eyesT > 0) {
-      const sx = cat.x - camX + catOx, sy = cat.y - 24 + catOy, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (4 - eyesT) / .25);
+      const sx = cat.x - camX, sy = cat.y - 24, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (4 - eyesT) / .25);
       const g = ctx.createRadialGradient(sx, sy, r * .75, sx, sy, r * 1.15);
       g.addColorStop(0, 'rgba(6,12,24,0)'); g.addColorStop(1, `rgba(6,12,24,${.6 * fade})`);
       ctx.fillStyle = g; ctx.fillRect(0, -OY, VW, VH + OY * 2);
