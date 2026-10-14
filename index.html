@@ -14,6 +14,7 @@
   color-scheme:dark;
 }
 html,body{height:100%}
+*,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--night);color:var(--ink);font-family:var(--body);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
 #game{position:fixed;inset:0;width:100%;height:100%;display:block}
@@ -34,6 +35,35 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .btn.alt{background:var(--violet);color:#1a0f35}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-size:16px;padding:11px 20px}
 .actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.level-map-head{display:flex;align-items:end;justify-content:space-between;gap:12px}
+.level-map-head h2{font:800 clamp(21px,4vw,28px)/1 var(--display);color:var(--ink);margin:4px 0 0}
+.level-map-count{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+.level-map-window{height:clamp(260px,36vh,420px);min-height:260px;position:relative;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;border:1px solid rgba(201,192,255,.23);border-radius:18px;background:radial-gradient(ellipse at 50% 42%,rgba(59,74,120,.5),transparent 64%),linear-gradient(180deg,#12182f,#171330 48%,#211735);scrollbar-color:rgba(169,139,255,.55) rgba(255,255,255,.06);scrollbar-width:thin}
+.level-map-track{position:relative;width:100%;isolation:isolate}
+#levelMapViewport{overflow-x:hidden}
+.level-map-path{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:-1}
+.level-map-path .path-halo{fill:none;stroke:rgba(169,139,255,.16);stroke-width:12;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.level-map-path .path-line{fill:none;stroke:rgba(205,185,255,.48);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:2 7}
+.level-entry{position:absolute;width:0;height:0;z-index:1}
+.level-node{position:absolute;left:0;top:0;transform:translate(-50%,-50%);width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.82);display:grid;place-items:center;font:800 19px/1 var(--display);color:#201736;background:linear-gradient(145deg,#e9b0e2,#c879c9);box-shadow:0 5px 0 rgba(37,17,54,.42),0 0 14px rgba(236,146,229,.35);cursor:pointer;touch-action:manipulation}
+.level-node:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
+.level-node.is-playable{background:linear-gradient(145deg,#ffe38b,#f2ad46);box-shadow:0 5px 0 rgba(37,17,54,.42),0 0 18px rgba(246,196,83,.62)}
+.level-node.is-current{width:56px;height:56px;font-size:23px;background:linear-gradient(145deg,#c7f7c7,#71cf93);box-shadow:0 5px 0 rgba(20,53,48,.58),0 0 24px rgba(125,220,139,.8);animation:map-pulse 2.4s ease-in-out infinite}
+.level-node:disabled{cursor:default;color:#d0c9dd;background:linear-gradient(145deg,#625c78,#39334d);border-color:rgba(237,230,255,.42);box-shadow:0 4px 0 rgba(10,8,24,.46);opacity:.82}
+.level-node:disabled::after{content:"";position:absolute;right:-4px;top:-3px;width:10px;height:8px;border-radius:2px;background:#c7bfd7;border:1px solid #39334d}
+.level-node:disabled::before{content:"";position:absolute;right:-2px;top:-8px;width:6px;height:7px;border:1.5px solid #c7bfd7;border-bottom:0;border-radius:5px 5px 0 0}
+.level-caption{position:absolute;top:0;transform:translateY(-50%);width:135px;display:grid;gap:2px;pointer-events:none;text-shadow:0 2px 8px #0c0a1b}
+.level-entry.caption-left .level-caption{right:34px;text-align:right}
+.level-entry.caption-right .level-caption{left:34px;text-align:left}
+.level-caption strong{font:800 13px/1.15 var(--display);color:#fff3c4}
+.level-caption span{font-size:10px;line-height:1.2;color:#cbc2e4}
+.level-map-hint{font-size:12px;color:var(--muted);line-height:1.4}
+.level-map-key{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:11px}
+.level-map-key span{display:inline-flex;align-items:center;gap:6px}
+.level-map-key i{width:11px;height:11px;border-radius:50%;border:2px solid rgba(255,255,255,.8);display:inline-block}
+.level-map-key .key-open{background:var(--gold);box-shadow:0 0 8px rgba(246,196,83,.6)}
+.level-map-key .key-locked{background:#514b66}
+@keyframes map-pulse{50%{box-shadow:0 5px 0 rgba(20,53,48,.58),0 0 31px rgba(125,220,139,.95)}}
 .stats{display:flex;gap:22px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
 .stat{display:grid;gap:2px}
 .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
@@ -105,7 +135,15 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     <p class="eyebrow">Digit7 Jam 2026 · playable prototype</p>
     <h1>Mood Keepers</h1>
     <p>Thiri tore up her drawing, and her feelings ran away to the Night Side. You are <b class="gold">Shwe</b>, her cat. Bring home the Moodlings before time runs out, then lead them home and give them back to her.</p>
-    <p class="muted">Night 7 · Moon Hollow is now open: explore the mountain caves, find hidden feeling bubbles with Night Eyes, and sit quietly with Calm.</p>
+    <p class="muted">Choose a chapter on the winding trail. Scroll upward to explore future levels; only the open chapters can be entered.</p>
+    <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count">2 open · up to 1,000 levels</span></div>
+    <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Scrollable level map; scroll upward for higher levels" tabindex="0">
+      <div class="level-map-track" id="levelMapTrack">
+        <svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg>
+      </div>
+    </div>
+    <p class="level-map-hint">Swipe or scroll up the path to see higher levels. Levels 1 and 7 are open now; other chapters are planned for later.</p>
+    <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Planned / locked</span></div>
     <div class="cards">
       <div class="card"><b class="red">Frustrated</b>Charges when you get close. Dodge it, then pounce while it is dizzy.</div>
       <div class="card"><b class="violet">Nervous</b>Panics if you run or jump nearby. Sneak up slowly, then pounce.</div>
@@ -114,8 +152,6 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <div class="card"><b class="gold">Golden</b>Rare and fast. Worth 500 points and 5 extra seconds.</div>
     </div>
     <div class="actions">
-      <button class="btn" id="playBtn">Story · Night 1</button>
-      <button class="btn alt" id="night7Btn">Level 7 · Moon Hollow</button>
       <button class="btn alt" id="freeBtn">Free Mode</button>
       <button class="btn ghost" id="shopBtn">Upgrade Shwe</button>
       <button class="btn ghost" id="bookBtn">Mood Book</button>
@@ -134,7 +170,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <span>Hold <kbd>Shift</kbd></span><span>Sneak</span>
       <span><kbd>Space</kbd> or <kbd>↑</kbd></span><span>Jump</span>
       <span><kbd>J</kbd> or <kbd>X</kbd></span><span>Pounce</span>
-      <span><kbd>E</kbd></span><span>Night eyes: reveal hidden Lonely Moodlings</span>
+      <span><kbd>E</kbd></span><span>Night eyes: reveal hidden Lonely and Calm Moodlings</span>
       <span><kbd>K</kbd></span><span>Purr, once you buy it: slows nearby Moodlings</span>
       <span>On a phone</span><span>Stick on the left (push halfway to sneak), buttons on the right. Landscape works best.</span>
     </div>
@@ -1463,6 +1499,51 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     announce(mode === 'free' ? 'Free Mode · every catch adds time' : storyNight === 7 ? 'Night 7 · Moon Hollow · find the hidden Calm bubbles' : 'Night 1 · Bring them home', INK, 1.8);
     cv.focus?.();
   }
+  const LEVEL_MAP_LIMIT = 1000, LEVEL_MAP_STEP = 56;
+  const LEVEL_MAP_CHAPTERS = new Map([
+    [1, { name: 'First Night', sub: 'Bring the first feelings home', night: 1 }],
+    [7, { name: 'Moon Hollow', sub: 'Mountain caves · Calm returns', night: 7 }]
+  ]);
+  const levelMapX = level => 50 + Math.sin(level * .72) * 24;
+  function buildLevelMap() {
+    const track = $('#levelMapTrack'), path = $('#levelMapPath'), svg = $('#levelMapSvg'), viewport = $('#levelMapViewport');
+    const height = LEVEL_MAP_LIMIT * LEVEL_MAP_STEP;
+    track.style.height = `${height}px`; svg.setAttribute('viewBox', `0 0 100 ${height}`);
+    let d = '', prev = null;
+    for (let level = LEVEL_MAP_LIMIT; level >= 1; level--) {
+      const point = { x: levelMapX(level), y: (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2 };
+      if (!prev) d = `M ${point.x.toFixed(2)} ${point.y}`;
+      else d += ` Q ${((prev.x + point.x) / 2 + Math.sin(level * .29) * 3).toFixed(2)} ${((prev.y + point.y) / 2).toFixed(1)} ${point.x.toFixed(2)} ${point.y}`;
+      prev = point;
+    }
+    path.setAttribute('d', d);
+    svg.querySelector('.path-halo').setAttribute('d', d);
+    for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
+      const chapter = LEVEL_MAP_CHAPTERS.get(level), x = levelMapX(level);
+      const entry = document.createElement('div');
+      entry.className = `level-entry ${x > 50 ? 'caption-left' : 'caption-right'}`;
+      entry.style.left = `${x}%`;
+      entry.style.top = `${(LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2}px`;
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = `level-node${chapter ? ' is-playable' : ''}${level === 7 ? ' is-current' : ''}`;
+      button.textContent = String(level); button.disabled = !chapter;
+      button.setAttribute('aria-label', chapter ? `Level ${level}, ${chapter.name}, playable` : `Level ${level}, planned and locked`);
+      button.title = chapter ? `Play Level ${level} · ${chapter.name}` : `Level ${level} · planned for later`;
+      if (level === 1) button.id = 'playBtn';
+      if (level === 7) button.id = 'night7Btn';
+      entry.appendChild(button);
+      if (chapter) {
+        const caption = document.createElement('span'); caption.className = 'level-caption';
+        const name = document.createElement('strong'); name.textContent = `Level ${level} · ${chapter.name}`;
+        const sub = document.createElement('span'); sub.textContent = chapter.sub;
+        caption.appendChild(name); caption.appendChild(sub); entry.appendChild(caption);
+      }
+      track.appendChild(entry);
+    }
+    const currentY = (LEVEL_MAP_LIMIT - 7) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
+    viewport.scrollTop = Math.max(0, currentY - 34);
+  }
+  buildLevelMap();
   $('#playBtn').addEventListener('click', () => startGame('story', 1));
   $('#night7Btn').addEventListener('click', () => startGame('story', 7));
   $('#freeBtn').addEventListener('click', () => startGame('free'));
