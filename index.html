@@ -776,8 +776,6 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
     const target = clamp(cat.x - VW * .42, 0, Math.max(0, WORLD - VW));
     camX += (target - camX) * Math.min(1, dt * 6);
-    const pixelScale = dpr * S;
-    if (pixelScale > 0) camX = Math.round(camX * pixelScale) / pixelScale;
     scratchSpots = scratchSpots.filter(spot => !spot.used || t - spot.usedAt < 1.3);
   }
 
@@ -976,10 +974,11 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     drawParallaxLayer(0,.10);drawParallaxLayer(1,.38);drawParallaxLayer(2,.78);
     const ground=ctx.createLinearGradient(0,410,0,VH+OY+60);ground.addColorStop(0,'#394440');ground.addColorStop(.18,'#303a38');ground.addColorStop(1,'#151f27');
     const rockEdge=x=>{const seed=Math.sin(x*12.9898+7.31)*43758.5453;return terrainY(x)+(seed-Math.floor(seed)-.5)*4;};
-    ctx.fillStyle=ground;ctx.beginPath();ctx.moveTo(x0,rockEdge(x0));
-    for(let x=x0;x<x1+24;x+=24)ctx.lineTo(x+24,rockEdge(x+24));
-    ctx.lineTo(x1,VH+OY+60);ctx.lineTo(x0,VH+OY+60);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='rgba(190,199,165,.7)';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(x0,rockEdge(x0));for(let x=x0;x<x1+24;x+=24)ctx.lineTo(x+24,rockEdge(x+24));ctx.stroke();
+    const groundStart=Math.floor(x0/24)*24;
+    ctx.fillStyle=ground;ctx.beginPath();ctx.moveTo(groundStart,rockEdge(groundStart));
+    for(let x=groundStart;x<x1+24;x+=24)ctx.lineTo(x+24,rockEdge(x+24));
+    ctx.lineTo(x1,VH+OY+60);ctx.lineTo(groundStart,VH+OY+60);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(190,199,165,.7)';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(groundStart,rockEdge(groundStart));for(let x=groundStart;x<x1+24;x+=24)ctx.lineTo(x+24,rockEdge(x+24));ctx.stroke();
     // Loose scree and long fractured strata follow the fixed stone shelves and hollows.
     for(let x=Math.floor(x0/31)*31;x<x1;x+=31){const seed=Math.sin(x*12.9898)*43758.5453,f=seed-Math.floor(seed),yy=terrainY(x)+12+f*43;ctx.fillStyle=f>.5?'rgba(175,184,163,.48)':'rgba(8,15,21,.54)';ctx.beginPath();ctx.ellipse(x+f*12,yy,2+f*3.4,1+f*1.7,f,0,Math.PI*2);ctx.fill();}
     ctx.strokeStyle='rgba(143,159,151,.18)';ctx.lineWidth=1;for(let x=Math.floor(x0/175)*175;x<x1;x+=175){const y=terrainY(x)+50;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+24,y-5);ctx.lineTo(x+42,y+1);ctx.moveTo(x+90,y+34);ctx.lineTo(x+108,y+24);ctx.lineTo(x+126,y+29);ctx.stroke();}
