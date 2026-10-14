@@ -145,7 +145,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 @media (max-width:520px){.panel{padding:18px}.controls{grid-template-columns:1fr}}
 </style>
 
-<canvas id="game" aria-label="Mood Keepers prototype game"></canvas>
+<canvas id="game" aria-label="Mood Keepers prototype game" hidden></canvas>
 
 <div id="touch" hidden>
   <div id="stickZone"><div id="stick" hidden><div id="knob"></div></div></div>
@@ -157,7 +157,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   <div id="hint">Push halfway to sneak · S to scratch</div>
 </div>
 
-<div class="overlay" id="prologueScreen" aria-labelledby="prologueTitle">
+<div class="overlay" id="prologueScreen" hidden aria-labelledby="prologueTitle">
   <div class="panel prologue-panel">
     <p class="eyebrow">Before the Night Side</p>
     <h1 id="prologueTitle">Mood Keepers</h1>
@@ -203,7 +203,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   </div>
 </div>
 
-<div class="overlay" id="startScreen" hidden>
+<div class="overlay" id="startScreen">
   <div class="panel">
     <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count">2 open · up to 1,000 levels</span></div>
     <p class="level-map-hint">Choose an open chapter. Swipe or scroll upward on the path to explore higher, planned levels.</p>
@@ -225,6 +225,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <button class="btn ghost" id="shopBtn">Upgrade Shwe</button>
       <button class="btn ghost" id="bookBtn">Mood Book</button>
       <button class="btn ghost" id="previewBtn">Watch the Coming Home scene</button>
+      <button class="btn ghost" id="storyBtn">Read the story</button>
     </div>
     <section class="missions" aria-labelledby="mTitle">
       <div class="mhead"><b id="mTitle">Today's missions</b><span class="muted" id="mReset"></span></div>
@@ -1395,7 +1396,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       papers: [[150, 462, .3], [186, 452, -.6], [140, 446, 1.1], [208, 470, -.2]].map(a => ({ x: a[0], y: a[1], r: a[2], on: false, k: 0 })),
       parts: [], floats: [], react: 0, reactCol: INK, drag: null, canContinue: false, caption: false, finished: false
     };
-    state = 'home'; touchUI.hidden = true;
+    cv.hidden = false; state = 'home'; touchUI.hidden = true;
     $('#startScreen').hidden = true; $('#endScreen').hidden = true;
     tone(523, .25, 'sine', .05); setTimeout(() => tone(659, .3, 'sine', .04), 120);
   }
@@ -1424,7 +1425,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   }
   function finishHome() {
     if (!H || H.finished) return; H.finished = true;
-    if (H.preview) { state = 'menu'; $('#startScreen').hidden = false; setTimeout(() => $('#playBtn').focus(), 50); }
+    if (H.preview) { state = 'menu'; cv.hidden = true; $('#startScreen').hidden = false; setTimeout(() => $('#playBtn').focus(), 50); }
     else showEnd();
   }
   function homeUpdate(dt) {
@@ -1683,6 +1684,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (typeof m === 'string') mode = m;
     storyNight = mode === 'story' && night === 7 ? 7 : 1;
     initAudio();
+    cv.hidden = false;
     $('#bPurr').hidden = upg.purr === 0; $('#bScratch').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
     reset(); state = 'play';
     $('#startScreen').hidden = true; $('#endScreen').hidden = true;
@@ -1810,15 +1812,20 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     viewport.scrollTop = Math.max(0, y - 34);
   }
   buildLevelMap();
+  focusLevelMap(1);
+  $('#playBtn').focus({ preventScroll: true });
+  $('#storyBtn').addEventListener('click', () => {
+    $('#startScreen').hidden = true; $('#prologueScreen').hidden = false; $('#introContinueBtn').focus();
+  });
   $('#introContinueBtn').addEventListener('click', () => {
     $('#prologueScreen').hidden = true; $('#startScreen').hidden = false;
-    focusLevelMap(7); $('#night7Btn').focus();
+    focusLevelMap(1); $('#playBtn').focus({ preventScroll: true });
   });
   $('#playBtn').addEventListener('click', () => startGame('story', 1));
   $('#night7Btn').addEventListener('click', () => startGame('story', 7));
   $('#freeBtn').addEventListener('click', () => startGame('free'));
   $('#againBtn').addEventListener('click', () => startGame(mode, storyNight));
-  $('#menuBtn').addEventListener('click', () => { state = 'menu'; refreshShopBtns(); $('#endScreen').hidden = true; $('#startScreen').hidden = false; $('#playBtn').focus(); });
+  $('#menuBtn').addEventListener('click', () => { state = 'menu'; cv.hidden = true; refreshShopBtns(); $('#endScreen').hidden = true; $('#startScreen').hidden = false; $('#playBtn').focus(); });
   $('#previewBtn').addEventListener('click', () => { initAudio(); startHome(true, ['F', 'F', 'F', 'F', 'L', 'N', 'N', 'N', 'N', 'L'], true); });
 
   let last = performance.now();
