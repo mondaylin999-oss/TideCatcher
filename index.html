@@ -305,6 +305,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       <div class="card"><b class="violet">Nervous</b>Panics if you run or jump nearby. Sneak up slowly, then pounce.</div>
       <div class="card"><b class="blue">Lonely</b>Night 1: Lonely is visible—sit nearby. From Night 2, use Night Eyes to find pawprints, scratch with S, then sit still beside Lonely. Never pounce.</div>
       <div class="card"><b style="color:#7ddc8b">Calm · Nights 6–7</b>Find a marked cave-side hiding spot with Night Eyes, scratch to reveal Calm, then sit quietly beside it. Never pounce.</div>
+      <div class="card"><b style="color:#a67646">Buried · Nights 4–7</b>Hides inside a mountain rock. Night Eyes marks the right one. Scratch a wrong rock and the mountain wakes angry feelings. Never guess blindly.</div>
       <div class="card"><b class="gold">Golden</b>Rare and fast. Worth 500 points and 5 extra seconds.</div>
     </div>
     <div class="actions">
@@ -412,7 +413,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   <div class="panel wide">
     <p class="eyebrow">Shwe's collection</p>
     <h1>Mood Book</h1>
-    <p>Every feeling you bring home is recorded here. Rare ones appear now and then with sparkles around them. <b class="gold" id="bookCount">0 / 12 found</b></p>
+    <p>Every feeling you bring home is recorded here. Rare ones appear now and then with sparkles around them. <b class="gold" id="bookCount">0 / 15 found</b></p>
     <div class="book" id="bookList"></div>
     <button class="btn ghost" id="bookBack">Back</button>
   </div>
@@ -427,7 +428,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   const DISP = '"Grandstander","Trebuchet MS",sans-serif', BODY = '"Lexend",system-ui,sans-serif';
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const col = ty => ty === 'F' ? RED : ty === 'N' ? VIOLET : ty === 'L' ? BLUE : ty === 'C' ? CALM : GOLD;
+  const col = ty => ty === 'F' ? RED : ty === 'N' ? VIOLET : ty === 'L' ? BLUE : ty === 'C' ? CALM : ty === 'B' ? '#a67646' : GOLD;
 
   // ---------- sizing ----------
   let VW = 960, S = 1, OY = 0, dpr = 1;
@@ -536,10 +537,10 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1, N: 0, L: 0, C: 0 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' },
     { night: 2, name: 'Lantern Path', sub: 'Learn to move quietly around Nervous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 115, rareChance: 0, feelingsNeeded: { F: 3, N: 3 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift, then pounce.' },
     { night: 3, name: 'The Long Hallway', sub: 'Sit still beside Lonely', theme: '#628aa0', musicRoot: 220, timeLimit: 115, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Walk slowly, then sit still beside it.' },
-    { night: 4, name: 'Night Market', sub: 'Scratch to reveal Lonely', theme: '#c17679', musicRoot: 233.08, timeLimit: 110, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2 }, newMoodling: 'Press E for Night Eyes, then S to scratch marked spots', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Press E for Night Eyes, then S to scratch marked spots.' },
-    { night: 5, name: 'Storm Peak', sub: 'Keep steady while the sky turns', theme: '#7181aa', musicRoot: 246.94, timeLimit: 105, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3 }, newMoodling: 'Rare feelings sparkle; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Rare feelings sparkle. They are worth extra Glow.' },
-    { night: 6, name: 'Quiet Field', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 110, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2 }, newMoodling: 'Calm waits in cave marks; scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 0 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm waits in cave marks. Scratch, then sit quietly.' },
-    { night: 7, name: 'Moon Hollow', sub: 'Bring every feeling home before dawn', theme: '#d6a866', musicRoot: 293.66, timeLimit: 115, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 0 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' }
+    { night: 4, name: 'Night Market', sub: 'Scratch to reveal what is buried', theme: '#c17679', musicRoot: 233.08, timeLimit: 110, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2, B: 1 }, newMoodling: 'A new feeling is buried in the rocks. Use Night Eyes to spot the right rock, then scratch it.', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0, B: 1 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Press E for Night Eyes. One rock is marked. Scratch the marked rock with S.' },
+    { night: 5, name: 'Storm Peak', sub: 'Keep steady while the sky turns', theme: '#7181aa', musicRoot: 246.94, timeLimit: 105, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1 }, newMoodling: 'Rare feelings sparkle; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Rare feelings sparkle. They are worth extra Glow.' },
+    { night: 6, name: 'Quiet Field', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 110, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2 }, newMoodling: 'Calm waits in cave marks; scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 0, B: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm waits in cave marks. Scratch, then sit quietly.' },
+    { night: 7, name: 'Moon Hollow', sub: 'Bring every feeling home before dawn', theme: '#d6a866', musicRoot: 293.66, timeLimit: 115, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3, B: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 0, B: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' }
   ];
   const chapterFor = night => NIGHT_CHAPTERS[clamp(night - 1, 0, NIGHT_CHAPTERS.length - 1)];
   const SLEEP_STAGES = [
@@ -599,9 +600,14 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     ],
     G: [{ n: 'Golden', c: '#f6c453', r: 'Special', d: 'Rare and fast. Worth 500 points and 5 extra seconds.', line: '“Some days have one small good thing. That counts.”' }],
     E: [{ n: 'Excited', c: '#ffd84d', r: 'Story', d: 'Bounces across the night market.', lock: 'A storybook visitor beyond these seven playable nights.' }],
-    C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Scratch a marked cave-side spot, then sit quietly beside Calm.', lock: 'Meet it in a cave on Night 6.' }]
+    C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Scratch a marked cave-side spot, then sit quietly beside Calm.', lock: 'Meet it in a cave on Night 6.' }],
+    B: [
+      { n: 'Buried', c: '#a67646', r: 'Common', d: 'Hides inside a mountain rock. Reveal it with Night Eyes, then scratch the marked rock. A wrong rock wakes the mountain.', line: '“I put it somewhere deep so I wouldn’t have to look at it.”' },
+      { n: 'Petrified Buried', c: '#8c5a3a', r: 'Rare', d: 'So deep it has almost turned to stone. Same scratch rules.', line: '“It was easier to be numb than to feel it.”' },
+      { n: 'Fossil Buried', c: '#c8a56a', r: 'Rare', d: 'Leaves a faint amber trail when it flees.', line: '“Some things stay with you even after you bury them.”' }
+    ]
   };
-  const BOOK_ORDER = ['F0', 'F1', 'F2', 'N0', 'N1', 'N2', 'L0', 'L1', 'L2', 'G0', 'E0', 'C0'];
+  const BOOK_ORDER = ['F0', 'F1', 'F2', 'N0', 'N1', 'N2', 'L0', 'L1', 'L2', 'B0', 'B1', 'B2', 'G0', 'E0', 'C0'];
   let book = {};
   try { book = JSON.parse(localStorage.getItem('mk-book') || '{}') || {}; } catch (e) { book = {}; }
   const saveBook = () => { try { localStorage.setItem('mk-book', JSON.stringify(book)); } catch (e) {} };
@@ -652,7 +658,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   const requiredTotal = () => Object.values(need).reduce((sum, n) => sum + n, 0);
   const caughtTotal = () => Object.values(got).reduce((sum, n) => sum + n, 0);
   let cat, mood = [], parts = [], floats = [], trail = [], hist = [], camX = 0, respawnQ = [], banner = null;
-  let scratchSpots = [], scratchTarget = null, scratchAnim = 0;
+  let scratchSpots = [], scratchTarget = null, scratchAnim = 0, rocks = [], buriedHome = null, shake = 0;
+  const ROCK_XS = [560, 1120, 1680, 2260, 2520];
 
   function newCat() { return { x: 200, y: terrainY(200), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false }; }
   function pickX() { let x, n = 0; do { x = 150 + Math.random() * (WORLD - 300); n++; } while (Math.abs(x - cat.x) < 380 && n < 40); return x; }
@@ -684,10 +691,11 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     x = x ?? (hidesInCave ? pickCaveX() : pickX());
     const m = { type, x, y: 0, dir: Math.random() < .5 ? -1 : 1, phase: Math.random() * 6, alpha: 1, cd: 1 + Math.random(), st: 0, alarm: 0, state: '', home: x, dead: false, life: 0, caveX: hidesInCave ? x : null };
     const rareChance = mode === 'story' ? chapterFor(storyNight).rareChance : .1;
-    m.v = (type === 'F' || type === 'N' || type === 'L') && Math.random() < rareChance ? (Math.random() < .5 ? 1 : 2) : 0;
+    m.v = (type === 'F' || type === 'N' || type === 'L' || type === 'B') && Math.random() < rareChance ? (Math.random() < .5 ? 1 : 2) : 0;
     if (type === 'F') { m.y = terrainY(x) - 20; m.state = 'patrol'; }
     if (type === 'N') { m.y = terrainY(x) - 46; m.state = 'wander'; }
     if (type === 'G') { m.y = 200; m.state = 'fly'; m.life = 6.5; }
+    if (type === 'B') { const rock = rocks.find(r => r.marked) || rocks[0]; m.x = rock.x; m.y = rock.y - 12; m.state = 'buried'; m.alpha = 0; m.rock = rock; m.chime = 0; }
     if (type === 'L' || type === 'C') {
       m.y = terrainY(x) - (type === 'C' ? 46 : 30); m.st = 0; m.rev = 0; m.sit = 0; m.chime = 0; m.fleeAlarm = 0;
       const tutorialLonely = type === 'L' && mode === 'story' && storyNight <= 3;
@@ -703,18 +711,22 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
     goldDone = { a: false, b: false }; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
-    scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false;
+    scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0;
+    rocks = mode === 'story' ? ROCK_XS.map(x => ({ x, y: terrainY(x), marked: false, scratched: false, wrongUsed: false, phase: Math.random() * Math.PI * 2, holeDepth: 0 })) : [];
+    buriedHome = null;
+    if (need.B > 0) { buriedHome = rocks[Math.floor(Math.random() * rocks.length)]; buriedHome.marked = true; }
     if (mode === 'free') {
       goldDone = { a: true, b: true }; chaos = true;
       [700, 1000, 1350, 1650, 2050, 2300].forEach((x, i) => spawn(i % 2 ? 'N' : 'F', x));
       [1180, 2480].forEach(x => spawn('L', x));
       return;
     }
-    for (const [type, count] of Object.entries(chapter.initialSpawns || {})) {
+    for (const type of Object.keys(need)) {
+      const base = chapter.initialSpawns?.[type] || 0;
+      const count = ['F', 'N', 'L'].includes(type) ? Math.max(base, Math.min(need[type], 2)) : base;
       for (let i = 0; i < count; i++) {
         if (!need[type]) continue;
-        const caveBound = type === 'C' || (type === 'L' && moonHollow());
-        spawn(type, caveBound ? undefined : undefined);
+        spawn(type);
       }
     }
   }
@@ -742,9 +754,16 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (trail.length) {
       const l = trail.pop(); got[l.type]--;
       const nm = spawn(l.type, clamp(l.x, 60, WORLD - 60));
+      if (l.type === 'B' && nm.rock) { nm.rock.scratched = false; nm.rock.holeDepth = 0; }
       if (l.type === 'N') panic(nm, cat.x - nm.x);
       float(l.x, l.y - 20, 'A light drifted away', col(l.type));
     } else float(cat.x, cat.y - 64, 'Ouch!', RED);
+  }
+  function buriedAmbushSize(night) { return night < 5 ? 0 : clamp(night - 3, 1, 4); }
+  function triggerBuriedAmbush() {
+    const n = buriedAmbushSize(storyNight); if (!n) { timeLeft = Math.max(0, timeLeft - 2); announce('The mountain rumbles…', RED, 2); return; }
+    for (let i = 0; i < n; i++) { const side = i % 2 ? 1 : -1, x = clamp(cat.x + side * (120 + Math.random() * 140), 60, WORLD - 60), type = i === n - 1 && n >= 3 ? 'N' : 'F', amb = spawn(type, x); if (type === 'F') { amb.state = 'windup'; amb.st = .6; amb.dir = -side; } }
+    announce(`The mountain woke ${n} angrier feelings`, RED, 2); shake = Math.max(shake, 10);
   }
   function catchIt(m) {
     if (mode === 'story' && m.type !== 'G' && got[m.type] >= need[m.type]) {
@@ -752,17 +771,18 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       timeLeft = Math.max(0, timeLeft - 3); combo = 0; comboT = 0;
       if (m.type === 'N') panic(m, cat.x - m.x);
       else if (m.type === 'L' || m.type === 'C') hideFeeling(m);
+      else if (m.type === 'B') { if (m.rock) m.rock.scratched = false; m.dead = false; m.state = 'buried'; m.alpha = 0; m.rock = buriedHome; m.x = buriedHome.x; m.y = buriedHome.y - 12; m.chime = 0; }
       else { m.state = 'patrol'; m.cd = 2; m.home = m.x; }
       tone(200, .2, 'sine', .05, -80); return;
     }
     combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 4; bestCombo = Math.max(bestCombo, combo);
-    const pts = { F: 100, N: 120, L: 150, C: 180, G: 500 }[m.type] * combo; score += pts;
-    const gain = { F: 10, N: 12, L: 14, C: 16, G: 40 }[m.type] + 2 * (combo - 1);
+    const pts = { F: 100, N: 120, L: 150, C: 180, B: 160, G: 500 }[m.type] * combo; score += pts;
+    const gain = { F: 10, N: 12, L: 14, C: 16, B: 13, G: 40 }[m.type] + 2 * (combo - 1);
     glowRun += gain; bump('glow', gain);
     caughtN++;
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
     else if (mode === 'free') { timeLeft += 2; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 12) trail.shift(); }
-    else { const chapter = chapterFor(storyNight); got[m.type]++; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); respawnQ.push({ type: m.type, at: chapter.respawnDelay + Math.random() * .8 }); }
+    else { const chapter = chapterFor(storyNight); got[m.type]++; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay + Math.random() * .8 }); }
     const key = m.type + (m.v || 0), info = vinfo(m.type, m.v || 0);
     if (!book[key]) {
       const bonus = m.v ? 30 : m.type === 'G' ? 20 : 10;
@@ -847,6 +867,12 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         m.st -= dt; m.alpha = Math.max(0, m.alpha - dt * 3);
         if (m.st <= 0) { m.x = pickX(); m.state = 'wander'; m.alpha = 0; }
       }
+    } else if (m.type === 'B') {
+      const rock = m.rock || buriedHome; m.x = rock.x; m.y = rock.y - 12;
+      if (m.state === 'buried') { m.alpha = 0; if (Math.abs(cat.x - m.x) < 4 * T) { m.chime -= dt; if (m.chime <= 0) { m.chime = 1.6; tone(440, .12, 'sine', .025); } } }
+      else if (m.state === 'scratching') { m.alpha = 0; m.st -= dt; if (m.st <= 0) { m.state = 'emerging'; m.st = .5; rock.holeDepth = 0; } }
+      else if (m.state === 'emerging') { m.alpha = Math.min(1, m.alpha + dt * 2.4); m.st -= dt; rock.holeDepth = Math.min(1, rock.holeDepth + dt * 2); if (m.st <= 0) { m.state = 'revealed'; m.alpha = 1; } }
+      else if (m.state === 'revealed') { rock.holeDepth = 1; }
     } else if (m.type === 'L' || m.type === 'C') {
       const dx = cat.x - m.x, moodColor = m.type === 'C' ? CALM : BLUE, floorY = terrainY(m.x);
       if (m.state === 'hide') { m.alpha = 0; m.sit = 0; }
@@ -897,8 +923,10 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (cat.pounce <= 0) return;
     const cx = cat.x + cat.face * 16, cy = cat.y - 24;
     for (const m of mood) {
-      if (m.dead || m.alpha < .5) continue;
+      if (m.dead) continue;
       if (Math.hypot(m.x - cx, m.y - cy) > uv('pounce')) continue;
+      if (m.type === 'B' && m.state === 'buried') { cat.bounced = true; cat.vx = -cat.face * 260; cat.pounce = 0; float(cat.x, cat.y - 70, 'It’s still buried. Scratch the rock.', '#a67646'); tone(150, .12, 'square', .05); continue; }
+      if (m.alpha < .5) continue;
       if (m.type === 'F' && m.state !== 'dizzy') {
         if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 300; cat.pounce = 0; float(m.x, m.y - 40, "Wait until it's dizzy", RED); tone(150, .12, 'square', .05); }
         continue;
@@ -929,6 +957,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   }
   function update(dt) {
     t += dt;
+    shake = Math.max(0, shake - dt * 24);
     updCat(dt);
     const last = hist[hist.length - 1];
     if (!last || Math.hypot(last.x - cat.x, last.y - cat.y) > 3) { hist.push({ x: cat.x, y: cat.y }); if (hist.length > 500) hist.shift(); }
@@ -996,10 +1025,18 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       const d = Math.hypot(cat.x - m.spot.x, Math.max(0, Math.abs(cat.y - m.spot.y) - 12));
       if (d < best) { best = d; scratchTarget = m; }
     }
+    if (need.B > 0) for (const rock of rocks) { if (rock.scratched || Math.abs(cat.y - rock.y) > 115) continue; const d = Math.hypot(cat.x - rock.x, Math.max(0, Math.abs(cat.y - rock.y) - 12)); if (d < best) { best = d; scratchTarget = { kind: 'rock', rock }; } }
     $('#bScratch').hidden = !scratchTarget || touchUI.hidden;
     return scratchTarget;
   }
   function performScratch() {
+    if (scratchTarget?.kind === 'rock') {
+      const rock = scratchTarget.rock; if (!rock || rock.scratched || !cat.on || Math.abs(cat.y - rock.y) > 115) return false;
+      rock.scratched = true; rock.holeDepth = 0; scratchAnim = .8; shake = Math.max(shake, rock.marked ? 0 : 10);
+      if (rock.marked) { const m = mood.find(x => x.type === 'B' && !x.dead); if (m) { m.state = 'scratching'; m.st = .8; m.rock = rock; } burst(rock.x, rock.y - 22, '#8a6a45', 12); float(rock.x, rock.y - 68, 'Something was buried here.', '#a67646'); tone(190 + Math.random() * 40, .12, 'triangle', .03, 100); }
+      else { rock.wrongUsed = true; tone(80, .5, 'sawtooth', .09, -40); announce('The mountain rumbles…', RED, 2); triggerBuriedAmbush(); }
+      scratchTarget = null; return true;
+    }
     const m = scratchTarget;
     if (!m || m.dead || m.state !== 'hide' || !m.spot || m.spot.used || !cat.on || Math.abs(cat.y - m.spot.y) > 115) return false;
     m.state = 'scratching'; m.st = .58; m.spot.scratching = true; m.spot.scratchAt = t; m.sit = 0; scratchAnim = .58;
@@ -1047,7 +1084,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   function lightShape(type, x, y, s, v) {
     const cc = v ? vcol(type, v) : col(type);
     ctx.fillStyle = cc; ctx.shadowColor = cc; ctx.shadowBlur = 14;
-    if (type === 'F') star(x, y, 5, 9 * s, 4 * s, t * 2); else if (type === 'N') zig(x, y, 8 * s, .6); else if (type === 'L') tear(x, y + 2 * s, 6 * s); else if (type === 'C') { ctx.beginPath(); ctx.arc(x, y, 7 * s, 0, 7); ctx.fill(); ctx.strokeStyle = cc; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 10 * s, t, t + Math.PI * 1.5); ctx.stroke(); } else { ctx.beginPath(); ctx.arc(x, y, 7 * s, 0, 7); }
+    if (type === 'F') star(x, y, 5, 9 * s, 4 * s, t * 2); else if (type === 'N') zig(x, y, 8 * s, .6); else if (type === 'L') tear(x, y + 2 * s, 6 * s); else if (type === 'C') { ctx.beginPath(); ctx.arc(x, y, 7 * s, 0, 7); ctx.fill(); ctx.strokeStyle = cc; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 10 * s, t, t + Math.PI * 1.5); ctx.stroke(); } else if (type === 'B') { ctx.beginPath(); for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + i * Math.PI / 3; ctx.lineTo(x + Math.cos(a) * 7 * s, y + Math.sin(a) * 7 * s); } ctx.closePath(); } else { ctx.beginPath(); ctx.arc(x, y, 7 * s, 0, 7); }
     if (type !== 'C') ctx.fill(); ctx.shadowBlur = 0;
   }
 
@@ -1162,6 +1199,15 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     }
     ctx.globalAlpha=1;
   }
+  function drawRockFormation(x, y, rock, moodHolding) {
+    ctx.save(); const pulse = .5 + .5 * Math.sin(t * 4 + rock.phase), markedGlow = eyesT > 0 && rock.marked && !rock.scratched && Math.abs(cat.x - x) <= uv('eyes') * T;
+    if (markedGlow) { const g = ctx.createRadialGradient(x, y - 24, 3, x, y - 24, 66); g.addColorStop(0, 'rgba(166,118,70,.35)'); g.addColorStop(1, 'rgba(166,118,70,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 24, 66, 0, 7); ctx.fill(); }
+    const stones = [[-28,0,30,24,'#4a4340'],[0,-10,34,29,'#5c524a'],[28,2,29,23,'#6f645a'],[-9,6,23,18,'#514943']];
+    for (const [dx,dy,rx,ry,c] of stones) { ctx.fillStyle=c; ctx.beginPath(); ctx.moveTo(x+dx-rx,y+dy); ctx.lineTo(x+dx-rx*.55,y+dy-ry); ctx.lineTo(x+dx+rx*.2,y+dy-ry*.8); ctx.lineTo(x+dx+rx,y+dy-ry*.25); ctx.lineTo(x+dx+rx*.72,y+dy); ctx.closePath(); ctx.fill(); ctx.strokeStyle='#8a8074'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(x+dx-rx*.5,y+dy-ry*.78); ctx.lineTo(x+dx+rx*.15,y+dy-ry*.58); ctx.lineTo(x+dx+rx*.48,y+dy-ry*.25); ctx.stroke(); }
+    if (rock.holeDepth > 0) { ctx.fillStyle=`rgba(12,13,16,${.55 + .3 * rock.holeDepth})`; ctx.beginPath(); ctx.ellipse(x, y - 4, 18, 9, 0, 0, 7); ctx.fill(); ctx.fillStyle=`rgba(166,118,70,${.45 * rock.holeDepth})`; ctx.beginPath(); ctx.arc(x, y - 7, 6, 0, 7); ctx.fill(); }
+    if (markedGlow) { ctx.strokeStyle=`rgba(166,118,70,${.55 + .35 * pulse})`; ctx.lineWidth=2; for (const off of [-13,2,15]) { ctx.beginPath(); ctx.moveTo(x+off,y-27); ctx.lineTo(x+off+4,y-18); ctx.lineTo(x+off-1,y-11); ctx.stroke(); } const py=y-53-Math.sin(t*3+rock.phase)*2; ctx.fillStyle='#a67646'; [[-5,0,2.5],[5,0,2.5],[-7,-6,2],[0,-8,2],[7,-6,2]].forEach(([dx,dy,r])=>{ctx.beginPath();ctx.arc(x+dx,py+dy,r,0,7);ctx.fill();}); }
+    ctx.restore();
+  }
   function drawMoonHollowWorld(x0,x1) {
     for(const x of CAVE_XS){if(x<x0-100||x>x1+100)continue;
       ctx.save();ctx.translate(0,terrainY(x)-GROUND);
@@ -1193,6 +1239,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     for(const [hx,off,rx,ry] of [[390,31,42,23],[1045,38,52,28],[1710,47,45,24],[2075,34,49,26]]){const hy=terrainY(hx)+off;ctx.fillStyle='rgba(5,13,20,.83)';ctx.beginPath();ctx.moveTo(hx-rx,hy+ry);ctx.quadraticCurveTo(hx-rx*.88,hy-ry*.2,hx-rx*.3,hy-ry*.65);ctx.quadraticCurveTo(hx,hy-ry*1.05,hx+rx*.32,hy-ry*.55);ctx.quadraticCurveTo(hx+rx*.9,hy-.1*ry,hx+rx,hy+ry);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(134,151,144,.34)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(hx-rx*.82,hy+ry*.1);ctx.quadraticCurveTo(hx,hy-ry*.9,hx+rx*.8,hy+ry*.05);ctx.stroke();}
     drawMoonHollowWorld(x0,x1);
     for(const spot of scratchSpots){if(spot.x<x0-60||spot.x>x1+60)continue;drawScratchSpot(spot.x,spot.y,spot.moodType,spot);}
+    for(const rock of rocks){if(rock.x<x0-80||rock.x>x1+80)continue;drawRockFormation(rock.x,rock.y,rock);}
     for(const p of plats){if(p[0]+p[2]<x0||p[0]>x1)continue;
       const x=p[0],y=p[1],w=p[2];ctx.fillStyle='#27333a';ctx.beginPath();ctx.moveTo(x-4,y+13);ctx.lineTo(x+4,y+4);ctx.quadraticCurveTo(x+w*.21,y+12,x+w*.34,y+6);ctx.quadraticCurveTo(x+w*.58,y-1,x+w*.76,y+8);ctx.lineTo(x+w+5,y+11);ctx.lineTo(x+w-8,y+28);ctx.lineTo(x+10,y+28);ctx.closePath();ctx.fill();
       const rock=ctx.createLinearGradient(0,y,0,y+18);rock.addColorStop(0,'#596458');rock.addColorStop(.36,'#49514b');rock.addColorStop(1,'#303a3b');ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(x-2,y+7);ctx.quadraticCurveTo(x+w*.2,y+3,x+w*.4,y+8);ctx.quadraticCurveTo(x+w*.72,y+2,x+w+3,y+6);ctx.lineTo(x+w-4,y+15);ctx.quadraticCurveTo(x+w*.6,y+12,x+w*.35,y+16);ctx.quadraticCurveTo(x+w*.1,y+12,x-2,y+17);ctx.closePath();ctx.fill();
@@ -1249,6 +1296,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
           ctx.font = `600 13px ${BODY}`; ctx.textAlign = 'center'; ctx.fillStyle = BLUE;
           ctx.fillText('Sit still beside me', m.x, m.y - 34);
         }
+      } else if (m.type === 'B') {
+        if (m.alpha < .02) { ctx.restore(); continue; } lightShape('B', m.x, m.y, 1.8, m.v); ctx.strokeStyle = '#493321'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(m.x-5,m.y-2); ctx.lineTo(m.x,m.y+3); ctx.lineTo(m.x+5,m.y-2); ctx.stroke();
       } else if (m.type === 'C') {
         if (m.alpha < .02) { ctx.restore(); continue; }
         ctx.fillStyle = CALM; ctx.shadowColor = CALM; ctx.shadowBlur = 24;
@@ -1371,7 +1420,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       }
     }
     if (mode === 'story') {
-      const types = Object.keys(need).filter(type => need[type] > 0), width = types.length === 4 ? 88 : 96, gap = 8;
+      const types = Object.keys(need).filter(type => need[type] > 0), width = types.length >= 5 ? 78 : types.length === 4 ? 88 : 96, gap = 8;
       let x = VW - 22 - types.length * (width + gap) + gap;
       for (const type of types) { chip(x, top + 6, type, got[type] || 0, need[type], width); x += width + gap; }
       ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.textAlign = 'right';
@@ -1382,9 +1431,9 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       ctx.font = `600 13px ${BODY}`; ctx.fillStyle = VIOLET;
       ctx.fillText(`FREE MODE · LEVEL ${level + 1}`, VW - 22, top + 58);
     }
-    if (scratchTarget && scratchTarget.state === 'hide') {
+    if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
-      const prompt=`S  Scratch ${scratchTarget.type==='C'?'cave mark':'hiding spot'}`,py=VH-74;
+      const prompt = scratchTarget.kind === 'rock' ? `S  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? 'marked rock' : 'rock'}` : `S  Scratch ${scratchTarget.type==='C'?'cave mark':'hiding spot'}`, py=VH-74;
       ctx.strokeText(prompt,VW/2,py);ctx.fillText(prompt,VW/2,py);
     } else if (scratchAnim>0) {
       ctx.textAlign='center';ctx.font=`800 16px ${DISP}`;ctx.fillStyle='#f4e8c7';ctx.fillText('Scratching…',VW/2,VH-74);
@@ -1400,6 +1449,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   function render(dt) {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#120c24'; ctx.fillRect(0, 0, cv.width, cv.height);
     ctx.setTransform(dpr * S, 0, 0, dpr * S, 0, dpr * S * OY);
+    if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
     ctx.save(); ctx.translate(-camX, 0);
     drawWorld(); drawMoods(); drawTrail();
@@ -1546,7 +1596,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 
   function playNightComplete(night) {
     const chapter = chapterFor(night), next = Math.min(7, night + 1);
-    $('#nightStoryline').hidden = false;
+    $('#nightStoryline').hidden = true;
     $('#endThiriArt').dataset.stage = String(Math.min(7, thiriSleepStage));
     $('#endDiaryLine').textContent = `“${chapter.diary}”`;
     $('#endStageLine').textContent = `Thiri’s room is changing · sleep stage ${thiriSleepStage} of 7`;
@@ -1666,6 +1716,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     const cw = 55 - d.curtain * 42; g.fillStyle = mix('#4b3b62', '#cf8194', light); g.fillRect(48, 22, cw, 155); g.fillRect(212 - cw, 22, cw, 155);
     g.fillStyle = '#855978'; g.fillRect(270, 132, 340, 82); g.fillStyle = '#f5e4e7'; g.fillRect(292, 120, 300, 36);
     g.fillStyle = '#d28aa4'; g.beginPath(); g.moveTo(280, 168); g.quadraticCurveTo(400, 105 - d.blanketLift * 2, 570, 160); g.lineTo(590, 214); g.lineTo(275, 214); g.closePath(); g.fill();
+    if (!d.faceVisible) { ctx.fillStyle = '#2a2532'; ctx.beginPath(); ctx.ellipse(656, 314, 25, 10, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(638, 314); ctx.lineTo(646, 296); ctx.lineTo(654, 313); ctx.lineTo(664, 294); ctx.lineTo(674, 315); ctx.closePath(); ctx.fill(); }
     if (d.faceVisible) { g.fillStyle = '#e9b993'; g.beginPath(); g.arc(500, 121 - d.blanketLift, 25, 0, 7); g.fill(); g.fillStyle = '#30243a'; g.beginPath(); g.arc(500, 111 - d.blanketLift, 28, Math.PI, 0); g.fill(); g.strokeStyle = '#493143'; g.lineWidth = 3; g.beginPath(); g.moveTo(487, 126 - d.blanketLift); g.quadraticCurveTo(492, 131 - d.blanketLift, 497, 126 - d.blanketLift); g.stroke(); }
     if (d.handOut) { g.strokeStyle = '#e9b993'; g.lineWidth = 9; g.beginPath(); g.moveTo(425, 172); g.lineTo(370, 185); g.stroke(); }
     g.fillStyle = '#efb44a'; g.beginPath(); g.ellipse(230, 203, 32, 17, 0, 0, 7); g.fill(); g.beginPath(); g.arc(253, 186, 14, 0, 7); g.fill();
