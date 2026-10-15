@@ -37,7 +37,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .level-map-head{display:flex;align-items:end;justify-content:space-between;gap:12px}
 .level-map-head h2{font:800 clamp(21px,4vw,28px)/1 var(--display);color:var(--ink);margin:4px 0 0}
-.level-map-count{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+.level-map-count{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}.room-status{display:block;margin-top:4px;color:var(--muted);font-size:11px;text-align:right;white-space:nowrap}.wake-panel{max-width:720px;gap:14px}.wake-art{display:grid;place-items:center;min-height:220px;border:1px solid rgba(243,236,255,.18);border-radius:16px;background:linear-gradient(145deg,#161332,#483755);overflow:hidden}.wake-art canvas{width:100%;height:100%;min-height:220px}.wake-copy{display:grid;gap:7px}.wake-copy em{color:var(--muted);font-size:14px}.wake-copy strong{color:var(--gold);font-family:var(--display);font-size:18px}
 .level-map-window{height:clamp(280px,52vh,560px);min-height:280px;position:relative;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;border:1px solid rgba(190,200,211,.28);border-radius:18px;background:radial-gradient(ellipse at 54% 10%,rgba(148,184,210,.14),transparent 38%),linear-gradient(180deg,#0a111d,#111a28 48%,#111520);box-shadow:inset 0 0 42px rgba(0,0,0,.38);scrollbar-color:rgba(184,162,115,.62) rgba(255,255,255,.05);scrollbar-width:thin}
 .level-map-track{position:relative;width:100%;isolation:isolate}
 #levelMapViewport{overflow-x:hidden}
@@ -292,7 +292,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 
 <div class="overlay" id="startScreen">
   <div class="panel">
-    <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count" id="levelMapCount">1 / 7 nights unlocked</span></div>
+    <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count" id="levelMapCount">1 / 7 nights unlocked</span><span class="room-status" id="roomStatus" aria-live="polite">Thiri is sleeping</span></div>
     <p class="level-map-hint">Choose the lit night. Each completed story night opens the next chapter.</p>
     <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Scrollable level map; scroll upward for higher levels" tabindex="0">
       <div class="level-map-track" id="levelMapTrack">
@@ -363,6 +363,15 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   </div>
 </div>
 
+<div class="overlay" id="nightWakeScreen" hidden aria-labelledby="nightWakeTitle">
+  <div class="panel wake-panel">
+    <p class="eyebrow" id="nightWakeEyebrow">AFTER NIGHT 1</p><h1 id="nightWakeTitle">She stirs in her sleep.</h1>
+    <div class="wake-art"><canvas id="nightWakeCanvas" width="680" height="250" aria-label="Thiri's room becoming brighter"></canvas></div>
+    <div class="wake-copy"><strong id="nightWakeDiary"></strong><em id="nightWakeLine"></em></div>
+    <button class="btn" id="nightWakeContinue" type="button">Continue →</button>
+  </div>
+</div>
+
 <div class="overlay" id="awakeningScreen" hidden aria-labelledby="awakeningTitle">
   <div class="panel awakening-panel">
     <button class="intro-skip awakening-skip" id="awakeningSkipBtn" type="button">Skip to ending</button>
@@ -384,6 +393,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       </svg>
     </div>
     <div class="awakening-subtitle" id="awakeningSubtitle" aria-live="polite">Sunrise light spills across the room…</div>
+    <p class="muted" id="awakeningCompleteLine" hidden>The seven nights are complete. <span class="gold">Morning has come.</span></p>
     <div class="actions" id="awakeningActions" hidden><button class="btn" id="awakeningReplayBtn" type="button">Play again</button><button class="btn ghost" id="awakeningBookBtn" type="button">View Mood Book</button><button class="btn alt" id="awakeningFreeBtn" type="button">Free Mode</button></div>
   </div>
 </div>
@@ -450,6 +460,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
     if (e.repeat) return;
+    if ($('#nightWakeScreen') && !$('#nightWakeScreen').hidden) { if (['Space','Enter','Escape'].includes(e.code)) { e.preventDefault(); closeNightWake(); } return; }
     if (state === 'home' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); homeKey(); return; }
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') jumpQ = true;
     if (e.code === 'KeyJ' || e.code === 'KeyX') pounceQ = true;
@@ -531,6 +542,17 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     { night: 7, name: 'Moon Hollow', sub: 'Bring every feeling home before dawn', theme: '#d6a866', musicRoot: 293.66, timeLimit: 115, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 0 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' }
   ];
   const chapterFor = night => NIGHT_CHAPTERS[clamp(night - 1, 0, NIGHT_CHAPTERS.length - 1)];
+  const SLEEP_STAGES = [
+    { faceVisible: 0, blanketLift: 0, handOut: 0, eyesOpen: 0, smile: 0, plant: 0, curtain: 0, room: .15 },
+    { faceVisible: 1, blanketLift: 2, handOut: 0, eyesOpen: 0, smile: 0, plant: .15, curtain: .05, room: .22 },
+    { faceVisible: 1, blanketLift: 4, handOut: 0, eyesOpen: 0, smile: 0, plant: .3, curtain: .18, room: .30 },
+    { faceVisible: 1, blanketLift: 6, handOut: .5, eyesOpen: 0, smile: .1, plant: .5, curtain: .3, room: .40 },
+    { faceVisible: 1, blanketLift: 8, handOut: 1, eyesOpen: 0, smile: .4, plant: .7, curtain: .45, room: .52 },
+    { faceVisible: 1, blanketLift: 10, handOut: 1, eyesOpen: .3, smile: .7, plant: .9, curtain: .6, room: .65 },
+    { faceVisible: 1, blanketLift: 14, handOut: 1, eyesOpen: .5, smile: 1, plant: 1, curtain: .8, room: .78 },
+    { faceVisible: 1, blanketLift: 18, handOut: 1, eyesOpen: 1, smile: 1, plant: 1, curtain: 1, room: 1 }
+  ];
+  const STAGE_LINES = ['', 'She stopped crying in her sleep. I stayed close.', 'She turned toward the window. The moon touched her cheek.', 'Her hand found me in the dark. I did not move.', 'Her face is softer tonight. Something is mending.', 'Her eyelids fluttered. Almost, almost.', 'She stretched. The room smells like morning.', 'Morning. She opened her eyes.'];
   let unlockedLevel = 1, thiriSleepStage = 0, finalAwakeningSeen = false;
   try { unlockedLevel = clamp(Math.floor(+localStorage.getItem('mk-progress') || 1), 1, 7); } catch (e) {}
   try { thiriSleepStage = clamp(Math.floor(+localStorage.getItem('mk-thiri') || 0), 0, 7); } catch (e) {}
@@ -1532,7 +1554,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   function playNightComplete(night) {
     const chapter = chapterFor(night), next = Math.min(7, night + 1);
     $('#nightStoryline').hidden = false;
-    $('#endThiriArt').dataset.stage = String(Math.min(6, thiriSleepStage));
+    $('#endThiriArt').dataset.stage = String(Math.min(7, thiriSleepStage));
     $('#endDiaryLine').textContent = `“${chapter.diary}”`;
     $('#endStageLine').textContent = `Thiri’s room is changing · sleep stage ${thiriSleepStage} of 7`;
     $('#endUnlockBadge').hidden = !R.unlocked;
@@ -1607,7 +1629,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     const n = types.length;
     const floorP = [[300, 452, -.5], [388, 470, .4], [470, 450, -.25], [548, 468, .7]];
     H = {
-      won, preview, night, stage: Math.min(6, thiriSleepStage), diary: chapterFor(night).diary, phase: 'enter', pt: 0, p: 0, m: 0, capT: 0, total: n, given: { F: 0, N: 0, L: 0, C: 0 },
+      won, preview, night, stage: Math.min(7, thiriSleepStage), diary: chapterFor(night).diary, phase: 'enter', pt: 0, p: 0, m: 0, capT: 0, total: n, given: { F: 0, N: 0, L: 0, C: 0 },
       nF: types.filter(x => x === 'F').length, nN: types.filter(x => x === 'N').length,
       lights: types.map((ty, i) => ({ type: ty, x: 120, y: 190, sx: 440 - (n - 1) * 20 + i * 40, sy: 222, state: 'wait', delay: .55 + i * .12, ft: 0, fx: 0, fy: 0 })),
       cat: { x: 120, y: 262 },
@@ -1642,10 +1664,39 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (H.canContinue) { finishHome(); return; }
     if (H.phase === 'give') { const L = H.lights.find(l => l.state === 'hover'); if (L) give(L); }
   }
+  let wakeTimer = 0, wakeRaf = 0, wakeStage = 0;
+  function drawWakeCard(stage) {
+    const c = $('#nightWakeCanvas'), g = c.getContext('2d'), d = SLEEP_STAGES[clamp(stage, 0, 7)];
+    g.clearRect(0, 0, c.width, c.height); const light = d.room;
+    g.fillStyle = mix('#15132b', '#f3c98b', light); g.fillRect(0, 0, c.width, c.height);
+    g.fillStyle = mix('#202040', '#8eb9d8', light); g.fillRect(55, 28, 150, 140); g.fillStyle = mix('#403253', '#fff0b0', light); g.fillRect(72, 42, 116, 112);
+    const cw = 55 - d.curtain * 42; g.fillStyle = mix('#4b3b62', '#cf8194', light); g.fillRect(48, 22, cw, 155); g.fillRect(212 - cw, 22, cw, 155);
+    g.fillStyle = '#855978'; g.fillRect(270, 132, 340, 82); g.fillStyle = '#f5e4e7'; g.fillRect(292, 120, 300, 36);
+    g.fillStyle = '#d28aa4'; g.beginPath(); g.moveTo(280, 168); g.quadraticCurveTo(400, 105 - d.blanketLift * 2, 570, 160); g.lineTo(590, 214); g.lineTo(275, 214); g.closePath(); g.fill();
+    if (d.faceVisible) { g.fillStyle = '#e9b993'; g.beginPath(); g.arc(500, 121 - d.blanketLift, 25, 0, 7); g.fill(); g.fillStyle = '#30243a'; g.beginPath(); g.arc(500, 111 - d.blanketLift, 28, Math.PI, 0); g.fill(); g.strokeStyle = '#493143'; g.lineWidth = 3; g.beginPath(); g.moveTo(487, 126 - d.blanketLift); g.quadraticCurveTo(492, 131 - d.blanketLift, 497, 126 - d.blanketLift); g.stroke(); }
+    if (d.handOut) { g.strokeStyle = '#e9b993'; g.lineWidth = 9; g.beginPath(); g.moveTo(425, 172); g.lineTo(370, 185); g.stroke(); }
+    g.fillStyle = '#efb44a'; g.beginPath(); g.ellipse(230, 203, 32, 17, 0, 0, 7); g.fill(); g.beginPath(); g.arc(253, 186, 14, 0, 7); g.fill();
+    g.fillStyle = mix('#5e5b66', '#5fbf72', d.plant); g.fillRect(620, 177, 24, 30); g.strokeStyle = g.fillStyle; g.lineWidth = 5; for (const x of [614,630,646]) { g.beginPath(); g.moveTo(632,180); g.lineTo(x,150); g.stroke(); }
+  }
+  function closeNightWake() {
+    clearTimeout(wakeTimer); cancelAnimationFrame(wakeRaf); $('#nightWakeScreen').hidden = true;
+    if (wakeStage === 7 && !finalAwakeningSeen) playFinalAwakening(); else showEnd();
+  }
+  function showNightWake(night) {
+    wakeStage = clamp(thiriSleepStage, 1, 7); const ch = chapterFor(night);
+    $('#nightWakeEyebrow').textContent = `AFTER NIGHT ${night}`;
+    $('#nightWakeTitle').textContent = wakeStage === 7 ? 'Morning is almost here.' : 'She stirs in her sleep.';
+    $('#nightWakeDiary').textContent = `“${ch.diary}”`; $('#nightWakeLine').textContent = `Shwe: “${STAGE_LINES[wakeStage]}”`;
+    $('#nightWakeContinue').textContent = wakeStage === 7 ? 'See the morning →' : 'Continue →';
+    $('#nightWakeScreen').hidden = false; $('#nightWakeContinue').focus({ preventScroll: true });
+    const from = SLEEP_STAGES[Math.max(0, wakeStage - 1)], to = SLEEP_STAGES[wakeStage], started = performance.now(), tween = reduce ? .1 : 1.5;
+    const animateWake = now => { const q = clamp((now - started) / 1000 / tween, 0, 1), e = ease(q), blended = {}; for (const key of Object.keys(to)) blended[key] = from[key] + (to[key] - from[key]) * e; const original = SLEEP_STAGES[wakeStage]; SLEEP_STAGES[wakeStage] = blended; drawWakeCard(wakeStage); SLEEP_STAGES[wakeStage] = original; if (q < 1) wakeRaf = requestAnimationFrame(animateWake); };
+    wakeRaf = requestAnimationFrame(animateWake); wakeTimer = setTimeout(closeNightWake, reduce ? 2000 : 6000);
+  }
   function finishHome() {
     if (!H || H.finished) return; H.finished = true;
     if (H.preview) { state = 'menu'; cv.hidden = true; $('#startScreen').hidden = false; buildLevelMap(); focusLevelMap(unlockedLevel); setTimeout(() => $('#playBtn').focus(), 50); }
-    else if (H.won && H.night === 7 && !finalAwakeningSeen) playFinalAwakening();
+    else if (H.won) showNightWake(H.night);
     else showEnd();
   }
   function homeUpdate(dt) {
@@ -1736,8 +1787,24 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   }
   function rrect(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
 
+  function drawThiriAwakening(stage, morning, h) {
+    const d = SLEEP_STAGES[clamp(stage, 0, 7)], skin = mix('#8c8794', '#e9b993', d.room);
+    const share = h.nN ? h.given.N / h.nN : 1, amp = 3.4 - 2 * share, spd = 3.4 - 1.8 * share, br = Math.sin(t * spd) * amp;
+    if (d.faceVisible) {
+      ctx.fillStyle = '#2a2532'; ctx.beginPath(); ctx.ellipse(676, 320 - d.blanketLift * .3, 22, 9, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(656, 302 - d.blanketLift * .3, 21, 0, 7); ctx.fill();
+      ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(645, 309 - d.blanketLift * .3, 16, 0, 7); ctx.fill(); ctx.fillStyle = '#2a2532'; ctx.beginPath(); ctx.arc(650, 300 - d.blanketLift * .3, 15, Math.PI * 1.05, Math.PI * 1.9); ctx.fill();
+      ctx.strokeStyle = '#2a2532'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+      if (d.eyesOpen > 0 && Math.sin(t * 2.4) > .94) { ctx.fillStyle = '#372b3b'; ctx.beginPath(); ctx.ellipse(639, 305, 2.1, 2.7 * d.eyesOpen, 0, 0, 7); ctx.fill(); } else { ctx.beginPath(); ctx.moveTo(636, 305); ctx.quadraticCurveTo(639, 308, 642, 305); ctx.stroke(); }
+      const smile = -2.6 - 2.2 * d.smile - 1.5 * morning; ctx.beginPath(); ctx.moveTo(632, 317); ctx.quadraticCurveTo(637, 317 + smile, 642, 317); ctx.stroke();
+    }
+    if (d.handOut > 0) { ctx.strokeStyle = '#e9b995'; ctx.lineWidth = 8 * d.handOut; ctx.beginPath(); ctx.moveTo(520, 345 - d.blanketLift); ctx.quadraticCurveTo(492, 360, 468, 348); ctx.stroke(); }
+    const blanketLift = d.blanketLift;
+    ctx.fillStyle = mix('#55525e', '#d98aa6', Math.max(morning * .25, d.room)); ctx.beginPath(); ctx.moveTo(312, 380); ctx.lineTo(312, 336 - blanketLift); ctx.bezierCurveTo(380, 318 - blanketLift, 430, 296 + br - blanketLift, 500, 298 + br - blanketLift); ctx.bezierCurveTo(570, 300 + br - blanketLift, 600, 306 - blanketLift, 632, 324 - d.faceVisible * 6); ctx.lineTo(640, 380); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.12)'; for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.arc(340 + i * 32, 352 - (i % 2) * 14 - blanketLift * .35, 3, 0, 7); ctx.fill(); }
+  }
+
   function drawHome() {
-    const h = H, rx = (VW - 760) / 2, p = h.p, m = h.m, stage = h.stage || 0, roomLight = Math.max(m, stage / 6 * .48), y0 = -OY, fullH = VH + OY * 2;
+    const h = H, rx = (VW - 760) / 2, p = h.p, m = h.m, stage = clamp(h.stage || 0, 0, 7), stageDef = SLEEP_STAGES[stage], roomLight = Math.max(m, stageDef.room), y0 = -OY, fullH = VH + OY * 2;
     // Wall and room light gradually change with each completed night.
     ctx.fillStyle = mix('#34313d', '#72627a', roomLight); ctx.fillRect(0, y0, VW, fullH);
     ctx.fillStyle = 'rgba(255,255,255,.035)'; for (let x = 0; x < VW; x += 44) ctx.fillRect(x, y0, 20, 430 - y0);
@@ -1757,13 +1824,13 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     ctx.strokeStyle = mix('#5a5662', '#f3e7d0', p); ctx.lineWidth = 6; ctx.strokeRect(40, 70, 160, 200);
     ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(120, 70); ctx.lineTo(120, 270); ctx.moveTo(40, 170); ctx.lineTo(200, 170); ctx.stroke();
     // curtains
-    const curtainOpen = Math.max(m, stage / 6 * .55), cw = 84 - 64 * curtainOpen, curt = mix('#4a4752', '#e0798e', roomLight);
+    const curtainOpen = Math.max(m, stageDef.curtain), cw = 84 - 64 * curtainOpen, curt = mix('#4a4752', '#e0798e', roomLight);
     ctx.fillStyle = curt; ctx.fillRect(28, 60, cw, 222); ctx.fillRect(212 - cw, 60, cw, 222);
     ctx.fillStyle = 'rgba(0,0,0,.12)'; for (let i = 1; i < 4; i++) { ctx.fillRect(28 + cw * i / 4, 60, 2, 222); ctx.fillRect(212 - cw * i / 4, 60, 2, 222); }
     ctx.fillStyle = mix('#3e3b46', '#8a5a44', p); ctx.fillRect(22, 54, 196, 6);
     ctx.fillStyle = mix('#46434e', '#a26f52', p); ctx.fillRect(30, 270, 180, 12);
     // plant
-    const health = Math.max(p * .25, roomLight, stage / 6);
+    const health = Math.max(p * .25, roomLight, stageDef.plant);
     ctx.strokeStyle = mix('#5e5b66', '#5fbf72', health); ctx.lineWidth = 4; ctx.lineCap = 'round';
     [-1, 0, 1].forEach(s => { const a = -Math.PI / 2 + s * (.5 + (1 - health) * .9); ctx.beginPath(); ctx.moveTo(176, 250); ctx.quadraticCurveTo(176 + Math.cos(a) * 14, 250 + Math.sin(a) * 14 - 4, 176 + Math.cos(a) * 26, 250 + Math.sin(a) * 26 + (1 - health) * 14); ctx.stroke(); });
     if (m > .5) { ctx.fillStyle = `rgba(255,120,160,${(m - .5) * 2})`; ctx.beginPath(); ctx.arc(176, 222, 6, 0, 7); ctx.fill(); }
@@ -1811,26 +1878,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     ctx.fillStyle = mix('#47444f', '#8a5a44', p); rrect(704, 238, 28, 150, 8); ctx.fill();
     ctx.fillStyle = mix('#6a6672', '#efe6ff', p); rrect(300, 330, 420, 44, 8); ctx.fill();
     ctx.fillStyle = mix('#77737f', '#fff4fb', p); ctx.beginPath(); ctx.ellipse(662, 324, 42, 14, 0, 0, 7); ctx.fill();
-    // Thiri
-    const skin = mix('#8c8794', '#e9b993', roomLight);
-    ctx.fillStyle = '#2a2532'; ctx.beginPath(); ctx.ellipse(676, 320, 22, 9, 0, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.arc(656, 302, 21, 0, 7); ctx.fill();
-    ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(645, 309, 16, 0, 7); ctx.fill();
-    ctx.fillStyle = '#2a2532'; ctx.beginPath(); ctx.arc(650, 300, 15, Math.PI * 1.05, Math.PI * 1.9); ctx.fill();
-    ctx.strokeStyle = '#2a2532'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
-    if (stage >= 6 && Math.sin(t * 2.4) <= .94) { ctx.fillStyle = '#372b3b'; ctx.beginPath(); ctx.ellipse(639, 305, 2.1, 2.7, 0, 0, 7); ctx.fill(); }
-    else { ctx.beginPath(); ctx.moveTo(636, 305); ctx.quadraticCurveTo(639, 308, 642, 305); ctx.stroke(); }
-    const smile = clamp(-2.6 - .42 * stage - 1.5 * m, -5.2, -2.6);
-    ctx.beginPath(); ctx.moveTo(632, 317); ctx.quadraticCurveTo(637, 317 + smile, 642, 317); ctx.stroke();
-    if (p > .5) { ctx.fillStyle = `rgba(255,130,150,${(p - .5) * .6})`; ctx.beginPath(); ctx.arc(633, 312, 3.5, 0, 7); ctx.fill(); }
-    // blanket (breathing)
-    const share = h.nN ? h.given.N / h.nN : 1, amp = 3.4 - 2 * share, spd = 3.4 - 1.8 * share, br = Math.sin(t * spd) * amp, blanketLift = stage >= 6 ? 7 : 0;
-    ctx.fillStyle = mix('#55525e', '#d98aa6', Math.max(p * .25, stage / 6));
-    ctx.beginPath(); ctx.moveTo(312, 380); ctx.lineTo(312, 336 - blanketLift);
-    ctx.bezierCurveTo(380, 318 - blanketLift, 430, 296 + br - blanketLift, 500, 298 + br - blanketLift); ctx.bezierCurveTo(570, 300 + br - blanketLift, 600, 306 - blanketLift, 632, 324);
-    ctx.lineTo(640, 380); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.12)';
-    for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.arc(340 + i * 32, 352 - (i % 2) * 14, 3, 0, 7); ctx.fill(); }
+    drawThiriAwakening(stage, m, h);
     // cat
     drawCurled(h.cat.x, h.cat.y, m > .3);
     if (m > .3) { ctx.fillStyle = `rgba(243,236,255,${.6 * m})`; ctx.font = `800 14px ${DISP}`; ctx.textAlign = 'left'; ctx.fillText('z', h.cat.x + 30, h.cat.y - 26 - Math.sin(t * 2) * 3); ctx.fillText('z', h.cat.x + 40, h.cat.y - 40 - Math.sin(t * 2 + 1) * 3); }
@@ -2006,6 +2054,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     route.setAttribute('d', d); path.setAttribute('d', d);
     svg.querySelector('.path-halo').setAttribute('d', d);
     $('#levelMapCount').textContent = `${unlockedLevel} / 7 nights unlocked`;
+    $('#roomStatus').textContent = thiriSleepStage >= 7 ? 'Thiri woke up' : thiriSleepStage >= 5 ? 'Thiri is almost awake' : thiriSleepStage >= 3 ? 'Thiri is stirring' : 'Thiri is sleeping';
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const chapter = LEVEL_MAP_CHAPTERS.get(level), x = levelMapX(level);
       const entry = document.createElement('div');
@@ -2086,30 +2135,33 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   $('#introSkipBtn').addEventListener('click', leaveIntro);
   $('#introContinueBtn').addEventListener('click', leaveIntro);
 
+  $('#nightWakeContinue').addEventListener('click', closeNightWake);
   const AWAKENING_BEATS = [
-    { t: 0, dur: 2.5, anim: 'sunrise', text: 'Sunrise light floods the room, warm and gold.' },
-    { t: 2.5, dur: 2.5, anim: 'stretch', text: 'Thiri sits up and stretches into the morning.' },
-    { t: 5, dur: 2.5, anim: 'drawing', text: 'The scattered pieces are together again. Her drawing is whole.' },
-    { t: 7.5, dur: 2.5, anim: 'message', text: 'Her phone lights up: Hnin is waiting at art club.' },
-    { t: 10, dur: 3, anim: 'message', text: '“Thank you. I think I’m ready to try again.”' },
-    { t: 13, dur: 2.5, anim: 'window', text: 'Morning. She opens the curtains. Day 7 — Thiri woke up.' }
+    { t: 0, dur: 2, anim: 'sunrise', text: 'She stirred. Then she opened her eyes.' },
+    { t: 2, dur: 2.5, anim: 'sunrise', text: 'Sunrise light floods the room, warm and gold.' },
+    { t: 4.5, dur: 2.5, anim: 'stretch', text: 'Thiri sits up and stretches into the morning.' },
+    { t: 7, dur: 2.5, anim: 'drawing', text: 'The scattered pieces are together again. Her drawing is whole.' },
+    { t: 9.5, dur: 2.5, anim: 'message', text: 'Her phone lights up: Hnin is waiting at art club.' },
+    { t: 12, dur: 3, anim: 'message', text: '“Thank you. I think I’m ready to try again.”' },
+    { t: 15, dur: 2.5, anim: 'window', text: 'Morning. She opens the curtains. Day 7 — Thiri woke up.' }
   ];
   let awakeningRaf = 0;
   function revealAwakeningActions() {
     cancelAnimationFrame(awakeningRaf); $('#awakeningArt').dataset.anim = 'window';
     $('#awakeningTitle').textContent = 'Day 7 — Thiri woke up.';
     $('#awakeningSubtitle').textContent = 'Thiri smiles at Shwe. Tomorrow is something she can try again.';
-    $('#awakeningActions').hidden = false; $('#awakeningReplayBtn').focus({ preventScroll: true });
+    $('#awakeningCompleteLine').hidden = false; $('#awakeningActions').hidden = false; $('#awakeningReplayBtn').focus({ preventScroll: true });
   }
   function playFinalAwakening() {
     if (finalAwakeningSeen) { showEnd(); return; }
     finalAwakeningSeen = true;
+    if (thiriSleepStage < 7) { thiriSleepStage = 7; saveStoryProgress(); }
     try { localStorage.setItem('mk-awakening-seen', '1'); } catch (e) {}
     state = 'awakening'; cv.hidden = true; $('#endScreen').hidden = true; $('#startScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = false; $('#awakeningActions').hidden = true;
     $('#awakeningArt').dataset.anim = 'sunrise'; $('#awakeningSubtitle').textContent = 'Sunrise light spills across the room…';
     $('#awakeningSkipBtn').focus({ preventScroll: true });
-    const started = performance.now(), scale = reduce ? .72 : 1, duration = 15.5;
+    const started = performance.now(), scale = reduce ? .72 : 1, duration = 17.5;
     let active = -1;
     const tick = now => {
       if (state !== 'awakening') return;
@@ -2120,7 +2172,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         active = index; const beat = AWAKENING_BEATS[index];
         if (index === AWAKENING_BEATS.length - 1) $('#awakeningTitle').textContent = 'Day 7 — Thiri woke up.';
         $('#awakeningArt').dataset.anim = beat.anim; $('#awakeningSubtitle').textContent = beat.text;
-        const root = [392, 440, 523, 587, 659, 784][index]; tone(root, .9, 'sine', .03); setTimeout(() => tone(root * 1.5, .8, 'triangle', .018), 150);
+        const root = [392, 440, 523, 587, 659, 784, 880][index]; tone(root, .9, 'sine', .03); setTimeout(() => tone(root * 1.5, .8, 'triangle', .018), 150);
       }
       if (elapsed >= duration) { revealAwakeningActions(); return; }
       awakeningRaf = requestAnimationFrame(tick);
