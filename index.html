@@ -519,16 +519,16 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     }
     return TRAIL_PROFILE[TRAIL_PROFILE.length-1][1];
   }
-  let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0;
+  let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
   const NIGHT_CHAPTERS = [
-    { night: 1, name: 'First Night', sub: 'Meet visible Lonely; no scratching yet', theme: '#7893bb', musicRoot: 196, timeLimit: 105, rareChance: .08, feelingsNeeded: { F: 4, N: 4, L: 2 }, newMoodling: 'Lonely is visible; sit quietly beside it', diary: 'She stopped crying in her sleep. That is something.' },
-    { night: 2, name: 'Lantern Path', sub: 'Learn to find Lonely in hiding spots', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 110, rareChance: .1, feelingsNeeded: { F: 4, N: 4, L: 2 }, newMoodling: 'Scratch a marked spot to reveal Lonely', diary: 'She turned a little toward the window.' },
-    { night: 3, name: 'The Long Hallway', sub: 'Move gently through the quiet', theme: '#628aa0', musicRoot: 220, timeLimit: 112, rareChance: .12, feelingsNeeded: { F: 4, N: 4, L: 3 }, newMoodling: null, diary: 'Her hand found Shwe in the dark.' },
-    { night: 4, name: 'Night Market', sub: 'Rare feelings sparkle in the crowd', theme: '#c17679', musicRoot: 233.08, timeLimit: 115, rareChance: .22, feelingsNeeded: { F: 5, N: 5, L: 2 }, newMoodling: 'Rare Moodling forms appear more often', diary: 'She dreamed of the drawing, not the tearing.' },
-    { night: 5, name: 'Storm Peak', sub: 'Keep steady while the sky turns', theme: '#7181aa', musicRoot: 246.94, timeLimit: 118, rareChance: .26, feelingsNeeded: { F: 6, N: 5, L: 2 }, newMoodling: 'More rare feelings and Golden visitors', diary: 'Almost a smile.' },
-    { night: 6, name: 'Quiet Field', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 5, N: 5, L: 3, C: 1 }, newMoodling: 'Calm waits in a marked cave-side spot', diary: 'She murmured something kind.' },
-    { night: 7, name: 'Moon Hollow', sub: 'Bring every feeling home before dawn', theme: '#d6a866', musicRoot: 293.66, timeLimit: 135, rareChance: .28, feelingsNeeded: { F: 2, N: 2, L: 2, C: 3 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.' }
+    { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1, N: 0, L: 0, C: 0 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' },
+    { night: 2, name: 'Lantern Path', sub: 'Learn to move quietly around Nervous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 115, rareChance: 0, feelingsNeeded: { F: 3, N: 3 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift, then pounce.' },
+    { night: 3, name: 'The Long Hallway', sub: 'Sit still beside Lonely', theme: '#628aa0', musicRoot: 220, timeLimit: 115, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Walk slowly, then sit still beside it.' },
+    { night: 4, name: 'Night Market', sub: 'Scratch to reveal Lonely', theme: '#c17679', musicRoot: 233.08, timeLimit: 110, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2 }, newMoodling: 'Press E for Night Eyes, then S to scratch marked spots', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Press E for Night Eyes, then S to scratch marked spots.' },
+    { night: 5, name: 'Storm Peak', sub: 'Keep steady while the sky turns', theme: '#7181aa', musicRoot: 246.94, timeLimit: 105, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3 }, newMoodling: 'Rare feelings sparkle; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Rare feelings sparkle. They are worth extra Glow.' },
+    { night: 6, name: 'Quiet Field', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 110, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2 }, newMoodling: 'Calm waits in cave marks; scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 0 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm waits in cave marks. Scratch, then sit quietly.' },
+    { night: 7, name: 'Moon Hollow', sub: 'Bring every feeling home before dawn', theme: '#d6a866', musicRoot: 293.66, timeLimit: 115, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 0 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' }
   ];
   const chapterFor = night => NIGHT_CHAPTERS[clamp(night - 1, 0, NIGHT_CHAPTERS.length - 1)];
   let unlockedLevel = 1, thiriSleepStage = 0, finalAwakeningSeen = false;
@@ -653,7 +653,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     const inCave = mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight === 7));
     m.x = x ?? (inCave ? pickCaveX() : pickX()); m.caveX = inCave ? m.x : null;
     m.y = terrainY(m.x) - (m.type === 'C' ? 46 : 30); m.st = 0; m.sit = 0; m.rev = 0; m.fleeAlarm = 0;
-    const tutorialLonely = m.type === 'L' && mode === 'story' && storyNight === 1;
+    const tutorialLonely = m.type === 'L' && mode === 'story' && storyNight <= 3;
     m.alpha = tutorialLonely ? 1 : 0; m.state = tutorialLonely ? 'revealed' : 'hide';
     m.spot = tutorialLonely ? null : makeScratchSpot(m.x, m.type);
   }
@@ -668,14 +668,14 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (type === 'G') { m.y = 200; m.state = 'fly'; m.life = 6.5; }
     if (type === 'L' || type === 'C') {
       m.y = terrainY(x) - (type === 'C' ? 46 : 30); m.st = 0; m.rev = 0; m.sit = 0; m.chime = 0; m.fleeAlarm = 0;
-      const tutorialLonely = type === 'L' && mode === 'story' && storyNight === 1;
+      const tutorialLonely = type === 'L' && mode === 'story' && storyNight <= 3;
       m.state = tutorialLonely ? 'revealed' : 'hide'; m.alpha = tutorialLonely ? 1 : 0; m.spot = tutorialLonely ? null : makeScratchSpot(x, type);
     }
     mood.push(m); return m;
   }
   function reset() {
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
-    t = 0; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0;
+    t = 0; warmup = mode === 'free' ? 0 : 1.5; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0;
     nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
     combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
@@ -692,7 +692,14 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     for (const [type, count] of Object.entries(need)) {
       for (let i = 0; i < count; i++) {
         const caveBound = type === 'C' || (type === 'L' && moonHollow());
-        spawn(type, caveBound ? undefined : positions[type][i]);
+        spawn(type, caveBound ? undefined : (positions[type][i] ?? undefined));
+      }
+    }
+    for (const [type, count] of Object.entries(chapter.initialSpawns || {})) {
+      for (let i = 0; i < count; i++) {
+        if (!need[type]) continue;
+        const caveBound = type === 'C' || (type === 'L' && moonHollow());
+        spawn(type, caveBound ? undefined : undefined);
       }
     }
   }
@@ -709,7 +716,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 
   // ---------- gameplay ----------
   function panic(m, dx) {
-    m.state = 'panic'; m.st = 1.1; m.dir = -(Math.sign(dx) || 1); m.alarm = 0; startles++;
+    const chapter = mode === 'story' ? chapterFor(storyNight) : null;
+    m.state = 'panic'; m.st = chapter?.nervousPanicTime ?? 1.1; m.dir = -(Math.sign(dx) || 1); m.alarm = 0; startles++;
     float(m.x, m.y - 34, 'Startled!', VIOLET); tone(900, .15, 'square', .03, 400);
   }
   function hitCat(m) {
@@ -739,7 +747,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     caughtN++;
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
     else if (mode === 'free') { timeLeft += 2; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 12) trail.shift(); }
-    else { got[m.type]++; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); respawnQ.push({ type: m.type, at: 2 + Math.random() * 1.5 }); }
+    else { const chapter = chapterFor(storyNight); got[m.type]++; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); respawnQ.push({ type: m.type, at: chapter.respawnDelay + Math.random() * .8 }); }
     const key = m.type + (m.v || 0), info = vinfo(m.type, m.v || 0);
     if (!book[key]) {
       const bonus = m.v ? 30 : m.type === 'G' ? 20 : 10;
@@ -784,36 +792,40 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   }
 
   function updMood(m, dt) {
-    const sp = mode === 'free' ? 1 + Math.min(.6, level * .1) : (chaos ? 1.25 : 1);
+    const chapter = mode === 'story' ? chapterFor(storyNight) : { moodlingSpeed: 1, frustratedChargeSpeed: 1, frustratedWindup: .55, nervousHearingMul: 1, nervousPanicTime: 1.1 };
+    const sp = mode === 'free' ? 1 + Math.min(.6, level * .1) : (chapter.moodlingSpeed * (chaos ? 1.25 : 1));
     if (m.type === 'F') {
       m.y = terrainY(m.x) - 20;
       const dx = cat.x - m.x, dy = cat.y - (m.y + 20);
       if (m.state === 'patrol') {
         m.x += m.dir * 55 * dt * sp; if (Math.abs(m.x - m.home) > 140) m.dir = Math.sign(m.home - m.x) || 1;
         m.x = clamp(m.x, 40, WORLD - 40); m.cd -= dt;
-        if (m.cd <= 0 && Math.abs(dx) < 4 * T && Math.abs(dy) < 90) { m.state = 'windup'; m.st = .55; m.dir = Math.sign(dx) || 1; tone(120, .45, 'sawtooth', .035, -40); }
+        if (m.cd <= 0 && t >= 10 && Math.abs(dx) < 4 * T && Math.abs(dy) < 90) { m.state = 'windup'; m.st = chapter.frustratedWindup; m.dir = Math.sign(dx) || 1; tone(120, .45, 'sawtooth', .035, -40); }
       } else if (m.state === 'windup') {
         m.st -= dt; if (Math.random() < .5) puff(m); if (m.st <= 0) { m.state = 'charge'; m.st = 1.5; }
       } else if (m.state === 'charge') {
-        m.x += m.dir * 8 * T * sp * dt; m.st -= dt; if (Math.random() < .6) dust(m);
+        m.x += m.dir * 8 * T * sp * chapter.frustratedChargeSpeed * dt; m.st -= dt; if (Math.random() < .6) dust(m);
         if (m.x < 40 || m.x > WORLD - 40) { m.x = clamp(m.x, 40, WORLD - 40); m.st = 0; }
-        if (cat.inv <= 0 && Math.abs(dx) < 34 && Math.abs(dy) < 46) { hitCat(m); m.state = 'patrol'; m.cd = 2.2; m.home = m.x; }
+        if (cat.inv <= 0 && Math.abs(dx) < 34 && Math.abs(dy) < 46) {
+          if (storyNight <= 3 && cat.sneak) { m.state = 'dizzy'; m.st = 3; float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); }
+          else { hitCat(m); m.state = 'patrol'; m.cd = 2.2; m.home = m.x; }
+        }
         else if (m.st <= 0) { m.state = 'dizzy'; m.st = 3; tone(660, .3, 'triangle', .05, -300); float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); }
       } else if (m.state === 'dizzy') {
         m.st -= dt; if (m.st <= 0) { m.state = 'patrol'; m.cd = 1.2; m.home = m.x; }
       }
     } else if (m.type === 'N') {
-      const dx = cat.x - m.x, d = Math.hypot(dx, cat.y - 24 - m.y), R = uv('paws') * T;
+      const dx = cat.x - m.x, d = Math.hypot(dx, cat.y - 24 - m.y), R = uv('paws') * T * chapter.nervousHearingMul;
       if (m.state === 'wander') {
         m.x += m.dir * 45 * dt * sp; m.cd -= dt; if (m.cd <= 0) { m.dir *= -1; m.cd = 1 + Math.random() * 2.5; }
         if (m.x < 60 || m.x > WORLD - 60) m.dir *= -1;
         m.y = terrainY(m.x) - 46 + Math.sin(t * 3 + m.phase) * 8;
         const loud = Math.abs(cat.vx) > 3.2 * T || !cat.on || cat.justLanded;
-        if (d < R && loud && cat.pounce <= 0) { m.alarm += dt; if (m.alarm > .3) panic(m, dx); }
+        if (d < R && loud && cat.pounce <= 0) { m.alarm += dt; if (m.alarm > (chapter.nervousAlarmThreshold ?? .3) && t >= 10) panic(m, dx); }
         else m.alarm = Math.max(0, m.alarm - dt);
         if (m.alpha < 1) m.alpha = Math.min(1, m.alpha + dt * 2);
       } else if (m.state === 'panic') {
-        m.x += m.dir * 7 * T * dt; m.st -= dt; m.y = terrainY(m.x) - 46 + Math.sin(t * 20) * 6;
+        m.x += m.dir * 7 * T * sp * dt; m.st -= dt; m.y = terrainY(m.x) - 46 + Math.sin(t * 20) * 6;
         if (m.x < 40 || m.x > WORLD - 40) { m.dir *= -1; m.x = clamp(m.x, 40, WORLD - 40); }
         if (m.st <= 0) { m.state = 'hidden'; m.st = 5; }
       } else if (m.state === 'hidden') {
@@ -837,11 +849,12 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
           if (m.fleeAlarm > .48) { m.state = 'flee'; m.st = .72; m.dir = -(Math.sign(dx) || 1); m.sit = 0; float(m.x, m.y - 36, 'Lonely darted away!', BLUE); tone(840, .16, 'sine', .035, -300); }
         }
         if (m.state === 'flee') {
-          m.x += m.dir * 240 * dt; m.alpha = Math.max(0, m.alpha - dt * .7); m.st -= dt;
+          m.x += m.dir * 240 * sp * dt; m.alpha = Math.max(0, m.alpha - dt * .7); m.st -= dt;
           if (m.st <= 0) { m.state = 'rest'; m.st = 1.05; }
         } else {
           const still = cat.on && Math.abs(cat.vx) < 25 && cat.pounce <= 0;
-          if (still && Math.abs(dx) < 1.4 * T) {
+          const sitRadius = mode === 'story' && storyNight === 3 ? 2.2 * T : 1.4 * T;
+          if (still && Math.abs(dx) < sitRadius) {
             if (m.sit === 0) tone(523, .2, 'sine', .03);
             m.sit += dt;
             if (m.sit >= 2) { m.sit = 0; catchIt(m); }
@@ -856,7 +869,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
         if (m.chime <= 0) { m.chime = 1.6; tone(m.type === 'C' ? 784 : 1318, .12, 'sine', .025); for (let k = 0; k < 3; k++) parts.push({ x: m.x + (Math.random() - .5) * 30, y: floorY - 20 + (Math.random() - .5) * 20, vx: 0, vy: -20, life: .7, max: .7, c: moodColor, r: 2, g: 0 }); }
       }
     } else if (m.type === 'G') {
-      m.life -= dt; m.x += Math.cos(t * 2.2 + m.phase) * 260 * dt + m.dir * 120 * dt;
+      m.life -= dt; m.x += Math.cos(t * 2.2 + m.phase) * 260 * sp * dt + m.dir * 120 * sp * dt;
       m.y = 205 + Math.sin(t * 3.1 + m.phase) * 85;
       if (m.x < 80 || m.x > WORLD - 80) m.dir *= -1;
       if (m.life < 1.2) m.alpha = Math.max(0, m.life / 1.2);
@@ -922,11 +935,20 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     respawnQ = respawnQ.filter(r => { if (r.at <= 0) { spawn(r.type); return false; } return true; });
     if (comboT > 0) { comboT -= dt; if (comboT <= 0) combo = 0; }
     if (state === 'play') {
-      timeLeft -= dt;
+      if (mode === 'story') warmup = Math.max(0, warmup - dt);
+      if (warmup <= 0) timeLeft -= dt;
       if (mode === 'free') freeTick(dt);
-      if (!goldDone.a && timeLeft <= 62) { goldDone.a = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); announce('A golden Moodling appeared!', GOLD); tone(1046, .3, 'sine', .06); }
-      if (!goldDone.b && timeLeft <= 28) { goldDone.b = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); announce('Golden Moodling! Catch it!', GOLD); tone(1046, .3, 'sine', .06); }
-      if (!chaos && timeLeft <= 15) { chaos = true; spawn('F'); spawn('N'); spawn('N'); announce('Last 15 seconds!', RED, 1.6); }
+      const chapter = mode === 'story' ? chapterFor(storyNight) : null;
+      if (mode === 'free' || chapter.goldensAllowed > 0) {
+        if (!goldDone.a && timeLeft <= 62 && (mode === 'free' || chapter.goldensAllowed >= 1)) { goldDone.a = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); announce('A golden Moodling appeared!', GOLD); tone(1046, .3, 'sine', .06); }
+        if (!goldDone.b && timeLeft <= 28 && (mode === 'free' || chapter.goldensAllowed >= 2)) { goldDone.b = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); announce('Golden Moodling! Catch it!', GOLD); tone(1046, .3, 'sine', .06); }
+      }
+      if (!chaos && timeLeft <= 15 && (mode === 'free' || chapter.chaosWave)) {
+        chaos = true;
+        const wave = mode === 'free' ? { F: 1, N: 2 } : chapter.chaosSize;
+        for (const [type, count] of Object.entries(wave || {})) for (let i = 0; i < count; i++) spawn(type);
+        announce('Last 15 seconds!', RED, 1.6);
+      }
       const sec = Math.ceil(timeLeft);
       if (sec <= 10 && sec < lastTick) { lastTick = sec; tone(sec <= 3 ? 1200 : 880, .06, 'square', .03); }
       if (timeLeft <= 0) { timeLeft = 0; finish(false); }
@@ -1410,11 +1432,13 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     R = {
       won, night: storyNight, total: requiredTotal(), left, final, best, combo: bestCombo, home: caughtTotal(), unlocked: unlockedNow, stage: thiriSleepStage,
       starsN: won ? (left >= 30 ? 3 : left >= 10 ? 2 : 1) : 0,
-      tip: hits > 0
-        ? 'Tip: Frustrated charges when you get close. Let the charge miss, then pounce while it is dizzy.'
-        : startles > 2
-          ? 'Tip: Nervous Moodlings panic when you run or jump nearby. Sneak with Shift, or push the stick only halfway.'
-          : 'Tip: catch again within 4 seconds to grow your combo up to ×5.'
+      tip: chapterFor(storyNight).tutorialHints
+        ? `Tip: ${chapterFor(storyNight).tutorialHint}`
+        : hits > 0
+          ? 'Tip: Frustrated charges when you get close. Let the charge miss, then pounce while it is dizzy.'
+          : startles > 2
+            ? 'Tip: Nervous Moodlings panic when you run or jump nearby. Sneak with Shift, or push the stick only halfway.'
+            : 'Tip: catch again within 4 seconds to grow your combo up to ×5.'
     };
     tone(won ? 784 : 330, .35, 'triangle', .08, won ? 260 : -80);
     const types = trail.map(l => l.type), completedNight = storyNight;
@@ -1889,7 +1913,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     announce(mode === 'free' ? 'Free Mode · every catch adds time' : `${chapter.name} · ${chapter.sub}`, INK, 2.1);
-    if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); }
+    if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); if (chapter.tutorialHints) announce(chapter.tutorialHint, INK, 8); }
     cv.focus?.();
   }
   const LEVEL_MAP_LIMIT = 7, LEVEL_MAP_STEP = 92;
