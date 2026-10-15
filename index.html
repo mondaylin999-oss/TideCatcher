@@ -1258,9 +1258,23 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (markedGlow) { const g = ctx.createRadialGradient(x, y - 24, 3, x, y - 24, 66); g.addColorStop(0, 'rgba(166,118,70,.35)'); g.addColorStop(1, 'rgba(166,118,70,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 24, 66, 0, 7); ctx.fill(); }
     const stones = [[-28,0,30,24,'#4a4340'],[0,-10,34,29,'#5c524a'],[28,2,29,23,'#6f645a'],[-9,6,23,18,'#514943']];
     for (const [dx,dy,rx,ry,c] of stones) { ctx.fillStyle=c; ctx.beginPath(); ctx.moveTo(x+dx-rx,y+dy); ctx.lineTo(x+dx-rx*.55,y+dy-ry); ctx.lineTo(x+dx+rx*.2,y+dy-ry*.8); ctx.lineTo(x+dx+rx,y+dy-ry*.25); ctx.lineTo(x+dx+rx*.72,y+dy); ctx.closePath(); ctx.fill(); ctx.strokeStyle='#8a8074'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(x+dx-rx*.5,y+dy-ry*.78); ctx.lineTo(x+dx+rx*.15,y+dy-ry*.58); ctx.lineTo(x+dx+rx*.48,y+dy-ry*.25); ctx.stroke(); }
+    if (moodHolding && rock.marked && !rock.scratched) {
+      ctx.strokeStyle = 'rgba(194,205,199,.9)'; ctx.lineWidth = 1.35; ctx.lineCap = 'round';
+      for (let k = 0; k < 2; k++) {
+        const age = (t * .32 + rock.phase * .1 + k * .5) % 1;
+        const rise = age * 18, drift = Math.sin(t * 1.2 + rock.phase + k * 2.2) * (2 + age * 2.5);
+        const sx = x + drift, sy = y - 39 - rise;
+        ctx.globalAlpha = .17 * (1 - age); ctx.beginPath(); ctx.moveTo(sx, sy + 8);
+        ctx.bezierCurveTo(sx - 3, sy + 5, sx + 4, sy + 3, sx + 1, sy); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
     if (rock.holeDepth > 0) { ctx.fillStyle=`rgba(12,13,16,${.55 + .3 * rock.holeDepth})`; ctx.beginPath(); ctx.ellipse(x, y - 4, 18, 9, 0, 0, 7); ctx.fill(); ctx.fillStyle=`rgba(166,118,70,${.45 * rock.holeDepth})`; ctx.beginPath(); ctx.arc(x, y - 7, 6, 0, 7); ctx.fill(); }
     if (markedGlow) { ctx.strokeStyle=`rgba(166,118,70,${.55 + .35 * pulse})`; ctx.lineWidth=2; for (const off of [-13,2,15]) { ctx.beginPath(); ctx.moveTo(x+off,y-27); ctx.lineTo(x+off+4,y-18); ctx.lineTo(x+off-1,y-11); ctx.stroke(); } const py=y-53-Math.sin(t*3+rock.phase)*2; ctx.fillStyle='#a67646'; [[-5,0,2.5],[5,0,2.5],[-7,-6,2],[0,-8,2],[7,-6,2]].forEach(([dx,dy,r])=>{ctx.beginPath();ctx.arc(x+dx,py+dy,r,0,7);ctx.fill();}); }
     ctx.restore();
+  }
+  function rockHoldsFeeling(rock) {
+    return !!rock && rock.marked && !rock.scratched && mood.some(m => m.type === 'B' && !m.dead && m.state === 'buried' && m.rock === rock);
   }
   function drawMoonHollowWorld(x0,x1) {
     for(const x of CAVE_XS){if(x<x0-100||x>x1+100)continue;
@@ -1293,7 +1307,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     for(const [hx,off,rx,ry] of [[390,31,42,23],[1045,38,52,28],[1710,47,45,24],[2075,34,49,26]]){const hy=terrainY(hx)+off;ctx.fillStyle='rgba(5,13,20,.83)';ctx.beginPath();ctx.moveTo(hx-rx,hy+ry);ctx.quadraticCurveTo(hx-rx*.88,hy-ry*.2,hx-rx*.3,hy-ry*.65);ctx.quadraticCurveTo(hx,hy-ry*1.05,hx+rx*.32,hy-ry*.55);ctx.quadraticCurveTo(hx+rx*.9,hy-.1*ry,hx+rx,hy+ry);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(134,151,144,.34)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(hx-rx*.82,hy+ry*.1);ctx.quadraticCurveTo(hx,hy-ry*.9,hx+rx*.8,hy+ry*.05);ctx.stroke();}
     drawMoonHollowWorld(x0,x1);
     for(const spot of scratchSpots){if(spot.x<x0-60||spot.x>x1+60)continue;drawScratchSpot(spot.x,spot.y,spot.moodType,spot);}
-    for(const rock of rocks){if(rock.x<x0-80||rock.x>x1+80)continue;drawRockFormation(rock.x,rock.y,rock);}
+    for(const rock of rocks){if(rock.x<x0-80||rock.x>x1+80)continue;drawRockFormation(rock.x,rock.y,rock,rockHoldsFeeling(rock));}
     for(const p of activePlats){if(p[0]+p[2]<x0||p[0]>x1)continue;
       const x=p[0],y=p[1],w=p[2];ctx.fillStyle='#27333a';ctx.beginPath();ctx.moveTo(x-4,y+13);ctx.lineTo(x+4,y+4);ctx.quadraticCurveTo(x+w*.21,y+12,x+w*.34,y+6);ctx.quadraticCurveTo(x+w*.58,y-1,x+w*.76,y+8);ctx.lineTo(x+w+5,y+11);ctx.lineTo(x+w-8,y+28);ctx.lineTo(x+10,y+28);ctx.closePath();ctx.fill();
       const rock=ctx.createLinearGradient(0,y,0,y+18);rock.addColorStop(0,'#596458');rock.addColorStop(.36,'#49514b');rock.addColorStop(1,'#303a3b');ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(x-2,y+7);ctx.quadraticCurveTo(x+w*.2,y+3,x+w*.4,y+8);ctx.quadraticCurveTo(x+w*.72,y+2,x+w+3,y+6);ctx.lineTo(x+w-4,y+15);ctx.quadraticCurveTo(x+w*.6,y+12,x+w*.35,y+16);ctx.quadraticCurveTo(x+w*.1,y+12,x-2,y+17);ctx.closePath();ctx.fill();
