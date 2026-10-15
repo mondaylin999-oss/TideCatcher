@@ -710,13 +710,6 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
       [1180, 2480].forEach(x => spawn('L', x));
       return;
     }
-    const positions = { F: [650, 1010, 1370, 1730, 2090, 2410], N: [820, 1180, 1540, 1900, 2260, 2490], L: [1120, 2380, 1650], C: [930, 1900, 2440] };
-    for (const [type, count] of Object.entries(need)) {
-      for (let i = 0; i < count; i++) {
-        const caveBound = type === 'C' || (type === 'L' && moonHollow());
-        spawn(type, caveBound ? undefined : (positions[type][i] ?? undefined));
-      }
-    }
     for (const [type, count] of Object.entries(chapter.initialSpawns || {})) {
       for (let i = 0; i < count; i++) {
         if (!need[type]) continue;
