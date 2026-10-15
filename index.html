@@ -806,7 +806,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
     if (m.ambush) {
       const gain = 8 + 2 * combo;
       glowRun += gain; bump('glow', gain);
-      m.dead = true; hitstop = .05;
+      m.dead = true; m.alpha = 0; hitstop = .05;
       burst(m.x, m.y, col(m.type), 18);
       float(m.x, m.y - 36, `+${gain} Glow · ambush cleared`, col(m.type));
       tone(660, .18, 'triangle', .08);
