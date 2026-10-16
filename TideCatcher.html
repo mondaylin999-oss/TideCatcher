@@ -558,7 +558,7 @@ function mkName(str) {
 (() => {
   const cv = document.getElementById('game'), ctx = cv.getContext('2d');
   const $ = s => document.querySelector(s);
-  const T = 48, VH = 540, WORLD = 2600, GROUND = 470;
+  const T = 48, VH = 540, WORLD = 4200, GROUND = 470;
   const BLUE = '#6fb6ff', RED = '#ff6168', VIOLET = '#a98bff', GOLD = '#f6c453', CALM = '#7ddc8b', INK = '#f3ecff', MUTED = '#b7acd3';
   const EXC = '#ffd23f', SHY = '#ff7ab8', JEAL = '#ff9a3c';
   const DISP = '"Grandstander","Trebuchet MS",sans-serif', BODY = '"Lexend",system-ui,sans-serif';
@@ -661,10 +661,10 @@ function mkName(str) {
   addEventListener('touchstart', () => { if (state === 'play') touchUI.hidden = false; }, { passive: true });
 
   // ---------- world ----------
-  const plats = [[300, 385, 170], [640, 330, 150], [930, 390, 210], [1260, 305, 170], [1520, 385, 190], [1830, 325, 160], [2120, 390, 210], [2380, 315, 150]];
+  const plats = [[300, 385, 170], [640, 330, 150], [930, 390, 210], [1260, 305, 170], [1520, 385, 190], [1830, 325, 160], [2120, 390, 210], [2380, 315, 150], [2730, 360, 180], [3100, 330, 190], [3500, 370, 170], [3920, 330, 180]];
   let activePlats = plats;
-  const CAVE_XS = [430, 960, 1480, 2020, 2440];
-  const TRAIL_PROFILE = [[0,425],[120,432],[225,454],[320,480],[390,494],[470,486],[540,455],[620,415],[700,388],[820,382],[905,396],[980,438],[1030,476],[1100,490],[1180,478],[1240,438],[1310,390],[1390,365],[1510,360],[1600,372],[1680,398],[1770,405],[1850,396],[1920,430],[1990,474],[2070,496],[2160,482],[2230,448],[2300,405],[2360,375],[2440,360],[2530,385],[2600,430]];
+  const CAVE_XS = [430, 960, 1480, 2020, 2440, 2780, 3320, 3860];
+  const TRAIL_PROFILE = [[0,425],[120,432],[225,454],[320,480],[390,494],[470,486],[540,455],[620,415],[700,388],[820,382],[905,396],[980,438],[1030,476],[1100,490],[1180,478],[1240,438],[1310,390],[1390,365],[1510,360],[1600,372],[1680,398],[1770,405],[1850,396],[1920,430],[1990,474],[2070,496],[2160,482],[2230,448],[2300,405],[2360,375],[2440,360],[2530,385],[2600,430],[2700,462],[2800,490],[2880,480],[3000,438],[3120,390],[3210,368],[3300,380],[3400,420],[3500,470],[3580,494],[3650,487],[3760,445],[3860,400],[3960,368],[4050,385],[4140,440],[4200,470]];
   function terrainY(x) {
     if (x <= TRAIL_PROFILE[0][0]) return TRAIL_PROFILE[0][1];
     for (let i = 1; i < TRAIL_PROFILE.length; i++) {
@@ -676,20 +676,20 @@ function mkName(str) {
   let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
   const NIGHT_CHAPTERS = [
-    { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1, N: 0, L: 0, C: 0 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' },
-    { night: 2, name: 'Lantern Path', sub: 'Learn to move quietly around Nervous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 3, N: 3, J: 1 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' },
-    { night: 3, name: 'The Long Hallway', sub: 'Sit still beside Lonely', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2, S: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' },
-    { night: 4, name: 'Night Market', sub: 'Scratch to reveal what is buried', theme: '#c17679', musicRoot: 233.08, timeLimit: 122, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2, B: 1, E: 2 }, newMoodling: 'A new feeling is buried in the rocks. Use Night Eyes to spot the right rock, then scratch it.', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0, B: 1, E: 1 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Excited bounces high. Jump, then pounce at the very top of its bounce.' },
-    { night: 5, name: 'Storm Peak', sub: 'Keep steady while the sky turns', theme: '#7181aa', musicRoot: 246.94, timeLimit: 117, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1, J: 2 }, newMoodling: 'Rare feelings sparkle; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1, J: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Rare feelings sparkle. They are worth extra Glow.' },
-    { night: 6, name: 'Quiet Field', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2, S: 2, E: 1 }, newMoodling: 'Calm waits in cave marks; scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 1, B: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm waits in cave marks. Scratch, then sit quietly.' },
-    { night: 7, name: 'Moon Hollow', sub: 'Bring every feeling home before dawn', theme: '#d6a866', musicRoot: 293.66, timeLimit: 135, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3, B: 2, E: 2, S: 1, J: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 1, B: 1, E: 1, S: 1, J: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' }
+    { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1, N: 0, L: 0, C: 0 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
+    { night: 2, name: 'Lantern Path', sub: 'Learn to move quietly around Nervous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 3, N: 3, J: 1 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' , sky: { A: 1, B: 0, C: 0, wait: 2.5, fallSpeed: 70, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
+    { night: 3, name: 'The Long Hallway', sub: 'Sit still beside Lonely', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2, S: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' , sky: { A: 2, B: 1, C: 0, wait: 2.2, fallSpeed: 85, gravity: 800, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.20, hintShown: false }},
+    { night: 4, name: 'Night Market', sub: 'Scratch to reveal what is buried', theme: '#c17679', musicRoot: 233.08, timeLimit: 122, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2, B: 1, E: 2 }, newMoodling: 'A new feeling is buried in the rocks. Use Night Eyes to spot the right rock, then scratch it.', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0, B: 1, E: 1 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Excited bounces high. Jump, then pounce at the very top of its bounce.' , sky: { A: 2, B: 1, C: 1, wait: 2.0, fallSpeed: 100, gravity: 900, scratchWindow: 2.0, ambushBase: 2, pounceWindowMul: 1.10, hintShown: false }},
+    { night: 5, name: 'Storm Peak', sub: 'Keep steady while the sky turns', theme: '#7181aa', musicRoot: 246.94, timeLimit: 117, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1, J: 2 }, newMoodling: 'Rare feelings sparkle; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1, J: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Rare feelings sparkle. They are worth extra Glow.' , sky: { A: 3, B: 2, C: 1, wait: 1.6, fallSpeed: 115, gravity: 1000, scratchWindow: 1.7, ambushBase: 2, pounceWindowMul: 1.00, hintShown: false }},
+    { night: 6, name: 'Quiet Field', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2, S: 2, E: 1 }, newMoodling: 'Calm waits in cave marks; scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 1, B: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm waits in cave marks. Scratch, then sit quietly.' , sky: { A: 3, B: 2, C: 2, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
+    { night: 7, name: 'Moon Hollow', sub: 'Bring every feeling home before dawn', theme: '#d6a866', musicRoot: 293.66, timeLimit: 135, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3, B: 2, E: 2, S: 1, J: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 1, B: 1, E: 1, S: 1, J: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
   ];
-  const PERCH_BUDGET = { 1: 8, 2: 8, 3: 7, 4: 6, 5: 5, 6: 3, 7: 2 };
+  const PERCH_BUDGET = { 1: 12, 2: 10, 3: 9, 4: 8, 5: 6, 6: 4, 7: 2 };
   function activePlatsForNight(night) {
     if (mode !== 'story') return plats;
     const budget = PERCH_BUDGET[night] ?? plats.length;
     if (budget >= plats.length) return plats;
-    const step = plats.length / budget;
+    const step = (plats.length - 1) / Math.max(1, budget - 1);
     const kept = [];
     for (let i = 0; i < budget; i++) kept.push(plats[Math.round(i * step)]);
     return kept;
@@ -714,6 +714,24 @@ function mkName(str) {
     try { localStorage.setItem('mk-progress', String(unlockedLevel)); localStorage.setItem('mk-thiri', String(thiriSleepStage)); } catch (e) {}
   }
   const moonHollow = () => mode === 'story' && storyNight === 7;
+  const SKY_TUTORIALS = {
+    A: 'A feeling is falling. Wait for it to land, then pounce.',
+    B: 'Hit it mid-air! Pounce while it is falling.',
+    C: 'Pounce it mid-air, then scratch with S before it escapes.'
+  };
+  let skyTutorialSeen = {};
+  try { const saved = JSON.parse(localStorage.getItem('mk-skyTutorial') || '{}'); if (saved && typeof saved === 'object' && !Array.isArray(saved)) skyTutorialSeen = saved; } catch (e) {}
+  function showSkyTutorial(feature) {
+    if (skyTutorialSeen[feature]) return;
+    skyTutorialSeen[feature] = true;
+    try { localStorage.setItem('mk-skyTutorial', JSON.stringify(skyTutorialSeen)); } catch (e) {}
+    announce(SKY_TUTORIALS[feature], feature === 'C' ? RED : feature === 'B' ? GOLD : BLUE, 2.8);
+  }
+  function skyTotalFor(chapter) { return chapter?.sky ? chapter.sky.A + chapter.sky.B + chapter.sky.C : 0; }
+  function skyRemaining(chapter = chapterFor(storyNight)) {
+    if (!chapter?.sky) return 0;
+    return ['A', 'B', 'C'].reduce((sum, feature) => sum + Math.max(0, chapter.sky[feature] - skyUsed[feature]), 0);
+  }
 
   // ---------- upgrades (Glow treats) ----------
   const UPG = [
@@ -813,7 +831,8 @@ function mkName(str) {
   const caughtTotal = () => Object.values(got).reduce((sum, n) => sum + n, 0);
   let cat, mood = [], parts = [], floats = [], trail = [], hist = [], camX = 0, respawnQ = [], banner = null;
   let scratchSpots = [], scratchTarget = null, scratchAnim = 0, rocks = [], buriedHome = null, shake = 0;
-  const ROCK_XS = [560, 1120, 1680, 2260, 2520];
+  let skyUsed = { A: 0, B: 0, C: 0 }, skyPerfect = 0, skySpawned = 0, skyNextAt = 15;
+  const ROCK_XS = [560, 1120, 1680, 2260, 2520, 2860, 3180, 3560, 3940];
 
   function newCat() { return { x: 200, y: terrainY(200), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false }; }
   function pickX() { let x, n = 0; do { x = 150 + Math.random() * (WORLD - 300); n++; } while (Math.abs(x - cat.x) < 380 && n < 40); return x; }
@@ -843,7 +862,7 @@ function mkName(str) {
   function spawn(type, x) {
     const hidesInCave = type === 'C' || (type === 'L' && moonHollow());
     x = x ?? (hidesInCave ? pickCaveX() : pickX());
-    const m = { type, x, y: 0, dir: Math.random() < .5 ? -1 : 1, phase: Math.random() * 6, alpha: 1, cd: 1 + Math.random(), st: 0, alarm: 0, state: '', home: x, dead: false, life: 0, caveX: hidesInCave ? x : null };
+    const m = { type, x, y: 0, dir: Math.random() < .5 ? -1 : 1, phase: Math.random() * 6, alpha: 1, cd: 1 + Math.random(), st: 0, alarm: 0, state: '', home: x, dead: false, life: 0, caveX: hidesInCave ? x : null, sky: false, skyFeature: null, skyPhase: 'ground', skyTimer: 0, skyStartY: 0, skyTargetY: 0, skyVY: 0, skyHit: false, scratchNeed: 0, ambushWave: [], hitCooldown: 0, skyGroundStun: 0 };
     const rareChance = mode === 'story' ? chapterFor(storyNight).rareChance : .1;
     m.v = (type === 'F' || type === 'N' || type === 'L' || type === 'B') && Math.random() < rareChance ? (Math.random() < .5 ? 1 : 2) : 0;
     if (type === 'F') { m.y = terrainY(x) - 20; m.state = 'patrol'; }
@@ -860,6 +879,52 @@ function mkName(str) {
     }
     mood.push(m); return m;
   }
+  function skyTypeFor(feature) {
+    const choices = feature === 'A' ? ['N', 'L'] : feature === 'B' ? ['E', 'J'] : ['F'];
+    const stillNeeded = choices.filter(type => (need[type] || 0) > (got[type] || 0));
+    const pool = stillNeeded.length ? stillNeeded : choices;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  function skyWaitFor(feature, chapter) {
+    if (feature === 'A') return clamp(chapter.sky.wait + (Math.random() - .5) * .6, 1.2, 2.5);
+    if (feature === 'B') return clamp(2 - Math.max(0, storyNight - 3) * .3, .8, 2.0);
+    return Math.min(1.6, chapter.sky.wait);
+  }
+  function spawnSky(feature) {
+    const chapter = chapterFor(storyNight);
+    if (!chapter.sky || !['A', 'B', 'C'].includes(feature) || skyUsed[feature] >= chapter.sky[feature]) return null;
+    const type = skyTypeFor(feature);
+    const existing = mood.find(x => !x.dead && !x.sky && !x.ambush && x.type === type && (type !== 'J' || !(x.stolen || []).length));
+    if (existing) {
+      if (existing.spot) { existing.spot.used = true; existing.spot.usedAt = t; existing.spot.scratching = false; }
+      existing.dead = true; existing.alpha = 0;
+    }
+    const spawnX = type === 'L' && moonHollow() ? pickCaveX() : pickX(), m = spawn(type, spawnX);
+    const restOffset = { F: 20, N: 46, L: 30, E: 24, J: 30 }[type] || 24;
+    m.sky = true; m.skyFeature = feature; m.skyPhase = 'wait'; m.skyTimer = 0;
+    m.skyStartY = -80; m.skyTargetY = terrainY(m.x) - restOffset; m.skyVY = 0;
+    m.skyHit = false; m.scratchNeed = feature === 'C' ? 1 : 0; m.ambushWave = [];
+    m.hitCooldown = 0; m.skyGroundStun = 0; m.skyWait = skyWaitFor(feature, chapter);
+    m.skyChimeAt = 1; m.skyEmberTimer = .04; m.skyMissed = false; m.skyReplacedNormal = !!existing; m.alpha = 1; m.y = m.skyStartY;
+    skyUsed[feature]++; skySpawned++; showSkyTutorial(feature);
+    return m;
+  }
+  function maybeSpawnSky() {
+    if (mode !== 'story' || state !== 'play') return;
+    const chapter = chapterFor(storyNight), config = chapter.sky;
+    if (!config || skyRemaining(chapter) <= 0) return;
+    const elapsed = chapter.timeLimit - timeLeft, deadline = chapter.timeLimit - 25;
+    if (elapsed < skyNextAt || elapsed > deadline) return;
+    const available = ['A', 'B', 'C'].filter(feature => skyUsed[feature] < config[feature]);
+    if (!available.length) return;
+    const feature = available[Math.floor(Math.random() * available.length)];
+    if (!spawnSky(feature)) return;
+    const remaining = skyRemaining(chapter);
+    if (!remaining) { skyNextAt = Infinity; return; }
+    const slots = deadline - elapsed, maxGap = Math.min(12, slots / remaining);
+    const desiredGap = 8 + Math.random() * 4;
+    skyNextAt = elapsed + (maxGap >= 8 ? clamp(desiredGap, 8, maxGap) : Math.max(.2, maxGap));
+  }
   function reset() {
     activePlats = activePlatsForNight(storyNight);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
@@ -868,7 +933,7 @@ function mkName(str) {
     combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
-    goldDone = { a: false, b: false }; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
+    goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
     scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0;
     rocks = mode === 'story' ? ROCK_XS.map(x => ({ x, y: terrainY(x), marked: false, scratched: false, wrongUsed: false, phase: Math.random() * Math.PI * 2, holeDepth: 0 })) : [];
     buriedHome = null;
@@ -934,19 +999,92 @@ function mkName(str) {
     else float(cat.x, cat.y - 64, 'Ouch!', RED);
   }
   function buriedAmbushSize(night) { return night < 5 ? 0 : clamp(night - 3, 1, 4); }
-  function triggerBuriedAmbush() {
-    const n = buriedAmbushSize(storyNight); if (!n) { timeLeft = Math.max(0, timeLeft - 2); announce('The mountain rumbles…', RED, 2); return; }
+  function triggerBuriedAmbush(sizeOverride = null, message = null, options = null) {
+    const n = sizeOverride == null ? buriedAmbushSize(storyNight) : sizeOverride;
+    if (!n) { timeLeft = Math.max(0, timeLeft - 2); announce('The mountain rumbles…', RED, 2); return; }
     const away = -(cat.face || 1);
     for (let i = 0; i < n; i++) {
-      const side = i === 0 ? away : i % 2 ? -away : away;
-      const x = clamp(cat.x + side * (140 + Math.random() * 120), 60, WORLD - 60);
-      const type = i === n - 1 && n >= 3 ? 'N' : 'F';
+      const fallbackSide = i === 0 ? away : i % 2 ? -away : away;
+      const wave = options?.wave?.[i], side = wave?.side ?? fallbackSide;
+      const x = wave?.x ?? clamp(cat.x + side * (140 + Math.random() * 120), 60, WORLD - 60);
+      const type = options?.frustratedOnly ? 'F' : i === n - 1 && n >= 3 ? 'N' : 'F';
       const amb = spawn(type, x);
       amb.ambush = true; amb.dir = -side;
       if (type === 'F') { amb.state = 'windup'; amb.st = .4; }
       else { amb.state = 'panic'; amb.st = 1.2; }
     }
-    announce(`The mountain woke ${n} angrier feelings`, RED, 2); shake = Math.max(shake, 10);
+    announce(message || `The mountain woke ${n} angrier feelings`, RED, 2); shake = Math.max(shake, options?.shake ?? 10);
+  }
+  function failSkyChallenge(m) {
+    if (!m || m.dead || m.skyPhase === 'cleared') return false;
+    const chapter = chapterFor(storyNight), n = chapter.sky.ambushBase + Math.max(0, storyNight - 4);
+    m.skyPhase = 'cleared'; m.dead = true; m.alpha = 0; m.skyTimer = 0;
+    skyPerfect = Math.max(0, skyPerfect - 1);
+    if ((got.F || 0) < (need.F || 0) && !respawnQ.some(r => r.type === 'F')) respawnQ.push({ type: 'F', at: chapter.respawnDelay + Math.random() * .8 });
+    m.ambushWave = [];
+    const away = -(cat.face || 1);
+    for (let i = 0; i < n; i++) {
+      const side = i === 0 ? away : i % 2 ? -away : away;
+      m.ambushWave.push({ x: clamp(cat.x + side * (140 + Math.random() * 120), 60, WORLD - 60), side, type: 'F' });
+    }
+    float(cat.x, cat.y - 88, 'It got away…', RED);
+    triggerBuriedAmbush(n, 'It got away…', { frustratedOnly: true, wave: m.ambushWave, shake: 12 });
+    setTimeout(() => tone(80, .55, 'sawtooth', .09, -40), 120);
+    return true;
+  }
+  function landSkyMood(m, chapter) {
+    if (m.skyFeature === 'C' && !m.skyHit) { failSkyChallenge(m); return; }
+    m.y = m.skyTargetY; m.skyVY = 0; m.skyTimer = 0; m.skyPhase = 'ground';
+    if (m.skyFeature === 'A' && cat.on && Math.abs(cat.x - m.x) < 36 && Math.abs(cat.y - terrainY(m.x)) < 10) {
+      const catOnLeft = cat.x <= m.x;
+      cat.vx = catOnLeft ? -120 : 120;
+      m.x = clamp(cat.x + (catOnLeft ? 52 : -52), 60, WORLD - 60);
+      if (m.spot) { m.spot.x = m.x; m.spot.y = terrainY(m.x); }
+      if (m.caveX != null) m.caveX = m.x;
+      m.skyTargetY = terrainY(m.x) - ({ N: 46, L: 30 }[m.type] || 30); m.y = m.skyTargetY;
+      float(cat.x, cat.y - 72, 'Mind the landing!', GOLD); tone(660, .12, 'sine', .035, 160);
+    }
+    if (m.skyFeature === 'B') {
+      if (!m.skyHit) {
+        m.skyMissed = true; skyPerfect = Math.max(0, skyPerfect - 1);
+        float(m.x, m.y - 34, 'Missed sky interception', MUTED);
+      } else {
+        m.skyGroundStun = .6;
+        if (m.type === 'E') { m.state = 'squash'; m.st = .6; m.vy = 0; m.apex = false; }
+        else { m.state = 'tired'; m.st = .6; }
+      }
+    }
+  }
+  function updateSkyMood(m, dt, chapter) {
+    m.hitCooldown = Math.max(0, (m.hitCooldown || 0) - dt);
+    if (m.skyPhase === 'wait') {
+      m.skyTimer += dt; m.y = m.skyStartY + Math.sin(t * 4 + m.phase) * 3;
+      while (m.skyTimer >= m.skyChimeAt && m.skyChimeAt < m.skyWait) { tone(740, .10, 'sine', .018, 90); m.skyChimeAt += 1; }
+      if (m.skyTimer >= m.skyWait) { m.skyPhase = 'falling'; m.skyTimer = 0; m.skyVY = 0; m.y = m.skyStartY; }
+      return;
+    }
+    if (m.skyPhase === 'scratchReq') {
+      m.skyTimer += dt;
+      const walkedAway = Math.abs(cat.x - m.skyAnchorX) > 120 || Math.abs(cat.x - m.x) > 165;
+      if (walkedAway || m.skyTimer >= chapter.sky.scratchWindow) failSkyChallenge(m);
+      return;
+    }
+    if (!['falling', 'struck', 'scratched'].includes(m.skyPhase)) return;
+    m.skyTimer += dt;
+    if (m.skyFeature === 'C' && (m.skyPhase === 'falling' || m.skyPhase === 'scratched')) {
+      m.skyEmberTimer -= dt;
+      if (m.skyEmberTimer <= 0) { m.skyEmberTimer = .055; parts.push({ x: m.x + (Math.random() - .5) * 12, y: m.y - 14, vx: (Math.random() - .5) * 35, vy: -25 - Math.random() * 30, life: .42, max: .42, c: '#ff6168', r: 2 + Math.random() * 2.4, g: -10 }); }
+    }
+    if (m.skyPhase === 'falling' && m.skyFeature === 'A') m.y += chapter.sky.fallSpeed * dt;
+    else if (m.skyPhase === 'falling' && m.skyFeature === 'C') {
+      m.skyVY = Math.min(m.skyVY + chapter.sky.gravity * .52 * dt, Math.max(180, chapter.sky.fallSpeed * 1.6)); m.y += m.skyVY * dt;
+    } else {
+      const gravityScale = m.skyPhase === 'scratched' ? 1.2 : 1;
+      m.skyVY += chapter.sky.gravity * gravityScale * dt;
+      if (m.skyPhase === 'scratched') m.skyVY = Math.max(m.skyVY, Math.max(260, chapter.sky.fallSpeed * 2));
+      m.y += m.skyVY * dt;
+    }
+    if (m.y >= m.skyTargetY) landSkyMood(m, chapter);
   }
   function catchIt(m) {
     if (m.ambush) {
@@ -969,6 +1107,7 @@ function mkName(str) {
       else { m.state = 'patrol'; m.cd = 2; m.home = m.x; }
       tone(200, .2, 'sine', .05, -80); return;
     }
+    if (m.sky) { m.skyPhase = 'cleared'; m.skyTimer = 0; }
     combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 4; bestCombo = Math.max(bestCombo, combo);
     const pts = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170, G: 500 }[m.type] * combo; score += pts;
     const gain = { F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16, G: 40 }[m.type] + 2 * (combo - 1);
@@ -976,7 +1115,7 @@ function mkName(str) {
     caughtN++;
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
     else if (mode === 'free') { timeLeft += 2; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 12) trail.shift(); }
-    else { const chapter = chapterFor(storyNight); got[m.type]++; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay + Math.random() * .8 }); }
+    else { const chapter = chapterFor(storyNight); if (Object.prototype.hasOwnProperty.call(got, m.type)) { got[m.type]++; if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay + Math.random() * .8 }); } trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } }
     const key = m.type + (m.v || 0), info = vinfo(m.type, m.v || 0);
     if (!book[key]) {
       const bonus = m.v ? 30 : m.type === 'G' ? 20 : 10;
@@ -1023,6 +1162,16 @@ function mkName(str) {
   function updMood(m, dt) {
     const chapter = mode === 'story' ? chapterFor(storyNight) : { moodlingSpeed: 1, frustratedChargeSpeed: 1, frustratedWindup: .55, nervousHearingMul: 1, nervousPanicTime: 1.1 };
     const sp = mode === 'free' ? 1 + Math.min(.6, level * .1) : (chapter.moodlingSpeed * (chaos ? 1.25 : 1));
+    if (m.sky && m.skyPhase === 'cleared') return;
+    if (m.sky && m.skyPhase !== 'ground') { updateSkyMood(m, dt, chapter); return; }
+    if (m.sky && m.skyGroundStun > 0) {
+      m.skyGroundStun = Math.max(0, m.skyGroundStun - dt); m.y = m.skyTargetY;
+      if (m.skyGroundStun === 0) {
+        if (m.type === 'E') { m.state = 'bounce'; m.vy = -180; m.apex = true; }
+        else if (m.type === 'J') { m.state = 'tired'; m.st = 1.2; }
+      }
+      return;
+    }
     if (m.type === 'F') {
       if (!m.ambush || m.state !== 'charge') m.y = terrainY(m.x) - 20;
       const dx = cat.x - m.x, dy = cat.y - (m.y + 20);
@@ -1172,6 +1321,27 @@ function mkName(str) {
     const cx = cat.x + cat.face * 16, cy = cat.y - 24;
     for (const m of mood) {
       if (m.dead) continue;
+      if (m.sky && m.skyFeature === 'C' && m.skyPhase === 'scratchReq') { failSkyChallenge(m); cat.pounce = 0; return; }
+      if (m.sky && m.skyPhase !== 'ground') {
+        if (m.skyPhase === 'falling' && m.hitCooldown <= 0 && (m.skyFeature === 'B' || m.skyFeature === 'C')) {
+          const chapter = chapterFor(storyNight), base = uv('pounce') * chapter.sky.pounceWindowMul;
+          const reach = base * (m.skyFeature === 'B' ? .9 : 1);
+          if (Math.hypot(cat.x - m.x, cat.y - 24 - m.y) < reach) {
+            m.skyHit = true; m.hitCooldown = .55;
+            if (m.skyFeature === 'B') {
+              m.skyPhase = 'struck'; m.skyTimer = 0; m.skyVY *= -.35;
+              cat.vx = -cat.face * 180; cat.vy = -120; cat.on = false; cat.pounce = 0; cat.bounced = true;
+              burst(m.x, m.y, col(m.type), 14); float(m.x, m.y - 36, 'Mid-air hit!', col(m.type)); tone(620, .16, 'triangle', .08, 320);
+            } else {
+              m.skyPhase = 'scratchReq'; m.skyTimer = 0; m.scratchNeed = 1; m.skyAnchorX = cat.x; m.skyAnchorY = cat.y;
+              cat.pounce = 0; cat.bounced = true; announce('Scratch it! (S)', RED, chapter.sky.scratchWindow); burst(m.x, m.y, RED, 12); tone(420, .18, 'triangle', .07, 260);
+            }
+            return;
+          }
+        }
+        continue;
+      }
+      if (m.sky && m.skyGroundStun > 0) continue;
       if (Math.hypot(m.x - cx, m.y - cy) > uv('pounce')) continue;
       if (m.type === 'B' && m.state === 'buried') { cat.bounced = true; cat.vx = -cat.face * 260; cat.pounce = 0; float(cat.x, cat.y - 70, 'It’s still buried. Scratch the rock.', '#a67646'); tone(150, .12, 'square', .05); continue; }
       if (m.alpha < .5) continue;
@@ -1244,6 +1414,7 @@ function mkName(str) {
       if (warmup <= 0) timeLeft -= dt;
       if (mode === 'free') freeTick(dt);
       const chapter = mode === 'story' ? chapterFor(storyNight) : null;
+      if (mode === 'story') maybeSpawnSky();
       if (mode === 'free' || chapter.goldensAllowed > 0) {
         if (!goldDone.a && timeLeft <= 62 && (mode === 'free' || chapter.goldensAllowed >= 1)) { goldDone.a = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); announce('A golden Moodling appeared!', GOLD); tone(1046, .3, 'sine', .06); }
         if (!goldDone.b && timeLeft <= 28 && (mode === 'free' || chapter.goldensAllowed >= 2)) { goldDone.b = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); announce('Golden Moodling! Catch it!', GOLD); tone(1046, .3, 'sine', .06); }
@@ -1278,6 +1449,13 @@ function mkName(str) {
 
   function checkScratchProximity() {
     scratchTarget = null;
+    const skyChallenge = mood.find(m => !m.dead && m.sky && m.skyFeature === 'C' && m.skyPhase === 'scratchReq');
+    if (skyChallenge) {
+      const walkedAway = Math.abs(cat.x - skyChallenge.skyAnchorX) > 120 || Math.abs(cat.x - skyChallenge.x) > 165;
+      if (walkedAway) failSkyChallenge(skyChallenge); else scratchTarget = { type: 'sky', mood: skyChallenge };
+      $('#bScratch').hidden = !scratchTarget || touchUI.hidden;
+      return scratchTarget;
+    }
     let best = 74;
     const reachableHeight = Math.abs(cat.y - terrainY(cat.x)) <= 115;
     for (const m of mood) {
@@ -1291,6 +1469,16 @@ function mkName(str) {
     return scratchTarget;
   }
   function performScratch() {
+    if (scratchTarget?.type === 'sky') {
+      const m = scratchTarget.mood;
+      if (!m || m.dead || m.skyPhase !== 'scratchReq') { if (m) failSkyChallenge(m); return false; }
+      if (Math.abs(cat.x - m.skyAnchorX) > 120 || Math.abs(cat.x - m.x) > 165) { failSkyChallenge(m); scratchTarget = null; return false; }
+      m.skyPhase = 'scratched'; m.skyTimer = 0; m.scratchNeed = 0; m.skyVY = Math.max(260, chapterFor(storyNight).sky.fallSpeed * 2);
+      scratchAnim = .45; scratchTarget = null; burst(m.x, m.y, RED, 16); float(m.x, m.y - 58, 'Scratched! Let it land', RED); tone(520, .18, 'triangle', .07, 300);
+      return true;
+    }
+    const activeSkyChallenge = mood.find(m => !m.dead && m.sky && m.skyFeature === 'C' && m.skyPhase === 'scratchReq');
+    if (activeSkyChallenge) { failSkyChallenge(activeSkyChallenge); return false; }
     if (scratchTarget?.kind === 'rock') {
       const rock = scratchTarget.rock; if (!rock || rock.scratched || !cat.on || Math.abs(cat.y - rock.y) > 115) return false;
       rock.scratched = true; rock.holeDepth = 0; scratchAnim = .8; shake = Math.max(shake, rock.marked ? 0 : 10);
@@ -1642,6 +1830,28 @@ function mkName(str) {
       if (m.alpha < .02) continue;
       ctx.save(); ctx.globalAlpha = m.alpha;
       const look = clamp((cat.x - m.x) / 160, -2.5, 2.5), near = Math.abs(cat.x - m.x) < 3 * T;
+      if (m.sky && m.skyPhase !== 'ground' && m.skyPhase !== 'cleared') {
+        const skyColor = m.v ? vcol(m.type, m.v) : col(m.type);
+        if (m.skyPhase === 'wait') {
+          const ay = terrainY(m.x) - 70 - Math.sin(t * 3 + m.phase) * 2;
+          ctx.globalAlpha = .55 + .25 * Math.sin(t * 5 + m.phase); ctx.fillStyle = skyColor;
+          ctx.font = `800 22px ${DISP}`; ctx.textAlign = 'center'; ctx.fillText('↓', m.x, ay); ctx.globalAlpha = m.alpha;
+          if (m.skyFeature === 'B') for (let k = 0; k < 5; k++) { const yy = 18 + k * 15 + Math.sin(t * 4 + k) * 2; ctx.fillStyle = skyColor; star(m.x + Math.sin(t * 2 + k) * 4, yy, 4, 3.5, 1.2, t + k); ctx.fill(); }
+        } else {
+          const shadowWidth = 22 * (1 - Math.min(1, (m.y - GROUND) / -600)) + 6;
+          ctx.fillStyle = 'rgba(8,10,24,.28)'; ctx.beginPath(); ctx.ellipse(m.x, terrainY(m.x), shadowWidth, 5, 0, 0, 7); ctx.fill();
+        }
+        const size = m.type === 'F' ? .62 : m.type === 'N' ? .58 : m.type === 'L' ? .5 : .55;
+        const cy = m.type === 'F' || m.type === 'N' || m.type === 'L' ? 70 : m.type === 'J' ? 68 : 72;
+        drawCuteMood(m.type, m.x, m.y, size, { color: skyColor, glow: skyColor, look, cy });
+        if (m.skyPhase === 'struck' && m.skyHit) for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.1; ctx.fillStyle = GOLD; star(m.x + Math.cos(a) * 24, m.y - 22 + Math.sin(a) * 7, 5, 4.5, 1.8, a); ctx.fill(); }
+        if (m.skyPhase === 'scratchReq') {
+          ctx.strokeStyle = `rgba(255,97,104,${.65 + .28 * Math.sin(t * 12)})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(m.x, m.y, 39 + Math.sin(t * 10) * 3, 0, Math.PI * 2); ctx.stroke();
+          ctx.font = `800 22px ${DISP}`; ctx.textAlign = 'center'; ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(8,14,22,.9)'; ctx.fillStyle = RED; ctx.strokeText('Scratch it! (S)', m.x, m.y - 56); ctx.fillText('Scratch it! (S)', m.x, m.y - 56);
+        }
+        if (m.v) drawRare(m);
+        ctx.restore(); continue;
+      }
       if (m.type === 'F') {
         let x = m.x, y = m.y;
         if (m.state === 'windup') x += (Math.random() - .5) * 5;
@@ -1693,6 +1903,7 @@ function mkName(str) {
         drawCuteMood('G', m.x, m.y, .62, { color: '#FFE27A', glow: '#fff3c4', cy: 64 });
         for (let k = 0; k < 4; k++) { const a = t * 3 + k * Math.PI / 2; ctx.fillStyle = '#fff3c4'; star(m.x + Math.cos(a) * 26, m.y + Math.sin(a) * 26, 4, 5, 1.5, 0); ctx.fill(); }
       }
+      if (m.sky && m.skyPhase === 'ground' && m.skyHit && m.skyGroundStun > 0) { for (let k = 0; k < 3; k++) { const a = t * 5 + k * 2.1; ctx.fillStyle = GOLD; star(m.x + Math.cos(a) * 24, m.y - 22 + Math.sin(a) * 7, 5, 4.5, 1.8, a); ctx.fill(); } }
       if (m.v && m.alpha > .05) drawRare(m);
       ctx.restore();
     }
@@ -1793,13 +2004,33 @@ function mkName(str) {
     ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, 20, top + 34);
     ctx.font = `600 15px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText('SCORE', 22, top + 60);
     ctx.font = `800 22px ${DISP}`; ctx.fillStyle = INK; ctx.fillText(score.toLocaleString(), 82, top + 61);
+    const hudChapter = mode === 'story' ? chapterFor(storyNight) : null;
+    const skyEnabled = !!hudChapter && skyTotalFor(hudChapter) > 0;
+    const skyLive = skyEnabled && mood.some(m => m.sky && !m.dead && ['wait', 'falling', 'struck', 'scratchReq', 'scratched'].includes(m.skyPhase));
+    const compactSky = VW < 900;
+    if (skyEnabled) {
+      const sx = compactSky ? 22 : 122, sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
+      ctx.save(); ctx.globalAlpha = skyLive ? .84 + .16 * Math.sin(t * 5) : 1;
+      ctx.fillStyle = 'rgba(22,15,44,.78)'; ctx.strokeStyle = skyLive ? 'rgba(205,224,255,.62)' : 'rgba(243,236,255,.22)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(sx, sy, sw, sh, 14) : ctx.rect(sx, sy, sw, sh); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e7edff'; ctx.beginPath(); ctx.arc(sx + 15, sy + 14, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(22,15,44,.95)'; ctx.beginPath(); ctx.arc(sx + 19, sy + 11, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#e7edff'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(sx + 25, sy + 10); ctx.lineTo(sx + 25, sy + 20); ctx.lineTo(sx + 22, sy + 17); ctx.moveTo(sx + 25, sy + 20); ctx.lineTo(sx + 28, sy + 17); ctx.stroke();
+      ctx.font = `800 13px ${DISP}`; ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.fillText(skyLive ? 'Sky · ↓' : `Sky ×${skyRemaining(hudChapter)}`, sx + 35, sy + 19);
+      ctx.restore();
+    }
+    const comboY = top + 96 + (skyEnabled && compactSky ? 32 : 0);
     if (combo > 1) {
-      ctx.font = `800 26px ${DISP}`; ctx.fillStyle = GOLD; ctx.fillText(`×${combo} combo`, 20, top + 96);
-      ctx.fillStyle = 'rgba(246,196,83,.25)'; ctx.fillRect(22, top + 104, 120, 5);
-      ctx.fillStyle = GOLD; ctx.fillRect(22, top + 104, 120 * clamp(comboT / 4, 0, 1), 5);
+      ctx.font = `800 26px ${DISP}`; ctx.fillStyle = GOLD; ctx.fillText(`×${combo} combo`, 20, comboY);
+      ctx.fillStyle = 'rgba(246,196,83,.25)'; ctx.fillRect(22, comboY + 8, 120, 5);
+      ctx.fillStyle = GOLD; ctx.fillRect(22, comboY + 8, 120 * clamp(comboT / 4, 0, 1), 5);
+    }
+    if (skyEnabled && skySpawned > 0) {
+      const perfectY = top + (combo > 1 ? (compactSky ? 160 : 128) : (compactSky ? 104 : 92));
+      ctx.textAlign = 'left'; ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText(`Perfect skys: ${skyPerfect}`, 22, perfectY);
     }
     {
-      let ay = top + (combo > 1 ? 132 : 92);
+      let ay = skyEnabled ? top + (combo > 1 ? (compactSky ? 186 : 153) : (compactSky ? 128 : 116)) : top + (combo > 1 ? 132 : 92);
       ctx.textAlign = 'left'; ctx.font = `600 14px ${BODY}`;
       ctx.fillStyle = eyesT > 0 ? '#c8ff8a' : eyesCd > 0 ? MUTED : BLUE;
       ctx.fillText(eyesT > 0 ? 'Night eyes open' : eyesCd > 0 ? `Eyes in ${Math.ceil(eyesCd)}s` : 'Night eyes ready · E', 22, ay);
@@ -1820,9 +2051,9 @@ function mkName(str) {
       ctx.font = `600 13px ${BODY}`; ctx.fillStyle = VIOLET;
       ctx.fillText(`FREE MODE · LEVEL ${level + 1}`, VW - 22, top + 58);
     }
-    if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.state === 'hide')) {
+    if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
-      const prompt = scratchTarget.kind === 'rock' ? `S  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? 'marked rock' : 'rock'}` : `S  Scratch ${scratchTarget.type==='C'?'cave mark':'hiding spot'}`, py=VH-74;
+      const prompt = scratchTarget.type === 'sky' ? 'Scratch it! (S)' : scratchTarget.kind === 'rock' ? `S  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? 'marked rock' : 'rock'}` : `S  Scratch ${scratchTarget.type==='C'?'cave mark':'hiding spot'}`, py=VH-74;
       ctx.strokeText(prompt,VW/2,py);ctx.fillText(prompt,VW/2,py);
     } else if (scratchAnim>0) {
       ctx.textAlign='center';ctx.font=`800 16px ${DISP}`;ctx.fillStyle='#f4e8c7';ctx.fillText('Scratching…',VW/2,VH-74);
