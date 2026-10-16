@@ -1,2 +1,7 @@
-manus.md
-developer.md
+# Local-only project notes
+/manus.md
+/developer.md
+
+# Per-machine Manus state and temporary task files
+/.manus/
+/.work/
