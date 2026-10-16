@@ -38,6 +38,36 @@ This file records significant gameplay and world changes in chronological entrie
 
 ---
 
+## Entry 002 — Split Frontend and Backend Structure
+
+**Date:** 2026-10-16
+
+**Scope:** Extract the static game from one HTML file into separate frontend markup, styles, and ordered JavaScript modules while documenting the currently absent backend.
+
+### Changes
+
+- Moved game markup to `frontend/index.html`, CSS to `frontend/css/styles.css`, and the original JavaScript blocks to `frontend/js/customization.js` then `frontend/js/game.js` to preserve execution order.
+- Added `backend/README.md` to state that the game currently has no server/API/database logic; no artificial backend process was introduced.
+- Added root `index.html` and retained `TideCatcher.html` as forwarding entrypoints, preserving the Vercel root URL and existing legacy game URL.
+- Added a root README with the static deployment layout and local preview instructions; updated the Sky-Fall QA harness to read the separated JS modules.
+
+### Verification
+
+- `node --check frontend/js/customization.js` and `node --check frontend/js/game.js` — passed.
+- `node .work/scripts/test_skyfall.js` — passed for world continuity, perch budgets, Nights 1–7 quotas, HUD/tutorial, Free Mode gating, A/B/C sky-fall transitions, catch rewards, caves, and ambush failures.
+- Python HTML/reference checks — passed; the frontend has no inline style/script blocks and both modules plus CSS resolve locally.
+- Local HTTP checks for `/`, `/frontend/index.html`, CSS, both JS files, and `/TideCatcher.html` — all returned HTTP 200.
+- Local browser preview — original start/customization screen rendered, with no browser console errors.
+
+### Files
+
+- `frontend/index.html`, `frontend/css/styles.css`, and `frontend/js/*.js` — separated static frontend.
+- `backend/README.md` — backend status and future boundary.
+- `index.html` and `TideCatcher.html` — root/legacy forwarding entrypoints.
+- `README.md` and `developer.md` — project/developer documentation.
+
+---
+
 ## Future entry template
 
 ## Entry NNN — Short descriptive title

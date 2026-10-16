@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset=utf8>
+<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TideCatcher Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grandstander:wght@600;800&family=Lexend:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<canvas id="game" aria-label="TideCatcher prototype game" hidden></canvas>
+
+<div id="touch" hidden>
+  <div id="stickZone"><div id="stick" hidden><div id="knob"></div></div></div>
+  <button class="tbtn" id="bJump" aria-label="Jump">Jump</button>
+  <button class="tbtn" id="bPounce" aria-label="Pounce">Pounce</button>
+  <button class="tbtn" id="bPurr" aria-label="Purr" hidden>Purr</button>
+  <button class="tbtn" id="bEyes" aria-label="Night eyes">Eyes</button>
+  <button class="tbtn" id="bScratch" aria-label="Scratch nearby hiding spot" hidden>Scratch</button>
+  <div id="hint">Hold Shift or left mouse to sneak · quick left-click or X to pounce · S to scratch</div>
+</div>
+
+<div class="overlay" id="prologueScreen" hidden aria-labelledby="prologueTitle">
+  <div class="panel prologue-panel">
+    <button class="intro-skip" id="introSkipBtn" type="button">Skip intro →</button>
+    <p class="eyebrow">Before the Night Side</p>
+    <h1 id="prologueTitle">TideCatcher</h1>
+    <div class="prologue-art" id="introArt" data-anim="wake">
+      <svg viewBox="0 0 720 320" role="img" aria-label="Thiri sits awake in her moonlit bedroom while Shwe watches beside her">
+        <defs>
+          <linearGradient id="introSky" x2="0" y2="1"><stop stop-color="#151b38"/><stop offset="1" stop-color="#3d4160"/></linearGradient>
+          <linearGradient id="introBlanket" x2="0" y2="1"><stop stop-color="#c37b9c"/><stop offset="1" stop-color="#704967"/></linearGradient>
+          <linearGradient id="introBeam" x2="0" y2="1"><stop stop-color="#fff1c5" stop-opacity=".42"/><stop offset="1" stop-color="#fff1c5" stop-opacity="0"/></linearGradient>
+          <radialGradient id="introMoonGlow"><stop stop-color="#fff0bd" stop-opacity=".85"/><stop offset="1" stop-color="#fff0bd" stop-opacity="0"/></radialGradient>
+        </defs>
+        <rect width="720" height="320" rx="18" fill="url(#introSky)"/>
+        <path d="M0 250Q150 226 310 250T720 230V320H0Z" fill="#25213e"/>
+        <rect x="48" y="26" width="174" height="156" rx="9" fill="#10182f" stroke="#887ba7" stroke-width="5"/>
+        <path d="M135 28V180M50 104H220" stroke="#796a9e" stroke-width="4"/>
+        <circle cx="174" cy="63" r="48" fill="url(#introMoonGlow)"/><circle cx="174" cy="63" r="18" fill="#ffeab3"/>
+        <g id="introStars" fill="#e3ddff"><path class="twinkle" d="M91 56l4 9 10 2-8 7 2 10-8-5-9 5 2-10-8-7 10-2z"/><path class="twinkle" d="M119 128l3 6 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z"/><circle class="twinkle" cx="195" cy="135" r="2.5"/><circle class="twinkle" cx="76" cy="151" r="2"/></g>
+        <path id="introMoonbeam" d="M203 120L270 126L402 302L220 302Z" fill="url(#introBeam)"/>
+        <g id="introCurtainL"><path d="M42 22Q69 40 91 30L89 184Q67 163 42 184Z" fill="#78627e"/><path d="M52 36L59 170M72 36L75 174" stroke="#a48698" stroke-width="4" opacity=".48"/></g>
+        <g id="introCurtainR"><path d="M225 22Q200 40 179 30L181 184Q204 163 226 184Z" fill="#78627e"/><path d="M215 36L208 170M195 36L191 174" stroke="#a48698" stroke-width="4" opacity=".48"/></g>
+        <g id="introDust" fill="#fff2c9"><circle cx="252" cy="195" r="2.4"/><circle cx="284" cy="226" r="1.8"/><circle cx="238" cy="268" r="2"/><circle cx="320" cy="247" r="1.6"/><circle cx="290" cy="177" r="1.4"/></g>
+        <rect x="294" y="138" width="366" height="128" rx="13" fill="#4c3550" stroke="#8d6377" stroke-width="6"/>
+        <rect x="314" y="158" width="374" height="91" rx="22" fill="#dfc8de"/>
+        <ellipse cx="536" cy="180" rx="66" ry="24" fill="#fff0df"/>
+        <path d="M336 222Q385 183 452 187Q507 179 574 202L649 239H328Z" fill="url(#introBlanket)" stroke="#e4a3bb" stroke-width="3"/>
+        <g id="introThiri">
+          <path d="M488 204Q488 163 511 151Q536 139 559 157Q576 173 574 205Z" fill="#9b6e91" stroke="#efc4d7" stroke-width="2"/>
+          <path d="M502 186Q512 165 532 169Q550 171 566 187" fill="none" stroke="#e8b9a8" stroke-width="13" stroke-linecap="round"/>
+          <g id="introArms"><path d="M503 185Q516 174 529 183Q543 193 562 181" fill="none" stroke="#f0c19e" stroke-width="9" stroke-linecap="round"/><path d="M512 188Q535 199 558 190" fill="none" stroke="#e9b995" stroke-width="7" stroke-linecap="round"/></g><path id="introComfortArm" d="M516 183Q476 186 435 204" fill="none" stroke="#efb995" stroke-width="9" stroke-linecap="round"/><circle cx="434" cy="204" r="6" fill="#efb995"/>
+          <g id="introHead">
+            <path d="M495 141Q491 105 521 96Q553 91 568 119L560 158Q539 172 510 155Z" fill="#30243a"/>
+            <ellipse cx="531" cy="130" rx="29" ry="30" fill="#e7b995"/>
+            <path d="M503 126Q498 97 528 99Q552 96 561 117Q544 111 524 119Q514 126 503 126Z" fill="#30243a"/>
+            <g id="introEyes" fill="#493143"><ellipse cx="521" cy="133" rx="3.5" ry="4.2"/><ellipse cx="541" cy="133" rx="3.5" ry="4.2"/><circle cx="522" cy="134" r="1.4" fill="#fff0dc"/><circle cx="542" cy="134" r="1.4" fill="#fff0dc"/></g>
+            <path id="introMouth" d="M526 148Q532 152 539 147" fill="none" stroke="#744555" stroke-width="2.5" stroke-linecap="round"/>
+            <path id="introTear" d="M548 138Q554 146 548 152Q542 147 548 138Z" fill="#a8dfff"/>
+          </g>
+          <path id="introHand" d="M557 183Q579 180 588 193" fill="none" stroke="#efb995" stroke-width="8" stroke-linecap="round"/>
+        </g>
+        <g id="introShwe">
+          <ellipse cx="397" cy="232" rx="38" ry="21" fill="#efb44a"/>
+          <path id="introShweTail" d="M366 230Q335 215 351 194Q364 185 370 202" fill="none" stroke="#efb44a" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="425" cy="214" r="20" fill="#efb44a"/><path d="M410 201l2-18 13 14M427 196l15-13-2 23" fill="#efb44a"/>
+          <path d="M418 214q4 4 8 0" fill="none" stroke="#41303e" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="415" cy="212" r="2" fill="#c8ff8a"/><circle cx="427" cy="212" r="2" fill="#c8ff8a"/>
+          <path d="M380 225l5 7m7-10 4 8m7-8 4 8" stroke="#c98a2c" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <circle id="introShweGlow" cx="397" cy="219" r="42" fill="none" stroke="#ffe39b" stroke-width="5"/>
+        <g id="introPaper"><path d="M226 263l32-7 7 31-34 4Z" fill="#e9dfd5"/><path d="M235 270l19-4m-17 10 14-3" stroke="#8d8797" stroke-width="2"/><path d="M269 270l17 3-3 19-16-4Z" fill="#c9c2d3"/></g>
+        <text x="370" y="293" fill="#f6dca2" font-family="Trebuchet MS,sans-serif" font-size="13" font-weight="700">SHWE</text>
+        <path d="M0 294H720" stroke="#695275" stroke-width="4"/>
+      </svg>
+    </div>
+    <div class="intro-subtitle" id="introSubtitle" aria-live="polite">Thiri is waking in the quiet of the night…</div>
+    <div class="prologue-actions"><span class="muted">A short, skippable story · subtitles always on</span><button class="btn" id="introContinueBtn" type="button" hidden>Follow the moonlit trail →</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="setupScreen" hidden aria-labelledby="setupTitle">
+  <form class="panel setup-panel" id="setupForm" novalidate>
+    <p class="eyebrow">Before the night begins</p>
+    <h1 id="setupTitle">Who are they?</h1>
+    <p class="muted">Choose her cat, then name them both. The story will use these names.</p>
+    <div class="setup-grid">
+      <div class="setup-preview" aria-hidden="true">
+        <canvas id="setupCatCanvas" width="340" height="300"></canvas>
+        <div class="setup-tag" id="setupCatTag">Shwe</div>
+      </div>
+      <div class="setup-fields">
+        <label class="field">Her name<input type="text" id="girlNameInput" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Thiri"></label>
+        <label class="field">Her cat’s name<input type="text" id="catNameInput" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Shwe"></label>
+        <fieldset class="coat-pick">
+          <legend>Choose your cat</legend>
+          <div class="coat-options" id="breedOptions"></div>
+          <div class="muted" id="breedName" aria-live="polite"></div>
+        </fieldset>
+        <div class="setup-error" id="setupError" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="prologue-actions"><span class="muted" id="setupNote">You can change these later from the menu.</span><button class="btn" id="setupGo" type="submit">Begin the story →</button></div>
+  </form>
+</div>
+
+<div class="overlay" id="startScreen">
+  <div class="panel">
+    <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count" id="levelMapCount">1 / 7 nights unlocked</span><span class="room-status" id="roomStatus" aria-live="polite">Thiri is sleeping</span></div>
+    <p class="level-map-hint">Choose the lit night. Each completed story night opens the next chapter.</p>
+    <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Scrollable level map; scroll upward for higher levels" tabindex="0">
+      <div class="level-map-track" id="levelMapTrack">
+        <svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg>
+      </div>
+    </div>
+    <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Planned / locked</span></div>
+    <div class="cards">
+      <div class="card"><b class="red">Frustrated</b>Charges when you get close. Dodge it, then pounce while it is dizzy.</div>
+      <div class="card"><b class="violet">Nervous</b>Panics if you run or jump nearby. Sneak up slowly, then pounce.</div>
+      <div class="card"><b class="blue">Lonely</b>Night 1: Lonely is visible—sit nearby. From Night 2, use Night Eyes to find pawprints, scratch with S, then sit still beside Lonely. Never pounce.</div>
+      <div class="card"><b style="color:#7ddc8b">Calm · Nights 6–7</b>Find a marked cave-side hiding spot with Night Eyes, scratch to reveal Calm, then sit quietly beside it. Never pounce.</div>
+      <div class="card"><b style="color:#a67646">Buried · Nights 4–7</b>Hides inside a mountain rock. Night Eyes marks the right one. Scratch a wrong rock and the mountain wakes angry feelings. Never guess blindly.</div>
+      <div class="card"><b class="gold">Golden</b>Rare and fast. Worth 500 points and 5 extra seconds.</div>
+    </div>
+    <div class="actions">
+      <button class="btn alt" id="freeBtn">Free Mode</button>
+      <button class="btn ghost" id="shopBtn">Upgrade Shwe</button>
+      <button class="btn ghost" id="bookBtn">Mood Book</button>
+      <button class="btn ghost" id="previewBtn">Watch the Coming Home scene</button>
+      <button class="btn ghost" id="storyBtn">Replay intro</button>
+      <button class="btn ghost" id="profileBtn">Names &amp; cat</button>
+    </div>
+    <section class="missions" aria-labelledby="mTitle">
+      <div class="mhead"><b id="mTitle">Today's missions</b><span class="muted" id="mReset"></span></div>
+      <div id="mList"></div>
+    </section>
+    <details class="howto">
+    <summary>How to play and controls</summary>
+    <p class="muted">Catch within 4 seconds of your last catch to build a combo, up to ×5. If a charge hits you, the last light in your trail drifts away. Look out for <b class="gold">rare Moodlings</b> with sparkles: they fill new pages of the Mood Book.</p>
+    <p class="muted"><b class="violet">Free Mode</b> is endless: every catch adds 2 seconds, getting hit costs 3, and more feelings appear every 20 seconds. How long can you last?</p>
+    <div class="controls">
+      <span><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd></span><span>Run</span>
+      <span>Hold <kbd>Shift</kbd> or the left mouse button while moving</span><span>Sneak</span>
+      <span><kbd>Space</kbd> or <kbd>↑</kbd></span><span>Jump</span>
+      <span><kbd>J</kbd>, <kbd>X</kbd>, or quick left-click</span><span>Pounce</span>
+      <span><kbd>E</kbd></span><span>Night eyes: highlight nearby hiding spots</span>
+      <span><kbd>S</kbd></span><span>Scratch a nearby hiding spot</span>
+      <span><kbd>K</kbd></span><span>Purr, once you buy it: slows nearby Moodlings</span>
+      <span>On a phone</span><span>Stick on the left (push halfway to sneak). On desktop, hold Shift or left mouse to sneak; quick left-click pounces like X. Landscape works best.</span>
+    </div>
+    </details>
+  </div>
+</div>
+
+<div class="overlay" id="endScreen" hidden>
+  <div class="panel">
+    <p class="eyebrow" id="endEyebrow">Night 1 complete</p>
+    <h1 id="endTitle">Thiri's curtains open a little</h1>
+    <div class="stars" id="endStars" aria-label="Stars"></div>
+    <div class="night-storyline" id="nightStoryline" hidden>
+      <div class="thiri-mini" id="endThiriArt" data-stage="0" aria-hidden="true"><svg viewBox="0 0 180 120"><defs><linearGradient id="miniRoom" x2="0" y2="1"><stop stop-color="#1a1e3c"/><stop offset="1" stop-color="#55455c"/></linearGradient></defs><rect width="180" height="120" fill="url(#miniRoom)"/><rect x="14" y="12" width="39" height="42" rx="3" fill="#233453" stroke="#9c91b7" stroke-width="2"/><path class="mini-curtain" d="M11 9h13v49H11zm33 0h13v49H44z" fill="#6a5575"/><rect x="70" y="59" width="97" height="43" rx="7" fill="#7f6280"/><rect x="75" y="54" width="88" height="21" rx="7" fill="#e6d2df"/><path class="mini-blanket" d="M78 73Q111 54 145 72l12 23H75Z" fill="#94647e"/><circle cx="126" cy="56" r="13" fill="#e6b995"/><path d="M113 53q0-14 14-14 13 0 14 12-11-7-28 2" fill="#32263c"/><path class="mini-eyes" d="M120 57q3 3 5 0m5 0q3 3 5 0" fill="none" stroke="#4c3748" stroke-width="1.5"/><path d="M96 94h36" stroke="#f0cf88" stroke-width="3" opacity=".55"/></svg></div>
+      <div class="night-story-copy"><strong id="endUnlockBadge" hidden></strong><p id="endDiaryLine"></p><span id="endStageLine"></span></div>
+    </div>
+    <p id="endMsg"></p>
+    <div class="stats">
+      <div class="stat"><span>Score</span><strong id="sScore">0</strong></div>
+      <div class="stat"><span>Best</span><strong id="sBest">0</strong></div>
+      <div class="stat"><span>Biggest combo</span><strong id="sCombo">×1</strong></div>
+      <div class="stat"><span>Brought home</span><strong id="sHome">0/10</strong></div>
+      <div class="stat"><span>Glow earned</span><strong id="sGlow" class="gold">+0</strong></div>
+    </div>
+    <p class="muted" id="endTip"></p>
+    <p id="endMissions" class="gold" hidden></p>
+    <div class="actions">
+      <button class="btn" id="againBtn">Play again</button>
+      <button class="btn ghost" id="endShopBtn">Upgrade Shwe</button>
+      <button class="btn ghost" id="menuBtn">Main menu</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="nightWakeScreen" hidden aria-labelledby="nightWakeTitle">
+  <div class="panel wake-panel">
+    <p class="eyebrow" id="nightWakeEyebrow">AFTER NIGHT 1</p><h1 id="nightWakeTitle">She stirs in her sleep.</h1>
+    <div class="wake-art"><canvas id="nightWakeCanvas" width="680" height="250" aria-label="Thiri's room becoming brighter"></canvas></div>
+    <div class="wake-copy"><strong id="nightWakeDiary"></strong><em id="nightWakeLine"></em></div>
+    <button class="btn" id="nightWakeContinue" type="button">Continue →</button>
+  </div>
+</div>
+
+<div class="overlay" id="awakeningScreen" hidden aria-labelledby="awakeningTitle">
+  <div class="panel awakening-panel">
+    <button class="intro-skip awakening-skip" id="awakeningSkipBtn" type="button">Skip to ending</button>
+    <p class="eyebrow">The last night gives way to morning</p>
+    <h1 id="awakeningTitle">A New Morning</h1>
+    <div class="awakening-art" id="awakeningArt" data-anim="sunrise">
+      <svg viewBox="0 0 800 350" role="img" aria-label="Thiri wakes in her brightening room beside Shwe, with her restored drawing and Hnin’s message">
+        <defs><linearGradient id="awakeRoom" x2="0" y2="1"><stop stop-color="#7a8eaa"/><stop offset="1" stop-color="#f6c88b"/></linearGradient><linearGradient id="awakeSunGlow" x2="0" y2="1"><stop stop-color="#fff6c9" stop-opacity=".95"/><stop offset="1" stop-color="#ffc66f" stop-opacity="0"/></linearGradient></defs>
+        <rect width="800" height="350" rx="18" fill="url(#awakeRoom)"/><rect x="36" y="35" width="210" height="205" rx="9" fill="#617d9f" stroke="#f4e5c2" stroke-width="8"/><path d="M141 38v199M39 136h204" stroke="#dae7ea" stroke-width="5"/>
+        <circle id="awakeSun" cx="185" cy="98" r="95" fill="url(#awakeSunGlow)"/><circle cx="190" cy="107" r="30" fill="#fff0b2"/>
+        <g id="awakeCurtains"><path d="M24 26Q82 50 105 34V247Q60 216 24 251Z" fill="#cf8194"/><path d="M258 26Q214 51 187 34V247Q224 216 258 251Z" fill="#cf8194"/><path d="M47 49v170m31-168v170m153-169v170" stroke="#edb4ae" stroke-width="6" opacity=".55"/></g>
+        <path d="M0 286Q230 267 440 288T800 275V350H0Z" fill="#d9aa8b"/>
+        <rect x="302" y="173" width="396" height="121" rx="15" fill="#805979"/><rect x="326" y="191" width="380" height="76" rx="22" fill="#fff0e5"/><rect x="364" y="213" width="286" height="83" rx="12" fill="#c4809a"/>
+        <g id="awakeThiri"><path d="M455 225Q454 167 490 154Q526 144 556 177L570 236Z" fill="#a46d93"/><path d="M474 182Q491 164 513 172Q536 177 548 198" fill="none" stroke="#e8b798" stroke-width="14" stroke-linecap="round"/><ellipse cx="512" cy="146" rx="33" ry="36" fill="#edbd9c"/><path d="M480 145Q476 104 513 105Q549 107 552 137Q523 125 502 140Z" fill="#332640"/><path d="M500 147q4 4 8 0m10 0q4 4 8 0" fill="none" stroke="#493143" stroke-width="3" stroke-linecap="round"/><path d="M505 162q8 8 17 0" fill="none" stroke="#9a5665" stroke-width="3" stroke-linecap="round"/><path d="M487 191Q506 212 536 194" fill="none" stroke="#f0c29e" stroke-width="10" stroke-linecap="round"/></g>
+        <g id="awakeDrawing"><rect x="578" y="48" width="116" height="86" rx="4" fill="#f7eddc" stroke="#8e7657" stroke-width="5"/><circle cx="667" cy="67" r="10" fill="#ffc953"/><path d="M584 121q23-39 46-17 17-30 60 2v23H584Z" fill="#72a983"/><path d="M600 105q18-23 34 0" fill="none" stroke="#dc986e" stroke-width="6"/></g>
+        <g id="awakePhone"><rect x="280" y="228" width="70" height="40" rx="7" fill="#2d3f58"/><rect x="287" y="234" width="56" height="26" rx="4" fill="#c3e7ff"/><text x="315" y="251" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#30415b">Hnin: Art club?</text></g>
+        <g id="awakeShwe"><ellipse cx="383" cy="274" rx="34" ry="18" fill="#efa93f"/><circle cx="408" cy="256" r="17" fill="#efa93f"/><path d="M396 244l3-17 11 14m4 0 13-13-2 20" fill="#efa93f"/><path d="M377 270q-25-9-12-27" fill="none" stroke="#efa93f" stroke-width="7" stroke-linecap="round"/><circle cx="404" cy="255" r="2.2" fill="#c8ff8a"/><circle cx="414" cy="255" r="2.2" fill="#c8ff8a"/></g>
+        <text x="76" y="319" fill="#fff5dc" font-family="Trebuchet MS,sans-serif" font-size="16" font-weight="700">A NEW MORNING</text>
+      </svg>
+    </div>
+    <div class="awakening-subtitle" id="awakeningSubtitle" aria-live="polite">Sunrise light spills across the room…</div>
+    <p class="muted" id="awakeningCompleteLine" hidden>The seven nights are complete. <span class="gold">Morning has come.</span></p>
+    <div class="actions" id="awakeningActions" hidden><button class="btn" id="awakeningReplayBtn" type="button">Play again</button><button class="btn ghost" id="awakeningBookBtn" type="button">View Mood Book</button><button class="btn alt" id="awakeningFreeBtn" type="button">Free Mode</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="shopScreen" hidden>
+  <div class="panel">
+    <p class="eyebrow">Upgrade Shwe</p>
+    <h1>Glow treats</h1>
+    <p>You earn Glow for every feeling you catch, in both modes. Bigger combos earn more. You have <span class="glowpill" id="glowAmt">0</span> Glow.</p>
+    <div class="shop" id="shopList"></div>
+    <button class="btn ghost" id="shopBack">Back</button>
+  </div>
+</div>
+
+<div class="overlay" id="bookScreen" hidden>
+  <div class="panel wide">
+    <p class="eyebrow">Shwe's collection</p>
+    <h1>Mood Book</h1>
+    <p>Every feeling you bring home is recorded here. Rare ones appear now and then with sparkles around them. <b class="gold" id="bookCount">0 / 15 found</b></p>
+    <div class="book" id="bookList"></div>
+    <button class="btn ghost" id="bookBack">Back</button>
+  </div>
+</div>
+
+<script src="js/customization.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
