@@ -22,6 +22,21 @@
   <div id="hint">Hold Shift or left mouse to sneak · quick left-click or X to pounce · S to scratch</div>
 </div>
 
+<button class="game-pause-btn" id="pauseBtn" type="button" aria-label="Pause game" title="Pause game (Escape or P)" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+</button>
+<div class="overlay pause-screen" id="pauseScreen" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle" aria-describedby="pauseDescription">
+  <section class="panel pause-panel">
+    <p class="eyebrow">TAKE A BREATH</p>
+    <h2 id="pauseTitle">Game paused</h2>
+    <p class="muted" id="pauseDescription">The night is waiting. Continue when you’re ready, or quit this attempt and return to the menu. Unbanked run rewards will be lost.</p>
+    <div class="pause-actions">
+      <button class="btn" id="pauseContinueBtn" type="button">Continue</button>
+      <button class="btn danger" id="pauseQuitBtn" type="button">Quit to menu</button>
+    </div>
+  </section>
+</div>
+
 <div class="overlay" id="resetScreen" hidden role="dialog" aria-modal="true" aria-labelledby="resetTitle" aria-describedby="resetText">
   <div class="panel reset-panel">
     <h2 id="resetTitle">Start over?</h2>

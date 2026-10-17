@@ -387,3 +387,17 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .orientation-status{max-width:38ch;min-height:2.8em;color:var(--sea-mist);font-size:12px;line-height:1.4}
 .orientation-card .btn{width:min(100%,320px);min-height:48px}
 @media(max-height:480px) and (orientation:portrait){.orientation-card{gap:8px;padding:14px}.orientation-symbol{width:46px;height:46px}.orientation-card h2{font-size:25px}}
+
+
+/* In-run pause control and modal. */
+.game-pause-btn{position:fixed;z-index:18;left:clamp(176px,19vw,194px);top:calc(12px + env(safe-area-inset-top,0px));width:42px;height:42px;display:grid;place-items:center;padding:0;border:1px solid rgba(243,236,255,.32);border-radius:50%;background:rgba(22,15,44,.84);color:var(--ink);box-shadow:0 4px 16px rgba(0,0,0,.32);cursor:pointer;touch-action:manipulation}
+.game-pause-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round}
+.game-pause-btn:hover{border-color:var(--gold);color:var(--gold)}
+.game-pause-btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.pause-screen{z-index:50;background:rgba(5,3,13,.82)}
+.pause-panel{max-width:430px;justify-items:center;text-align:center}
+.pause-panel h2{margin:0;color:var(--ink);font:800 clamp(28px,5vw,36px)/1.08 var(--display)}
+.pause-panel p{max-width:42ch}
+.pause-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:4px}
+.pause-actions .btn{justify-self:stretch;text-align:center;font-size:16px;padding:11px 14px}
+@media(max-width:560px),(orientation:portrait){.game-pause-btn{left:14px;top:calc(96px + env(safe-area-inset-top,0px))}.pause-actions{grid-template-columns:1fr}}

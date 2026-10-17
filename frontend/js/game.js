@@ -2,6 +2,11 @@
 (() => {
   const cv = document.getElementById('game'), ctx = cv.getContext('2d');
   const $ = s => document.querySelector(s);
+  const pauseBtn = document.getElementById('pauseBtn');
+  const pauseScreen = document.getElementById('pauseScreen');
+  const pauseContinueBtn = document.getElementById('pauseContinueBtn');
+  const pauseQuitBtn = document.getElementById('pauseQuitBtn');
+  let pauseTouchWasHidden = true;
   const orientationGate = document.getElementById('orientationGate');
   const orientationTryBtn = document.getElementById('orientationTryBtn');
   const orientationStatus = document.getElementById('orientationStatus');
@@ -105,6 +110,8 @@
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
     if (e.repeat) return;
+    if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'play') { e.preventDefault(); pauseGame(); return; }
+    if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'paused') { e.preventDefault(); resumeGame(); return; }
     if ($('#nightWakeScreen') && !$('#nightWakeScreen').hidden) { if (['Space','Enter','Escape'].includes(e.code)) { e.preventDefault(); closeNightWake(); } return; }
     if (state === 'home' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); homeKey(); return; }
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') jumpQ = true;
@@ -1784,7 +1791,7 @@
   let R = null;
   function finish(won) {
     if (state === 'over' || state === 'home') return;
-    state = 'over'; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
+    state = 'over'; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
     if (mode === 'story' && storyNight === 1 && won && hits === 0) bump('nohit');
     let unlockedNow = false;
@@ -2350,7 +2357,7 @@
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#bPurr').hidden = upg.purr === 0; $('#bScratch').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; reset(); state = 'play';
-    $('#startScreen').hidden = true; $('#endScreen').hidden = true;
+    $('#startScreen').hidden = true; $('#endScreen').hidden = true; pauseScreen.hidden = true; pauseBtn.hidden = false;
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     announce(mode === 'free' ? 'Free Mode · every catch adds time' : `${chapter.name} · ${chapter.sub}`, INK, 2.1);
@@ -2493,11 +2500,30 @@
     else if (focus) $(`#levelMapTrack button[data-level="${unlockedLevel}"]`)?.focus({ preventScroll: true });
   }
   function showMainMenu(focusCurrent = true) {
-    state = 'menu'; cv.hidden = true;
+    state = 'menu'; cv.hidden = true; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#endScreen').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
     buildLevelMap(); showHub(focusCurrent);
+  }
+  function pauseGame() {
+    if (state !== 'play') return;
+    pauseTouchWasHidden = touchUI.hidden;
+    state = 'paused'; pauseBtn.hidden = true; touchUI.hidden = true;
+    for (const key in keys) keys[key] = false;
+    jumpQ = false; pounceQ = false; scratchQ = false; purrQ = false; eyesQ = false;
+    touchAxis = 0; sid = null; stick.hidden = true; knob.style.transform = 'translate(-50%,-50%)';
+    mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
+    pauseScreen.hidden = false; pauseContinueBtn.focus({ preventScroll: true });
+  }
+  function resumeGame() {
+    if (state !== 'paused') return;
+    pauseScreen.hidden = true; state = 'play'; touchUI.hidden = pauseTouchWasHidden;
+    pauseBtn.hidden = false; pauseBtn.focus({ preventScroll: true });
+  }
+  function quitPausedRun() {
+    if (state !== 'paused') return;
+    showMainMenu(true);
   }
 
   // ---- Opening cutscene ----
@@ -2970,6 +2996,16 @@
   if (!MK_HAS_PROFILE) showWelcome();
   else showMainMenu(false);
   syncMobileOrientationGate();
+  pauseBtn.addEventListener('click', pauseGame);
+  pauseContinueBtn.addEventListener('click', resumeGame);
+  pauseQuitBtn.addEventListener('click', quitPausedRun);
+  pauseScreen.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); resumeGame(); return; }
+    if (e.key !== 'Tab') return;
+    const first = pauseContinueBtn, last = pauseQuitBtn;
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
   $('#levelMapTrack').addEventListener('click', e => {
     const button = e.target.closest('button[data-level]'); if (!button || button.disabled) return;
     const night = +button.dataset.level; if (night <= unlockedLevel) showLevelBriefing(night, button);
@@ -2986,6 +3022,7 @@
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(.033, (now - last) / 1000); last = now;
+    pauseBtn.hidden = state !== 'play';
     if (mobileLandscapeRequired && !orientationGate.hidden) return;
     if (state === 'intro' || state === 'awakening') { t += dt; return; }
     if (state === 'play' || state === 'ending') {
