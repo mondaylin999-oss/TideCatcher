@@ -2,6 +2,65 @@
 (() => {
   const cv = document.getElementById('game'), ctx = cv.getContext('2d');
   const $ = s => document.querySelector(s);
+  const orientationGate = document.getElementById('orientationGate');
+  const orientationTryBtn = document.getElementById('orientationTryBtn');
+  const orientationStatus = document.getElementById('orientationStatus');
+  const mobilePortraitQuery = window.matchMedia('(orientation: portrait)');
+  const mobileLandscapeRequired = window.matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints || 0) > 0;
+  const mobileScreenOrientation = window.screen && window.screen.orientation;
+  let orientationReturnFocus = null;
+  function syncMobileOrientationGate() {
+    const showGate = mobileLandscapeRequired && mobilePortraitQuery.matches;
+    const wasVisible = !orientationGate.hidden;
+    orientationGate.hidden = !showGate;
+    if (showGate && !wasVisible) {
+      orientationReturnFocus = document.activeElement;
+      requestAnimationFrame(() => orientationTryBtn.focus({ preventScroll: true }));
+    } else if (!showGate && wasVisible) {
+      const target = orientationReturnFocus;
+      orientationReturnFocus = null;
+      if (target && target.isConnected && !target.closest('[hidden]')) target.focus({ preventScroll: true });
+    }
+  }
+  async function tryMobileLandscape() {
+    if (!mobileLandscapeRequired) return;
+    if (!mobileScreenOrientation || typeof mobileScreenOrientation.lock !== 'function') {
+      orientationStatus.textContent = 'Automatic rotation is unavailable in this browser. Turn your device sideways to continue.';
+      return;
+    }
+    let enteredFullscreen = false;
+    orientationTryBtn.disabled = true;
+    orientationStatus.textContent = 'Trying to switch to landscape…';
+    try {
+      const root = document.documentElement;
+      if (!document.fullscreenElement && typeof root.requestFullscreen === 'function') {
+        try { await root.requestFullscreen(); enteredFullscreen = !!document.fullscreenElement; } catch (error) {}
+      }
+      await mobileScreenOrientation.lock('landscape');
+      orientationStatus.textContent = 'Landscape requested. If the screen does not rotate, turn your device sideways.';
+    } catch (error) {
+      if (enteredFullscreen && document.fullscreenElement && typeof document.exitFullscreen === 'function') {
+        try { await document.exitFullscreen(); } catch (exitError) {}
+      }
+      orientationStatus.textContent = 'Your browser blocked automatic rotation. Turn your device sideways to continue.';
+    } finally {
+      orientationTryBtn.disabled = false;
+      syncMobileOrientationGate();
+    }
+  }
+  orientationTryBtn.addEventListener('click', tryMobileLandscape);
+  orientationGate.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Tab') { e.preventDefault(); orientationTryBtn.focus({ preventScroll: true }); }
+    else if (e.key === 'Escape') e.preventDefault();
+  });
+  window.addEventListener('resize', syncMobileOrientationGate, { passive: true });
+  window.addEventListener('orientationchange', syncMobileOrientationGate, { passive: true });
+  document.addEventListener('visibilitychange', syncMobileOrientationGate);
+  if (typeof mobilePortraitQuery.addEventListener === 'function') mobilePortraitQuery.addEventListener('change', syncMobileOrientationGate);
+  else mobilePortraitQuery.addListener(syncMobileOrientationGate);
+  if (mobileScreenOrientation && typeof mobileScreenOrientation.addEventListener === 'function') mobileScreenOrientation.addEventListener('change', syncMobileOrientationGate);
+
   const T = 48, VH = 540, WORLD = 4200, GROUND = 470;
   const BLUE = '#6fb6ff', RED = '#ff6168', VIOLET = '#a98bff', GOLD = '#f6c453', CALM = '#7ddc8b', INK = '#f3ecff', MUTED = '#b7acd3';
   const EXC = '#ffd23f', SHY = '#ff7ab8', JEAL = '#ff9a3c';
@@ -2910,6 +2969,7 @@
   buildLevelMap();
   if (!MK_HAS_PROFILE) showWelcome();
   else showMainMenu(false);
+  syncMobileOrientationGate();
   $('#levelMapTrack').addEventListener('click', e => {
     const button = e.target.closest('button[data-level]'); if (!button || button.disabled) return;
     const night = +button.dataset.level; if (night <= unlockedLevel) showLevelBriefing(night, button);
@@ -2926,6 +2986,7 @@
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(.033, (now - last) / 1000); last = now;
+    if (mobileLandscapeRequired && !orientationGate.hidden) return;
     if (state === 'intro' || state === 'awakening') { t += dt; return; }
     if (state === 'play' || state === 'ending') {
       if (hitstop > 0) hitstop -= dt;

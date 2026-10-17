@@ -280,6 +280,17 @@
   </div>
 </div>
 
+<div class="orientation-gate" id="orientationGate" hidden role="dialog" aria-modal="true" aria-labelledby="orientationTitle" aria-describedby="orientationDescription orientationStatus">
+  <section class="orientation-card">
+    <svg class="orientation-symbol" viewBox="0 0 80 80" aria-hidden="true"><path d="M18 25A29 29 0 0 1 65 20"/><path d="m57 14 9 6 2-10"/><rect x="21" y="30" width="38" height="24" rx="5"/><circle cx="54" cy="42" r="1.5"/></svg>
+    <p class="orientation-kicker">LANDSCAPE ONLY</p>
+    <h2 id="orientationTitle">Turn your phone sideways</h2>
+    <p class="orientation-copy" id="orientationDescription">TideCatcher is designed for landscape play. Tap once to try automatic rotation; if your browser blocks it, rotate your device manually.</p>
+    <p class="orientation-status" id="orientationStatus" aria-live="polite">Portrait play is paused until the screen is landscape.</p>
+    <button class="btn" id="orientationTryBtn" type="button">Try landscape mode</button>
+  </section>
+</div>
+
 <script src="js/customization.js"></script>
 <script src="js/game.js"></script>
 </body>
