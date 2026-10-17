@@ -2,6 +2,70 @@
 (() => {
   const cv = document.getElementById('game'), ctx = cv.getContext('2d');
   const $ = s => document.querySelector(s);
+  const pauseBtn = document.getElementById('pauseBtn');
+  const pauseScreen = document.getElementById('pauseScreen');
+  const pauseContinueBtn = document.getElementById('pauseContinueBtn');
+  const pauseQuitBtn = document.getElementById('pauseQuitBtn');
+  let pauseTouchWasHidden = true;
+  const orientationGate = document.getElementById('orientationGate');
+  const orientationTryBtn = document.getElementById('orientationTryBtn');
+  const orientationStatus = document.getElementById('orientationStatus');
+  const mobilePortraitQuery = window.matchMedia('(orientation: portrait)');
+  const mobileLandscapeRequired = window.matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints || 0) > 0;
+  const mobileScreenOrientation = window.screen && window.screen.orientation;
+  let orientationReturnFocus = null;
+  function syncMobileOrientationGate() {
+    const showGate = mobileLandscapeRequired && mobilePortraitQuery.matches;
+    const wasVisible = !orientationGate.hidden;
+    orientationGate.hidden = !showGate;
+    if (showGate && !wasVisible) {
+      orientationReturnFocus = document.activeElement;
+      requestAnimationFrame(() => orientationTryBtn.focus({ preventScroll: true }));
+    } else if (!showGate && wasVisible) {
+      const target = orientationReturnFocus;
+      orientationReturnFocus = null;
+      if (target && target.isConnected && !target.closest('[hidden]')) target.focus({ preventScroll: true });
+    }
+  }
+  async function tryMobileLandscape() {
+    if (!mobileLandscapeRequired) return;
+    if (!mobileScreenOrientation || typeof mobileScreenOrientation.lock !== 'function') {
+      orientationStatus.textContent = 'Automatic rotation is unavailable in this browser. Turn your device sideways to continue.';
+      return;
+    }
+    let enteredFullscreen = false;
+    orientationTryBtn.disabled = true;
+    orientationStatus.textContent = 'Trying to switch to landscape…';
+    try {
+      const root = document.documentElement;
+      if (!document.fullscreenElement && typeof root.requestFullscreen === 'function') {
+        try { await root.requestFullscreen(); enteredFullscreen = !!document.fullscreenElement; } catch (error) {}
+      }
+      await mobileScreenOrientation.lock('landscape');
+      orientationStatus.textContent = 'Landscape requested. If the screen does not rotate, turn your device sideways.';
+    } catch (error) {
+      if (enteredFullscreen && document.fullscreenElement && typeof document.exitFullscreen === 'function') {
+        try { await document.exitFullscreen(); } catch (exitError) {}
+      }
+      orientationStatus.textContent = 'Your browser blocked automatic rotation. Turn your device sideways to continue.';
+    } finally {
+      orientationTryBtn.disabled = false;
+      syncMobileOrientationGate();
+    }
+  }
+  orientationTryBtn.addEventListener('click', tryMobileLandscape);
+  orientationGate.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Tab') { e.preventDefault(); orientationTryBtn.focus({ preventScroll: true }); }
+    else if (e.key === 'Escape') e.preventDefault();
+  });
+  window.addEventListener('resize', syncMobileOrientationGate, { passive: true });
+  window.addEventListener('orientationchange', syncMobileOrientationGate, { passive: true });
+  document.addEventListener('visibilitychange', syncMobileOrientationGate);
+  if (typeof mobilePortraitQuery.addEventListener === 'function') mobilePortraitQuery.addEventListener('change', syncMobileOrientationGate);
+  else mobilePortraitQuery.addListener(syncMobileOrientationGate);
+  if (mobileScreenOrientation && typeof mobileScreenOrientation.addEventListener === 'function') mobileScreenOrientation.addEventListener('change', syncMobileOrientationGate);
+
   const T = 48, VH = 540, WORLD = 4200, GROUND = 470;
   const BLUE = '#6fb6ff', RED = '#ff6168', VIOLET = '#a98bff', GOLD = '#f6c453', CALM = '#7ddc8b', INK = '#f3ecff', MUTED = '#b7acd3';
   const EXC = '#ffd23f', SHY = '#ff7ab8', JEAL = '#ff9a3c';
@@ -46,6 +110,8 @@
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
     if (e.repeat) return;
+    if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'play') { e.preventDefault(); pauseGame(); return; }
+    if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'paused') { e.preventDefault(); resumeGame(); return; }
     if ($('#nightWakeScreen') && !$('#nightWakeScreen').hidden) { if (['Space','Enter','Escape'].includes(e.code)) { e.preventDefault(); closeNightWake(); } return; }
     if (state === 'home' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); homeKey(); return; }
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') jumpQ = true;
@@ -2036,7 +2102,7 @@
   let R = null;
   function finish(won) {
     if (state === 'over' || state === 'home') return;
-    state = 'over'; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
+    state = 'over'; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
     if (mode === 'story' && storyNight === 1 && won && hits === 0) bump('nohit');
     let unlockedNow = false;
@@ -2075,10 +2141,45 @@
     if (types.length) setTimeout(() => startHome(won, types, false, completedNight), 500);
     else showEnd();
   }
+  function animateHubNumber(el, value, format = n => String(n)) {
+    if (!el) return;
+    const target = Math.max(0, Math.round(+value || 0));
+    const from = Math.max(0, Math.round(+(el.dataset.displayed || el.textContent.replace(/[^0-9]/g, '')) || 0));
+    const run = (+(el.dataset.animRun || 0)) + 1; el.dataset.animRun = String(run);
+    if (from === target) { el.textContent = format(target); el.dataset.displayed = String(target); return; }
+    const began = performance.now(), duration = 480;
+    const tick = now => {
+      if (+el.dataset.animRun !== run) return;
+      const p = Math.min(1, (now - began) / duration), eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = format(Math.round(from + (target - from) * eased));
+      if (p < 1) requestAnimationFrame(tick); else { el.textContent = format(target); el.dataset.displayed = String(target); }
+    };
+    requestAnimationFrame(tick);
+  }
+  function refreshHubStats(found = BOOK_ORDER.filter(k => book[k]).length) {
+    animateHubNumber($('#hubGlowValue'), glow);
+    animateHubNumber($('#hubBookValue'), found, n => `${n} / ${BOOK_ORDER.length}`);
+    $('#shopBtnValue').textContent = `${glow} Glow`;
+    $('#bookBtnValue').textContent = `${found} / ${BOOK_ORDER.length} found`;
+    $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
+    $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
+    const heroCat = $('#hubHeroCat');
+    if (heroCat && COAT) heroCat.setAttribute('href', COAT.img);
+    const heroSvg = $('#hubHeroSvg');
+    if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
+    $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
+  }
   function refreshShopBtns() {
     const label = `Upgrade Shwe · ${glow} Glow`;
-    $('#shopBtn').textContent = label; $('#endShopBtn').textContent = label;
-    $('#bookBtn').textContent = `Mood Book · ${BOOK_ORDER.filter(k => book[k]).length}/${BOOK_ORDER.length}`;
+    if (heroCat && COAT) heroCat.setAttribute('href', COAT.img);
+    const heroSvg = $('#hubHeroSvg');
+    if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
+    $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
+  }
+  function refreshShopBtns() {
+    const label = `Upgrade Shwe · ${glow} Glow`;
+    $('#endShopBtn').textContent = label;
+    refreshHubStats();
     renderMissions();
   }
   function renderMissions() {
@@ -2101,7 +2202,7 @@
     if (!ms || ms.claimed[id] || (ms.prog[id] || 0) < d.goal) return;
     initAudio(); ms.claimed[id] = true; saveMissions(); glow += d.reward; saveUpg();
     tone(660, .15, 'triangle', .07); setTimeout(() => tone(990, .25, 'sine', .06), 90);
-    refreshShopBtns(); $('#shopBtn').focus();
+    refreshShopBtns(); $('#settingsCloseBtn').focus({ preventScroll: true });
   });
   function iconSVG(ty, v, known) {
     const c = known ? vcol(ty, v) : 'rgba(243,236,255,.16)';
@@ -2119,7 +2220,7 @@
   }
   function renderBook() {
     const found = BOOK_ORDER.filter(k => book[k]).length;
-    $('#bookCount').textContent = `${found} / ${BOOK_ORDER.length} found`;
+    $('#bookCount').textContent = `${found} / ${BOOK_ORDER.length} found`; refreshHubStats(found);
     $('#bookList').innerHTML = BOOK_ORDER.map(k => {
       const ty = k[0], v = +k[1], info = vinfo(ty, v), n = book[k] || 0, known = n > 0;
       const tag = `<span class="tag${info.r === 'Rare' || info.r === 'Special' ? ' rare' : ''}">${info.r}${known ? ` · caught ×${n}` : ''}</span>`;
@@ -2129,7 +2230,7 @@
     }).join('');
   }
   $('#bookBtn').addEventListener('click', () => { $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
-  $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; $('#startScreen').hidden = false; refreshShopBtns(); buildLevelMap(); focusLevelMap(unlockedLevel); });
+  $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; showMainMenu(true); });
   let shopFrom = null;
   function renderShop() {
     $('#glowAmt').textContent = glow;
@@ -2304,7 +2405,7 @@
   }
   function finishHome() {
     if (!H || H.finished) return; H.finished = true;
-    if (H.preview) { state = 'menu'; cv.hidden = true; $('#startScreen').hidden = false; buildLevelMap(); focusLevelMap(unlockedLevel); setTimeout(() => $('#playBtn').focus(), 50); }
+    if (H.preview) { state = 'menu'; cv.hidden = true; showStoryMap(false); setTimeout(() => $('#playBtn').focus(), 50); }
     else if (H.won) showNightWake(H.night);
     else showEnd();
   }
@@ -2563,10 +2664,11 @@
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 7) : 1;
     initAudio();
     cv.hidden = false;
+    $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#bPurr').hidden = upg.purr === 0; $('#bScratch').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; reset(); state = 'play';
-    $('#startScreen').hidden = true; $('#endScreen').hidden = true;
+    $('#startScreen').hidden = true; $('#endScreen').hidden = true; pauseScreen.hidden = true; pauseBtn.hidden = false;
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     announce(mode === 'free' ? 'Free Mode · every catch adds time' : `${chapter.name} · ${chapter.sub}`, INK, 2.1);
@@ -2693,11 +2795,46 @@
     const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
     viewport.scrollTop = Math.max(0, y - 34);
   }
+  function showHub(focus = true) {
+    $('#startScreen').hidden = false; $('#menuHub').hidden = false; $('#storyMapScreen').hidden = true;
+    $('#hubSettingsScreen').hidden = true;
+    refreshHubStats();
+    if (focus) $('#storyBtn').focus({ preventScroll: true });
+  }
+  function showStoryMap(focus = true) {
+    $('#startScreen').hidden = false; $('#menuHub').hidden = true; $('#storyMapScreen').hidden = false;
+    $('#hubSettingsScreen').hidden = true; $('#levelBriefingScreen').hidden = true;
+    buildLevelMap(); focusLevelMap(unlockedLevel);
+    let mapTipSeen = false;
+    try { mapTipSeen = localStorage.getItem('mk-map-guide-seen') === '1'; } catch (e) {}
+    if (mapGuidePending || !mapTipSeen) showMapGuide();
+    else if (focus) $(`#levelMapTrack button[data-level="${unlockedLevel}"]`)?.focus({ preventScroll: true });
+  }
   function showMainMenu(focusCurrent = true) {
-    state = 'menu'; cv.hidden = true; $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
-    $('#endScreen').hidden = true; $('#startScreen').hidden = false; buildLevelMap(); focusLevelMap(unlockedLevel);
-    const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`);
-    if (focusCurrent && current) current.focus({ preventScroll: true });
+    state = 'menu'; cv.hidden = true; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true;
+    $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
+    $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
+    $('#endScreen').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
+    buildLevelMap(); showHub(focusCurrent);
+  }
+  function pauseGame() {
+    if (state !== 'play') return;
+    pauseTouchWasHidden = touchUI.hidden;
+    state = 'paused'; pauseBtn.hidden = true; touchUI.hidden = true;
+    for (const key in keys) keys[key] = false;
+    jumpQ = false; pounceQ = false; scratchQ = false; purrQ = false; eyesQ = false;
+    touchAxis = 0; sid = null; stick.hidden = true; knob.style.transform = 'translate(-50%,-50%)';
+    mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
+    pauseScreen.hidden = false; pauseContinueBtn.focus({ preventScroll: true });
+  }
+  function resumeGame() {
+    if (state !== 'paused') return;
+    pauseScreen.hidden = true; state = 'play'; touchUI.hidden = pauseTouchWasHidden;
+    pauseBtn.hidden = false; pauseBtn.focus({ preventScroll: true });
+  }
+  function quitPausedRun() {
+    if (state !== 'paused') return;
+    showMainMenu(true);
   }
 
   // ---- Opening cutscene ----
@@ -2743,11 +2880,23 @@
     { s: 7, who: 'cat', text: 'Mrrp! (Wait for me!)' },
     { s: 7, text: 'So Shwe leapt into the Night Side, to bring every feeling home before sunrise.' }
   ];
-  const INTRO_CPS = 40;
+  const INTRO_CPS = 46;
   const introImgs = INTRO_SCENES.map(() => new Image());
   let introRaf = 0, introI = 0, introScene = -1, introTyped = 0, introLineStart = 0, introDoneAt = 0, introShot = 0;
-  function introPreload() {
-    INTRO_SCENES.forEach((sc, i) => { if (!introImgs[i].src) introImgs[i].src = `assets/intro/${sc.img}.webp`; });
+  let mapGuidePending = false;
+  function introPreload(onProgress = null) {
+    let finished = 0;
+    const report = () => { finished++; if (onProgress) onProgress(finished, INTRO_SCENES.length); };
+    return Promise.all(INTRO_SCENES.map((sc, i) => {
+      const img = introImgs[i];
+      return new Promise(resolve => {
+        let done = false;
+        const finish = () => { if (done) return; done = true; img.onload = img.onerror = null; report(); resolve(img.naturalWidth > 0); };
+        img.onload = finish; img.onerror = finish;
+        if (!img.src) img.src = `assets/intro/${sc.img}.webp`;
+        if (img.complete) finish();
+      });
+    }));
   }
   function introShowScene(i) {
     const sc = INTRO_SCENES[i], shots = [$('#introShotA'), $('#introShotB')];
@@ -2755,7 +2904,7 @@
     const inc = shots[introShot], out = shots[introShot ^ 1];
     inc.src = introImgs[i].src; inc.alt = sc.alt;
     const sceneLines = INTRO_LINES.filter(l => l.s === i);
-    const dur = sceneLines.reduce((t, l) => t + l.text.length / INTRO_CPS + 1.4 + l.text.length * .038, 1.5);
+    const dur = sceneLines.reduce((t, l) => t + l.text.length / INTRO_CPS + .9 + l.text.length * .018, 1.5);
     [['--ox', sc.ox], ['--oy', sc.oy], ['--k0', sc.k0], ['--k1', sc.k1], ['--dx', sc.dx], ['--dy', sc.dy], ['--dur', dur.toFixed(1) + 's']]
       .forEach(([k, v]) => inc.style.setProperty(k, v));
     inc.classList.remove('move'); void inc.offsetWidth; inc.classList.add('move', 'on');
@@ -2802,7 +2951,7 @@
       if (!introDoneAt) introDoneAt = now;
       if (introI === INTRO_LINES.length - 1) { introFinish(); return; }
       $('#introHint').classList.add('show');
-      if (now - introDoneAt > 1400 + line.full.length * 38) introShowLine(introI + 1);
+      if (now - introDoneAt > 900 + line.full.length * 18) introShowLine(introI + 1);
     }
     introRaf = requestAnimationFrame(introTick);
   }
@@ -2815,15 +2964,17 @@
     }
     if (introI < INTRO_LINES.length - 1) introShowLine(introI + 1); else leaveIntro();
   }
+  let introReturnView = 'storyMap';
   function leaveIntro() {
-    cancelAnimationFrame(introRaf); $('#prologueScreen').hidden = true; $('#startScreen').hidden = false;
+    cancelAnimationFrame(introRaf); $('#prologueScreen').hidden = true;
     [$('#introShotA'), $('#introShotB')].forEach(im => im.classList.remove('on', 'move'));
-    introFx(null, 0);
-    state = 'menu'; cv.hidden = true; buildLevelMap(); focusLevelMap(unlockedLevel);
-    const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`); if (current) current.focus({ preventScroll: true });
+    introFx(null, 0); state = 'menu'; cv.hidden = true;
+    if (introReturnView === 'hub') showHub(true); else showStoryMap(true);
   }
-  function playIntro() {
+  function playIntro(returnView = 'storyMap') {
+    introReturnView = returnView;
     initAudio(); state = 'intro'; cv.hidden = true;
+    $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#startScreen').hidden = true; $('#endScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#prologueScreen').hidden = false; $('#introContinueBtn').hidden = true;
     introPreload();
@@ -2834,7 +2985,10 @@
     tone(196, 2.4, 'sine', .018, 12);
     cancelAnimationFrame(introRaf); introRaf = requestAnimationFrame(introTick);
   }
-  $('#storyBtn').addEventListener('click', playIntro);
+  $('#storyBtn').addEventListener('click', () => showStoryMap(true));
+  $('#mapHubBackBtn').addEventListener('click', () => showHub(true));
+  $('#mapHubBackBtnSecondary').addEventListener('click', () => showHub(true));
+  $('#infoBtn').addEventListener('click', () => playIntro('hub'));
   $('#introSkipBtn').addEventListener('click', leaveIntro);
   $('#introContinueBtn').addEventListener('click', leaveIntro);
   $('#prologueScreen').addEventListener('click', e => { if (!e.target.closest('button')) introAdvance(); });
@@ -2989,13 +3143,101 @@
     }
     previewRaf = requestAnimationFrame(previewLoop);
   }
+  let welcomeLoadRun = 0, briefingNight = 1, briefingReturnButton = null, readyTimers = [];
+  const BRIEFING_FEELING_NAMES = { F: 'Frustrated', N: 'Nervous', L: 'Lonely', C: 'Calm', B: 'Buried', E: 'Excited', S: 'Shy', J: 'Jealous' };
+  function showWelcome() {
+    const run = ++welcomeLoadRun, welcome = $('#welcomeScreen'), start = $('#welcomeBeginBtn');
+    state = 'menu'; cv.hidden = true;
+    ['#setupScreen', '#prologueScreen', '#startScreen', '#endScreen', '#awakeningScreen', '#levelBriefingScreen', '#nightReadyScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
+    welcome.hidden = false;
+    const coat = MK_COATS[MK_PROFILE.coat] || MK_COATS.burmese;
+    $('#welcomeCat').src = coat.img; $('#welcomeCat').alt = `${MK_PROFILE.cat}, ready to follow the night lights`;
+    $('#welcomeCatName').textContent = MK_PROFILE.cat;
+    $('#welcomeLoadStatus').textContent = 'Gathering the moonlight…';
+    $('#welcomeLoadCount').textContent = `0 / ${INTRO_SCENES.length}`;
+    $('#welcomeProgress').style.width = '0%'; $('#welcomeProgressBar').setAttribute('aria-valuenow', '0');
+    start.disabled = true;
+    introPreload((loaded, total) => {
+      if (run !== welcomeLoadRun) return;
+      $('#welcomeLoadCount').textContent = `${loaded} / ${total}`;
+      $('#welcomeProgress').style.width = `${Math.round(loaded / total * 100)}%`;
+      $('#welcomeProgressBar').setAttribute('aria-valuenow', String(loaded));
+      if (loaded === total) $('#welcomeLoadStatus').textContent = 'The night is ready.';
+    }).then(results => {
+      if (run !== welcomeLoadRun || welcome.hidden) return;
+      const loaded = results.filter(Boolean).length;
+      $('#welcomeLoadStatus').textContent = loaded === INTRO_SCENES.length ? 'The night is ready.' : `The story is ready · ${loaded} of ${INTRO_SCENES.length} scenes loaded.`;
+      start.disabled = false;
+      start.focus({ preventScroll: true });
+    }).catch(() => {
+      if (run !== welcomeLoadRun || welcome.hidden) return;
+      $('#welcomeLoadStatus').textContent = 'The night is ready when you are.';
+      start.disabled = false;
+      start.focus({ preventScroll: true });
+    });
+  }
+  function showMapGuide() {
+    mapGuidePending = true;
+    const coat = MK_COATS[MK_PROFILE.coat] || MK_COATS.burmese;
+    $('#mapGuideCat').src = coat.img; $('#mapGuideName').textContent = MK_PROFILE.cat;
+    $('#mapGuideText').textContent = `${MK_PROFILE.cat} will follow the glowing path with you. Choose the lit night at its base to see the first goal.`;
+    $('#mapGuide').hidden = false; $('#mapGuideDismiss').focus({ preventScroll: true });
+  }
+  function dismissMapGuide() {
+    $('#mapGuide').hidden = true; mapGuidePending = false;
+    try { localStorage.setItem('mk-map-guide-seen', '1'); } catch (e) {}
+  }
+  function showLevelBriefing(night, returnButton = null) {
+    if (mapGuidePending) dismissMapGuide();
+    briefingNight = clamp(Math.floor(+night) || 1, 1, LEVEL_MAP_LIMIT);
+    briefingReturnButton = returnButton || $(`#levelMapTrack button[data-level="${briefingNight}"]`);
+    const chapter = LEVEL_MAP_CHAPTERS.get(briefingNight) || chapterFor(briefingNight);
+    if (!chapter) return;
+    $('#levelBriefingEyebrow').textContent = `NIGHT ${briefingNight} · THE NIGHT SIDE`;
+    $('#levelBriefingTitle').textContent = chapter.name;
+    $('#levelBriefingSub').textContent = chapter.sub;
+    const goal = Object.entries(chapter.feelingsNeeded || {}).map(([type, count]) => `${BRIEFING_FEELING_NAMES[type] || type} ×${count}`).join(' · ');
+    $('#levelBriefingGoal').textContent = goal ? `Bring home: ${goal}` : 'Find the little lights that are ready to come home.';
+    $('#levelBriefingTip').textContent = chapter.tutorialHint || chapter.newMoodling || chapter.sub;
+    const seconds = Math.max(0, Math.floor(chapter.timeLimit || 0));
+    $('#levelBriefingTime').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} before sunrise`;
+    $('#levelBriefingScreen').hidden = false; $('#levelBriefingStart').focus({ preventScroll: true });
+  }
+  function closeLevelBriefing() {
+    $('#levelBriefingScreen').hidden = true;
+    const target = briefingReturnButton || $(`#levelMapTrack button[data-level="${unlockedLevel}"]`);
+    if (target) target.focus({ preventScroll: true });
+  }
+  function beginNightSequence() {
+    const chapter = LEVEL_MAP_CHAPTERS.get(briefingNight) || chapterFor(briefingNight);
+    if (!chapter) return;
+    initAudio(); readyTimers.forEach(clearTimeout); readyTimers = [];
+    $('#levelBriefingScreen').hidden = true;
+    const screen = $('#nightReadyScreen'), word = $('#nightReadyWord');
+    screen.hidden = false; screen.dataset.phase = 'ready';
+    $('#readyNightEyebrow').textContent = `NIGHT ${briefingNight} · ${chapter.name}`;
+    word.textContent = 'Ready?'; $('#nightReadyCaption').textContent = 'Bring every little light home.';
+    tone(chapter.musicRoot, .45, 'sine', .018);
+    readyTimers.push(setTimeout(() => {
+      if (screen.hidden) return;
+      screen.dataset.phase = 'go'; word.textContent = 'Go!';
+      $('#nightReadyCaption').textContent = `${MK_PROFILE.cat} will follow the last light.`;
+      tone(chapter.musicRoot * 1.5, .35, 'triangle', .022);
+    }, 680));
+    readyTimers.push(setTimeout(() => {
+      if (screen.hidden) return;
+      screen.hidden = true; startGame('story', briefingNight);
+    }, 1180));
+  }
   function showSetup(firstRun) {
     setupFirstRun = firstRun;
+    welcomeLoadRun++;
     state = 'menu'; cv.hidden = true;
-    ['#startScreen', '#prologueScreen', '#endScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
+    ['#welcomeScreen', '#startScreen', '#hubSettingsScreen', '#prologueScreen', '#endScreen', '#levelBriefingScreen', '#nightReadyScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
     girlIn.value = MK_HAS_PROFILE ? MK_PROFILE.girl : ''; catIn.value = MK_HAS_PROFILE ? MK_PROFILE.cat : '';
     const r = setupEl.querySelector(`input[name="coat"][value="${MK_PROFILE.coat}"]`); if (r) r.checked = true;
     $('#setupGo').textContent = firstRun ? 'Begin the story →' : 'Save';
+    $('#setupBackBtn').hidden = !firstRun;
     $('#setupNote').textContent = firstRun ? 'You can change these later from the menu.' : 'Your progress stays the same.';
     $('#setupError').textContent = '';
     refreshSetupPreview();
@@ -3011,9 +3253,38 @@
     try { localStorage.setItem('mk-profile', JSON.stringify(MK_PROFILE)); } catch (err) {}
     paintCoat(COAT); renameAll();
     setupEl.hidden = true;
-    if (setupFirstRun) playIntro(); else showMainMenu(true);
+    if (setupFirstRun) { mapGuidePending = true; playIntro(); } else showMainMenu(true);
+  });
+  $('#welcomeBeginBtn').addEventListener('click', () => showSetup(true));
+  $('#setupBackBtn').addEventListener('click', () => { if (setupFirstRun) showWelcome(); });
+  $('#mapGuideDismiss').addEventListener('click', () => { dismissMapGuide(); const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`); if (current) current.focus({ preventScroll: true }); });
+  $('#levelBriefingBack').addEventListener('click', closeLevelBriefing);
+  $('#levelBriefingStart').addEventListener('click', beginNightSequence);
+  $('#levelBriefingScreen').addEventListener('click', e => { if (e.target.id === 'levelBriefingScreen') closeLevelBriefing(); });
+  $('#levelBriefingScreen').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeLevelBriefing(); return; }
+    if (e.key === 'Tab') {
+      const buttons = Array.from($('#levelBriefingScreen').querySelectorAll('button:not([disabled])'));
+      if (!buttons.length) return;
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
   });
   $('#profileBtn').addEventListener('click', () => showSetup(false));
+  $('#settingsBtn').addEventListener('click', () => { $('#hubSettingsScreen').hidden = false; $('#settingsCloseBtn').focus({ preventScroll: true }); });
+  $('#settingsCloseBtn').addEventListener('click', () => { $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); });
+  $('#hubSettingsScreen').addEventListener('click', e => { if (e.target.id === 'hubSettingsScreen') { $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); } });
+  $('#hubSettingsScreen').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); return; }
+    if (e.key !== 'Tab') return;
+    const focusable = Array.from($('#hubSettingsScreen').querySelectorAll('button:not([disabled]), summary, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter(el => !el.hidden && el.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
 
   // ---- Reset progress ----
   // Deletes every saved 'mk-' key on this device, then reloads so the game starts like a new player.
@@ -3032,12 +3303,23 @@
   $('#resetScreen').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeReset(); } });
   paintCoat(COAT); renameAll();
 
-  buildLevelMap(); focusLevelMap(unlockedLevel);
-  $(`#levelMapTrack button[data-level="${unlockedLevel}"]`)?.focus({ preventScroll: true });
-  if (!MK_HAS_PROFILE) showSetup(true);
+  buildLevelMap();
+  if (!MK_HAS_PROFILE) showWelcome();
+  else showMainMenu(false);
+  syncMobileOrientationGate();
+  pauseBtn.addEventListener('click', pauseGame);
+  pauseContinueBtn.addEventListener('click', resumeGame);
+  pauseQuitBtn.addEventListener('click', quitPausedRun);
+  pauseScreen.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); resumeGame(); return; }
+    if (e.key !== 'Tab') return;
+    const first = pauseContinueBtn, last = pauseQuitBtn;
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
   $('#levelMapTrack').addEventListener('click', e => {
     const button = e.target.closest('button[data-level]'); if (!button || button.disabled) return;
-    const night = +button.dataset.level; if (night <= unlockedLevel) startGame('story', night);
+    const night = +button.dataset.level; if (night <= unlockedLevel) showLevelBriefing(night, button);
   });
   $('#freeBtn').addEventListener('click', () => startGame('free'));
   $('#againBtn').addEventListener('click', () => {
@@ -3051,6 +3333,8 @@
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(.033, (now - last) / 1000); last = now;
+    pauseBtn.hidden = state !== 'play';
+    if (mobileLandscapeRequired && !orientationGate.hidden) return;
     if (state === 'intro' || state === 'awakening') { t += dt; return; }
     if (state === 'play' || state === 'ending') {
       if (hitstop > 0) hitstop -= dt;
