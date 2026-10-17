@@ -11,6 +11,9 @@ frontend/
   js/customization.js     Cat breeds, chosen-name support, and text customization
   js/game.js              Canvas game, world, input, progression, and UI logic
   assets/cats/            The 8 cat breed sprites (PNG)
+  assets/intro/           The 8 opening story pictures (WebP)
+  assets/school/          Night school hallway background (Nights 1–2)
+  assets/festival/        Lighting festival sky and pagoda hill (Night 4)
 docs/
   design/                 Design roles and instruction pictures for designers
   proof/                  Proof of how the art was made (cats, Moodlings, intro scenes)
