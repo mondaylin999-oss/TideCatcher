@@ -134,6 +134,9 @@
   const FESTIVAL_NIGHTS = [4];
   const FEST_BACK = new Image();
   FEST_BACK.src = 'assets/festival/festival-back.webp';
+  const FEST_COLORS = ['255,156,207', '185,162,255', '143,227,224', '255,227,163', '255,143,163', '160,200,255'];
+  const FEST_CLOTH = ['#7b2d8e', '#b8336a', '#1f7f86', '#3a5fc0', '#8e3fb0', '#2f8f5e'];
+  const festCol = i => FEST_COLORS[((Math.floor(i) % FEST_COLORS.length) + FEST_COLORS.length) % FEST_COLORS.length];
   function inFestival() { return mode === 'story' && FESTIVAL_NIGHTS.includes(storyNight); }
   const NIGHT_CHAPTERS = [
     { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1, N: 0, L: 0, C: 0 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
@@ -1158,7 +1161,7 @@
   function drawFestivalSky() {
     const y0 = -OY, h = VH + OY * 2;
     const sky = ctx.createLinearGradient(0, y0, 0, 420);
-    sky.addColorStop(0, '#0b0a22'); sky.addColorStop(1, '#231a3e');
+    sky.addColorStop(0, '#1c0f40'); sky.addColorStop(1, '#4a2470');
     ctx.fillStyle = sky; ctx.fillRect(0, y0, VW, h);
     if (FEST_BACK.complete && FEST_BACK.naturalWidth) {
       const k = Math.max(VW * 1.14 / FEST_BACK.naturalWidth, 420 / FEST_BACK.naturalHeight);
@@ -1172,16 +1175,17 @@
       const x = ((i * 173.3 - camX * .05) % (VW + 60) + VW + 60) % (VW + 60) - 30 + Math.sin(t * .4 + i) * 10;
       const y = 400 - life, a = Math.min(1, life / 60) * Math.min(1, (y + 30) / 90) * .55;
       if (a <= 0) continue;
-      const g = ctx.createRadialGradient(x, y, 1, x, y, 13); g.addColorStop(0, `rgba(255,176,110,${a * .45})`); g.addColorStop(1, 'rgba(255,176,110,0)');
-      ctx.fillStyle = g; ctx.fillRect(x - 13, y - 13, 26, 26);
-      ctx.fillStyle = `rgba(250,196,140,${a})`; ctx.fillRect(x - 2.5, y - 3.5, 5, 7);
+      const lc = festCol(i);
+      const g = ctx.createRadialGradient(x, y, 1, x, y, 14); g.addColorStop(0, `rgba(${lc},${a * .5})`); g.addColorStop(1, `rgba(${lc},0)`);
+      ctx.fillStyle = g; ctx.fillRect(x - 14, y - 14, 28, 28);
+      ctx.fillStyle = `rgba(${lc},${a + .2})`; ctx.fillRect(x - 2.5, y - 3.5, 5, 7);
     }
   }
   function drawFestivalWorld(x0, x1) {
     // middle layer: palm trees and tiered roofs, very dark, a few warm windows
     ctx.save(); const sp = .45; ctx.translate(camX * (1 - sp), 0);
     const px0 = camX * sp - 60, px1 = camX * sp + VW + 60;
-    ctx.fillStyle = '#120d24';
+    ctx.fillStyle = '#2b1550';
     for (let x = Math.floor(px0 / 230) * 230; x < px1; x += 230) {
       const seed = Math.abs(Math.sin(x * .013)), base = GROUND - 6;
       if (seed > .45) { // tiered roof pavilion
@@ -1189,10 +1193,10 @@
         ctx.fillRect(x + 20, top + 40, w - 40, base - top - 40);
         for (let k = 0; k < 3; k++) { const ww = w - k * 26, yy = top + 40 - k * 22; ctx.beginPath(); ctx.moveTo(x + (w - ww) / 2 - 8, yy + 14); ctx.lineTo(x + w / 2, yy - 10); ctx.lineTo(x + (w + ww) / 2 + 8, yy + 14); ctx.closePath(); ctx.fill(); }
         ctx.fillRect(x + w / 2 - 2, top - 40, 4, 22);
-        ctx.fillStyle = 'rgba(255,190,120,.35)'; ctx.fillRect(x + w / 2 - 9, top + 70, 6, 8); ctx.fillRect(x + w / 2 + 4, top + 70, 6, 8); ctx.fillStyle = '#120d24';
+        ctx.fillStyle = `rgba(${festCol(x / 230)},.55)`; ctx.fillRect(x + w / 2 - 9, top + 46, 6, 8); ctx.fillRect(x + w / 2 + 4, top + 46, 6, 8); ctx.fillStyle = '#2b1550';
       } else { // palm
         const tx = x + 60, ty = base - 120 - seed * 50;
-        ctx.strokeStyle = '#120d24'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(tx, base); ctx.quadraticCurveTo(tx + 14, (ty + base) / 2, tx + 6, ty); ctx.stroke();
+        ctx.strokeStyle = '#2b1550'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(tx, base); ctx.quadraticCurveTo(tx + 14, (ty + base) / 2, tx + 6, ty); ctx.stroke();
         for (let k = 0; k < 8; k++) {
           const side = k % 2 ? 1 : -1, L = 26 + (k >> 1) * 11, droop = 18 + (k >> 1) * 13, cx = tx + 6;
           ctx.beginPath(); ctx.moveTo(cx, ty);
@@ -1204,24 +1208,25 @@
     ctx.restore();
     // water
     const water = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
-    water.addColorStop(0, '#1b1f45'); water.addColorStop(1, '#070818');
+    water.addColorStop(0, '#3d2470'); water.addColorStop(1, '#12082a');
     ctx.fillStyle = water; ctx.fillRect(x0, GROUND, x1 - x0, VH + OY + 60 - GROUND);
-    ctx.strokeStyle = 'rgba(170,180,240,.12)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(214,180,255,.2)'; ctx.lineWidth = 1;
     for (let k = 0; k < 6; k++) { const yy = GROUND + 26 + k * 9; ctx.beginPath(); for (let x = Math.floor(x0 / 40) * 40; x < x1; x += 40) { const o = Math.sin(x * .03 + t * 1.3 + k) * 2; ctx.moveTo(x, yy + o); ctx.lineTo(x + 18, yy + o); } ctx.stroke(); }
     // floating lamps on the water
     for (let x = Math.floor(x0 / 290) * 290 + 140; x < x1; x += 290) {
       const fx = x + Math.sin(t * .3 + x) * 12, fy = GROUND + 44 + Math.sin(t * 1.4 + x * .01) * 2;
-      const g = ctx.createRadialGradient(fx, fy, 1, fx, fy, 22); g.addColorStop(0, 'rgba(255,190,120,.35)'); g.addColorStop(1, 'rgba(255,190,120,0)');
-      ctx.fillStyle = g; ctx.fillRect(fx - 22, fy - 22, 44, 44);
-      ctx.fillStyle = '#3a2a3a'; ctx.fillRect(fx - 7, fy, 14, 4);
-      ctx.fillStyle = 'rgba(255,214,160,.9)'; ctx.fillRect(fx - 3, fy - 6, 6, 6);
-      ctx.fillStyle = 'rgba(255,190,120,.18)'; ctx.fillRect(fx - 2, fy + 6, 4, 20);
+      const fc = festCol(x / 290);
+      const g = ctx.createRadialGradient(fx, fy, 1, fx, fy, 24); g.addColorStop(0, `rgba(${fc},.45)`); g.addColorStop(1, `rgba(${fc},0)`);
+      ctx.fillStyle = g; ctx.fillRect(fx - 24, fy - 24, 48, 48);
+      ctx.fillStyle = '#4a2a5a'; ctx.fillRect(fx - 7, fy, 14, 4);
+      ctx.fillStyle = `rgba(${fc},.95)`; ctx.fillRect(fx - 3, fy - 6, 6, 6);
+      ctx.fillStyle = `rgba(${fc},.25)`; ctx.fillRect(fx - 2, fy + 6, 4, 22);
     }
     // posts + boardwalk
     ctx.fillStyle = '#24171f';
     for (let x = Math.floor(x0 / 120) * 120; x < x1; x += 120) ctx.fillRect(x + 50, GROUND + 10, 9, 46);
     const deck = ctx.createLinearGradient(0, GROUND - 2, 0, GROUND + 16);
-    deck.addColorStop(0, '#9a6e52'); deck.addColorStop(.3, '#6e4a3a'); deck.addColorStop(1, '#3c2630');
+    deck.addColorStop(0, '#b0805e'); deck.addColorStop(.3, '#7a5040'); deck.addColorStop(1, '#40243a');
     ctx.fillStyle = deck; ctx.fillRect(x0, GROUND - 2, x1 - x0, 18);
     ctx.strokeStyle = 'rgba(20,10,18,.55)'; ctx.lineWidth = 1;
     for (let x = Math.floor(x0 / 34) * 34; x < x1; x += 34) { ctx.beginPath(); ctx.moveTo(x, GROUND); ctx.lineTo(x, GROUND + 15); ctx.stroke(); }
@@ -1235,9 +1240,10 @@
       ctx.strokeStyle = 'rgba(30,20,30,.9)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a, ya); ctx.quadraticCurveTo((a + b) / 2, ya + sag * 2, b, ya); ctx.stroke();
       for (let k = 1; k <= 5; k++) {
         const u = k / 6, lx = a + (b - a) * u, ly = ya + sag * 4 * u * (1 - u) + 4 + Math.sin(t * 1.5 + k + i) * 1.5;
-        const g = ctx.createRadialGradient(lx, ly + 8, 1, lx, ly + 8, 20); g.addColorStop(0, 'rgba(255,220,170,.22)'); g.addColorStop(1, 'rgba(255,220,170,0)');
-        ctx.fillStyle = g; ctx.fillRect(lx - 20, ly - 12, 40, 40);
-        ctx.fillStyle = '#efd9b4'; ctx.beginPath(); ctx.roundRect(lx - 6, ly, 12, 16, 4); ctx.fill();
+        const lc = festCol(k + i);
+        const g = ctx.createRadialGradient(lx, ly + 8, 1, lx, ly + 8, 22); g.addColorStop(0, `rgba(${lc},.32)`); g.addColorStop(1, `rgba(${lc},0)`);
+        ctx.fillStyle = g; ctx.fillRect(lx - 22, ly - 14, 44, 44);
+        ctx.fillStyle = `rgb(${lc})`; ctx.beginPath(); ctx.roundRect(lx - 6, ly, 12, 16, 4); ctx.fill();
         ctx.strokeStyle = 'rgba(150,40,40,.8)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(lx - 6, ly + 4); ctx.lineTo(lx + 6, ly + 4); ctx.moveTo(lx - 6, ly + 12); ctx.lineTo(lx + 6, ly + 12); ctx.stroke();
         ctx.fillStyle = '#b8323a'; ctx.fillRect(lx - 1, ly + 16, 2, 8);
       }
@@ -1246,11 +1252,12 @@
       if (sx < x0 - 110 || sx > x1 + 110) continue;
       const w = 150, l = sx - w / 2, top = stallTop(sx);
       ctx.fillStyle = '#2b1b22'; ctx.fillRect(l + 6, top + 16, 8, GROUND - top - 16); ctx.fillRect(l + w - 14, top + 16, 8, GROUND - top - 16);
-      ctx.fillStyle = '#5a2430'; ctx.fillRect(l + 4, GROUND - 52, w - 8, 50);                                     // counter cloth
+      const si = CAVE_XS.indexOf(sx), cloth = FEST_CLOTH[si % FEST_CLOTH.length], flag = FEST_CLOTH[(si + 2) % FEST_CLOTH.length];
+      ctx.fillStyle = cloth; ctx.fillRect(l + 4, GROUND - 52, w - 8, 50);                                     // counter cloth
       ctx.fillStyle = '#c99a4a'; ctx.fillRect(l + 4, GROUND - 52, w - 8, 3); ctx.fillRect(l + 4, GROUND - 12, w - 8, 2);
       ctx.fillStyle = 'rgba(201,154,74,.6)'; for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.arc(l + 20 + k * 22, GROUND - 32, 3, 0, 7); ctx.fill(); }
-      ctx.fillStyle = '#7a2a34'; ctx.fillRect(l + 16, top + 18, 16, 54); ctx.beginPath(); ctx.moveTo(l + 16, top + 72); ctx.lineTo(l + 24, top + 64); ctx.lineTo(l + 32, top + 72); ctx.fill();  // banner
-      ctx.fillStyle = '#22151f';                                                                                   // two-tier roof
+      ctx.fillStyle = flag; ctx.fillRect(l + 16, top + 18, 16, 54); ctx.beginPath(); ctx.moveTo(l + 16, top + 72); ctx.lineTo(l + 24, top + 64); ctx.lineTo(l + 32, top + 72); ctx.fill();  // banner
+      ctx.fillStyle = '#2e1648';                                                                                   // two-tier roof
       ctx.beginPath(); ctx.moveTo(l - 14, top + 20); ctx.lineTo(sx, top - 12); ctx.lineTo(l + w + 14, top + 20); ctx.closePath(); ctx.fill();
       ctx.beginPath(); ctx.moveTo(l + 30, top - 6); ctx.lineTo(sx, top - 34); ctx.lineTo(l + w - 30, top - 6); ctx.closePath(); ctx.fill();
       ctx.strokeStyle = 'rgba(214,170,90,.75)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(l - 14, top + 20); ctx.lineTo(sx, top - 12); ctx.lineTo(l + w + 14, top + 20); ctx.moveTo(l + 30, top - 6); ctx.lineTo(sx, top - 34); ctx.lineTo(l + w - 30, top - 6); ctx.stroke();
