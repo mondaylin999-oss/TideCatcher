@@ -10,7 +10,7 @@
   --body:"Lexend",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
 }
-html,body{height:100%}
+html,body{height:100%;height:100dvh}
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 body{background:var(--night);color:var(--ink);font-family:var(--body);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
@@ -99,8 +99,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .stat strong{font-family:var(--display);font-size:26px;font-weight:800}
 .stars{font-size:32px;color:var(--gold);letter-spacing:6px;line-height:1}
 .stars .off{color:rgba(246,196,83,.22)}
-#touch{position:fixed;inset:0;pointer-events:none}
-#stickZone{position:absolute;left:0;top:20%;bottom:0;width:50%;pointer-events:auto}
+#touch{position:fixed;inset:0;pointer-events:none;touch-action:none}
+#stickZone{position:absolute;left:0;top:20%;bottom:0;width:50%;pointer-events:auto;touch-action:none;overscroll-behavior:contain}
 #stick{position:absolute;width:116px;height:116px;border-radius:50%;border:2px solid var(--line);background:rgba(255,255,255,.05);transform:translate(-50%,-50%)}
 #knob{position:absolute;left:50%;top:50%;width:48px;height:48px;border-radius:50%;background:rgba(246,196,83,.6);transform:translate(-50%,-50%)}
 .tbtn{position:absolute;pointer-events:auto;border-radius:50%;border:2px solid var(--line);background:rgba(22,15,44,.6);color:var(--ink);font-family:var(--display);font-weight:800;display:grid;place-items:center;touch-action:none}
@@ -336,3 +336,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
   .hub-content,.hub-sidebar{position:relative;z-index:1}
 }
 @media(max-width:420px){.hub-hero{height:clamp(145px,24vh,185px)}}
+
+
+/* Mobile browser hardening: keep story panels within the visible viewport and let narrow hub headings wrap. */
+@supports (height:100dvh){.prologue-panel,.awakening-panel{max-height:calc(100dvh - 24px)}}
+@media(max-width:420px){.hub-content-heading{flex-wrap:wrap;align-items:flex-start}}
