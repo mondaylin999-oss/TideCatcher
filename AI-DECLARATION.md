@@ -14,6 +14,8 @@ _Team: check this list and add anything missing before submitting._
 | Moodling art | Designed the vector art for the 8 Moodlings (see `docs/proof/moodlings/`) | Defined each feeling, colour and behaviour, gave feedback |
 | Intro scenes | Edited 4 of the 8 opening images, wrote the cutscene dialogue and built the cutscene (see `docs/proof/intro-scenes/`) | _TEAM TO FILL — who made the base images_ |
 | Designer briefs | Made instruction pictures for designers (`docs/design/`) | Designed the backgrounds, places and characters |
+| Hilltop park map (Night 5) | Built the team's level design into the game: stepped terrace, platforms and hiding places drawn in code; city view taken from the team's picture, recoloured and upscaled (see `docs/proof/hill-map/`) | Designed the level layout, platforms and hiding places |
+| Lakeside map (Nights 6–7) | Painted entirely in code: dawn sky, rising sun, mountains, lake, reeds, jetties (see `docs/proof/lakeside-map/`) | Chose the place and the sunrise ending |
 | Team logo | Helped design the NextCrown team logo | Chose the direction |
 
 ## Other tools

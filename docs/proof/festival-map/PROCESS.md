@@ -5,7 +5,7 @@ Map for **Night 4 · Lighting Festival** (Thadingyut). In the game: [`frontend/a
 | File | Step |
 |---|---|
 | `1-original-chatgpt.webp` | Landscape generated with **ChatGPT** by _TEAM TO FILL (name)_ on 17 Oct 2026 |
-| `2-back-layer.webp` | Only the sky, moon, mountains and pagoda hill are used, as the far background. Hanging lanterns and floating sky lanterns removed, the sky turned to a vivid purple night (team's purple theme), the pagoda given a soft glow |
+| `2-back-layer.webp` | Only the sky, moon, mountains and pagoda hill are used, as the far background. Hanging lanterns and floating sky lanterns removed, the sky turned to a vivid purple night (team's purple theme), the pagoda given a soft glow, then upscaled 4× with the Real-ESRGAN anime model (open-source AI upscaler) and scaled to 2× for sharp screens |
 | `3-in-game.png` | Screenshot in the game |
 
 Step 2 and the in-game parts were done on 17 Oct 2026 with Claude (Anthropic).

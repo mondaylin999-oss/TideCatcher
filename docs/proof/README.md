@@ -15,7 +15,10 @@ Each folder follows the same order:
 - `moodlings/` — the 8 feelings the cat catches
 - `intro-scenes/` — the 8 opening story pictures
 - `school-map/` — the school hallway background for Nights 1–2
+- `park-map/` — the park for Night 3
 - `festival-map/` — the lighting festival for Night 4
+- `hill-map/` — the hilltop park for Night 5
+- `lakeside-map/` — the lakeside at dawn for Nights 6–7
 
 **Rules**
 - Keep files under ~5 MB. Put videos, timelapses and large .psd / .procreate / .kra files on Google Drive and link them in `PROCESS.md`.
