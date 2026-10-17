@@ -1784,10 +1784,16 @@
     animateHubNumber($('#hubBookValue'), found, n => `${n} / ${BOOK_ORDER.length}`);
     $('#shopBtnValue').textContent = `${glow} Glow`;
     $('#bookBtnValue').textContent = `${found} / ${BOOK_ORDER.length} found`;
-    $('#hubLevelProgress').textContent = `Night ${unlockedLevel} / 7 unlocked`;
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
     $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
     const heroCat = $('#hubHeroCat');
+    if (heroCat && COAT) heroCat.setAttribute('href', COAT.img);
+    const heroSvg = $('#hubHeroSvg');
+    if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
+    $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
+  }
+  function refreshShopBtns() {
+    const label = `Upgrade Shwe · ${glow} Glow`;
     if (heroCat && COAT) heroCat.setAttribute('href', COAT.img);
     const heroSvg = $('#hubHeroSvg');
     if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
@@ -2584,7 +2590,6 @@
     cancelAnimationFrame(introRaf); introRaf = requestAnimationFrame(introTick);
   }
   $('#storyBtn').addEventListener('click', () => showStoryMap(true));
-  $('#levelsBtn').addEventListener('click', () => showStoryMap(true));
   $('#mapHubBackBtn').addEventListener('click', () => showHub(true));
   $('#mapHubBackBtnSecondary').addEventListener('click', () => showHub(true));
   $('#infoBtn').addEventListener('click', () => playIntro('hub'));
