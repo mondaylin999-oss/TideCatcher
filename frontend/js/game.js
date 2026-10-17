@@ -110,6 +110,7 @@
   const CAVE_XS = [430, 960, 1480, 2020, 2440, 2780, 3320, 3860];
   const TRAIL_PROFILE = [[0,425],[120,432],[225,454],[320,480],[390,494],[470,486],[540,455],[620,415],[700,388],[820,382],[905,396],[980,438],[1030,476],[1100,490],[1180,478],[1240,438],[1310,390],[1390,365],[1510,360],[1600,372],[1680,398],[1770,405],[1850,396],[1920,430],[1990,474],[2070,496],[2160,482],[2230,448],[2300,405],[2360,375],[2440,360],[2530,385],[2600,430],[2700,462],[2800,490],[2880,480],[3000,438],[3120,390],[3210,368],[3300,380],[3400,420],[3500,470],[3580,494],[3650,487],[3760,445],[3860,400],[3960,368],[4050,385],[4140,440],[4200,470]];
   function terrainY(x) {
+    if (inSchool()) return GROUND;
     if (x <= TRAIL_PROFILE[0][0]) return TRAIL_PROFILE[0][1];
     for (let i = 1; i < TRAIL_PROFILE.length; i++) {
       const a = TRAIL_PROFILE[i-1], b = TRAIL_PROFILE[i];
@@ -119,9 +120,17 @@
   }
   let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
+  // ---------- School map (Nights 1-2) ----------
+  // Night-time school hallway behind a flat floor. The wall picture is one 2445-wide image (drawn
+  // mirrored every other repeat so it never shows a seam); platforms are drawn in code as wooden shelves.
+  const SCHOOL_NIGHTS = [1, 2];
+  const SCHOOL_WALL = new Image();
+  SCHOOL_WALL.src = 'assets/school/hallway-night.webp';
+  const SCHOOL_WALL_W = 2445, SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
+  function inSchool() { return mode === 'story' && SCHOOL_NIGHTS.includes(storyNight); }
   const NIGHT_CHAPTERS = [
     { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1, N: 0, L: 0, C: 0 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
-    { night: 2, name: 'Lantern Path', sub: 'Learn to move quietly around Nervous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 3, N: 3, J: 1 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' , sky: { A: 1, B: 0, C: 0, wait: 2.5, fallSpeed: 70, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
+    { night: 2, name: 'The Winners’ Wall', sub: 'Learn to move quietly around Nervous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 3, N: 3, J: 1 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' , sky: { A: 1, B: 0, C: 0, wait: 2.5, fallSpeed: 70, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
     { night: 3, name: 'The Long Hallway', sub: 'Sit still beside Lonely', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2, S: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' , sky: { A: 2, B: 1, C: 0, wait: 2.2, fallSpeed: 85, gravity: 800, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.20, hintShown: false }},
     { night: 4, name: 'Night Market', sub: 'Scratch to reveal what is buried', theme: '#c17679', musicRoot: 233.08, timeLimit: 122, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2, B: 1, E: 2 }, newMoodling: 'A new feeling is buried in the rocks. Use Night Eyes to spot the right rock, then scratch it.', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0, B: 1, E: 1 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Excited bounces high. Jump, then pounce at the very top of its bounce.' , sky: { A: 2, B: 1, C: 1, wait: 2.0, fallSpeed: 100, gravity: 900, scratchWindow: 2.0, ambushBase: 2, pounceWindowMul: 1.10, hintShown: false }},
     { night: 5, name: 'Storm Peak', sub: 'Keep steady while the sky turns', theme: '#7181aa', musicRoot: 246.94, timeLimit: 117, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1, J: 2 }, newMoodling: 'Rare feelings sparkle; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1, J: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Rare feelings sparkle. They are worth extra Glow.' , sky: { A: 3, B: 2, C: 1, wait: 1.6, fallSpeed: 115, gravity: 1000, scratchWindow: 1.7, ambushBase: 2, pounceWindowMul: 1.00, hintShown: false }},
@@ -989,6 +998,7 @@
   }
 
   function drawBG() {
+    if (inSchool()) { ctx.fillStyle = '#16122a'; ctx.fillRect(0, -OY, VW, VH + OY * 2); return; }
     const y0 = -OY, h = VH + OY * 2;
     const sky = ctx.createLinearGradient(0, y0, 0, y0 + h);
     sky.addColorStop(0, '#0a1128'); sky.addColorStop(.55, '#14213c'); sky.addColorStop(1, '#1a2a4a');
@@ -1137,8 +1147,53 @@
       ctx.restore();
     }
   }
+  function drawSchoolWall(alpha = 1, mirrorY = false) {
+    if (!SCHOOL_WALL.complete || !SCHOOL_WALL.naturalWidth) return false;
+    const W = SCHOOL_WALL_W, off = camX * SCHOOL_PARALLAX;
+    ctx.save(); ctx.globalAlpha = alpha;
+    for (let k = Math.floor(off / W); k * W - off < VW; k++) {
+      const sx = camX + k * W - off;                     // world x of this repeat
+      ctx.save();
+      if (mirrorY) { ctx.translate(0, GROUND * 1.55); ctx.scale(1, -.55); }
+      if (k % 2) { ctx.translate(sx + W, 0); ctx.scale(-1, 1); ctx.drawImage(SCHOOL_WALL, 0, 0, W, SCHOOL_WALL_H); }
+      else ctx.drawImage(SCHOOL_WALL, sx, 0, W, SCHOOL_WALL_H);
+      ctx.restore();
+    }
+    ctx.restore(); return true;
+  }
+  function drawSchoolWorld(x0, x1) {
+    ctx.fillStyle = '#16122a'; ctx.fillRect(x0, -OY - 10, x1 - x0, SCHOOL_WALL_H + OY + 12);
+    if (!drawSchoolWall()) { ctx.fillStyle = '#2b2546'; ctx.fillRect(x0, 0, x1 - x0, GROUND); }
+    // glossy hallway floor with a faint reflection of the wall
+    const floor = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
+    floor.addColorStop(0, '#4a3c63'); floor.addColorStop(.18, '#30284a'); floor.addColorStop(1, '#130f22');
+    ctx.fillStyle = floor; ctx.fillRect(x0, GROUND, x1 - x0, VH + OY + 60 - GROUND);
+    ctx.save(); ctx.beginPath(); ctx.rect(x0, GROUND, x1 - x0, 110); ctx.clip(); drawSchoolWall(.32, true);
+    const fade = ctx.createLinearGradient(0, GROUND, 0, GROUND + 110); fade.addColorStop(0, 'rgba(19,15,34,0)'); fade.addColorStop(1, 'rgba(19,15,34,.95)');
+    ctx.fillStyle = fade; ctx.fillRect(x0, GROUND, x1 - x0, 110); ctx.restore();
+    ctx.strokeStyle = 'rgba(120,108,170,.22)'; ctx.lineWidth = 1;
+    for (let x = Math.floor(x0 / 96) * 96; x < x1; x += 96) { ctx.beginPath(); ctx.moveTo(x, GROUND + 4); ctx.lineTo(x - 22, VH + OY + 60); ctx.stroke(); }
+    for (const yy of [GROUND + 26, GROUND + 62]) { ctx.beginPath(); ctx.moveTo(x0, yy); ctx.lineTo(x1, yy); ctx.stroke(); }
+    ctx.fillStyle = '#4b4170'; ctx.fillRect(x0, GROUND - 2, x1 - x0, 4);
+    ctx.fillStyle = 'rgba(16,12,30,.55)'; ctx.fillRect(x0, GROUND + 2, x1 - x0, 3);
+    // wooden wall shelves = the platforms
+    for (const p of activePlats) {
+      if (p[0] + p[2] < x0 || p[0] > x1) continue;
+      const x = p[0], y = p[1], w = p[2];
+      ctx.fillStyle = 'rgba(8,6,18,.35)'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + 30, w * .45, 7, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = '#3a2a35';
+      for (const bx of [x + 16, x + w - 26]) { ctx.beginPath(); ctx.moveTo(bx, y + 9); ctx.lineTo(bx + 10, y + 9); ctx.lineTo(bx + 10, y + 26); ctx.closePath(); ctx.fill(); }
+      const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11);
+      wood.addColorStop(0, '#8a5e4c'); wood.addColorStop(.4, '#6a4438'); wood.addColorStop(1, '#3a2430');
+      ctx.fillStyle = wood; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 12, 4); ctx.fill();
+      ctx.strokeStyle = 'rgba(16,10,22,.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,214,160,.75)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 2, y); ctx.lineTo(x + w - 2, y); ctx.stroke();
+    }
+    for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
+  }
   function drawWorld() {
     const x0=camX-50,x1=camX+VW+50;
+    if (inSchool()) { drawSchoolWorld(x0, x1); return; }
     drawParallaxLayer(0,.10);drawParallaxLayer(1,.38);drawParallaxLayer(2,.78);
     const ground=ctx.createLinearGradient(0,410,0,VH+OY+60);ground.addColorStop(0,'#394440');ground.addColorStop(.18,'#303a38');ground.addColorStop(1,'#151f27');
     const rockEdge=x=>{const seed=Math.sin(x*12.9898+7.31)*43758.5453;return terrainY(x)+(seed-Math.floor(seed)-.5)*4;};
