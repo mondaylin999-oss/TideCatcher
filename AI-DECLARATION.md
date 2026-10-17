@@ -1,0 +1,25 @@
+# AI declaration
+
+TideCatcher was made by the NextCrown team for Digit7 Jam 2026 (1–31 Oct 2026). This file lists every AI tool used and what it was used for.
+
+_Team: check this list and add anything missing before submitting._
+
+## Claude (Anthropic)
+
+| Area | What AI did | What the team did |
+|---|---|---|
+| Game idea and story | Helped write the story outline, chapter plan and design-role documents | Came up with the game concept, chose the story, made all final decisions |
+| Code | Helped build prototype features: name and breed setup, cat animation, new Moodling behaviours (Excited, Shy, Jealous), performance fixes, code reorganisation | Reviewed, tested and integrated the code |
+| Cat sprites | Cut out, recoloured, made "chibi" and animated the 8 cats (see `docs/proof/cats/`) | Supplied the source sheet, chose the breeds, gave feedback |
+| Moodling art | Designed the vector art for the 8 Moodlings (see `docs/proof/moodlings/`) | Defined each feeling, colour and behaviour, gave feedback |
+| Intro scenes | Edited 4 of the 8 opening images (see `docs/proof/intro-scenes/`) | _TEAM TO FILL — who made the base images_ |
+| Designer briefs | Made instruction pictures for designers (`docs/design/`) | Designed the backgrounds, places and characters |
+| Team logo | Helped design the NextCrown team logo | Chose the direction |
+
+## Other tools
+- **Manus** — _TEAM TO FILL — this repo's `.gitignore` mentions Manus. Say what it was used for, or remove this line if it wasn't used._
+- **Image tool for the cat sheet / intro base images** — _TEAM TO FILL_
+- _Add any other AI tools here (music, sound, voice, images, code)._
+
+## Not made with AI
+_TEAM TO FILL — list what was made by hand, e.g. background art, girl character drawings, sound, level layouts._
