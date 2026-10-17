@@ -2207,49 +2207,152 @@
     if (focusCurrent && current) current.focus({ preventScroll: true });
   }
 
-  const INTRO_BEATS = [
-    { t: 0, dur: 3, anim: 'wake', text: '…It’s still night.' },
-    { t: 3, dur: 3.5, anim: 'look-down', text: 'I tore my drawing. The one I loved.' },
-    { t: 6.5, dur: 3.5, anim: 'hug', text: 'I couldn’t stop crying. Everything felt… scattered.' },
-    { t: 10, dur: 3.5, anim: 'window', text: 'When I fell asleep, my feelings drifted into the Night Side.' },
-    { t: 13.5, dur: 3.5, anim: 'camera', text: 'You’re Shwe, aren’t you? My brave little cat.' },
-    { t: 17, dur: 2, anim: 'wipe', text: 'I tried to wipe my tears…' },
-    { t: 19, dur: 1.5, anim: 'comfort', text: 'Please bring them home. I need to feel like myself again.' },
-    { t: 20.5, dur: 3, anim: 'rest', text: 'I’ll wait here. Wake me when morning comes…' },
-    { t: 23.5, dur: 4, anim: 'trail', text: 'Follow the moonlit trail.' }
+  // ---- Opening cutscene ----
+  // Eight story pictures with gentle camera motion and typed dialogue.
+  // Names are written as Thiri / Shwe and swapped for the player's chosen names by mkName().
+  const INTRO_SCENES = [
+    { img: '01-contest', alt: 'At the school drawing contest, Thiri holds her cat drawing while three other girls celebrate with the prizes.', ox: '24%', oy: '46%', k0: 1.02, k1: 1.13, dx: '1%', dy: '0%', note: 392 },
+    { img: '02-walk-home', alt: 'Thiri walks home at sunset, head down, holding her drawing. Shwe trots beside her.', ox: '52%', oy: '48%', k0: 1.04, k1: 1.12, dx: '-1.5%', dy: '0%', note: 349 },
+    { img: '03-tear-drawing', alt: 'In her room, Thiri tears her drawing in half while Shwe watches.', ox: '62%', oy: '40%', k0: 1.03, k1: 1.16, dx: '0%', dy: '1%', note: 330 },
+    { img: '04-dont-want-to-feel', alt: 'Thiri hugs her knees on the bed, eyes closed. Shwe lies beside her.', ox: '30%', oy: '42%', k0: 1.04, k1: 1.15, dx: '0%', dy: '0%', note: 294 },
+    { img: '05-colours-fade', alt: 'The room turns grey and dark. Thiri sits still, Shwe looks out at the moon.', ox: '50%', oy: '45%', k0: 1.14, k1: 1.03, dx: '0%', dy: '0%', note: 262 },
+    { img: '06-cat-eyes-glow', alt: 'Thiri is asleep. In the grey room, Shwe’s eyes glow.', ox: '62%', oy: '50%', k0: 1.03, k1: 1.2, dx: '-1%', dy: '0%', note: 440 },
+    { img: '07-moodlings-leave', alt: 'Small glowing Moodlings drift sadly from the sleeping girl toward the window as Shwe watches.', ox: '62%', oy: '28%', k0: 1.04, k1: 1.2, dx: '-3%', dy: '1%', note: 330, fx: 'leave' },
+    { img: '08-cat-follows', alt: 'Shwe leaps out of the window into the night sky after the Moodlings.', ox: '58%', oy: '38%', k0: 1.03, k1: 1.15, dx: '0%', dy: '1%', note: 587 }
   ];
-  const introNotes = [392, 440, 494, 523, 587, 587, 523, 440, 659];
-  let introRaf = 0;
+  const INTRO_WHO = {
+    girl: { name: 'Thiri', color: '#8fc3ff' }, cat: { name: 'Shwe', color: '#f6c453' },
+    F: { name: 'Frustrated', color: '#ff8a8f' }, N: { name: 'Nervous', color: '#c3adff' }, L: { name: 'Lonely', color: '#8fc3ff' },
+    E: { name: 'Excited', color: '#ffe066' }, C: { name: 'Calm', color: '#8fe0a0' }, S: { name: 'Shy', color: '#ff9ccb' }, J: { name: 'Jealous', color: '#ffb36b' }
+  };
+  const INTRO_FX_COLORS = ['#ff6168', '#a98bff', '#6fb6ff', '#ffd23f', '#7ddc8b', '#ff7ab8', '#ff9a3c'];
+  const INTRO_LINES = [
+    { s: 0, text: 'The school drawing contest. Thiri drew the one she loves most: her cat, Shwe.' },
+    { s: 0, text: 'Three names were called. Hers was not one of them.' },
+    { s: 0, who: 'girl', text: '…I really thought this one was good.' },
+    { s: 1, text: 'She walked home without a word. Shwe stayed close the whole way.' },
+    { s: 1, who: 'girl', text: 'Don’t look at me like that, Shwe. I’m fine.' },
+    { s: 2, who: 'girl', text: 'If I never draw again… I never have to lose again.' },
+    { s: 2, sfx: true, text: 'RRRIP.' },
+    { s: 3, who: 'girl', text: 'I don’t want to feel anything anymore.' },
+    { s: 4, text: 'And just like that, the colour drained out of her room.' },
+    { s: 4, text: 'She fell asleep without noticing.' },
+    { s: 5, text: 'But Shwe noticed. Cats can see what people can’t.' },
+    { s: 5, who: 'cat', text: '…Mrrow?' },
+    { s: 6, text: 'Deep in her heart, her feelings heard every word. The little Moodlings.' },
+    { s: 6, who: 'L', text: 'She… doesn’t want us anymore?' },
+    { s: 6, who: 'S', text: '(sniff) We were only trying to help…' },
+    { s: 6, who: 'F', text: 'Fine. If she doesn’t want us… we’ll go.' },
+    { s: 6, who: 'C', text: 'Goodbye, Thiri.' },
+    { s: 6, text: 'One by one, they drifted to the window. Their lights grew dimmer… and dimmer.' },
+    { s: 6, text: 'Frustrated. Nervous. Lonely. Excited. Calm. Shy. Jealous. All of them, gone.' },
+    { s: 6, text: 'Without them, she would wake up empty.' },
+    { s: 7, who: 'cat', text: 'Mrrp! (Wait for me!)' },
+    { s: 7, text: 'So Shwe leapt into the Night Side, to bring every feeling home before sunrise.' }
+  ];
+  const INTRO_CPS = 40;
+  const introImgs = INTRO_SCENES.map(() => new Image());
+  let introRaf = 0, introI = 0, introScene = -1, introTyped = 0, introLineStart = 0, introDoneAt = 0, introShot = 0;
+  function introPreload() {
+    INTRO_SCENES.forEach((sc, i) => { if (!introImgs[i].src) introImgs[i].src = `assets/intro/${sc.img}.webp`; });
+  }
+  function introShowScene(i) {
+    const sc = INTRO_SCENES[i], shots = [$('#introShotA'), $('#introShotB')];
+    introShot ^= 1;
+    const inc = shots[introShot], out = shots[introShot ^ 1];
+    inc.src = introImgs[i].src; inc.alt = sc.alt;
+    const sceneLines = INTRO_LINES.filter(l => l.s === i);
+    const dur = sceneLines.reduce((t, l) => t + l.text.length / INTRO_CPS + 1.4 + l.text.length * .038, 1.5);
+    [['--ox', sc.ox], ['--oy', sc.oy], ['--k0', sc.k0], ['--k1', sc.k1], ['--dx', sc.dx], ['--dy', sc.dy], ['--dur', dur.toFixed(1) + 's']]
+      .forEach(([k, v]) => inc.style.setProperty(k, v));
+    inc.classList.remove('move'); void inc.offsetWidth; inc.classList.add('move', 'on');
+    out.classList.remove('on');
+    $('#introDots').querySelectorAll('i').forEach((d, k) => { d.className = k < i ? 'done' : k === i ? 'now' : ''; });
+    introFx(sc.fx, dur);
+    tone(sc.note, .6, 'sine', .022); setTimeout(() => tone(sc.note * 1.5, .4, 'triangle', .012), 140);
+  }
+  // Scene 7: the Moodlings' lights drift sadly to the window and fade while the room dims.
+  function introFx(kind, dur) {
+    const fx = $('#introFx'), stage = $('#introArt');
+    stage.classList.toggle('dim', kind === 'leave'); stage.style.setProperty('--dim-dur', (dur * .8).toFixed(1) + 's');
+    if (kind !== 'leave') { fx.innerHTML = ''; return; }
+    fx.innerHTML = [...INTRO_FX_COLORS, ...INTRO_FX_COLORS].map((c, k) => `<i style="--c:${c};--d:${(.8 + k * 1.3).toFixed(1)}s;--y:${(k % 3) * 5 - 5}%"></i>`).join('');
+    if (!reduce) [523, 494, 440, 392].forEach((f, k) => setTimeout(() => state === 'intro' && tone(f, .9, 'sine', .016), 600 + k * 700));
+  }
+  function introShowLine(i) {
+    const line = INTRO_LINES[i]; introI = i;
+    if (line.s !== introScene) { introScene = line.s; introShowScene(line.s); }
+    const who = line.who && INTRO_WHO[line.who], sp = $('#introSpeaker'), el = $('#introSubtitle');
+    sp.hidden = !who;
+    if (who) { sp.textContent = mkName(who.name); sp.style.setProperty('--who', who.color); }
+    el.className = 'cs-line' + (line.sfx ? ' sfx' : who ? '' : ' narration');
+    line.full = mkName(line.text);
+    $('#introLive').textContent = (who ? mkName(who.name) + ': ' : '') + line.full;
+    introTyped = reduce ? line.full.length : 0; el.textContent = reduce ? line.full : '';
+    introLineStart = performance.now(); introDoneAt = reduce ? introLineStart : 0;
+    $('#introHint').classList.remove('show');
+    if (line.sfx) { tone(820, .2, 'sawtooth', .03, -600); setTimeout(() => tone(620, .16, 'sawtooth', .024, -450), 90); }
+  }
+  function introFinish() {
+    $('#introHint').classList.remove('show');
+    const b = $('#introContinueBtn');
+    if (b.hidden) { b.hidden = false; b.focus({ preventScroll: true }); }
+  }
+  function introTick(now) {
+    if (state !== 'intro') return;
+    const line = INTRO_LINES[introI], el = $('#introSubtitle');
+    if (introTyped < line.full.length) {
+      const n = Math.min(line.full.length, Math.floor((now - introLineStart) / 1000 * INTRO_CPS));
+      if (n !== introTyped) { introTyped = n; el.textContent = line.full.slice(0, n); }
+      if (n >= line.full.length) introDoneAt = now;
+    } else {
+      if (!introDoneAt) introDoneAt = now;
+      if (introI === INTRO_LINES.length - 1) { introFinish(); return; }
+      $('#introHint').classList.add('show');
+      if (now - introDoneAt > 1400 + line.full.length * 38) introShowLine(introI + 1);
+    }
+    introRaf = requestAnimationFrame(introTick);
+  }
+  function introAdvance() {
+    if (state !== 'intro') return;
+    const line = INTRO_LINES[introI];
+    if (introTyped < line.full.length) {
+      introTyped = line.full.length; $('#introSubtitle').textContent = line.full; introDoneAt = performance.now();
+      return;
+    }
+    if (introI < INTRO_LINES.length - 1) introShowLine(introI + 1); else leaveIntro();
+  }
   function leaveIntro() {
     cancelAnimationFrame(introRaf); $('#prologueScreen').hidden = true; $('#startScreen').hidden = false;
+    [$('#introShotA'), $('#introShotB')].forEach(im => im.classList.remove('on', 'move'));
+    introFx(null, 0);
     state = 'menu'; cv.hidden = true; buildLevelMap(); focusLevelMap(unlockedLevel);
     const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`); if (current) current.focus({ preventScroll: true });
   }
   function playIntro() {
-    initAudio(); state = 'intro'; cv.hidden = true; $('#startScreen').hidden = true; $('#endScreen').hidden = true;
-    $('#awakeningScreen').hidden = true; $('#prologueScreen').hidden = false; $('#introContinueBtn').hidden = true;
-    $('#introSubtitle').textContent = 'Thiri is waking in the quiet of the night…'; $('#introArt').dataset.anim = 'wake'; $('#introSkipBtn').focus({ preventScroll: true });
+    initAudio(); state = 'intro'; cv.hidden = true;
+    $('#startScreen').hidden = true; $('#endScreen').hidden = true; $('#awakeningScreen').hidden = true;
+    $('#prologueScreen').hidden = false; $('#introContinueBtn').hidden = true;
+    introPreload();
+    $('#introDots').innerHTML = INTRO_SCENES.map(() => '<i></i>').join('');
+    [$('#introShotA'), $('#introShotB')].forEach(im => im.classList.remove('on', 'move'));
+    introScene = -1; introShowLine(0);
+    $('#introArt').focus({ preventScroll: true });
     tone(196, 2.4, 'sine', .018, 12);
-    const started = performance.now(), scale = reduce ? .77 : 1, duration = 27.5;
-    let active = -1;
-    const tick = now => {
-      if (state !== 'intro') return;
-      const elapsed = (now - started) / 1000 / scale;
-      let index = INTRO_BEATS.findIndex((beat, i) => elapsed >= beat.t && elapsed < beat.t + beat.dur);
-      if (index < 0 && elapsed >= duration) index = INTRO_BEATS.length - 1;
-      if (index !== active && index >= 0) {
-        active = index; const beat = INTRO_BEATS[index];
-        $('#introArt').dataset.anim = beat.anim; $('#introSubtitle').textContent = beat.text;
-        tone(introNotes[index], .48, 'sine', .026); setTimeout(() => tone(introNotes[index] * 1.5, .35, 'triangle', .016), 110);
-      }
-      if (elapsed >= duration) { $('#introContinueBtn').hidden = false; $('#introContinueBtn').focus({ preventScroll: true }); return; }
-      introRaf = requestAnimationFrame(tick);
-    };
-    introRaf = requestAnimationFrame(tick);
+    cancelAnimationFrame(introRaf); introRaf = requestAnimationFrame(introTick);
   }
   $('#storyBtn').addEventListener('click', playIntro);
   $('#introSkipBtn').addEventListener('click', leaveIntro);
   $('#introContinueBtn').addEventListener('click', leaveIntro);
+  $('#prologueScreen').addEventListener('click', e => { if (!e.target.closest('button')) introAdvance(); });
+  addEventListener('keydown', e => {
+    if (state !== 'intro' || e.repeat) return;
+    if (e.code === 'Escape') { e.preventDefault(); leaveIntro(); return; }
+    if (['Space', 'Enter', 'ArrowRight'].includes(e.code)) {
+      if (e.target.closest && e.target.closest('button')) return;
+      e.preventDefault(); introAdvance();
+    }
+  });
 
   $('#nightWakeContinue').addEventListener('click', closeNightWake);
   const AWAKENING_BEATS = [
@@ -2418,6 +2521,22 @@
     if (setupFirstRun) playIntro(); else showMainMenu(true);
   });
   $('#profileBtn').addEventListener('click', () => showSetup(false));
+
+  // ---- Reset progress ----
+  // Deletes every saved 'mk-' key on this device, then reloads so the game starts like a new player.
+  function openReset() { $('#resetScreen').hidden = false; $('#resetCancel').focus({ preventScroll: true }); }
+  function closeReset() { $('#resetScreen').hidden = true; $('#resetBtn').focus({ preventScroll: true }); }
+  function resetProgress() {
+    try {
+      Object.keys(localStorage).filter(k => k.startsWith('mk-')).forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+    location.reload();
+  }
+  $('#resetBtn').addEventListener('click', openReset);
+  $('#resetCancel').addEventListener('click', closeReset);
+  $('#resetConfirm').addEventListener('click', resetProgress);
+  $('#resetScreen').addEventListener('click', e => { if (e.target.id === 'resetScreen') closeReset(); });
+  $('#resetScreen').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeReset(); } });
   paintCoat(COAT); renameAll();
 
   buildLevelMap(); focusLevelMap(unlockedLevel);
