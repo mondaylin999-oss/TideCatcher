@@ -13,6 +13,8 @@ frontend/
   assets/cats/            The 8 cat breed sprites (PNG)
   assets/intro/           The 8 opening story pictures (WebP)
   assets/school/          Night school hallway background (Nights 1–2)
+  assets/park/            Night park background (Night 3)
+  assets/hill/            City view behind the hilltop park (Night 5)
   assets/festival/        Lighting festival sky and pagoda hill (Night 4)
 docs/
   design/                 Design roles and instruction pictures for designers

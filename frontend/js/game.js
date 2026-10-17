@@ -176,7 +176,8 @@
   const CAVE_XS = [430, 960, 1480, 2020, 2440, 2780, 3320, 3860];
   const TRAIL_PROFILE = [[0,425],[120,432],[225,454],[320,480],[390,494],[470,486],[540,455],[620,415],[700,388],[820,382],[905,396],[980,438],[1030,476],[1100,490],[1180,478],[1240,438],[1310,390],[1390,365],[1510,360],[1600,372],[1680,398],[1770,405],[1850,396],[1920,430],[1990,474],[2070,496],[2160,482],[2230,448],[2300,405],[2360,375],[2440,360],[2530,385],[2600,430],[2700,462],[2800,490],[2880,480],[3000,438],[3120,390],[3210,368],[3300,380],[3400,420],[3500,470],[3580,494],[3650,487],[3760,445],[3860,400],[3960,368],[4050,385],[4140,440],[4200,470]];
   function terrainY(x) {
-    if (inSchool() || inFestival()) return GROUND;
+    if (inHill()) return hillY(x);
+    if (inSchool() || inFestival() || inPark() || inLake()) return GROUND;
     if (x <= TRAIL_PROFILE[0][0]) return TRAIL_PROFILE[0][1];
     for (let i = 1; i < TRAIL_PROFILE.length; i++) {
       const a = TRAIL_PROFILE[i-1], b = TRAIL_PROFILE[i];
@@ -194,24 +195,281 @@
   SCHOOL_WALL.src = 'assets/school/hallway-night.webp';
   const SCHOOL_WALL_W = 2445, SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
   function inSchool() { return mode === 'story' && SCHOOL_NIGHTS.includes(storyNight); }
+  // ---------- Hilltop park map (Night 5) ----------
+  // Layout from the team's level design: a stepped stone terrace (high gate terrace, bench step,
+  // lamp step, low walkway along the railing, back up), tree-branch ledges and stone pillars to jump on,
+  // and a tree hollow, bin and bushes to hide in. The far city view comes from the team's picture.
+  const HILL_NIGHTS = [5];
+  function inHill() { return mode === 'story' && HILL_NIGHTS.includes(storyNight); }
+  const HILL_W = 1400;
+  const HILL_PROFILE = [[0,440],[330,440],[352,460],[600,460],[620,478],[880,478],[905,502],[1150,502],[1172,478],[1290,478],[1312,458],[1378,458],[1400,440]];
+  function hillY(x) {
+    const m = ((x % HILL_W) + HILL_W) % HILL_W;
+    for (let i = 1; i < HILL_PROFILE.length; i++) { const a = HILL_PROFILE[i - 1], b = HILL_PROFILE[i]; if (m <= b[0]) return a[1] + (b[1] - a[1]) * ((m - a[0]) / (b[0] - a[0])); }
+    return HILL_PROFILE[0][1];
+  }
+  const HILL_PLATS = [];
+  for (let o = 0; o < 4200; o += HILL_W) HILL_PLATS.push([o + 165, 330, 120], [o + 655, 420, 90], [o + 1185, 348, 120]);
+  const HILL_VISTA = new Image();
+  HILL_VISTA.src = 'assets/hill/hill-vista.webp';
+  function drawHillSky() {
+    const y0 = -OY;
+    const sky = ctx.createLinearGradient(0, y0, 0, 300); sky.addColorStop(0, '#0d0720'); sky.addColorStop(1, '#2a1150');
+    ctx.fillStyle = sky; ctx.fillRect(0, y0, VW, VH + OY * 2);
+    for (let i = 0; i < 40; i++) {
+      const x = ((i * 157.7 - camX * .03) % (VW + 20) + VW + 20) % (VW + 20) - 10, y = 10 + (i * 47.3 % 150);
+      ctx.globalAlpha = .3 + .5 * (.5 + .5 * Math.sin(t * (.6 + i % 5 * .1) + i)); ctx.fillStyle = '#efe6ff'; ctx.beginPath(); ctx.arc(x, y, i % 9 ? .9 : 1.5, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    if (HILL_VISTA.complete && HILL_VISTA.naturalWidth) {
+      const k = Math.max(330 / HILL_VISTA.naturalHeight, VW * 1.12 / HILL_VISTA.naturalWidth);
+      const w = HILL_VISTA.naturalWidth * k, h = HILL_VISTA.naturalHeight * k;
+      const pan = (w - VW) * clamp(camX / Math.max(1, WORLD - VW), 0, 1);
+      const top = 470 - h;
+      const fade = ctx.createLinearGradient(0, top, 0, top + 40);
+      ctx.drawImage(HILL_VISTA, -pan, top, w, h);
+      fade.addColorStop(0, 'rgba(42,17,80,1)'); fade.addColorStop(1, 'rgba(42,17,80,0)');
+      ctx.fillStyle = fade; ctx.fillRect(0, top - 1, VW, 41);
+    }
+  }
+  function drawHillTree(x, gy, flip, hollow) {
+    const d = flip ? -1 : 1;
+    ctx.fillStyle = '#3a2440';
+    ctx.beginPath(); ctx.moveTo(x - 22, gy); ctx.quadraticCurveTo(x - 10, gy - 90, x - 14, gy - 200); ctx.lineTo(x + 14, gy - 200); ctx.quadraticCurveTo(x + 8, gy - 90, x + 26, gy); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#3a2440'; ctx.lineWidth = 14; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, gy - 150); ctx.quadraticCurveTo(x + d * 60, gy - 150, x + d * 120, gy - 112); ctx.stroke();
+    ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(190,170,230,.35)'; ctx.beginPath(); ctx.moveTo(x - 8, gy - 10); ctx.quadraticCurveTo(x - 4, gy - 100, x - 8, gy - 190); ctx.stroke();
+    if (hollow) {
+      ctx.fillStyle = '#120a1e'; ctx.beginPath(); ctx.ellipse(x + 2, gy - 22, 11, 18, 0, 0, 7); ctx.fill();
+      const g = ctx.createRadialGradient(x + 2, gy - 18, 1, x + 2, gy - 18, 16); g.addColorStop(0, 'rgba(255,190,120,.45)'); g.addColorStop(1, 'rgba(255,190,120,0)'); ctx.fillStyle = g; ctx.fillRect(x - 16, gy - 36, 36, 36);
+    }
+    const blobs = [[-70,-210,46],[-20,-250,56],[40,-240,52],[90,-205,44],[-40,-190,40],[20,-195,44],[d*120,-150,38],[d*80,-170,40]];
+    for (const [dx, dy, r] of blobs) { const g = ctx.createRadialGradient(x + dx - r * .3, gy + dy - r * .4, 2, x + dx, gy + dy, r); g.addColorStop(0, '#4fae8e'); g.addColorStop(1, '#1f5a58'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x + dx, gy + dy, r, 0, 7); ctx.fill(); }
+  }
+  function drawHillLamp(x, gy) {
+    ctx.fillStyle = '#2a2040'; ctx.fillRect(x - 2, gy - 92, 4, 92); ctx.fillRect(x - 6, gy - 4, 12, 4);
+    ctx.fillStyle = '#ffe2a8'; ctx.beginPath(); ctx.moveTo(x - 7, gy - 100); ctx.lineTo(x + 7, gy - 100); ctx.lineTo(x + 5, gy - 88); ctx.lineTo(x - 5, gy - 88); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#2a2040'; ctx.beginPath(); ctx.moveTo(x - 9, gy - 100); ctx.lineTo(x, gy - 108); ctx.lineTo(x + 9, gy - 100); ctx.closePath(); ctx.fill();
+    const g = ctx.createRadialGradient(x, gy - 94, 2, x, gy - 94, 70); g.addColorStop(0, 'rgba(255,214,150,.35)'); g.addColorStop(1, 'rgba(255,214,150,0)'); ctx.fillStyle = g; ctx.fillRect(x - 70, gy - 164, 140, 140);
+    const pool = ctx.createRadialGradient(x, gy, 2, x, gy, 80); pool.addColorStop(0, 'rgba(255,214,150,.22)'); pool.addColorStop(1, 'rgba(255,214,150,0)'); ctx.fillStyle = pool; ctx.beginPath(); ctx.ellipse(x, gy, 80, 14, 0, 0, 7); ctx.fill();
+  }
+  function drawHillBench(x, gy) {
+    ctx.fillStyle = '#6a4a58'; ctx.fillRect(x - 34, gy - 22, 68, 5); ctx.fillRect(x - 34, gy - 40, 68, 5); ctx.fillRect(x - 34, gy - 32, 68, 4);
+    ctx.fillStyle = '#2a2040'; ctx.fillRect(x - 30, gy - 22, 4, 22); ctx.fillRect(x + 26, gy - 22, 4, 22);
+    ctx.fillStyle = 'rgba(255,230,210,.25)'; ctx.fillRect(x - 34, gy - 40, 68, 1);
+  }
+  function drawHillBush(x, gy, seed) {
+    for (const [dx, dy, r] of [[-26,-14,20],[0,-24,26],[24,-14,20],[0,-8,24]]) { const g = ctx.createLinearGradient(0, gy - 50, 0, gy); g.addColorStop(0, '#3f9a80'); g.addColorStop(1, '#1d4c4c'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x + dx, gy + dy, r, 0, 7); ctx.fill(); }
+    for (let k = 0; k < 5; k++) { ctx.fillStyle = `rgb(${festCol(k + seed)})`; ctx.beginPath(); ctx.arc(x - 28 + k * 14, gy - 18 - (k % 2) * 14, 2.4, 0, 7); ctx.fill(); }
+  }
+  function drawHillWorld(x0, x1) {
+    // mid layer: dark pines on the slope below the terrace
+    ctx.save(); const sp = .4; ctx.translate(camX * (1 - sp), 0);
+    ctx.fillStyle = '#1e1238';
+    for (let x = Math.floor((camX * sp - 60) / 46) * 46; x < camX * sp + VW + 60; x += 46) {
+      const h = 50 + Math.abs(Math.sin(x * .07)) * 60, b = 470;
+      ctx.beginPath(); ctx.moveTo(x - 20, b); ctx.lineTo(x, b - h); ctx.lineTo(x + 20, b); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    const startO = Math.floor((x0 - 200) / HILL_W) * HILL_W;
+    // railing along the low walkway (behind)
+    for (let o = startO; o < x1 + 200; o += HILL_W) {
+      const a = o + 905, b = o + 1150, y = 502;
+      ctx.fillStyle = '#4c4478'; ctx.fillRect(a, y - 40, b - a, 6); ctx.fillRect(a, y - 12, b - a, 5);
+      for (let x = a + 8; x < b; x += 16) { ctx.fillStyle = '#3e3868'; ctx.beginPath(); ctx.ellipse(x, y - 24, 4, 11, 0, 0, 7); ctx.fill(); }
+      ctx.fillStyle = 'rgba(200,190,255,.35)'; ctx.fillRect(a, y - 40, b - a, 1.5);
+    }
+    // trees, gate, lamps, benches, bushes, bin (behind the cat)
+    for (let o = startO; o < x1 + 200; o += HILL_W) {
+      if (o + HILL_W + 200 < x0) continue;
+      // gate on the high terrace
+      for (const gx of [o + 50, o + 290]) { ctx.fillStyle = '#4c4478'; ctx.fillRect(gx - 14, 440 - 92, 28, 92); ctx.fillStyle = '#6a62a0'; ctx.fillRect(gx - 17, 440 - 98, 34, 8); drawHillLamp(gx, 440 - 98 + 100 - 100); }
+      ctx.strokeStyle = '#4c4478'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(o + 64, 440 - 76); ctx.quadraticCurveTo(o + 170, 440 - 120, o + 276, 440 - 76); ctx.stroke();
+      drawHillTree(o + 120, 440, false, false);
+      drawHillBush(o + 200, 440, o);
+      drawHillBench(o + 470, 460);
+      drawHillLamp(o + 560, 460);
+      drawHillBush(o + 790, 478, o + 3);
+      drawHillLamp(o + 860, 478);
+      drawHillBush(o + 960, 502, o + 5);
+      // bin
+      const bx = o + 1090, by = 502;
+      ctx.fillStyle = '#3e3868'; ctx.fillRect(bx - 14, by - 38, 28, 38); ctx.fillStyle = '#5a5290'; ctx.fillRect(bx - 17, by - 44, 34, 7);
+      ctx.strokeStyle = 'rgba(20,14,40,.6)'; ctx.lineWidth = 1; for (let k = -8; k <= 8; k += 8) { ctx.beginPath(); ctx.moveTo(bx + k, by - 34); ctx.lineTo(bx + k, by - 4); ctx.stroke(); }
+      drawHillBench(o + 1225, 478);
+      drawHillTree(o + 1345, 458, true, true);
+    }
+    // stone terrace following the stepped ground
+    const ground = ctx.createLinearGradient(0, 430, 0, VH + OY + 60); ground.addColorStop(0, '#4a4274'); ground.addColorStop(.25, '#2e2650'); ground.addColorStop(1, '#120c24');
+    ctx.fillStyle = ground; ctx.beginPath(); ctx.moveTo(x0, VH + OY + 60);
+    for (let x = Math.floor(x0 / 6) * 6; x <= x1 + 6; x += 6) ctx.lineTo(x, hillY(x));
+    ctx.lineTo(x1 + 6, VH + OY + 60); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(16,10,32,.45)'; ctx.lineWidth = 1;
+    for (let row = 0; row < 4; row++) for (let x = Math.floor(x0 / 34) * 34; x < x1; x += 34) { const y = hillY(x) + 12 + row * 14; ctx.strokeRect(x + (row % 2) * 17, y, 34, 14); }
+    ctx.strokeStyle = '#b4a8ec'; ctx.lineWidth = 2.5; ctx.beginPath();
+    for (let x = Math.floor(x0 / 6) * 6; x <= x1 + 6; x += 6) { const y = hillY(x); x === Math.floor(x0 / 6) * 6 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(80,170,130,.8)';
+    for (let x = Math.floor(x0 / 22) * 22; x < x1; x += 22) { if (Math.sin(x * 3.1) < .2) continue; const y = hillY(x); ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x, y - 6); ctx.lineTo(x + 4, y); ctx.fill(); }
+    // platforms: mossy branch ledges and stone pillars
+    for (const p of activePlats) {
+      if (p[0] + p[2] < x0 || p[0] > x1) continue;
+      const x = p[0], y = p[1], w = p[2];
+      if (w <= 95) {
+        const base = hillY(x + w / 2);
+        ctx.fillStyle = '#4c4478'; ctx.fillRect(x, y + 6, w, base - y - 6);
+        ctx.strokeStyle = 'rgba(16,10,32,.45)'; ctx.lineWidth = 1; for (let yy = y + 18; yy < base; yy += 14) for (let xx = x + ((yy / 14) % 2 ? 0 : 15); xx < x + w; xx += 30) ctx.strokeRect(xx, yy, 30, 14);
+        ctx.fillStyle = '#6a62a0'; ctx.fillRect(x - 4, y - 2, w + 8, 10);
+      } else {
+        ctx.fillStyle = '#5a3a58'; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 12, 5); ctx.fill();
+        ctx.fillStyle = '#4fae8e'; ctx.beginPath(); ctx.roundRect(x - 1, y - 4, w + 2, 5, 3); ctx.fill();
+      }
+      ctx.strokeStyle = 'rgba(230,220,255,.55)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, y - 2); ctx.lineTo(x + w, y - 2); ctx.stroke();
+    }
+    for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
+    for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
+  }
+  // ---------- Lakeside map (Nights 6-7) ----------
+  // Painted entirely in code: dawn sky that warms up (and on Night 7 the sun rises as the timer runs),
+  // mountains, a lake with the sun's reflection, a rowboat, then the shore path, reed beds (Calm's
+  // hiding places) and wooden jetties (platforms).
+  const LAKE_NIGHTS = [6, 7];
+  function inLake() { return mode === 'story' && LAKE_NIGHTS.includes(storyNight); }
+  const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+  const lerpC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(',')})`; };
+  function dawnP() {
+    if (storyNight !== 7) return .3;
+    const lim = chapterFor(7).timeLimit || 135;
+    return .42 + .58 * clamp(1 - timeLeft / lim, 0, 1);
+  }
+  function drawLakeSky() {
+    const p = dawnP(), y0 = -OY, H = 362;
+    const sky = ctx.createLinearGradient(0, y0, 0, H);
+    sky.addColorStop(0, lerpC('#120c3a', '#3f5fc0', p));
+    sky.addColorStop(.5, lerpC('#45207a', '#f07aa8', p));
+    sky.addColorStop(1, lerpC('#a2408e', '#ffc46e', p));
+    ctx.fillStyle = sky; ctx.fillRect(0, y0, VW, H - y0 + 2);
+    const sa = clamp(1 - p * 1.7, 0, 1);
+    if (sa > 0) for (let i = 0; i < 48; i++) {
+      const x = ((i * 157.7 - camX * .04) % (VW + 20) + VW + 20) % (VW + 20) - 10, y = 14 + (i * 61.3 % 200);
+      ctx.globalAlpha = sa * (.35 + .5 * (.5 + .5 * Math.sin(t * (.6 + i % 5 * .1) + i))); ctx.fillStyle = '#f2ecff';
+      ctx.beginPath(); ctx.arc(x, y, i % 9 === 0 ? 1.6 : .9, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // the sun: a glow under the horizon on Night 6, rising on Night 7
+    const sx = VW * .64 - camX * .03, sy = 300 - clamp((p - .42) / .58, 0, 1) * 200;
+    const glow = ctx.createRadialGradient(sx, sy, 4, sx, sy, 260 + p * 120);
+    glow.addColorStop(0, `rgba(255,226,160,${.25 + p * .45})`); glow.addColorStop(1, 'rgba(255,200,150,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0, y0, VW, H - y0);
+    if (p > .4) { ctx.fillStyle = '#fff1c2'; ctx.globalAlpha = clamp((p - .4) * 6, 0, 1); ctx.beginPath(); ctx.arc(sx, sy, 34, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+    // soft cloud streaks lit from below
+    for (let i = 0; i < 6; i++) {
+      const cx = ((i * 260 - camX * .06) % (VW + 300) + VW + 300) % (VW + 300) - 150, cy = 70 + (i * 47 % 170);
+      const g = ctx.createLinearGradient(0, cy - 8, 0, cy + 10);
+      g.addColorStop(0, lerpC('#5a3a9a', '#ffb0c8', p)); g.addColorStop(1, lerpC('#9a4f9a', '#ffd9a0', p));
+      ctx.fillStyle = g; ctx.globalAlpha = .55; ctx.beginPath(); ctx.ellipse(cx, cy, 120 + i * 12, 7 + i % 3 * 2, 0, 0, 7); ctx.ellipse(cx + 60, cy - 5, 70, 6, 0, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // two mountain ranges
+    const ridge = (sp, base, amp, col, seed) => {
+      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, 380);
+      for (let x = -20; x <= VW + 20; x += 20) { const wx = x + camX * sp; ctx.lineTo(x, base - amp * (.55 + .45 * Math.sin(wx * .004 + seed) * Math.sin(wx * .0017 + seed * 2)) - Math.abs(Math.sin(wx * .011 + seed)) * amp * .25); }
+      ctx.lineTo(VW + 20, 380); ctx.closePath(); ctx.fill();
+    };
+    ridge(.06, 345, 95, lerpC('#3a2a78', '#9a5aa0', p), 1.3);
+    ridge(.14, 360, 62, lerpC('#231a58', '#5e3a7e', p), 4.1);
+    if (p > .4) { const h2 = ctx.createRadialGradient(sx, sy, 20, sx, sy, 140); h2.addColorStop(0, `rgba(255,214,150,${(p - .4) * .5})`); h2.addColorStop(1, 'rgba(255,214,150,0)'); ctx.fillStyle = h2; ctx.fillRect(sx - 140, sy - 140, 280, 280); }
+  }
+  function drawLakeWorld(x0, x1) {
+    const p = dawnP();
+    // lake between the mountains and the shore, drawn in screen space
+    ctx.save(); ctx.translate(camX, 0);
+    const lake = ctx.createLinearGradient(0, 356, 0, GROUND);
+    lake.addColorStop(0, lerpC('#7a3f9a', '#ff9fb4', p)); lake.addColorStop(1, lerpC('#1e1452', '#3a4a9a', p));
+    ctx.fillStyle = lake; ctx.fillRect(0, 356, VW, GROUND - 356);
+    const sx = VW * .64 - camX * .03;
+    for (let k = 0; k < 16; k++) {
+      const y = 362 + k * 7, w = (60 - k * 2.5) * (.6 + p) + Math.sin(t * 2 + k) * 8;
+      ctx.fillStyle = `rgba(255,232,180,${(.12 + p * .4) * (1 - k / 18)})`; ctx.fillRect(sx - w / 2 + Math.sin(t * 1.3 + k * 1.7) * 6, y, w, 2);
+    }
+    ctx.strokeStyle = `rgba(255,255,255,${.08 + p * .1})`; ctx.lineWidth = 1;
+    for (let k = 0; k < 5; k++) { const y = 380 + k * 18; ctx.beginPath(); for (let x = 0; x < VW; x += 50) { const o = Math.sin(x * .02 + t + k) * 2; ctx.moveTo(x + (k * 23 % 50), y + o); ctx.lineTo(x + 20 + (k * 23 % 50), y + o); } ctx.stroke(); }
+    // far shore pines
+    ctx.fillStyle = lerpC('#160f3a', '#33204e', p);
+    for (let i = -1; i < VW / 34 + 2; i++) {
+      const wx = i * 34 + Math.floor(camX * .3 / 34) * 34, x = wx - camX * .3, h = 18 + Math.abs(Math.sin(wx * .13)) * 26;
+      ctx.beginPath(); ctx.moveTo(x - 10, 362); ctx.lineTo(x, 362 - h); ctx.lineTo(x + 10, 362); ctx.closePath(); ctx.fill();
+    }
+    ctx.fillRect(0, 358, VW, 6);
+    // rowboat bobbing on the lake
+    const bx = ((900 - camX * .5) % (VW + 400) + VW + 400) % (VW + 400) - 200, by = 418 + Math.sin(t * 1.2) * 2;
+    ctx.save(); ctx.translate(bx, by); ctx.rotate(Math.sin(t * .9) * .03);
+    ctx.fillStyle = '#5a3a3a'; ctx.beginPath(); ctx.moveTo(-34, -6); ctx.lineTo(34, -6); ctx.quadraticCurveTo(26, 8, 0, 9); ctx.quadraticCurveTo(-26, 8, -34, -6); ctx.fill();
+    ctx.fillStyle = '#8a5a4a'; ctx.fillRect(-34, -8, 68, 3); ctx.restore();
+    ctx.fillStyle = `rgba(20,16,40,.25)`; ctx.beginPath(); ctx.ellipse(bx, by + 12, 34, 3, 0, 0, 7); ctx.fill();
+    ctx.restore();
+    // shore: grass edge, sandy path, earth
+    const earth = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60); earth.addColorStop(0, '#5a4060'); earth.addColorStop(1, '#1e1530');
+    ctx.fillStyle = earth; ctx.fillRect(x0, GROUND, x1 - x0, VH + OY + 60 - GROUND);
+    ctx.fillStyle = lerpC('#9a6a9a', '#e8b080', p); ctx.fillRect(x0, GROUND + 6, x1 - x0, 14);
+    ctx.fillStyle = 'rgba(255,240,220,.25)'; ctx.fillRect(x0, GROUND + 6, x1 - x0, 1.5);
+    const grass = ctx.createLinearGradient(0, GROUND - 6, 0, GROUND + 7); grass.addColorStop(0, lerpC('#4f9a7a', '#8fcf7a', p)); grass.addColorStop(1, '#2a5a4c');
+    ctx.fillStyle = grass; ctx.beginPath(); ctx.moveTo(x0, GROUND + 7);
+    for (let x = Math.floor(x0 / 8) * 8; x < x1 + 8; x += 8) ctx.lineTo(x, GROUND - 2 - Math.abs(Math.sin(x * 1.3)) * 5);
+    ctx.lineTo(x1 + 8, GROUND + 7); ctx.closePath(); ctx.fill();
+    // reed beds (Calm's hiding places)
+    for (const rx of CAVE_XS) {
+      if (rx < x0 - 90 || rx > x1 + 90) continue;
+      for (let k = 0; k < 16; k++) {
+        const bx = rx - 56 + k * 7.5, h = 60 + Math.abs(Math.sin(k * 2.3 + rx)) * 48, sw = Math.sin(t * 1.4 + k * .6 + rx) * 4;
+        ctx.strokeStyle = k % 3 ? '#2f6a54' : '#3f8462'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(bx, GROUND); ctx.quadraticCurveTo(bx + sw * .5, GROUND - h * .5, bx + sw, GROUND - h); ctx.stroke();
+        if (k % 3 === 1) { ctx.fillStyle = '#7a4a34'; ctx.beginPath(); ctx.ellipse(bx + sw, GROUND - h + 8, 3.2, 9, 0, 0, 7); ctx.fill(); }
+      }
+      ctx.fillStyle = '#2a5a48'; ctx.beginPath(); ctx.ellipse(rx, GROUND - 4, 66, 10, 0, 0, 7); ctx.fill();
+    }
+    // wooden jetties = platforms
+    for (const pl of activePlats) {
+      if (pl[0] + pl[2] < x0 || pl[0] > x1) continue;
+      const x = pl[0], y = pl[1], w = pl[2];
+      ctx.fillStyle = '#3a2830';
+      for (const px of [x + 8, x + w / 2 - 3, x + w - 14]) ctx.fillRect(px, y + 8, 6, GROUND - y - 8);
+      const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11); wood.addColorStop(0, '#b4876a'); wood.addColorStop(.4, '#7d5444'); wood.addColorStop(1, '#45293a');
+      ctx.fillStyle = wood; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 12, 3); ctx.fill();
+      ctx.strokeStyle = 'rgba(30,16,26,.5)'; ctx.lineWidth = 1; for (let k = x + 16; k < x + w; k += 18) { ctx.beginPath(); ctx.moveTo(k, y - 1); ctx.lineTo(k, y + 9); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(255,226,190,.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x + 1, y - 1); ctx.lineTo(x + w - 1, y - 1); ctx.stroke();
+    }
+    for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
+    for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
+  }
+  // ---------- Park map (Night 3) ----------
+  // Night park picture behind (mirrored repeats, like the school); grass, path, flowers, bushes,
+  // and playground decks (platforms) are drawn in code.
+  const PARK_NIGHTS = [3];
+  const PARK_WALL = new Image();
+  PARK_WALL.src = 'assets/park/park-night.webp';
+  function inPark() { return mode === 'story' && PARK_NIGHTS.includes(storyNight); }
   // ---------- Lighting festival map (Night 4) ----------
   // Far back: sky + pagoda hill picture (barely moves). Middle: palm and roof silhouettes in code.
   // Front: boardwalk over dark water, stalls (hiding spots), a few lantern strings, raised decks.
   const FESTIVAL_NIGHTS = [4];
   const FEST_BACK = new Image();
   FEST_BACK.src = 'assets/festival/festival-back.webp';
+  const FEST_COLORS = ['255,156,207', '185,162,255', '143,227,224', '255,227,163', '255,143,163', '160,200,255'];
+  const FEST_CLOTH = ['#7b2d8e', '#b8336a', '#1f7f86', '#3a5fc0', '#8e3fb0', '#2f8f5e'];
+  const festCol = i => FEST_COLORS[((Math.floor(i) % FEST_COLORS.length) + FEST_COLORS.length) % FEST_COLORS.length];
   function inFestival() { return mode === 'story' && FESTIVAL_NIGHTS.includes(storyNight); }
   const NIGHT_CHAPTERS = [
     { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1, N: 0, L: 0, C: 0 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
     { night: 2, name: 'The Winners’ Wall', sub: 'Learn to move quietly around Nervous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 3, N: 3, J: 1 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' , sky: { A: 1, B: 0, C: 0, wait: 2.5, fallSpeed: 70, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
-    { night: 3, name: 'The Long Hallway', sub: 'Sit still beside Lonely', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2, S: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' , sky: { A: 2, B: 1, C: 0, wait: 2.2, fallSpeed: 85, gravity: 800, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.20, hintShown: false }},
+    { night: 3, name: 'The Park', sub: 'Sit still beside Lonely', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2, S: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' , sky: { A: 2, B: 1, C: 0, wait: 2.2, fallSpeed: 85, gravity: 800, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.20, hintShown: false }},
     { night: 4, name: 'Lighting Festival', sub: 'Scratch to reveal what is buried', theme: '#c17679', musicRoot: 233.08, timeLimit: 122, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2, B: 1, E: 2 }, newMoodling: 'A new feeling is buried in the rocks. Use Night Eyes to spot the right rock, then scratch it.', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0, B: 1, E: 1 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Excited bounces high. Jump, then pounce at the very top of its bounce.' , sky: { A: 2, B: 1, C: 1, wait: 2.0, fallSpeed: 100, gravity: 900, scratchWindow: 2.0, ambushBase: 2, pounceWindowMul: 1.10, hintShown: false }},
-    { night: 5, name: 'Storm Peak', sub: 'Keep steady while the sky turns', theme: '#7181aa', musicRoot: 246.94, timeLimit: 117, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1, J: 2 }, newMoodling: 'Rare feelings sparkle; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1, J: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Rare feelings sparkle. They are worth extra Glow.' , sky: { A: 3, B: 2, C: 1, wait: 1.6, fallSpeed: 115, gravity: 1000, scratchWindow: 1.7, ambushBase: 2, pounceWindowMul: 1.00, hintShown: false }},
-    { night: 6, name: 'Quiet Field', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2, S: 2, E: 1 }, newMoodling: 'Calm waits in cave marks; scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 1, B: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm waits in cave marks. Scratch, then sit quietly.' , sky: { A: 3, B: 2, C: 2, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
-    { night: 7, name: 'Moon Hollow', sub: 'Bring every feeling home before dawn', theme: '#d6a866', musicRoot: 293.66, timeLimit: 135, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3, B: 2, E: 2, S: 1, J: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 1, B: 1, E: 1, S: 1, J: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
+    { night: 5, name: 'Hilltop Park', sub: 'Climb the old park above the sleeping city', theme: '#7181aa', musicRoot: 246.94, timeLimit: 117, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1, J: 2 }, newMoodling: 'Rare feelings sparkle; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1, J: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Rare feelings sparkle. They are worth extra Glow.' , sky: { A: 3, B: 2, C: 1, wait: 1.6, fallSpeed: 115, gravity: 1000, scratchWindow: 1.7, ambushBase: 2, pounceWindowMul: 1.00, hintShown: false }},
+    { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2, S: 2, E: 1 }, newMoodling: 'Calm hides in the reeds; find the marked reed bed, scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 1, B: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm waits in cave marks. Scratch, then sit quietly.' , sky: { A: 3, B: 2, C: 2, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
+    { night: 7, name: 'Sunrise', sub: 'Bring every feeling home before the sun rises', theme: '#d6a866', musicRoot: 293.66, timeLimit: 135, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3, B: 2, E: 2, S: 1, J: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 1, B: 1, E: 1, S: 1, J: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
   ];
   const PERCH_BUDGET = { 1: 12, 2: 10, 3: 9, 4: 8, 5: 6, 6: 4, 7: 2 };
   function activePlatsForNight(night) {
+    if (mode === 'story' && HILL_NIGHTS.includes(night)) return HILL_PLATS;
     if (mode !== 'story') return plats;
     const budget = PERCH_BUDGET[night] ?? plats.length;
     if (budget >= plats.length) return plats;
@@ -298,7 +556,7 @@
     E: [{ n: 'Excited', c: '#ffd23f', r: 'Common', d: 'Bounces higher and higher. Jump, then pounce at the very top of its bounce.', line: '“I used to count the days until art club.”' }],
     S: [{ n: 'Shy', c: '#ff7ab8', r: 'Common', d: 'Peeks back over its shoulder. Freeze while it looks; move while it hides its face.', line: '“I wanted to show my drawing to Hnin, but I was too shy to ask.”' }],
     J: [{ n: 'Jealous', c: '#ff9a3c', r: 'Common', d: 'Steals lights from your trail, then runs. Catch it when it gets tired to win them back.', line: '“The winning drawing really was good. That is why it hurt.”' }],
-    C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Scratch a marked cave-side spot, then sit quietly beside Calm.', lock: 'Meet it in a cave on Night 6.' }],
+    C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Scratch a marked reed bed, then sit quietly beside Calm.', lock: 'Meet it in the reeds on Night 6.' }],
     B: [
       { n: 'Buried', c: '#a67646', r: 'Common', d: 'Hides inside a mountain rock. Reveal it with Night Eyes, then scratch the marked rock. A wrong rock wakes the mountain.', line: '“I put it somewhere deep so I wouldn’t have to look at it.”' },
       { n: 'Petrified Buried', c: '#8c5a3a', r: 'Rare', d: 'So deep it has almost turned to stone. Same scratch rules.', line: '“It was easier to be numb than to feel it.”' },
@@ -659,7 +917,7 @@
     float(m.x, m.y - 36, `+${pts}${combo > 1 ? '  ×' + combo : ''}${mode === 'free' && m.type !== 'G' ? '  +2s' : ''}`, col(m.type));
     const f = 523.25 * Math.pow(2, (combo - 1) * 2 / 12);
     tone(f, .18, 'triangle', .09); setTimeout(() => tone(f * 1.5, .22, 'sine', .07), 70);
-    if (mode === 'story' && Object.entries(need).every(([type, count]) => got[type] >= count) && state === 'play') { state = 'ending'; endT = 1.1; announce(moonHollow() ? 'Moon Hollow is calm again!' : 'All feelings found!', GOLD, 1.2); }
+    if (mode === 'story' && Object.entries(need).every(([type, count]) => got[type] >= count) && state === 'play') { state = 'ending'; endT = 1.1; announce(moonHollow() ? 'The sun is up. Every feeling is home!' : 'All feelings found!', GOLD, 1.2); }
   }
 
   function updCat(dt) {
@@ -881,7 +1139,7 @@
       }
       if (m.type === 'L' || m.type === 'C') {
         hideFeeling(m);
-        float(cat.x, cat.y - 70, m.type === 'C' ? 'Too quick. Calm slipped back into a cave' : 'Too fast. It hid again', m.type === 'C' ? CALM : BLUE); tone(300, .2, 'sine', .04, -100);
+        float(cat.x, cat.y - 70, m.type === 'C' ? 'Too quick. Calm slipped back into the reeds' : 'Too fast. It hid again', m.type === 'C' ? CALM : BLUE); tone(300, .2, 'sine', .04, -100);
         continue;
       }
       if (m.type === 'N' && m.state !== 'wander') continue;
@@ -1073,6 +1331,9 @@
   function drawBG() {
     if (inSchool()) { ctx.fillStyle = '#16122a'; ctx.fillRect(0, -OY, VW, VH + OY * 2); return; }
     if (inFestival()) { drawFestivalSky(); return; }
+    if (inPark()) { ctx.fillStyle = '#1a1338'; ctx.fillRect(0, -OY, VW, VH + OY * 2); return; }
+    if (inLake()) { drawLakeSky(); return; }
+    if (inHill()) { drawHillSky(); return; }
     const y0 = -OY, h = VH + OY * 2;
     const sky = ctx.createLinearGradient(0, y0, 0, y0 + h);
     sky.addColorStop(0, '#0a1128'); sky.addColorStop(.55, '#14213c'); sky.addColorStop(1, '#1a2a4a');
@@ -1224,7 +1485,7 @@
   function drawFestivalSky() {
     const y0 = -OY, h = VH + OY * 2;
     const sky = ctx.createLinearGradient(0, y0, 0, 420);
-    sky.addColorStop(0, '#0b0a22'); sky.addColorStop(1, '#231a3e');
+    sky.addColorStop(0, '#1c0f40'); sky.addColorStop(1, '#4a2470');
     ctx.fillStyle = sky; ctx.fillRect(0, y0, VW, h);
     if (FEST_BACK.complete && FEST_BACK.naturalWidth) {
       const k = Math.max(VW * 1.14 / FEST_BACK.naturalWidth, 420 / FEST_BACK.naturalHeight);
@@ -1238,16 +1499,17 @@
       const x = ((i * 173.3 - camX * .05) % (VW + 60) + VW + 60) % (VW + 60) - 30 + Math.sin(t * .4 + i) * 10;
       const y = 400 - life, a = Math.min(1, life / 60) * Math.min(1, (y + 30) / 90) * .55;
       if (a <= 0) continue;
-      const g = ctx.createRadialGradient(x, y, 1, x, y, 13); g.addColorStop(0, `rgba(255,176,110,${a * .45})`); g.addColorStop(1, 'rgba(255,176,110,0)');
-      ctx.fillStyle = g; ctx.fillRect(x - 13, y - 13, 26, 26);
-      ctx.fillStyle = `rgba(250,196,140,${a})`; ctx.fillRect(x - 2.5, y - 3.5, 5, 7);
+      const lc = festCol(i);
+      const g = ctx.createRadialGradient(x, y, 1, x, y, 14); g.addColorStop(0, `rgba(${lc},${a * .5})`); g.addColorStop(1, `rgba(${lc},0)`);
+      ctx.fillStyle = g; ctx.fillRect(x - 14, y - 14, 28, 28);
+      ctx.fillStyle = `rgba(${lc},${a + .2})`; ctx.fillRect(x - 2.5, y - 3.5, 5, 7);
     }
   }
   function drawFestivalWorld(x0, x1) {
     // middle layer: palm trees and tiered roofs, very dark, a few warm windows
     ctx.save(); const sp = .45; ctx.translate(camX * (1 - sp), 0);
     const px0 = camX * sp - 60, px1 = camX * sp + VW + 60;
-    ctx.fillStyle = '#120d24';
+    ctx.fillStyle = '#2b1550';
     for (let x = Math.floor(px0 / 230) * 230; x < px1; x += 230) {
       const seed = Math.abs(Math.sin(x * .013)), base = GROUND - 6;
       if (seed > .45) { // tiered roof pavilion
@@ -1255,10 +1517,10 @@
         ctx.fillRect(x + 20, top + 40, w - 40, base - top - 40);
         for (let k = 0; k < 3; k++) { const ww = w - k * 26, yy = top + 40 - k * 22; ctx.beginPath(); ctx.moveTo(x + (w - ww) / 2 - 8, yy + 14); ctx.lineTo(x + w / 2, yy - 10); ctx.lineTo(x + (w + ww) / 2 + 8, yy + 14); ctx.closePath(); ctx.fill(); }
         ctx.fillRect(x + w / 2 - 2, top - 40, 4, 22);
-        ctx.fillStyle = 'rgba(255,190,120,.35)'; ctx.fillRect(x + w / 2 - 9, top + 70, 6, 8); ctx.fillRect(x + w / 2 + 4, top + 70, 6, 8); ctx.fillStyle = '#120d24';
+        ctx.fillStyle = `rgba(${festCol(x / 230)},.55)`; ctx.fillRect(x + w / 2 - 9, top + 46, 6, 8); ctx.fillRect(x + w / 2 + 4, top + 46, 6, 8); ctx.fillStyle = '#2b1550';
       } else { // palm
         const tx = x + 60, ty = base - 120 - seed * 50;
-        ctx.strokeStyle = '#120d24'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(tx, base); ctx.quadraticCurveTo(tx + 14, (ty + base) / 2, tx + 6, ty); ctx.stroke();
+        ctx.strokeStyle = '#2b1550'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(tx, base); ctx.quadraticCurveTo(tx + 14, (ty + base) / 2, tx + 6, ty); ctx.stroke();
         for (let k = 0; k < 8; k++) {
           const side = k % 2 ? 1 : -1, L = 26 + (k >> 1) * 11, droop = 18 + (k >> 1) * 13, cx = tx + 6;
           ctx.beginPath(); ctx.moveTo(cx, ty);
@@ -1270,24 +1532,25 @@
     ctx.restore();
     // water
     const water = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
-    water.addColorStop(0, '#1b1f45'); water.addColorStop(1, '#070818');
+    water.addColorStop(0, '#3d2470'); water.addColorStop(1, '#12082a');
     ctx.fillStyle = water; ctx.fillRect(x0, GROUND, x1 - x0, VH + OY + 60 - GROUND);
-    ctx.strokeStyle = 'rgba(170,180,240,.12)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(214,180,255,.2)'; ctx.lineWidth = 1;
     for (let k = 0; k < 6; k++) { const yy = GROUND + 26 + k * 9; ctx.beginPath(); for (let x = Math.floor(x0 / 40) * 40; x < x1; x += 40) { const o = Math.sin(x * .03 + t * 1.3 + k) * 2; ctx.moveTo(x, yy + o); ctx.lineTo(x + 18, yy + o); } ctx.stroke(); }
     // floating lamps on the water
     for (let x = Math.floor(x0 / 290) * 290 + 140; x < x1; x += 290) {
       const fx = x + Math.sin(t * .3 + x) * 12, fy = GROUND + 44 + Math.sin(t * 1.4 + x * .01) * 2;
-      const g = ctx.createRadialGradient(fx, fy, 1, fx, fy, 22); g.addColorStop(0, 'rgba(255,190,120,.35)'); g.addColorStop(1, 'rgba(255,190,120,0)');
-      ctx.fillStyle = g; ctx.fillRect(fx - 22, fy - 22, 44, 44);
-      ctx.fillStyle = '#3a2a3a'; ctx.fillRect(fx - 7, fy, 14, 4);
-      ctx.fillStyle = 'rgba(255,214,160,.9)'; ctx.fillRect(fx - 3, fy - 6, 6, 6);
-      ctx.fillStyle = 'rgba(255,190,120,.18)'; ctx.fillRect(fx - 2, fy + 6, 4, 20);
+      const fc = festCol(x / 290);
+      const g = ctx.createRadialGradient(fx, fy, 1, fx, fy, 24); g.addColorStop(0, `rgba(${fc},.45)`); g.addColorStop(1, `rgba(${fc},0)`);
+      ctx.fillStyle = g; ctx.fillRect(fx - 24, fy - 24, 48, 48);
+      ctx.fillStyle = '#4a2a5a'; ctx.fillRect(fx - 7, fy, 14, 4);
+      ctx.fillStyle = `rgba(${fc},.95)`; ctx.fillRect(fx - 3, fy - 6, 6, 6);
+      ctx.fillStyle = `rgba(${fc},.25)`; ctx.fillRect(fx - 2, fy + 6, 4, 22);
     }
     // posts + boardwalk
     ctx.fillStyle = '#24171f';
     for (let x = Math.floor(x0 / 120) * 120; x < x1; x += 120) ctx.fillRect(x + 50, GROUND + 10, 9, 46);
     const deck = ctx.createLinearGradient(0, GROUND - 2, 0, GROUND + 16);
-    deck.addColorStop(0, '#9a6e52'); deck.addColorStop(.3, '#6e4a3a'); deck.addColorStop(1, '#3c2630');
+    deck.addColorStop(0, '#b0805e'); deck.addColorStop(.3, '#7a5040'); deck.addColorStop(1, '#40243a');
     ctx.fillStyle = deck; ctx.fillRect(x0, GROUND - 2, x1 - x0, 18);
     ctx.strokeStyle = 'rgba(20,10,18,.55)'; ctx.lineWidth = 1;
     for (let x = Math.floor(x0 / 34) * 34; x < x1; x += 34) { ctx.beginPath(); ctx.moveTo(x, GROUND); ctx.lineTo(x, GROUND + 15); ctx.stroke(); }
@@ -1301,9 +1564,10 @@
       ctx.strokeStyle = 'rgba(30,20,30,.9)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a, ya); ctx.quadraticCurveTo((a + b) / 2, ya + sag * 2, b, ya); ctx.stroke();
       for (let k = 1; k <= 5; k++) {
         const u = k / 6, lx = a + (b - a) * u, ly = ya + sag * 4 * u * (1 - u) + 4 + Math.sin(t * 1.5 + k + i) * 1.5;
-        const g = ctx.createRadialGradient(lx, ly + 8, 1, lx, ly + 8, 20); g.addColorStop(0, 'rgba(255,220,170,.22)'); g.addColorStop(1, 'rgba(255,220,170,0)');
-        ctx.fillStyle = g; ctx.fillRect(lx - 20, ly - 12, 40, 40);
-        ctx.fillStyle = '#efd9b4'; ctx.beginPath(); ctx.roundRect(lx - 6, ly, 12, 16, 4); ctx.fill();
+        const lc = festCol(k + i);
+        const g = ctx.createRadialGradient(lx, ly + 8, 1, lx, ly + 8, 22); g.addColorStop(0, `rgba(${lc},.32)`); g.addColorStop(1, `rgba(${lc},0)`);
+        ctx.fillStyle = g; ctx.fillRect(lx - 22, ly - 14, 44, 44);
+        ctx.fillStyle = `rgb(${lc})`; ctx.beginPath(); ctx.roundRect(lx - 6, ly, 12, 16, 4); ctx.fill();
         ctx.strokeStyle = 'rgba(150,40,40,.8)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(lx - 6, ly + 4); ctx.lineTo(lx + 6, ly + 4); ctx.moveTo(lx - 6, ly + 12); ctx.lineTo(lx + 6, ly + 12); ctx.stroke();
         ctx.fillStyle = '#b8323a'; ctx.fillRect(lx - 1, ly + 16, 2, 8);
       }
@@ -1312,11 +1576,12 @@
       if (sx < x0 - 110 || sx > x1 + 110) continue;
       const w = 150, l = sx - w / 2, top = stallTop(sx);
       ctx.fillStyle = '#2b1b22'; ctx.fillRect(l + 6, top + 16, 8, GROUND - top - 16); ctx.fillRect(l + w - 14, top + 16, 8, GROUND - top - 16);
-      ctx.fillStyle = '#5a2430'; ctx.fillRect(l + 4, GROUND - 52, w - 8, 50);                                     // counter cloth
+      const si = CAVE_XS.indexOf(sx), cloth = FEST_CLOTH[si % FEST_CLOTH.length], flag = FEST_CLOTH[(si + 2) % FEST_CLOTH.length];
+      ctx.fillStyle = cloth; ctx.fillRect(l + 4, GROUND - 52, w - 8, 50);                                     // counter cloth
       ctx.fillStyle = '#c99a4a'; ctx.fillRect(l + 4, GROUND - 52, w - 8, 3); ctx.fillRect(l + 4, GROUND - 12, w - 8, 2);
       ctx.fillStyle = 'rgba(201,154,74,.6)'; for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.arc(l + 20 + k * 22, GROUND - 32, 3, 0, 7); ctx.fill(); }
-      ctx.fillStyle = '#7a2a34'; ctx.fillRect(l + 16, top + 18, 16, 54); ctx.beginPath(); ctx.moveTo(l + 16, top + 72); ctx.lineTo(l + 24, top + 64); ctx.lineTo(l + 32, top + 72); ctx.fill();  // banner
-      ctx.fillStyle = '#22151f';                                                                                   // two-tier roof
+      ctx.fillStyle = flag; ctx.fillRect(l + 16, top + 18, 16, 54); ctx.beginPath(); ctx.moveTo(l + 16, top + 72); ctx.lineTo(l + 24, top + 64); ctx.lineTo(l + 32, top + 72); ctx.fill();  // banner
+      ctx.fillStyle = '#2e1648';                                                                                   // two-tier roof
       ctx.beginPath(); ctx.moveTo(l - 14, top + 20); ctx.lineTo(sx, top - 12); ctx.lineTo(l + w + 14, top + 20); ctx.closePath(); ctx.fill();
       ctx.beginPath(); ctx.moveTo(l + 30, top - 6); ctx.lineTo(sx, top - 34); ctx.lineTo(l + w - 30, top - 6); ctx.closePath(); ctx.fill();
       ctx.strokeStyle = 'rgba(214,170,90,.75)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(l - 14, top + 20); ctx.lineTo(sx, top - 12); ctx.lineTo(l + w + 14, top + 20); ctx.moveTo(l + 30, top - 6); ctx.lineTo(sx, top - 34); ctx.lineTo(l + w - 30, top - 6); ctx.stroke();
@@ -1339,19 +1604,62 @@
     for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
-  function drawSchoolWall(alpha = 1, mirrorY = false) {
-    if (!SCHOOL_WALL.complete || !SCHOOL_WALL.naturalWidth) return false;
-    const W = SCHOOL_WALL_W, off = camX * SCHOOL_PARALLAX;
+  function drawSchoolWall(alpha = 1, mirrorY = false) { return drawPictureLayer(SCHOOL_WALL, SCHOOL_WALL_W, SCHOOL_WALL_H, SCHOOL_PARALLAX, alpha, mirrorY); }
+  // Draws a hallway/park picture that repeats along the level, mirrored every other time (no seams).
+  function drawPictureLayer(IMG, W, H, parallax, alpha = 1, mirrorY = false) {
+    if (!IMG.complete || !IMG.naturalWidth) return false;
+    const off = camX * parallax;
     ctx.save(); ctx.globalAlpha = alpha;
     for (let k = Math.floor(off / W); k * W - off < VW; k++) {
       const sx = camX + k * W - off;                     // world x of this repeat
       ctx.save();
       if (mirrorY) { ctx.translate(0, GROUND * 1.55); ctx.scale(1, -.55); }
-      if (k % 2) { ctx.translate(sx + W, 0); ctx.scale(-1, 1); ctx.drawImage(SCHOOL_WALL, 0, 0, W, SCHOOL_WALL_H); }
-      else ctx.drawImage(SCHOOL_WALL, sx, 0, W, SCHOOL_WALL_H);
+      if (k % 2) { ctx.translate(sx + W, 0); ctx.scale(-1, 1); ctx.drawImage(IMG, 0, 0, W, H); }
+      else ctx.drawImage(IMG, sx, 0, W, H);
       ctx.restore();
     }
     ctx.restore(); return true;
+  }
+  function drawParkWorld(x0, x1) {
+    ctx.fillStyle = '#1a1338'; ctx.fillRect(x0, -OY - 10, x1 - x0, 486 + OY);
+    if (!drawPictureLayer(PARK_WALL, 1685, 474, .85)) { ctx.fillStyle = '#2a2458'; ctx.fillRect(x0, 0, x1 - x0, GROUND); }
+    // soil, stone path and grass edge
+    const soil = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60); soil.addColorStop(0, '#2a2152'); soil.addColorStop(1, '#100b24');
+    ctx.fillStyle = soil; ctx.fillRect(x0, GROUND, x1 - x0, VH + OY + 60 - GROUND);
+    ctx.fillStyle = '#5a5690'; ctx.fillRect(x0, GROUND + 8, x1 - x0, 16);
+    ctx.fillStyle = 'rgba(210,200,255,.25)'; ctx.fillRect(x0, GROUND + 8, x1 - x0, 2);
+    ctx.strokeStyle = 'rgba(20,14,40,.5)'; ctx.lineWidth = 1;
+    for (let x = Math.floor(x0 / 44) * 44; x < x1; x += 44) { ctx.beginPath(); ctx.moveTo(x, GROUND + 9); ctx.lineTo(x + 6, GROUND + 24); ctx.stroke(); }
+    const grass = ctx.createLinearGradient(0, GROUND - 6, 0, GROUND + 9); grass.addColorStop(0, '#5fc59a'); grass.addColorStop(.4, '#2e8a72'); grass.addColorStop(1, '#1d5050');
+    ctx.fillStyle = grass; ctx.beginPath(); ctx.moveTo(x0, GROUND + 9);
+    for (let x = Math.floor(x0 / 8) * 8; x < x1 + 8; x += 8) ctx.lineTo(x, GROUND - 2 - (Math.abs(Math.sin(x * 1.7)) * 5));
+    ctx.lineTo(x1 + 8, GROUND + 9); ctx.closePath(); ctx.fill();
+    // little flowers along the grass
+    for (let x = Math.floor(x0 / 37) * 37; x < x1; x += 37) {
+      const r = Math.abs(Math.sin(x * 12.9898) * 43758.5453) % 1; if (r < .45) continue;
+      ctx.fillStyle = `rgb(${festCol(x / 37)})`; ctx.beginPath(); ctx.arc(x + r * 20, GROUND - 4 - r * 4, 2.2, 0, 7); ctx.fill();
+    }
+    // bushes (hiding places)
+    for (const bx of CAVE_XS) {
+      if (bx < x0 - 90 || bx > x1 + 90) continue;
+      const g = ctx.createLinearGradient(0, GROUND - 70, 0, GROUND); g.addColorStop(0, '#3fa07e'); g.addColorStop(1, '#1b4c4a');
+      ctx.fillStyle = g;
+      for (const [dx, dy, r] of [[-40, -22, 26], [-14, -38, 32], [18, -34, 30], [44, -20, 24], [0, -16, 34]]) { ctx.beginPath(); ctx.arc(bx + dx, GROUND + dy, r, 0, 7); ctx.fill(); }
+      ctx.fillStyle = 'rgba(160,240,200,.25)'; ctx.beginPath(); ctx.arc(bx - 20, GROUND - 52, 12, 0, 7); ctx.arc(bx + 14, GROUND - 50, 10, 0, 7); ctx.fill();
+      for (let k = 0; k < 6; k++) { ctx.fillStyle = `rgb(${festCol(k + bx)})`; ctx.beginPath(); ctx.arc(bx - 40 + k * 16, GROUND - 26 - (k % 3) * 12, 2.6, 0, 7); ctx.fill(); }
+    }
+    // playground decks = platforms
+    const PARK_DECKS = ['#2fa69a', '#8b6fe0', '#3fb98a'];
+    for (const p of activePlats) {
+      if (p[0] + p[2] < x0 || p[0] > x1) continue;
+      const x = p[0], y = p[1], w = p[2], c = PARK_DECKS[Math.abs(Math.round(x / 97)) % PARK_DECKS.length];
+      ctx.fillStyle = '#6f6aa0'; ctx.fillRect(x + 10, y + 8, 6, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 6, GROUND - y - 8);
+      ctx.fillStyle = 'rgba(200,196,240,.35)'; ctx.fillRect(x + 10, y + 8, 2, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 2, GROUND - y - 8);
+      ctx.fillStyle = c; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 13, 5); ctx.fill();
+      ctx.strokeStyle = 'rgba(10,8,30,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 3, y + 1); ctx.lineTo(x + w - 3, y + 1); ctx.stroke();
+    }
+    for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
   }
   function drawSchoolWorld(x0, x1) {
     ctx.fillStyle = '#16122a'; ctx.fillRect(x0, -OY - 10, x1 - x0, SCHOOL_WALL_H + OY + 12);
@@ -1387,6 +1695,9 @@
     const x0=camX-50,x1=camX+VW+50;
     if (inSchool()) { drawSchoolWorld(x0, x1); return; }
     if (inFestival()) { drawFestivalWorld(x0, x1); return; }
+    if (inPark()) { drawParkWorld(x0, x1); return; }
+    if (inLake()) { drawLakeWorld(x0, x1); return; }
+    if (inHill()) { drawHillWorld(x0, x1); return; }
     drawParallaxLayer(0,.10);drawParallaxLayer(1,.38);drawParallaxLayer(2,.78);
     const ground=ctx.createLinearGradient(0,410,0,VH+OY+60);ground.addColorStop(0,'#394440');ground.addColorStop(.18,'#303a38');ground.addColorStop(1,'#151f27');
     const rockEdge=x=>{const seed=Math.sin(x*12.9898+7.31)*43758.5453;return terrainY(x)+(seed-Math.floor(seed)-.5)*4;};
@@ -1745,7 +2056,7 @@
     }
     if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
-      const prompt = scratchTarget.type === 'sky' ? 'Scratch it! (S)' : scratchTarget.kind === 'rock' ? `S  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? 'marked rock' : 'rock'}` : `S  Scratch ${scratchTarget.type==='C'?'cave mark':'hiding spot'}`, py=VH-74;
+      const prompt = scratchTarget.type === 'sky' ? 'Scratch it! (S)' : scratchTarget.kind === 'rock' ? `S  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? 'marked rock' : 'rock'}` : `S  Scratch ${scratchTarget.type==='C'?(inLake()?'reed bed':'cave mark'):'hiding spot'}`, py=VH-74;
       ctx.strokeText(prompt,VW/2,py);ctx.fillText(prompt,VW/2,py);
     } else if (scratchAnim>0) {
       ctx.textAlign='center';ctx.font=`800 16px ${DISP}`;ctx.fillStyle='#f4e8c7';ctx.fillText('Scratching…',VW/2,VH-74);
@@ -1958,7 +2269,7 @@
     $('#endUnlockBadge').hidden = !R.unlocked;
     $('#endUnlockBadge').textContent = R.unlocked ? `NIGHT ${next} UNLOCKED` : '';
     $('#endEyebrow').textContent = `Night ${night} complete · ${chapter.name}`;
-    $('#endTitle').textContent = R.unlocked ? `Night ${night} complete — Night ${next} unlocked!` : night === 7 ? 'Moon Hollow is quiet' : 'A little more of Thiri returns';
+    $('#endTitle').textContent = R.unlocked ? `Night ${night} complete — Night ${next} unlocked!` : night === 7 ? 'The lake is quiet' : 'A little more of Thiri returns';
     $('#endMsg').textContent = `You brought all ${R.total} feelings home. ${R.unlocked ? `Night ${next} is now playable from the map.` : 'Your story progress is saved.'}`;
     $('#againBtn').textContent = night < 7 ? `Play Night ${night + 1}` : 'Replay Night 7';
   }
