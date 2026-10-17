@@ -17,6 +17,8 @@ _Team: check this list and add anything missing before submitting._
 | Team logo | Helped design the NextCrown team logo | Chose the direction |
 
 ## Other tools
+- **ChatGPT** (OpenAI) — generated the lighting festival landscape (see `docs/proof/festival-map/`). Claude used its sky, moon, mountains and pagoda hill as the far background (darkened to 3 AM, floating lanterns removed); the boardwalk, stalls, lantern strings, palms and water are drawn in code.
+- **ChatGPT** (OpenAI) — generated the first school hallway background (see `docs/proof/school-map/`). Claude then removed the painted-in shelves, springs and balls, turned it into a night scene and fitted it to the game.
 - **Manus** — _TEAM TO FILL — this repo's `.gitignore` mentions Manus. Say what it was used for, or remove this line if it wasn't used._
 - **Image tool for the cat sheet / intro base images** — _TEAM TO FILL_
 - _Add any other AI tools here (music, sound, voice, images, code)._

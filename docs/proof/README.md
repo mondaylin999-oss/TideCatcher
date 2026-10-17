@@ -14,6 +14,8 @@ Each folder follows the same order:
 - `cats/` — the 8 cat breeds the player can choose
 - `moodlings/` — the 8 feelings the cat catches
 - `intro-scenes/` — the 8 opening story pictures
+- `school-map/` — the school hallway background for Nights 1–2
+- `festival-map/` — the lighting festival for Night 4
 
 **Rules**
 - Keep files under ~5 MB. Put videos, timelapses and large .psd / .procreate / .kra files on Google Drive and link them in `PROCESS.md`.
