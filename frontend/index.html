@@ -54,6 +54,22 @@
   </div>
 </div>
 
+<div class="overlay welcome-screen" id="welcomeScreen" hidden aria-labelledby="welcomeTitle">
+  <div class="welcome-backdrop" aria-hidden="true"><span class="welcome-moon"></span><span class="welcome-tide"></span><span class="welcome-tide welcome-tide-back"></span></div>
+  <section class="welcome-panel" aria-describedby="welcomeDescription">
+    <p class="eyebrow welcome-eyebrow">A story of a girl, her cat, and the feelings they chase</p>
+    <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/burmese.png" alt="Shwe, a cat ready to follow the night lights" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
+    <h1 id="welcomeTitle" class="welcome-title">TideCatcher</h1>
+    <p id="welcomeDescription" class="welcome-description">When Thiri falls asleep with a heavy heart, Shwe follows her little feelings into the Night Side.</p>
+    <div class="welcome-loading" id="welcomeLoading" role="status" aria-live="polite">
+      <div class="welcome-loading-copy"><span id="welcomeLoadStatus">Gathering the moonlight…</span><span id="welcomeLoadCount">0 / 8</span></div>
+      <div class="welcome-progress" id="welcomeProgressBar" role="progressbar" aria-label="Preparing story scenes" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0"><span id="welcomeProgress"></span></div>
+    </div>
+    <button class="btn welcome-begin" id="welcomeBeginBtn" type="button" disabled>Begin the story →</button>
+    <p class="welcome-note">One quiet night. A long journey home.</p>
+  </section>
+</div>
+
 <div class="overlay" id="setupScreen" hidden aria-labelledby="setupTitle">
   <form class="panel setup-panel" id="setupForm" novalidate>
     <p class="eyebrow">Before the night begins</p>
@@ -75,7 +91,7 @@
         <div class="setup-error" id="setupError" aria-live="polite"></div>
       </div>
     </div>
-    <div class="prologue-actions"><span class="muted" id="setupNote">You can change these later from the menu.</span><button class="btn" id="setupGo" type="submit">Begin the story →</button></div>
+    <div class="prologue-actions"><span class="muted" id="setupNote">You can change these later from the menu.</span><button class="btn ghost setup-back" id="setupBackBtn" type="button" hidden>Back</button><button class="btn" id="setupGo" type="submit">Begin the story →</button></div>
   </form>
 </div>
 
@@ -83,6 +99,11 @@
   <div class="panel">
     <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count" id="levelMapCount">1 / 7 nights unlocked</span><span class="room-status" id="roomStatus" aria-live="polite">Thiri is sleeping</span></div>
     <p class="level-map-hint">Choose the lit night. Each completed story night opens the next chapter.</p>
+    <div class="map-guide" id="mapGuide" hidden role="region" aria-labelledby="mapGuideName">
+      <img class="map-guide-cat" id="mapGuideCat" src="assets/cats/burmese.png" alt="" aria-hidden="true" decoding="async">
+      <div class="map-guide-copy"><strong id="mapGuideName">Shwe</strong><p id="mapGuideText">We’ll start with the glowing night at the bottom of the path. Choose it to see what Shwe is looking for.</p></div>
+      <button class="btn ghost map-guide-dismiss" id="mapGuideDismiss" type="button">Got it</button>
+    </div>
     <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Scrollable level map; scroll upward for higher levels" tabindex="0">
       <div class="level-map-track" id="levelMapTrack">
         <svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg>
@@ -126,6 +147,24 @@
     </div>
     </details>
   </div>
+</div>
+
+<div class="overlay level-briefing-screen" id="levelBriefingScreen" hidden role="dialog" aria-modal="true" aria-labelledby="levelBriefingTitle" aria-describedby="levelBriefingSub">
+  <section class="panel level-briefing-panel">
+    <p class="eyebrow" id="levelBriefingEyebrow">NIGHT 1 · THE NIGHT SIDE</p>
+    <h2 id="levelBriefingTitle">First Night</h2>
+    <p class="muted" id="levelBriefingSub">Learn to dodge Frustrated.</p>
+    <div class="briefing-objective"><span class="briefing-symbol" aria-hidden="true">✦</span><div><strong>Feelings to bring home</strong><p id="levelBriefingGoal">3 Frustrated</p></div></div>
+    <div class="briefing-tip"><strong>Shwe’s clue</strong><p id="levelBriefingTip">Dodge the charge, then pounce while Frustrated is dizzy.</p></div>
+    <p class="briefing-time" id="levelBriefingTime">2:00 before sunrise</p>
+    <div class="actions briefing-actions"><button class="btn ghost" id="levelBriefingBack" type="button">Back to the map</button><button class="btn" id="levelBriefingStart" type="button">Begin the night →</button></div>
+  </section>
+</div>
+
+<div class="overlay night-ready" id="nightReadyScreen" hidden role="status" aria-live="assertive" aria-atomic="true">
+  <div class="ready-lights" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="ready-wash" aria-hidden="true"></div>
+  <div class="ready-copy"><p class="eyebrow" id="readyNightEyebrow">NIGHT 1 · THE NIGHT SIDE</p><h1 id="nightReadyWord">Ready?</h1><p id="nightReadyCaption">Bring every little light home.</p></div>
 </div>
 
 <div class="overlay" id="endScreen" hidden>
