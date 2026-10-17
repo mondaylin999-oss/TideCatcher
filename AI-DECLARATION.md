@@ -12,7 +12,7 @@ _Team: check this list and add anything missing before submitting._
 | Code | Helped build prototype features: name and breed setup, cat animation, new Moodling behaviours (Excited, Shy, Jealous), performance fixes, code reorganisation | Reviewed, tested and integrated the code |
 | Cat sprites | Cut out, recoloured, made "chibi" and animated the 8 cats (see `docs/proof/cats/`) | Supplied the source sheet, chose the breeds, gave feedback |
 | Moodling art | Designed the vector art for the 8 Moodlings (see `docs/proof/moodlings/`) | Defined each feeling, colour and behaviour, gave feedback |
-| Intro scenes | Edited 4 of the 8 opening images (see `docs/proof/intro-scenes/`) | _TEAM TO FILL — who made the base images_ |
+| Intro scenes | Edited 4 of the 8 opening images, wrote the cutscene dialogue and built the cutscene (see `docs/proof/intro-scenes/`) | _TEAM TO FILL — who made the base images_ |
 | Designer briefs | Made instruction pictures for designers (`docs/design/`) | Designed the backgrounds, places and characters |
 | Team logo | Helped design the NextCrown team logo | Chose the direction |
 

@@ -11,6 +11,7 @@ frontend/
   js/customization.js     Cat breeds, chosen-name support, and text customization
   js/game.js              Canvas game, world, input, progression, and UI logic
   assets/cats/            The 8 cat breed sprites (PNG)
+  assets/intro/           The 8 opening story pictures (WebP)
 docs/
   design/                 Design roles and instruction pictures for designers
   proof/                  Proof of how the art was made (cats, Moodlings, intro scenes)
