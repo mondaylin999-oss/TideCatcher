@@ -6,7 +6,7 @@
 <title>TideCatcher Prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grandstander:wght@600;800&family=Lexend:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Grandstander:wght@600;800&family=Lexend:wght@400;600&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -95,43 +95,77 @@
   </form>
 </div>
 
-<div class="overlay" id="startScreen">
-  <div class="panel">
-    <div class="level-map-head"><div><p class="eyebrow">The Night Side</p><h2>Level Map</h2></div><span class="level-map-count" id="levelMapCount">1 / 7 nights unlocked</span><span class="room-status" id="roomStatus" aria-live="polite">Thiri is sleeping</span></div>
-    <p class="level-map-hint">Choose the lit night. Each completed story night opens the next chapter.</p>
-    <div class="map-guide" id="mapGuide" hidden role="region" aria-labelledby="mapGuideName">
-      <img class="map-guide-cat" id="mapGuideCat" src="assets/cats/burmese.png" alt="" aria-hidden="true" decoding="async">
-      <div class="map-guide-copy"><strong id="mapGuideName">Shwe</strong><p id="mapGuideText">We’ll start with the glowing night at the bottom of the path. Choose it to see what Shwe is looking for.</p></div>
-      <button class="btn ghost map-guide-dismiss" id="mapGuideDismiss" type="button">Got it</button>
+<div class="overlay hub-screen" id="startScreen">
+  <header class="hub-topbar" aria-label="TideCatcher home">
+    <div class="hub-brand"><span class="hub-brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M5 28c6-8 12-8 19 0s13 8 19 0v9c-6 7-12 7-19 0s-13-7-19 0z" fill="currentColor" opacity=".72"/><path d="M6 21c6-8 12-8 18 0s12 8 18 0" fill="none" stroke="#e8f1f5" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="11" r="4" fill="#e0b04a"/></svg></span><span class="hub-brand-copy"><span class="hub-brand-kicker">THE NIGHT SIDE</span><strong>TIDECATCHER</strong></span></div>
+    <div class="hub-currencies" aria-label="Saved collection totals">
+      <div class="hub-currency-pill"><span class="hub-currency-icon glow-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><ellipse cx="13" cy="22" rx="8" ry="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 18v4m16-4v4M5 18c0-2 3.6-4 8-4s8 2 8 4-3.6 4-8 4-8-2-8-4Zm5-8 3-5 3 5-3 5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span><span class="hub-currency-copy"><span>GLOW</span><strong id="hubGlowValue">0</strong></span></div>
+      <div class="hub-currency-pill"><span class="hub-currency-icon book-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 8c5-2 9-1 12 2v17c-3-3-7-4-12-2zm24 0c-5-2-9-1-12 2v17c3-3 7-4 12-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 13c2-.4 4 0 6 1m10-1c-2-.4-4 0-6 1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><span class="hub-currency-copy"><span>MOOD BOOK</span><strong id="hubBookValue">0 / 17</strong></span></div>
     </div>
-    <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Scrollable level map; scroll upward for higher levels" tabindex="0">
-      <div class="level-map-track" id="levelMapTrack">
-        <svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg>
-      </div>
-    </div>
-    <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Planned / locked</span></div>
-    <div class="cards">
-      <div class="card"><b class="red">Frustrated</b>Charges when you get close. Dodge it, then pounce while it is dizzy.</div>
-      <div class="card"><b class="violet">Nervous</b>Panics if you run or jump nearby. Sneak up slowly, then pounce.</div>
-      <div class="card"><b class="blue">Lonely</b>Night 1: Lonely is visible—sit nearby. From Night 2, use Night Eyes to find pawprints, scratch with S, then sit still beside Lonely. Never pounce.</div>
-      <div class="card"><b style="color:#7ddc8b">Calm · Nights 6–7</b>Find a marked cave-side hiding spot with Night Eyes, scratch to reveal Calm, then sit quietly beside it. Never pounce.</div>
-      <div class="card"><b style="color:#a67646">Buried · Nights 4–7</b>Hides inside a mountain rock. Night Eyes marks the right one. Scratch a wrong rock and the mountain wakes angry feelings. Never guess blindly.</div>
-      <div class="card"><b class="gold">Golden</b>Rare and fast. Worth 500 points and 5 extra seconds.</div>
-    </div>
-    <div class="actions">
-      <button class="btn alt" id="freeBtn">Free Mode</button>
-      <button class="btn ghost" id="shopBtn">Upgrade Shwe</button>
-      <button class="btn ghost" id="bookBtn">Mood Book</button>
-      <button class="btn ghost" id="previewBtn">Watch the Coming Home scene</button>
-      <button class="btn ghost" id="storyBtn">Replay intro</button>
-      <button class="btn ghost" id="profileBtn">Names &amp; cat</button>
-      <button class="btn ghost reset" id="resetBtn">Reset progress</button>
-    </div>
-    <section class="missions" aria-labelledby="mTitle">
-      <div class="mhead"><b id="mTitle">Today's missions</b><span class="muted" id="mReset"></span></div>
-      <div id="mList"></div>
+    <button class="hub-avatar" id="profileBtn" type="button" aria-label="Profile and cat settings"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 19 11 6l11 8q2-.5 4 0l11-8 2 13c4 5 4 13 0 18-4 5-10 7-15 7S13 42 9 37c-4-5-4-13 0-18Z" fill="var(--hub-cat-color,#e0b04a)" stroke="#e8f1f5" stroke-opacity=".7" stroke-width="1.6"/><path d="M16 27q3 3 6 0m4 0q3 3 6 0" fill="none" stroke="#0b1620" stroke-width="2.4" stroke-linecap="round"/><path d="M21 33q3 3 6 0" fill="none" stroke="#0b1620" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="25" r="1.4" fill="#f4f7f5"/><circle cx="31" cy="25" r="1.4" fill="#f4f7f5"/></svg><span>PROFILE</span></button>
+  </header>
+  <main class="hub-layout" id="menuHub">
+    <nav class="hub-sidebar" aria-label="Home options">
+      <button class="hub-side-btn" id="settingsBtn" type="button"><span>SETTINGS</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42m0-12.72-1.42 1.42m-9.88 9.88-1.42 1.42"/><circle cx="12" cy="12" r="6.2"/><circle cx="12" cy="12" r="2.1"/></svg></button>
+      <button class="hub-side-btn" id="infoBtn" type="button"><span>INFO</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v11H11l-5 4v-4H4z"/><path d="M12 10v4m0-7h.01"/></svg></button>
+      <button class="hub-side-btn hub-side-reset" id="resetBtn" type="button"><span>RESET</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 8.5A8 8 0 1 1 4 14"/><path d="M4 4v5h5"/><path d="M12 8v4l2.6 1.6"/></svg></button>
+    </nav>
+    <section class="hub-hero" aria-label="Shwe watching the moonlit tide from a pier">
+      <div class="hub-hero-mist mist-one" aria-hidden="true"></div><div class="hub-hero-mist mist-two" aria-hidden="true"></div>
+      <svg class="hub-hero-art" viewBox="0 0 520 620" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Original silhouette of Shwe, the cat, standing on a moonlit pier beside a lantern and fishing net">
+        <defs><linearGradient id="hubHeroSky" x2="0" y2="1"><stop stop-color="#23384a"/><stop offset=".56" stop-color="#122738"/><stop offset="1" stop-color="#0b1620"/></linearGradient><radialGradient id="hubHeroMoon"><stop stop-color="#f9f2d6" stop-opacity=".9"/><stop offset="1" stop-color="#a9c4d4" stop-opacity="0"/></radialGradient><linearGradient id="hubHeroWater" x2="0" y2="1"><stop stop-color="#315266" stop-opacity=".55"/><stop offset="1" stop-color="#09151e"/></linearGradient></defs>
+        <ellipse cx="264" cy="154" rx="156" ry="156" fill="url(#hubHeroMoon)"/><circle cx="264" cy="154" r="57" fill="#d9e6df" opacity=".78"/><path d="M0 308q76-44 143 0t134 0 132 0 111 0v312H0Z" fill="url(#hubHeroSky)"/><path d="M0 404q72-28 142 0t138 0 135 0 105 0v216H0Z" fill="url(#hubHeroWater)"/><path d="M0 445q65-18 129 0t129 0 129 0 133 0M0 490q74-15 143 0t130 0 128 0 119 0M0 538q60-12 123 0t130 0 136 0 131 0" fill="none" stroke="#a9c4d4" stroke-opacity=".22" stroke-width="2"/>
+        <path d="M35 397 143 330l91 67M143 330v-43m0 17 37 25M405 398l65-45v48" fill="none" stroke="#607987" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".66"/><path d="M52 395h415v27H52zM77 423v105m351-105v105M112 423v86m277-86v86" fill="#172832" stroke="#8098a0" stroke-opacity=".58" stroke-width="3"/>
+        <path d="M224 387c-29-22-40-52-26-70 11-15 31-13 38 2 5 10 0 22-11 25" fill="none" stroke="#0a171d" stroke-width="17" stroke-linecap="round"/><ellipse cx="275" cy="374" rx="51" ry="36" fill="#0a171d"/><path d="M297 354q0-33 29-40l17-26 11 24q23 9 22 33-1 31-34 36-42 6-45-27Z" fill="#0a171d"/><path d="m315 322 4-29 19 20m12 0 18-18 2 30" fill="#0a171d"/><path d="M252 393v36m28-34v36m42-46v43m20-47v46" fill="none" stroke="#0a171d" stroke-width="13" stroke-linecap="round"/><path d="M344 342q18-9 32 0" fill="none" stroke="#8be5d6" stroke-width="3" stroke-linecap="round"/><circle cx="351" cy="340" r="3" fill="#d4fff4"/><circle cx="367" cy="340" r="3" fill="#d4fff4"/><path d="M372 325 408 270m-20 2q22-13 39 2l-17 26q-18 4-27-8Z" fill="none" stroke="#a9c4d4" stroke-width="3" stroke-linejoin="round"/><path d="M393 273 410 292m-12-24 19 22m-24-10 23 8" stroke="#a9c4d4" stroke-width="1.5" opacity=".75"/><path d="M407 377v-36q0-10 10-10t10 10v36m-24 0h28" fill="none" stroke="#e0b04a" stroke-width="4" stroke-linecap="round"/><circle cx="417" cy="350" r="11" fill="#e0b04a" opacity=".28"/><circle cx="417" cy="350" r="5" fill="#f5df9b"/><ellipse cx="280" cy="430" rx="95" ry="8" fill="#a9c4d4" opacity=".14"/>
+        <g fill="#e8f1f5" opacity=".62"><circle cx="116" cy="293" r="2"/><circle cx="170" cy="257" r="1.5"/><circle cx="365" cy="224" r="2"/><circle cx="436" cy="302" r="1.4"/><circle cx="93" cy="366" r="1.5"/></g>
+      </svg>
+      <div class="hub-hero-label"><span>YOUR COMPANION</span><strong id="hubCatName">SHWE</strong><i>Keep the little lights close.</i></div>
+      <span class="hub-spray spray-a" aria-hidden="true"></span><span class="hub-spray spray-b" aria-hidden="true"></span><span class="hub-spray spray-c" aria-hidden="true"></span>
     </section>
-    <details class="howto">
+    <section class="hub-content" aria-label="Play modes and collection">
+      <div class="hub-content-heading"><span>THE TIDE IS TURNING</span><h1>Where will you go?</h1></div>
+      <button class="hub-card hub-story-card" id="storyBtn" type="button" aria-label="Story mode: open the level map">
+        <svg class="hub-story-scene" viewBox="0 0 800 280" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="hubStorySky" x2="0" y2="1"><stop stop-color="#30475a"/><stop offset=".56" stop-color="#172c3b"/><stop offset="1" stop-color="#0b1720"/></linearGradient><linearGradient id="hubStoryWater" x2="0" y2="1"><stop stop-color="#38727d"/><stop offset="1" stop-color="#0b1821"/></linearGradient></defs><rect width="800" height="280" fill="url(#hubStorySky)"/><circle cx="636" cy="70" r="37" fill="#e0d9b9" opacity=".82"/><path d="M0 155h800v125H0z" fill="url(#hubStoryWater)"/><path d="M0 188q92-24 184 0t184 0 184 0 248 0M0 231q70-17 150 0t170 0 170 0 170 0 140 0" fill="none" stroke="#b3d0d5" stroke-opacity=".25" stroke-width="2"/><path d="M0 0h195v157H0zm30 41h107v76H30zm126 0h41v115h-41zM229 40h199v115H229zM454 0h36v155h-36z" fill="#172630" stroke="#718792" stroke-opacity=".55" stroke-width="4"/><path d="M261 64h135v78H261zm40 0v78m38-78v78m39-78v78" fill="#243c4a" stroke="#899da1" stroke-width="3"/><path d="M0 154h800v18H0zm80 0v70m90-70v70m530-70v70m44-70v70" fill="#253943" stroke="#a9c4d4" stroke-opacity=".6" stroke-width="3"/><path d="M520 154v-90m0 8q40 18 74 0v36q-34 18-74 0" fill="#3fd0c9" opacity=".72"/><path d="M666 154q0-29 20-29t20 29m-49 0h59" fill="none" stroke="#e0b04a" stroke-width="4"/><circle cx="686" cy="137" r="7" fill="#e0b04a" opacity=".65"/><path d="M590 161v-29q0-14 13-14t13 14v29m-30 0h34" fill="#09151e" stroke="#a9c4d4" stroke-width="2"/><path d="M598 134q6-8 12 0" fill="none" stroke="#3fd0c9" stroke-width="3"/><g fill="#c1d5d8" opacity=".45"><circle cx="45" cy="205" r="2"/><circle cx="744" cy="204" r="2"/><circle cx="350" cy="251" r="1.5"/></g></svg>
+        <span class="hub-story-shade" aria-hidden="true"></span><span class="hub-story-plate">STORY MODE</span><span class="hub-story-copy"><strong>THE NIGHT SIDE</strong><span>Choose a chapter and bring every feeling home.</span></span><span class="hub-story-arrow" aria-hidden="true">↗</span>
+      </button>
+      <div class="hub-small-grid">
+        <button class="hub-card hub-small-card free-card" id="freeBtn" type="button" aria-label="Free Play">
+          <svg class="hub-small-scene" viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="hubFreeSea" x2="0" y2="1"><stop stop-color="#16444e"/><stop offset="1" stop-color="#0b1821"/></linearGradient></defs><rect width="360" height="170" fill="#112632"/><circle cx="271" cy="111" r="66" fill="#3fd0c9" opacity=".1"/><path d="M0 105q50-28 100 0t100 0 160 0v65H0Z" fill="url(#hubFreeSea)"/><path d="M0 124q50-14 102 0t104 0 154 0M0 149q55-12 110 0t112 0 138 0" fill="none" stroke="#83c7cb" stroke-opacity=".35" stroke-width="2"/><path d="M75 111q52-69 107-15 38 37 86 5" fill="none" stroke="#3fd0c9" stroke-width="3" stroke-dasharray="4 8"/><path d="M126 76 169 48m-18 5q24-15 40 3l-21 25q-18 2-27-8Z" fill="none" stroke="#d9e8e2" stroke-width="3"/><circle cx="268" cy="98" r="8" fill="#a9fff0"/><circle cx="268" cy="98" r="20" fill="#3fd0c9" opacity=".25"/></svg>
+          <span class="hub-small-head"><span>FREE PLAY</span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5q9 1 11 8l4 4-3 3-4-5Q5 14 4 5Z"/><path d="M15 14 20 9M14 19l-2 2"/></svg></i></span><span class="hub-small-copy">Stay out under the moon and keep the chain alive.</span>
+        </button>
+        <button class="hub-card hub-small-card shop-card" id="shopBtn" type="button" aria-label="Shop upgrades">
+          <svg class="hub-small-scene" viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="360" height="170" fill="#1c2b35"/><path d="M48 112h264l-26 34H76Z" fill="#111e27" stroke="#82969b" stroke-width="3"/><path d="M83 112V68h191v44M68 68h221L260 45H98Z" fill="#233944" stroke="#91a7a8" stroke-width="3"/><path d="M110 68V44m37 24V43m37 25V43m37 25V43m36 25V44" stroke="#a9c4d4" stroke-opacity=".45" stroke-width="2"/><path d="M107 85q22 29 44 0t43 0 43 0" fill="none" stroke="#3fd0c9" stroke-opacity=".8" stroke-width="3"/><path d="M139 86v22m55-22v22m54-22v22" stroke="#a9c4d4" stroke-opacity=".5" stroke-width="1.5"/><circle cx="287" cy="59" r="8" fill="#e0b04a"/><circle cx="287" cy="59" r="20" fill="#e0b04a" opacity=".17"/><path d="M37 153q55-13 110 0t108 0 105 0" fill="none" stroke="#76b9c0" stroke-opacity=".35" stroke-width="2"/></svg>
+          <span class="hub-small-head"><span>SHOP</span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 19 9l-7 12L5 9z"/><path d="M5 9h14M9 9l3 12 3-12"/></svg></i></span><span class="hub-small-copy">Treats and upgrades for Shwe.</span><span class="hub-small-value" id="shopBtnValue">0 Glow</span>
+        </button>
+        <button class="hub-card hub-small-card book-card" id="bookBtn" type="button" aria-label="Open Mood Book">
+          <svg class="hub-small-scene" viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="hubBookLight"><stop stop-color="#3fd0c9" stop-opacity=".7"/><stop offset="1" stop-color="#3fd0c9" stop-opacity="0"/></radialGradient></defs><rect width="360" height="170" fill="#182c3a"/><circle cx="180" cy="95" r="76" fill="url(#hubBookLight)"/><path d="M74 60q49-16 106 8v68q-56-23-106-8zm212 0q-49-16-106 8v68q56-23 106-8z" fill="#d7e5df" stroke="#e0b04a" stroke-width="3"/><path d="M180 68v68M92 72q36-7 71 6m105-6q-36-7-71 6M92 91q36-7 71 6m105-6q-36-7-71 6" fill="none" stroke="#3b6974" stroke-width="3" stroke-linecap="round"/><circle cx="126" cy="42" r="5" fill="#e0b04a"/><path d="m126 31 2 8 7 3-7 3-2 8-3-8-7-3 7-3zM250 35l2 6 6 2-6 3-2 6-2-6-6-3 6-2z" fill="#f6d782"/></svg>
+          <span class="hub-small-head"><span>MOOD BOOK</span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5q5-2 9 2v14q-4-4-9-2zm18 0q-5-2-9 2v14q4-4 9-2z"/></svg></i></span><span class="hub-small-copy">Every feeling Shwe has brought home.</span><span class="hub-small-value" id="bookBtnValue">0 / 17 found</span>
+        </button>
+        <button class="hub-card hub-small-card journey-card" id="levelsBtn" type="button" aria-label="Open the story level map">
+          <svg class="hub-small-scene" viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="360" height="170" fill="#1b2d3b"/><circle cx="286" cy="39" r="25" fill="#d7e4d5" opacity=".75"/><path d="M0 123 61 74l49 45 63-68 55 64 48-41 84 48v48H0Z" fill="#233a46"/><path d="M0 137q50-18 102 0t104 0 154 0" fill="none" stroke="#3fd0c9" stroke-opacity=".55" stroke-width="3"/><path d="M70 111q58-44 115-2t109-23" fill="none" stroke="#e0b04a" stroke-width="3" stroke-dasharray="3 8"/><circle cx="70" cy="111" r="8" fill="#e0b04a" stroke="#fff2d1" stroke-width="2"/><circle cx="185" cy="109" r="7" fill="#3fd0c9" stroke="#dafbf0" stroke-width="2"/><circle cx="294" cy="86" r="6" fill="#8da4ac" stroke="#d4e2e4" stroke-width="2"/><path d="M292 80V42m0 2 28 10-28 8" fill="none" stroke="#e8f1f5" stroke-width="3" stroke-linejoin="round"/></svg>
+          <span class="hub-small-head"><span>JOURNEY</span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 21V4m0 1q7-4 14 0v9q-7-4-14 0"/><path d="m9 9 2 2 4-4"/></svg></i></span><span class="hub-small-copy">Climb the Night Side, one chapter at a time.</span><span class="hub-small-value" id="hubLevelProgress">Night 1 / 7 unlocked</span>
+        </button>
+      </div>
+    </section>
+  </main>
+  <section class="story-map-screen" id="storyMapScreen" hidden aria-labelledby="storyMapTitle">
+    <div class="panel story-map-panel">
+      <div class="story-map-heading"><div><p class="eyebrow">THE NIGHT SIDE</p><h2 id="storyMapTitle">Choose your chapter</h2></div><button class="btn ghost map-hub-back" id="mapHubBackBtn" type="button">← Home</button><span class="level-map-count" id="levelMapCount">1 / 7 nights unlocked</span><span class="room-status" id="roomStatus" aria-live="polite">Thiri is sleeping</span></div>
+      <p class="level-map-hint">Choose a lit night. Complete each chapter to open the next.</p>
+      <div class="map-guide" id="mapGuide" hidden role="region" aria-labelledby="mapGuideName"><img class="map-guide-cat" id="mapGuideCat" src="assets/cats/burmese.png" alt="" aria-hidden="true" decoding="async"><div class="map-guide-copy"><strong id="mapGuideName">Shwe</strong><p id="mapGuideText">Follow the glowing path to the next feeling.</p></div><button class="btn ghost map-guide-dismiss" id="mapGuideDismiss" type="button">Got it</button></div>
+      <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Scrollable level map; scroll upward for higher levels" tabindex="0"><div class="level-map-track" id="levelMapTrack"><svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg></div></div>
+      <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Planned / locked</span></div>
+      <div class="cards"><div class="card"><b class="red">Frustrated</b>Charges when you get close. Dodge it, then pounce while it is dizzy.</div><div class="card"><b class="violet">Nervous</b>Panics if you run or jump nearby. Sneak up slowly, then pounce.</div><div class="card"><b class="blue">Lonely</b>Night 1: Lonely is visible—sit nearby. From Night 2, use Night Eyes to find pawprints, scratch with S, then sit still beside Lonely. Never pounce.</div><div class="card"><b style="color:#7ddc8b">Calm · Nights 6–7</b>Find a marked cave-side hiding spot with Night Eyes, scratch to reveal Calm, then sit quietly beside it. Never pounce.</div><div class="card"><b style="color:#a67646">Buried · Nights 4–7</b>Hides inside a mountain rock. Night Eyes marks the right one. Scratch a wrong rock and the mountain wakes angry feelings. Never guess blindly.</div><div class="card"><b class="gold">Golden</b>Rare and fast. Worth 500 points and 5 extra seconds.</div></div>
+      <div class="actions map-actions"><button class="btn ghost" id="previewBtn" type="button">Watch the Coming Home scene</button><button class="btn ghost" id="mapHubBackBtnSecondary" type="button">Back to Home</button></div>
+    </div>
+  </section>
+</div>
+
+<div class="overlay hub-settings-screen" id="hubSettingsScreen" hidden role="dialog" aria-modal="true" aria-labelledby="hubSettingsTitle">
+  <section class="panel hub-settings-panel"><p class="eyebrow">SETTINGS</p><h2 id="hubSettingsTitle">Settings &amp; daily missions</h2><p class="muted">Check today’s goals, claim Glow, or review the ways to guide Shwe.</p>
+    <section class="missions hub-missions" aria-labelledby="mTitle"><div class="mhead"><b id="mTitle">Today’s missions</b><span class="muted" id="mReset"></span></div><div id="mList"></div></section>
+    <p class="muted">Use your device’s reduced-motion preference for gentler movement. The current controls are listed below.</p>
+    <details class="howto" open>
     <summary>How to play and controls</summary>
     <p class="muted">Catch within 4 seconds of your last catch to build a combo, up to ×5. If a charge hits you, the last light in your trail drifts away. Look out for <b class="gold">rare Moodlings</b> with sparkles: they fill new pages of the Mood Book.</p>
     <p class="muted"><b class="violet">Free Mode</b> is endless: every catch adds 2 seconds, getting hit costs 3, and more feelings appear every 20 seconds. How long can you last?</p>
@@ -146,9 +180,9 @@
       <span>On a phone</span><span>Stick on the left (push halfway to sneak). On desktop, hold Shift or left mouse to sneak; quick left-click pounces like X. Landscape works best.</span>
     </div>
     </details>
-  </div>
+    <button class="btn ghost" id="settingsCloseBtn" type="button">Back to home</button>
+  </section>
 </div>
-
 <div class="overlay level-briefing-screen" id="levelBriefingScreen" hidden role="dialog" aria-modal="true" aria-labelledby="levelBriefingTitle" aria-describedby="levelBriefingSub">
   <section class="panel level-briefing-panel">
     <p class="eyebrow" id="levelBriefingEyebrow">NIGHT 1 · THE NIGHT SIDE</p>

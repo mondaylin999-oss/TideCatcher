@@ -1764,10 +1764,35 @@
     if (types.length) setTimeout(() => startHome(won, types, false, completedNight), 500);
     else showEnd();
   }
+  function animateHubNumber(el, value, format = n => String(n)) {
+    if (!el) return;
+    const target = Math.max(0, Math.round(+value || 0));
+    const from = Math.max(0, Math.round(+(el.dataset.displayed || el.textContent.replace(/[^0-9]/g, '')) || 0));
+    const run = (+(el.dataset.animRun || 0)) + 1; el.dataset.animRun = String(run);
+    if (from === target) { el.textContent = format(target); el.dataset.displayed = String(target); return; }
+    const began = performance.now(), duration = 480;
+    const tick = now => {
+      if (+el.dataset.animRun !== run) return;
+      const p = Math.min(1, (now - began) / duration), eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = format(Math.round(from + (target - from) * eased));
+      if (p < 1) requestAnimationFrame(tick); else { el.textContent = format(target); el.dataset.displayed = String(target); }
+    };
+    requestAnimationFrame(tick);
+  }
+  function refreshHubStats(found = BOOK_ORDER.filter(k => book[k]).length) {
+    animateHubNumber($('#hubGlowValue'), glow);
+    animateHubNumber($('#hubBookValue'), found, n => `${n} / ${BOOK_ORDER.length}`);
+    $('#shopBtnValue').textContent = `${glow} Glow`;
+    $('#bookBtnValue').textContent = `${found} / ${BOOK_ORDER.length} found`;
+    $('#hubLevelProgress').textContent = `Night ${unlockedLevel} / 7 unlocked`;
+    $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
+    $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
+    $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
+  }
   function refreshShopBtns() {
     const label = `Upgrade Shwe · ${glow} Glow`;
-    $('#shopBtn').textContent = label; $('#endShopBtn').textContent = label;
-    $('#bookBtn').textContent = `Mood Book · ${BOOK_ORDER.filter(k => book[k]).length}/${BOOK_ORDER.length}`;
+    $('#endShopBtn').textContent = label;
+    refreshHubStats();
     renderMissions();
   }
   function renderMissions() {
@@ -1790,7 +1815,7 @@
     if (!ms || ms.claimed[id] || (ms.prog[id] || 0) < d.goal) return;
     initAudio(); ms.claimed[id] = true; saveMissions(); glow += d.reward; saveUpg();
     tone(660, .15, 'triangle', .07); setTimeout(() => tone(990, .25, 'sine', .06), 90);
-    refreshShopBtns(); $('#shopBtn').focus();
+    refreshShopBtns(); $('#settingsCloseBtn').focus({ preventScroll: true });
   });
   function iconSVG(ty, v, known) {
     const c = known ? vcol(ty, v) : 'rgba(243,236,255,.16)';
@@ -1808,7 +1833,7 @@
   }
   function renderBook() {
     const found = BOOK_ORDER.filter(k => book[k]).length;
-    $('#bookCount').textContent = `${found} / ${BOOK_ORDER.length} found`;
+    $('#bookCount').textContent = `${found} / ${BOOK_ORDER.length} found`; refreshHubStats(found);
     $('#bookList').innerHTML = BOOK_ORDER.map(k => {
       const ty = k[0], v = +k[1], info = vinfo(ty, v), n = book[k] || 0, known = n > 0;
       const tag = `<span class="tag${info.r === 'Rare' || info.r === 'Special' ? ' rare' : ''}">${info.r}${known ? ` · caught ×${n}` : ''}</span>`;
@@ -1818,7 +1843,7 @@
     }).join('');
   }
   $('#bookBtn').addEventListener('click', () => { $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
-  $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; $('#startScreen').hidden = false; refreshShopBtns(); buildLevelMap(); focusLevelMap(unlockedLevel); });
+  $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; showMainMenu(true); });
   let shopFrom = null;
   function renderShop() {
     $('#glowAmt').textContent = glow;
@@ -1993,7 +2018,7 @@
   }
   function finishHome() {
     if (!H || H.finished) return; H.finished = true;
-    if (H.preview) { state = 'menu'; cv.hidden = true; $('#startScreen').hidden = false; buildLevelMap(); focusLevelMap(unlockedLevel); setTimeout(() => $('#playBtn').focus(), 50); }
+    if (H.preview) { state = 'menu'; cv.hidden = true; showStoryMap(false); setTimeout(() => $('#playBtn').focus(), 50); }
     else if (H.won) showNightWake(H.night);
     else showEnd();
   }
@@ -2383,12 +2408,26 @@
     const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
     viewport.scrollTop = Math.max(0, y - 34);
   }
+  function showHub(focus = true) {
+    $('#startScreen').hidden = false; $('#menuHub').hidden = false; $('#storyMapScreen').hidden = true;
+    $('#hubSettingsScreen').hidden = true;
+    if (focus) $('#storyBtn').focus({ preventScroll: true });
+  }
+  function showStoryMap(focus = true) {
+    $('#startScreen').hidden = false; $('#menuHub').hidden = true; $('#storyMapScreen').hidden = false;
+    $('#hubSettingsScreen').hidden = true; $('#levelBriefingScreen').hidden = true;
+    buildLevelMap(); focusLevelMap(unlockedLevel);
+    let mapTipSeen = false;
+    try { mapTipSeen = localStorage.getItem('mk-map-guide-seen') === '1'; } catch (e) {}
+    if (mapGuidePending || !mapTipSeen) showMapGuide();
+    else if (focus) $(`#levelMapTrack button[data-level="${unlockedLevel}"]`)?.focus({ preventScroll: true });
+  }
   function showMainMenu(focusCurrent = true) {
-    state = 'menu'; cv.hidden = true; $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
+    state = 'menu'; cv.hidden = true;
+    $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
-    $('#endScreen').hidden = true; $('#startScreen').hidden = false; buildLevelMap(); focusLevelMap(unlockedLevel);
-    const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`);
-    if (focusCurrent && current) current.focus({ preventScroll: true });
+    $('#endScreen').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
+    buildLevelMap(); refreshHubStats(); showHub(focusCurrent);
   }
 
   // ---- Opening cutscene ----
@@ -2518,15 +2557,15 @@
     }
     if (introI < INTRO_LINES.length - 1) introShowLine(introI + 1); else leaveIntro();
   }
+  let introReturnView = 'storyMap';
   function leaveIntro() {
-    cancelAnimationFrame(introRaf); $('#prologueScreen').hidden = true; $('#startScreen').hidden = false;
+    cancelAnimationFrame(introRaf); $('#prologueScreen').hidden = true;
     [$('#introShotA'), $('#introShotB')].forEach(im => im.classList.remove('on', 'move'));
-    introFx(null, 0);
-    state = 'menu'; cv.hidden = true; buildLevelMap(); focusLevelMap(unlockedLevel);
-    const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`);
-    if (mapGuidePending) showMapGuide(); else if (current) current.focus({ preventScroll: true });
+    introFx(null, 0); state = 'menu'; cv.hidden = true;
+    if (introReturnView === 'hub') showHub(true); else showStoryMap(true);
   }
-  function playIntro() {
+  function playIntro(returnView = 'storyMap') {
+    introReturnView = returnView;
     initAudio(); state = 'intro'; cv.hidden = true;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#startScreen').hidden = true; $('#endScreen').hidden = true; $('#awakeningScreen').hidden = true;
@@ -2539,7 +2578,11 @@
     tone(196, 2.4, 'sine', .018, 12);
     cancelAnimationFrame(introRaf); introRaf = requestAnimationFrame(introTick);
   }
-  $('#storyBtn').addEventListener('click', playIntro);
+  $('#storyBtn').addEventListener('click', () => showStoryMap(true));
+  $('#levelsBtn').addEventListener('click', () => showStoryMap(true));
+  $('#mapHubBackBtn').addEventListener('click', () => showHub(true));
+  $('#mapHubBackBtnSecondary').addEventListener('click', () => showHub(true));
+  $('#infoBtn').addEventListener('click', () => playIntro('hub'));
   $('#introSkipBtn').addEventListener('click', leaveIntro);
   $('#introContinueBtn').addEventListener('click', leaveIntro);
   $('#prologueScreen').addEventListener('click', e => { if (!e.target.closest('button')) introAdvance(); });
@@ -2784,7 +2827,7 @@
     setupFirstRun = firstRun;
     welcomeLoadRun++;
     state = 'menu'; cv.hidden = true;
-    ['#welcomeScreen', '#startScreen', '#prologueScreen', '#endScreen', '#levelBriefingScreen', '#nightReadyScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
+    ['#welcomeScreen', '#startScreen', '#hubSettingsScreen', '#prologueScreen', '#endScreen', '#levelBriefingScreen', '#nightReadyScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
     girlIn.value = MK_HAS_PROFILE ? MK_PROFILE.girl : ''; catIn.value = MK_HAS_PROFILE ? MK_PROFILE.cat : '';
     const r = setupEl.querySelector(`input[name="coat"][value="${MK_PROFILE.coat}"]`); if (r) r.checked = true;
     $('#setupGo').textContent = firstRun ? 'Begin the story →' : 'Save';
@@ -2823,6 +2866,19 @@
     }
   });
   $('#profileBtn').addEventListener('click', () => showSetup(false));
+  $('#settingsBtn').addEventListener('click', () => { $('#hubSettingsScreen').hidden = false; $('#settingsCloseBtn').focus({ preventScroll: true }); });
+  $('#settingsCloseBtn').addEventListener('click', () => { $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); });
+  $('#hubSettingsScreen').addEventListener('click', e => { if (e.target.id === 'hubSettingsScreen') { $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); } });
+  $('#hubSettingsScreen').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); return; }
+    if (e.key !== 'Tab') return;
+    const focusable = Array.from($('#hubSettingsScreen').querySelectorAll('button:not([disabled]), summary, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter(el => !el.hidden && el.offsetParent !== null);
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
 
   // ---- Reset progress ----
   // Deletes every saved 'mk-' key on this device, then reloads so the game starts like a new player.
@@ -2841,14 +2897,9 @@
   $('#resetScreen').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeReset(); } });
   paintCoat(COAT); renameAll();
 
-  buildLevelMap(); focusLevelMap(unlockedLevel);
-  $(`#levelMapTrack button[data-level="${unlockedLevel}"]`)?.focus({ preventScroll: true });
+  buildLevelMap();
   if (!MK_HAS_PROFILE) showWelcome();
-  else {
-    let mapTipSeen = false;
-    try { mapTipSeen = localStorage.getItem('mk-map-guide-seen') === '1'; } catch (e) {}
-    if (!mapTipSeen) showMapGuide();
-  }
+  else showMainMenu(false);
   $('#levelMapTrack').addEventListener('click', e => {
     const button = e.target.closest('button[data-level]'); if (!button || button.disabled) return;
     const night = +button.dataset.level; if (night <= unlockedLevel) showLevelBriefing(night, button);
