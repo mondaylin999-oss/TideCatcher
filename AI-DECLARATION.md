@@ -17,6 +17,8 @@ _Team: check this list and add anything missing before submitting._
 | Team logo | Helped design the NextCrown team logo | Chose the direction |
 
 ## Other tools
+- **Real-ESRGAN** (open-source AI image upscaler, anime model) — used to sharpen the park and festival backgrounds.
+- **ChatGPT** (OpenAI) — generated the night park background (see `docs/proof/park-map/`). Claude removed the painted-in platforms, upscaled it, regraded it to indigo with warm lamp light, and added the grass, path, flowers, bushes and playground decks in code.
 - **ChatGPT** (OpenAI) — generated the lighting festival landscape (see `docs/proof/festival-map/`). Claude used its sky, moon, mountains and pagoda hill as the far background (darkened to 3 AM, floating lanterns removed); the boardwalk, stalls, lantern strings, palms and water are drawn in code.
 - **ChatGPT** (OpenAI) — generated the first school hallway background (see `docs/proof/school-map/`). Claude then removed the painted-in shelves, springs and balls, turned it into a night scene and fitted it to the game.
 - **Manus** — _TEAM TO FILL — this repo's `.gitignore` mentions Manus. Say what it was used for, or remove this line if it wasn't used._
