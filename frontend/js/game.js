@@ -1787,6 +1787,10 @@
     $('#hubLevelProgress').textContent = `Night ${unlockedLevel} / 7 unlocked`;
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
     $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
+    const heroCat = $('#hubHeroCat');
+    if (heroCat && COAT) heroCat.setAttribute('href', COAT.img);
+    const heroSvg = $('#hubHeroSvg');
+    if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
     $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
   }
   function refreshShopBtns() {
@@ -2411,6 +2415,7 @@
   function showHub(focus = true) {
     $('#startScreen').hidden = false; $('#menuHub').hidden = false; $('#storyMapScreen').hidden = true;
     $('#hubSettingsScreen').hidden = true;
+    refreshHubStats();
     if (focus) $('#storyBtn').focus({ preventScroll: true });
   }
   function showStoryMap(focus = true) {
@@ -2427,7 +2432,7 @@
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#endScreen').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
-    buildLevelMap(); refreshHubStats(); showHub(focusCurrent);
+    buildLevelMap(); showHub(focusCurrent);
   }
 
   // ---- Opening cutscene ----
