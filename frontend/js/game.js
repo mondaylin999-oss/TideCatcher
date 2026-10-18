@@ -68,9 +68,12 @@
   if (mobileScreenOrientation && typeof mobileScreenOrientation.addEventListener === 'function') mobileScreenOrientation.addEventListener('change', syncMobileOrientationGate);
 
   const T = 48, VH = 540, WORLD = 4200, GROUND = 470;
-  const BLUE = '#6fb6ff', RED = '#ff6168', VIOLET = '#a98bff', GOLD = '#f6c453', CALM = '#7ddc8b', INK = '#f3ecff', MUTED = '#b7acd3';
-  const EXC = '#ffd23f', SHY = '#ff7ab8', JEAL = '#ff9a3c';
-  const DISP = '"Grandstander","Trebuchet MS",sans-serif', BODY = '"Lexend",system-ui,sans-serif';
+  // Canvas UI shares the same palette and typography as the DOM menus.
+  const uiTheme = getComputedStyle(document.documentElement);
+  const uiToken = name => uiTheme.getPropertyValue(name).trim();
+  const BLUE = uiToken('--sky'), RED = uiToken('--coral'), VIOLET = uiToken('--lilac'), GOLD = uiToken('--honey'), CALM = uiToken('--mint'), INK = uiToken('--cream'), MUTED = uiToken('--muted');
+  const EXC = GOLD, SHY = uiToken('--pink'), JEAL = uiToken('--peach');
+  const DISP = uiToken('--display'), BODY = uiToken('--body');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const col = ty => ty === 'F' ? RED : ty === 'N' ? VIOLET : ty === 'L' ? BLUE : ty === 'C' ? CALM : ty === 'B' ? '#a67646' : ty === 'E' ? EXC : ty === 'S' ? SHY : ty === 'J' ? JEAL : GOLD;
@@ -2054,6 +2057,7 @@
     const tl = Math.max(0, timeLeft), m = Math.floor(tl / 60), s = Math.floor(tl % 60);
     const urgent = tl <= 15 && state === 'play';
     ctx.textAlign = 'left';
+    ctx.fillStyle = uiToken('--glass'); rrect(10, top - 2, 158, 74, 22); ctx.fill();
     ctx.font = `800 ${urgent ? 38 + Math.sin(t * 10) * 2 : 36}px ${DISP}`; ctx.fillStyle = urgent ? RED : INK;
     ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, 20, top + 34);
     ctx.font = `600 15px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText('SCORE', 22, top + 60);
@@ -2075,7 +2079,8 @@
     }
     const comboY = top + 96 + (skyEnabled && compactSky ? 32 : 0);
     if (combo > 1) {
-      ctx.font = `800 26px ${DISP}`; ctx.fillStyle = GOLD; ctx.fillText(`×${combo} combo`, 20, comboY);
+      ctx.fillStyle = uiToken('--glass'); rrect(10, comboY - 28, 140 + combo * 3, 52, 22); ctx.fill();
+      ctx.font = `600 ${24 + combo}px ${DISP}`; ctx.fillStyle = combo >= 5 ? SHY : combo >= 3 ? CALM : GOLD; ctx.fillText(`×${combo} combo`, 20, comboY);
       ctx.fillStyle = 'rgba(246,196,83,.25)'; ctx.fillRect(22, comboY + 8, 120, 5);
       ctx.fillStyle = GOLD; ctx.fillRect(22, comboY + 8, 120 * clamp(comboT / 4, 0, 1), 5);
     }
@@ -2122,7 +2127,10 @@
         for (const w of banner.text.split(' ')) { const tryL = line ? line + ' ' + w : w; if (ctx.measureText(tryL).width > maxW && line) { lines.push(line); line = w; } else line = tryL; }
         lines.push(line); if (lines.length <= 3 || size <= 18) break; size -= 3;
       }
-      ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(18,12,36,.85)'; ctx.fillStyle = banner.c;
+      const bubbleW = Math.min(maxW + 36, Math.max(...lines.map(line => ctx.measureText(line).width)) + 36);
+      ctx.fillStyle = uiToken('--glass'); rrect((VW - bubbleW) / 2, 126, bubbleW, lines.length * size * 1.2 + 22, 22); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(VW / 2 - 12, 126); ctx.lineTo(VW / 2, 114); ctx.lineTo(VW / 2 + 12, 126); ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = uiToken('--bg-card'); ctx.fillStyle = banner.c;
       lines.forEach((ln, i) => { const y = 160 + i * size * 1.2; ctx.strokeText(ln, VW / 2, y); ctx.fillText(ln, VW / 2, y); });
       ctx.globalAlpha = 1;
     }
@@ -2283,7 +2291,7 @@
     $('#bookList').innerHTML = BOOK_ORDER.map(k => {
       const ty = k[0], v = +k[1], info = vinfo(ty, v), n = book[k] || 0, known = n > 0;
       const tag = `<span class="tag${info.r === 'Rare' || info.r === 'Special' ? ' rare' : ''}">${info.r}${known ? ` · caught ×${n}` : ''}</span>`;
-      if (known) return `<div class="entry">${iconSVG(ty, v, true)}<h3>${info.n}</h3>${tag}<p>${info.d}</p><p class="line">${info.line}</p></div>`;
+      if (known) return `<div class="entry" data-feeling="${ty}">${iconSVG(ty, v, true)}<h3>${info.n}</h3>${tag}<p>${info.d}</p><p class="line">${info.line}</p></div>`;
       const hint = info.lock || (info.r === 'Rare' ? `A rare form of ${vinfo(ty, 0).n}. Look for sparkles.` : 'Catch one to fill this page.');
       return `<div class="entry unknown">${iconSVG(ty, v, false)}<h3>???</h3>${tag}<p>${hint}</p></div>`;
     }).join('');
@@ -2297,8 +2305,8 @@
       const lv = upg[u.id], max = lv >= 3, cost = u.costs[lv];
       const now = u.fmt(u.vals[lv]), next = max ? '' : ` · next: ${u.fmt(u.vals[lv + 1])}`;
       const btn = max ? '<button class="buy" disabled>Maxed</button>'
-        : `<button class="buy" data-id="${u.id}" ${glow < cost ? 'disabled' : ''}>${lv === 0 && u.id === 'purr' ? 'Unlock' : 'Buy'} · ${cost}</button>`;
-      return `<div class="item"><h3>${u.name}</h3><div class="side"><div class="pips" aria-label="Level ${lv} of 3">${[0, 1, 2].map(i => `<span class="pip${i < lv ? ' on' : ''}"></span>`).join('')}</div>${btn}</div><p>${u.desc}</p><p>Now: ${now}${next}</p></div>`;
+        : `<button class="buy" data-id="${u.id}" ${glow < cost ? 'disabled' : ''}>${glow < cost ? '🔒 Can’t afford' : lv === 0 && u.id === 'purr' ? 'Unlock' : 'Buy'} · ${cost} Glow</button>`;
+      return `<div class="item" data-upgrade="${u.id}"><h3>${u.name}</h3><div class="side"><div class="pips" aria-label="Level ${lv} of 3">${[0, 1, 2].map(i => `<span class="pip${i < lv ? ' on' : ''}"></span>`).join('')}</div>${btn}</div><p>${u.desc}</p><p>Now: ${now}${next}</p></div>`;
     }).join('');
   }
   function openShop(from) {
@@ -2312,7 +2320,9 @@
     initAudio(); glow -= u.costs[lv]; upg[u.id]++; saveUpg();
     tone(660, .15, 'triangle', .07); setTimeout(() => tone(990, .25, 'sine', .06), 90);
     renderShop(); refreshShopBtns();
-    const again = $(`#shopList button[data-id="${u.id}"]`); (again || $('#shopBack')).focus();
+    const again = $(`#shopList button[data-id="${u.id}"]`);
+    $(`#shopList [data-upgrade="${u.id}"]`)?.classList.add('cozy-purchased');
+    (again && !again.disabled ? again : $('#shopBack')).focus();
   });
   $('#shopBack').addEventListener('click', () => { $('#shopScreen').hidden = true; (shopFrom === 'end' ? $('#endScreen') : $('#startScreen')).hidden = false; });
   $('#shopBtn').addEventListener('click', () => openShop('start'));
@@ -2330,12 +2340,14 @@
     $('#endEyebrow').textContent = `${hourOf(night)} · ${chapter.name} · done`;
     $('#endTitle').textContent = R.unlocked ? `${hourOf(night)} done. ${hourOf(next)} is open!` : night === 7 ? 'The lake is quiet' : 'A little more of Thiri returns';
     $('#endMsg').textContent = `You brought all ${R.total} feelings home. ${R.unlocked ? `${hourOf(next)} is now playable from the map.` : 'Your story progress is saved.'}`;
-    $('#againBtn').textContent = night < 7 ? `Play ${hourOf(night + 1)}` : `Replay ${hourOf(7)}`;
+    $('#againBtn').textContent = night < 7 ? `Continue → ${hourOf(night + 1)}` : `Replay ${hourOf(7)}`;
   }
 
   function showEnd() {
     state = 'over'; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     $('#sGlow').textContent = '+' + lastGlow;
+    $('#endReplayBtn').hidden = !R.won || R.free;
+    $('#newBestSticker').hidden = !(R.final > 0 && R.final >= R.best);
     const extra = [];
     if (runDone.length) extra.push(`Mission complete: ${runDone.join('; ')}. Claim the reward on the main menu.`);
     if (runNew.length) extra.push(`New in the Mood Book: ${runNew.join(', ')}.`);
@@ -2367,7 +2379,7 @@
     $('#sBest').textContent = R.best.toLocaleString();
     $('#sCombo').textContent = '×' + R.combo;
     $('#sHome').textContent = `${R.home}/${R.total}`;
-    $('#againBtn').textContent = R.won ? (R.night < 7 ? `Play ${hourOf(R.night + 1)}` : `Replay ${hourOf(7)}`) : `Retry ${hourOf(R.night)}`;
+    $('#againBtn').textContent = R.won ? (R.night < 7 ? `Continue → ${hourOf(R.night + 1)}` : `Replay ${hourOf(7)}`) : `Retry ${hourOf(R.night)}`;
     $('#endTip').textContent = R.tip;
     if (R.won) playNightComplete(R.night);
     setTimeout(() => { $('#endScreen').hidden = false; $('#againBtn').focus(); }, 280);
@@ -3457,6 +3469,7 @@
     if (R && R.won && !R.free && R.night < 7) startGame('story', R.night + 1);
     else startGame(mode, storyNight);
   });
+  $('#endReplayBtn').addEventListener('click', () => startGame(mode, storyNight));
   $('#menuBtn').addEventListener('click', () => { mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns(); showMainMenu(true); });
   $('#previewBtn').addEventListener('click', () => { initAudio(); startHome(true, ['F', 'F', 'F', 'F', 'L', 'N', 'N', 'N', 'N', 'L'], true); });
 
