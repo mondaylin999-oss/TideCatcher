@@ -181,7 +181,7 @@
 <div class="overlay hub-settings-screen" id="hubSettingsScreen" hidden role="dialog" aria-modal="true" aria-labelledby="hubSettingsTitle">
   <section class="panel hub-settings-panel"><p class="eyebrow">SETTINGS</p><h2 id="hubSettingsTitle">Settings &amp; daily missions</h2><p class="muted">Check today’s goals, claim Glow, or review the ways to guide Shwe.</p>
     <section class="missions hub-missions" aria-labelledby="mTitle"><div class="mhead"><b id="mTitle">Today’s missions</b><span class="muted" id="mReset"></span></div><div id="mList"></div></section>
-    <fieldset class="audio-settings" disabled aria-describedby="audioNote"><legend>Sounds of the night</legend><p class="muted" id="audioNote">Coming soon · audio controls aren’t connected yet.</p><label>Music<input type="range" min="0" max="100" value="70" data-audio="music" data-sfx="toggle"></label><label>Sound effects<input type="range" min="0" max="100" value="80" data-audio="effects" data-sfx="toggle"></label><label>Ambience<input type="range" min="0" max="100" value="60" data-audio="ambience" data-sfx="toggle"></label><label>Mute all<input class="cozy-toggle" type="checkbox" role="switch" data-audio="mute" data-sfx="toggle"></label></fieldset>
+    <fieldset class="audio-settings" aria-describedby="audioNote"><legend>Sounds of the night</legend><p class="muted" id="audioNote">Sound effects and Mute work now · music and ambience are coming soon.</p><label>Music<input type="range" min="0" max="100" value="70" data-audio="music" data-sfx="toggle" disabled></label><label>Sound effects<input type="range" min="0" max="100" value="80" data-audio="effects" data-sfx="toggle"></label><label>Ambience<input type="range" min="0" max="100" value="60" data-audio="ambience" data-sfx="toggle" disabled></label><label>Mute all<input class="cozy-toggle" type="checkbox" role="switch" data-audio="mute" data-sfx="toggle"></label></fieldset>
     <p class="muted">Use your device’s reduced-motion preference for gentler movement. The current controls are listed below.</p>
     <details class="howto" open>
     <summary>How to play and controls</summary>
@@ -315,6 +315,7 @@
 </div>
 
 <script src="js/customization.js"></script>
+<script src="js/tc-sfx.js"></script>
 <script src="js/game.js"></script>
 <script src="js/cozy-ui.js"></script>
 </body>
