@@ -189,6 +189,8 @@
     return TRAIL_PROFILE[TRAIL_PROFILE.length-1][1];
   }
   let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
+  const FRUST_SLEEP = 5; // Frustrated sleeps for the first 5 seconds of the night clock
+  let frustWakeAt = FRUST_SLEEP + 1.5;
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
   // ---------- School map (Nights 1-2) ----------
   // Night-time school hallway behind a flat floor. The wall picture is one 2445-wide image (drawn
@@ -463,11 +465,11 @@
   function inFestival() { return mode === 'story' && FESTIVAL_NIGHTS.includes(storyNight); }
   const NIGHT_CHAPTERS = [
     { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1, N: 0, L: 0, C: 0 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
-    { night: 2, name: 'The Winners’ Wall', sub: 'Learn to move quietly around Nervous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 3, N: 3, J: 1 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' , sky: { A: 1, B: 0, C: 0, wait: 2.5, fallSpeed: 70, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
-    { night: 3, name: 'The Park', sub: 'Sit still beside Lonely', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2, S: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' , sky: { A: 2, B: 1, C: 0, wait: 2.2, fallSpeed: 85, gravity: 800, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.20, hintShown: false }},
-    { night: 4, name: 'Lighting Festival', sub: 'Scratch to reveal what is buried', theme: '#c17679', musicRoot: 233.08, timeLimit: 122, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2, B: 1, E: 2 }, newMoodling: 'A new feeling is buried in the rocks. Use Night Eyes to spot the right rock, then scratch it.', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0, B: 1, E: 1 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Excited bounces high. Jump, then pounce at the very top of its bounce.' , sky: { A: 2, B: 1, C: 1, wait: 2.0, fallSpeed: 100, gravity: 900, scratchWindow: 2.0, ambushBase: 2, pounceWindowMul: 1.10, hintShown: false }},
-    { night: 5, name: 'Hilltop Park', sub: 'Climb the old park above the sleeping city', theme: '#7181aa', musicRoot: 246.94, timeLimit: 117, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1, J: 2 }, newMoodling: 'Rare feelings sparkle; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1, J: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Rare feelings sparkle. They are worth extra Glow.' , sky: { A: 3, B: 2, C: 1, wait: 1.6, fallSpeed: 115, gravity: 1000, scratchWindow: 1.7, ambushBase: 2, pounceWindowMul: 1.00, hintShown: false }},
-    { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2, S: 2, E: 1 }, newMoodling: 'Calm hides in the reeds; find the marked reed bed, scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 1, B: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm waits in cave marks. Scratch, then sit quietly.' , sky: { A: 3, B: 2, C: 2, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
+    { night: 2, name: 'The Winners’ Wall', sub: 'Move quietly around Nervous, and watch for Jealous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 3, N: 3, J: 1 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce. Jealous steals lights from your trail; catch it when it is tired.', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' , sky: { A: 1, B: 0, C: 0, wait: 2.5, fallSpeed: 70, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
+    { night: 3, name: 'The Park', sub: 'Sit still beside Lonely, and freeze when Shy peeks', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2, S: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' , sky: { A: 2, B: 1, C: 0, wait: 2.2, fallSpeed: 85, gravity: 800, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.20, hintShown: false }},
+    { night: 4, name: 'Lighting Festival', sub: 'Scratch to reveal what is buried', theme: '#c17679', musicRoot: 233.08, timeLimit: 122, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2, B: 1, E: 2 }, newMoodling: 'A feeling is buried under the rocks: use Night Eyes to spot the right rock, then scratch it. Excited bounces high: pounce at the top of its bounce.', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0, B: 1, E: 1 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Something is buried under the rocks. Press E for Night Eyes, then scratch the glowing rock. Excited bounces high: pounce at the top.' , sky: { A: 2, B: 1, C: 1, wait: 2.0, fallSpeed: 100, gravity: 900, scratchWindow: 2.0, ambushBase: 2, pounceWindowMul: 1.10, hintShown: false }},
+    { night: 5, name: 'Hilltop Park', sub: 'Climb the old park above the sleeping city', theme: '#7181aa', musicRoot: 246.94, timeLimit: 117, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1, J: 2 }, newMoodling: 'Up on the hill, sparkling Golden feelings appear more often; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1, J: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Golden feelings sparkle more often up here. They are worth extra Glow.' , sky: { A: 3, B: 2, C: 1, wait: 1.6, fallSpeed: 115, gravity: 1000, scratchWindow: 1.7, ambushBase: 2, pounceWindowMul: 1.00, hintShown: false }},
+    { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2, S: 2, E: 1 }, newMoodling: 'Calm hides in the reeds; find the marked reed bed, scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 1, B: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm hides in the reeds. Scratch the marked reed bed, then sit quietly.' , sky: { A: 3, B: 2, C: 2, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
     { night: 7, name: 'Sunrise', sub: 'Bring every feeling home before the sun rises', theme: '#d6a866', musicRoot: 293.66, timeLimit: 135, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3, B: 2, E: 2, S: 1, J: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 1, B: 1, E: 1, S: 1, J: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
   ];
   const PERCH_BUDGET = { 1: 12, 2: 10, 3: 9, 4: 8, 5: 6, 6: 4, 7: 2 };
@@ -561,7 +563,7 @@
     J: [{ n: 'Jealous', c: '#ff9a3c', r: 'Common', d: 'Steals lights from your trail, then runs. Catch it when it gets tired to win them back.', line: '“The winning drawing really was good. That is why it hurt.”' }],
     C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Scratch a marked reed bed, then sit quietly beside Calm.', lock: 'Meet it in the reeds on Night 6.' }],
     B: [
-      { n: 'Buried', c: '#a67646', r: 'Common', d: 'Hides inside a mountain rock. Reveal it with Night Eyes, then scratch the marked rock. A wrong rock wakes the mountain.', line: '“I put it somewhere deep so I wouldn’t have to look at it.”' },
+      { n: 'Buried', c: '#a67646', r: 'Common', d: 'Hides deep under a rock. Reveal it with Night Eyes, then scratch the marked rock. A wrong rock shakes the ground.', line: '“I put it somewhere deep so I wouldn’t have to look at it.”' },
       { n: 'Petrified Buried', c: '#8c5a3a', r: 'Rare', d: 'So deep it has almost turned to stone. Same scratch rules.', line: '“It was easier to be numb than to feel it.”' },
       { n: 'Fossil Buried', c: '#c8a56a', r: 'Rare', d: 'Leaves a faint amber trail when it flees.', line: '“Some things stay with you even after you bury them.”' }
     ]
@@ -715,7 +717,7 @@
   function reset() {
     activePlats = activePlatsForNight(storyNight);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
-    t = 0; warmup = mode === 'free' ? 0 : 1.5; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0;
+    t = 0; warmup = mode === 'free' ? 0 : 1.5; frustWakeAt = warmup + FRUST_SLEEP; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0;
     nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
     combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
@@ -781,14 +783,14 @@
       const dropped = detachTrail(n);
       float(cat.x, cat.y - 100, `−${dropped} feeling${dropped === 1 ? '' : 's'}`, RED);
       if (mode === 'story') timeLeft = Math.max(0, timeLeft - 2);
-      announce("The mountain's anger tore a light away", RED, 1.6);
+      announce("The angry ground tore a light away", RED, 1.6);
     } else if (trail.length) detachTrail(1);
     else float(cat.x, cat.y - 64, 'Ouch!', RED);
   }
   function buriedAmbushSize(night) { return night < 5 ? 0 : clamp(night - 3, 1, 4); }
   function triggerBuriedAmbush(sizeOverride = null, message = null, options = null) {
     const n = sizeOverride == null ? buriedAmbushSize(storyNight) : sizeOverride;
-    if (!n) { timeLeft = Math.max(0, timeLeft - 2); announce('The mountain rumbles…', RED, 2); return; }
+    if (!n) { timeLeft = Math.max(0, timeLeft - 2); announce('The ground rumbles…', RED, 2); return; }
     const away = -(cat.face || 1);
     for (let i = 0; i < n; i++) {
       const fallbackSide = i === 0 ? away : i % 2 ? -away : away;
@@ -800,7 +802,7 @@
       if (type === 'F') { amb.state = 'windup'; amb.st = .4; }
       else { amb.state = 'panic'; amb.st = 1.2; }
     }
-    announce(message || `The mountain woke ${n} angrier feelings`, RED, 2); shake = Math.max(shake, options?.shake ?? 10);
+    announce(message || `The ground woke ${n} angrier feelings`, RED, 2); shake = Math.max(shake, options?.shake ?? 10);
   }
   function failSkyChallenge(m) {
     if (!m || m.dead || m.skyPhase === 'cleared') return false;
@@ -963,9 +965,11 @@
       if (!m.ambush || m.state !== 'charge') m.y = terrainY(m.x) - 20;
       const dx = cat.x - m.x, dy = cat.y - (m.y + 20);
       if (m.state === 'patrol') {
-        m.x += m.dir * 55 * dt * sp; if (Math.abs(m.x - m.home) > 140) m.dir = Math.sign(m.home - m.x) || 1;
+        const asleep = !m.ambush && t < frustWakeAt; if (asleep && !m.slept) m.slept = 1;
+        if (!asleep && m.slept === 1) { m.slept = 2; float(m.x, m.y - 46, 'grr!', RED); tone(140, .25, 'sawtooth', .025, -30); }
+        if (!asleep) m.x += m.dir * 55 * dt * sp; if (Math.abs(m.x - m.home) > 140) m.dir = Math.sign(m.home - m.x) || 1;
         m.x = clamp(m.x, 40, WORLD - 40); m.cd -= dt;
-        if (m.cd <= 0 && t >= 10 && Math.abs(dx) < 4 * T && Math.abs(dy) < 90) { m.state = 'windup'; m.st = chapter.frustratedWindup; m.dir = Math.sign(dx) || 1; tone(120, .45, 'sawtooth', .035, -40); }
+        if (m.cd <= 0 && t >= frustWakeAt && Math.abs(dx) < 4 * T && Math.abs(dy) < 90) { m.state = 'windup'; m.st = chapter.frustratedWindup; m.dir = Math.sign(dx) || 1; tone(120, .45, 'sawtooth', .035, -40); }
       } else if (m.state === 'windup') {
         m.st -= dt; if (Math.random() < .5) puff(m); if (m.st <= 0) { m.state = 'charge'; m.st = m.ambush ? 2.2 : 1.5; }
       } else if (m.state === 'charge') {
@@ -1270,7 +1274,7 @@
       const rock = scratchTarget.rock; if (!rock || rock.scratched || !cat.on || Math.abs(cat.y - rock.y) > 115) return false;
       rock.scratched = true; rock.holeDepth = 0; scratchAnim = .8; shake = Math.max(shake, rock.marked ? 0 : 10);
       if (rock.marked) { const m = mood.find(x => x.type === 'B' && !x.dead); if (m) { m.state = 'scratching'; m.st = .8; m.rock = rock; } burst(rock.x, rock.y - 22, '#8a6a45', 12); float(rock.x, rock.y - 68, 'Something was buried here.', '#a67646'); tone(190 + Math.random() * 40, .12, 'triangle', .03, 100); }
-      else { rock.wrongUsed = true; tone(80, .5, 'sawtooth', .09, -40); announce('The mountain rumbles…', RED, 2); triggerBuriedAmbush(); }
+      else { rock.wrongUsed = true; tone(80, .5, 'sawtooth', .09, -40); announce('The ground rumbles…', RED, 2); triggerBuriedAmbush(); }
       scratchTarget = null; return true;
     }
     const m = scratchTarget;
@@ -1752,6 +1756,32 @@
     if (hi) { mEll(lx + look + rw * .35, y - rh * .35, hi, hi, 0, '#fff'); mEll(rx + look + rw * .35, y - rh * .35, hi, hi, 0, '#fff'); mEll(lx + look - rw * .3, y + rh * .45, hi * .45, hi * .45, 0, '#fff'); mEll(rx + look - rw * .3, y + rh * .45, hi * .45, hi * .45, 0, '#fff'); }
   }
   // draws one Moodling centred on (x, y); k = size, o = per-state options
+  function drawFrustSleep(x, y) {
+    const p = clamp(t / frustWakeAt, 0, 1), left = frustWakeAt - t, waking = left < 1.5;
+    const cx = x, cy = y - 56, r = 16;
+    ctx.save();
+    ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(20,12,40,.55)'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    const pulse = waking ? .65 + .35 * Math.sin(t * 14) : 1;
+    ctx.strokeStyle = waking ? `rgba(255,97,104,${pulse})` : 'rgba(243,236,255,.9)';
+    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = waking ? '#ff6168' : '#f3ecff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '800 16px Lexend, Arial, sans-serif'; ctx.fillText(waking ? '!' : 'z', cx, cy + 1);
+    if (!waking) {
+      for (let k = 0; k < 2; k++) {
+        const ph = (t * .7 + k * .5) % 1;
+        ctx.globalAlpha = Math.sin(ph * Math.PI) * .9;
+        ctx.font = `800 ${10 + k * 4}px Lexend, Arial, sans-serif`;
+        ctx.fillText('z', cx + 16 + ph * 10 + k * 6, cy - 8 - ph * 18 - k * 4);
+      }
+      ctx.globalAlpha = 1;
+    }
+    if (mode === 'story' && chapterFor(storyNight).tutorialHints) {
+      ctx.font = '700 13px Lexend, Arial, sans-serif'; ctx.fillStyle = waking ? '#ff8a8f' : 'rgba(243,236,255,.8)';
+      ctx.fillText(waking ? 'waking up!' : 'sleepy', cx, cy - 27);
+    }
+    ctx.restore();
+  }
   function drawCuteMood(type, x, y, k, o = {}) {
     const A = MOOD_ART[type], body = o.color;
     ctx.save(); ctx.translate(x, y);
@@ -1764,7 +1794,11 @@
       if (o.flash) { ctx.globalAlpha *= o.flash; mStroke(A.body, '#fff', 9); ctx.fillStyle = '#fff'; ctx.fill(A.body); ctx.globalAlpha /= o.flash; }
       mEll(50, 52, 9, 5, 0, 'rgba(255,190,180,.8)');
       mEll(42, 80, 6, 4, 0, '#FF9EB0'); mEll(78, 80, 6, 4, 0, '#FF9EB0');
-      if (o.dizzy) {
+      if (o.sleepy) {
+        ctx.strokeStyle = '#3A0A10'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+        [51, 69].forEach(ex => { ctx.beginPath(); ctx.arc(ex, 70, 4.5, .15 * Math.PI, .85 * Math.PI); ctx.stroke(); });
+        ctx.beginPath(); ctx.arc(60, 84, 2.5, 0, Math.PI * 2); ctx.stroke();
+      } else if (o.dizzy) {
         ctx.strokeStyle = '#3A0A10'; ctx.lineWidth = 2.5;
         [51, 69].forEach(ex => { ctx.beginPath(); ctx.arc(ex, 72, 4.5, o.t * 8, o.t * 8 + 5); ctx.stroke(); });
         mEll(60, 85, 3.5, 3, 0, '#3A0A10');
@@ -1863,7 +1897,9 @@
         if (m.state === 'windup') x += (Math.random() - .5) * 5;
         if (m.state === 'charge') { ctx.strokeStyle = 'rgba(255,97,104,.45)'; ctx.lineWidth = 3; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(x - m.dir * (26 + k * 10), y - 10 + k * 10); ctx.lineTo(x - m.dir * (60 + k * 14), y - 10 + k * 10); ctx.stroke(); } }
         const puffUp = m.state === 'windup' ? 1.12 : 1;
-        drawCuteMood('F', x, y, .62 * puffUp, { color: vcol('F', m.v), look, dizzy: m.state === 'dizzy', t, flash: m.state === 'windup' ? .25 + .25 * Math.sin(t * 30) : 0, cy: 70 });
+        const sleepy = m.state === 'patrol' && !m.ambush && t < frustWakeAt;
+        drawCuteMood('F', x, y, .62 * puffUp, { color: vcol('F', m.v), look, dizzy: m.state === 'dizzy', sleepy: sleepy && t < frustWakeAt - 1.2, t, flash: m.state === 'windup' ? .25 + .25 * Math.sin(t * 30) : 0, cy: 70 });
+        if (sleepy) drawFrustSleep(x, y);
         if (m.state === 'dizzy') for (let k = 0; k < 3; k++) { const a = t * 4 + k * 2.1; ctx.fillStyle = GOLD; star(x + Math.cos(a) * 20, y - 30 + Math.sin(a) * 5, 5, 5, 2, 0); ctx.fill(); }
       } else if (m.type === 'N') {
         const d = Math.hypot(cat.x - m.x, cat.y - 24 - m.y), R = uv('paws') * T;
