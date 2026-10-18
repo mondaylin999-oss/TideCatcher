@@ -41,7 +41,7 @@
     const now = performance.now();
     if (now - (last[name] || 0) < 90) return;           // never machine-gun the same sound
     last[name] = now;
-    const g = volume * vol * (LEVEL[name] || 1), rate = 0.97 + Math.random() * 0.06;
+    const g = volume * vol * (LEVEL[name] || 1), rate = 1;   // play every sound exactly as it was made
     if (buffers[name] && ensure()) {
       const s = ctx.createBufferSource(), gn = ctx.createGain();
       s.buffer = buffers[name]; s.playbackRate.value = rate; gn.gain.value = g;
