@@ -21,7 +21,7 @@ Files: `frontend/assets/audio/wav/` (44.1 kHz 16-bit mono) and `.../ogg/` (use t
 | sfx_mood_excited_boing | Excited, yellow | bouncy "ya-ya-yoo!" |
 | sfx_mood_calm_chime | Calm, green | warm "mm-loo" + tiny bell |
 | sfx_mood_shy_giggle | Shy, pink | "eep!" + "mi" |
-| sfx_mood_jealous_hmph | Jealous, orange | v3: a short pouty nasal "Hmph!" with a puff of air (re-made 19 Oct, see PROCESS) |
+| sfx_mood_jealous_hmph | Jealous, orange | pouty "hmph" |
 | sfx_mood_golden_sparkle | Golden, yellow | warm sparkle |
 | sfx_catch_happy_chime | catch | soft "pon" + two-note bell |
 
