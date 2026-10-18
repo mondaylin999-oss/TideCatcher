@@ -54,17 +54,9 @@ U = (650, 1150, 2500)       # "uh" (pouty)
 I = (380, 2300, 3000)       # "ee"
 A = (750, 1250, 2600)       # "ah"
 
-# A: "Hmph!" ... "mi-ine~"   (huff, then a whiny 'that's MINE')
-a = np.zeros(int(.95 * SR))
-place(a, voice(.20, [(0, 400), (.12, 590), (.2, 470)], [(0, M), (.12, U), (.2, U)], [(0, 0), (.03, .8), (.15, 1), (.2, 0)], nasal=.8), 0)
-place(a, noise_burst(.10, 1200, 5000, [(0, 0), (.01, .55), (.1, 0)]), .17)            # the 'ph!' puff of air
-place(a, voice(.55, [(0, 470), (.12, 520), (.30, 640), (.55, 500)], [(0, M), (.08, A), (.32, A), (.55, I)], [(0, 0), (.05, .7), (.3, .9), (.55, 0)], vib=(6.5, .025), nasal=.35), .36)
-sf.write('jealous_A.wav', finish(room(a)), SR, subtype='PCM_16')
-
-# B: "Hmm~?" (side-eye) then a sharp "HMPH!"
-b = np.zeros(int(.85 * SR))
-place(b, voice(.34, [(0, 430), (.18, 600), (.34, 680)], [(0, M), (.34, M)], [(0, 0), (.05, .6), (.3, .7), (.34, 0)], vib=(7, .02), nasal=1.0), 0)
-place(b, voice(.22, [(0, 620), (.08, 680), (.22, 430)], [(0, M), (.07, U), (.22, U)], [(0, 0), (.02, 1), (.15, 1), (.22, 0)], nasal=.6), .42)
-place(b, noise_burst(.12, 1200, 5500, [(0, 0), (.01, .7), (.12, 0)]), .6)
-sf.write('jealous_B.wav', finish(room(b)), SR, subtype='PCM_16')
+# Final: just a pouty "Hmph!" (nasal rise, sharp fall, puff of air)
+h = np.zeros(int(.42 * SR))
+place(h, voice(.24, [(0, 400), (.13, 600), (.24, 450)], [(0, M), (.12, U), (.24, U)], [(0, 0), (.03, .8), (.17, 1), (.24, 0)], nasal=.8), 0)
+place(h, noise_burst(.13, 1200, 5000, [(0, 0), (.01, .6), (.13, 0)]), .19)
+sf.write('jealous_hmph.wav', finish(room(h)), SR, subtype='PCM_16')
 print('ok')
