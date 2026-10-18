@@ -8,6 +8,6 @@
 Rebuild: ask for `build_pack.py` (kept outside the ZIP) then `python -I build_pack.py` (numpy, soundfile). Original recordings are fetched separately into `_downloads_untrusted/oga/` (not in this ZIP).
 
 ## Update 19 Oct 2026 (integration)
-- `sfx_mood_jealous_hmph` was re-made because the first version sounded like Frustrated (one falling "hmph"). New version: additive voice synthesis in NumPy (`jealous_synth.py`, version A chosen by the team): a nasal "Hmph!" rising then falling with a puff of air, then a whiny sing-song "mi-ine~". Same loudness as the pack (-23 dB RMS). Written with an AI assistant (Claude); no AI audio model, no samples.
+- `sfx_mood_jealous_hmph` was re-made because the first version sounded like Frustrated (one falling "hmph"). New version: additive voice synthesis in NumPy (`jealous_synth.py`): a nasal "Hmph!" rising then falling with a puff of air, kept short on request (no "mine"). Same loudness as the pack (-23 dB RMS). Written with an AI assistant (Claude); no AI audio model, no samples.
 - MP3 copies of every sound were added for browsers without Ogg support.
 - Wired into the game (`js/tc-sfx.js` + calls in `js/game.js`): catch chime + Moodling voice, Moodling reactions, Shwe's meow/hurt/purr/hiss/trill, Golden sparkle; "Sound effects" slider and "Mute all" in Settings.
