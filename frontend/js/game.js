@@ -1325,18 +1325,17 @@
     }
     if (Math.abs(cat.x - m.x) < 6 * T) { ctx.font = `600 11px ${BODY}`; ctx.textAlign = 'center'; ctx.fillStyle = GOLD; ctx.fillText('RARE', m.x, m.y - (k === 'F1' ? 56 : 44)); }
   }
+  // The little lights in Shwe's trail (and in the coming-home scene) are tiny versions of the real Moodlings,
+  // so they look the same as in the Night Side and the Mood Book.
+  const lightSprites = {};
+  function lightSprite(type, v = 0) {
+    const key = type + (v || 0); if (lightSprites[key]) return lightSprites[key];
+    const c = document.createElement('canvas'); c.width = c.height = 120; const main = ctx; ctx = c.getContext('2d');
+    try { drawCuteMood(type, 60, 64, .82, { ...moodLook(type, v), t: 0 }); } finally { ctx = main; }
+    return (lightSprites[key] = c);
+  }
   function lightShape(type, x, y, s, v) {
-    if (type === 'E' || type === 'S' || type === 'J') {
-      const cc = col(type); ctx.fillStyle = cc; ctx.shadowColor = cc; ctx.shadowBlur = 14; ctx.beginPath();
-      if (type === 'E') { ctx.arc(x, y, 7 * s, 0, 7); ctx.fill(); ctx.fillStyle = '#fff6c8'; star(x + 7 * s, y - 7 * s, 4, 3.5 * s, 1.2 * s, 0); ctx.fill(); }
-      else if (type === 'S') { ctx.arc(x, y + 1 * s, 6.5 * s, 0, 7); ctx.fill(); [-1, 0, 1].forEach(k => { ctx.beginPath(); ctx.ellipse(x + k * 4.5 * s, y - 6 * s, 2.6 * s, 3.6 * s, k * .5, 0, 7); ctx.fill(); }); }
-      else { ctx.moveTo(x, y - 10 * s); ctx.bezierCurveTo(x + 4 * s, y - 4 * s, x + 8 * s, y - 1 * s, x + 7 * s, y + 4 * s); ctx.bezierCurveTo(x + 6 * s, y + 9 * s, x - 6 * s, y + 9 * s, x - 7 * s, y + 4 * s); ctx.bezierCurveTo(x - 8 * s, y - 1 * s, x - 3 * s, y - 3 * s, x, y - 10 * s); ctx.fill(); }
-      ctx.shadowBlur = 0; return;
-    }
-    const cc = v ? vcol(type, v) : col(type);
-    ctx.fillStyle = cc; ctx.shadowColor = cc; ctx.shadowBlur = 14;
-    if (type === 'F') star(x, y, 5, 9 * s, 4 * s, t * 2); else if (type === 'N') zig(x, y, 8 * s, .6); else if (type === 'L') tear(x, y + 2 * s, 6 * s); else if (type === 'C') { ctx.beginPath(); ctx.arc(x, y, 7 * s, 0, 7); ctx.fill(); ctx.strokeStyle = cc; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 10 * s, t, t + Math.PI * 1.5); ctx.stroke(); } else if (type === 'B') { ctx.beginPath(); for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + i * Math.PI / 3; ctx.lineTo(x + Math.cos(a) * 7 * s, y + Math.sin(a) * 7 * s); } ctx.closePath(); } else { ctx.beginPath(); ctx.arc(x, y, 7 * s, 0, 7); }
-    if (type !== 'C') ctx.fill(); ctx.shadowBlur = 0;
+    const w = 40 * s; ctx.drawImage(lightSprite(type, v), x - w / 2, y - w / 2, w, w);
   }
 
   function drawBG() {
@@ -2047,7 +2046,7 @@
     const done = have >= needN;
     ctx.fillStyle = 'rgba(22,15,44,.75)'; ctx.strokeStyle = done ? col(type) : 'rgba(243,236,255,.16)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, width, 40, 20) : ctx.rect(x, y, width, 40); ctx.fill(); ctx.stroke();
-    lightShape(type, x + 22, y + 20, 1.1);
+    lightShape(type, x + 22, y + 20, .95);
     ctx.fillStyle = INK; ctx.font = `800 20px ${DISP}`; ctx.textAlign = 'left';
     ctx.fillText(done ? '✓' : `${have}/${needN}`, x + 44, y + 27);
   }
@@ -2265,15 +2264,17 @@
   });
   // Mood Book portraits use the same Moodling art as the game, so every page matches what you catch.
   const bookPortraits = {};
+  function moodLook(ty, v = 0) {
+    return { F: { color: vcol('F', v), cy: 70 }, N: { color: vcol('N', v), cy: 70 }, L: { color: vcol('L', v), cy: 70 }, B: { color: vcol('B', v), cy: 70 },
+      C: { color: '#4FDB92', glow: CALM, cy: 70 }, E: { color: EXC, cy: 72 }, S: { color: SHY, cy: 70 }, J: { color: JEAL, cy: 68 }, G: { color: '#FFE27A', glow: '#fff3c4', cy: 64 } }[ty] || { color: vcol(ty, v), cy: 70 };
+  }
   function bookPortrait(ty, v, known) {
     const key = ty + v + (known ? 'k' : 'u');
     if (bookPortraits[key]) return bookPortraits[key];
     const c = document.createElement('canvas'); c.width = c.height = 168;
     const main = ctx; ctx = c.getContext('2d');
     try {
-      const look = { F: { color: vcol('F', v), cy: 70 }, N: { color: vcol('N', v), cy: 70 }, L: { color: vcol('L', v), cy: 70 }, B: { color: vcol('B', v), cy: 70 },
-        C: { color: '#4FDB92', glow: CALM, cy: 70 }, E: { color: EXC, cy: 72 }, S: { color: SHY, cy: 70 }, J: { color: JEAL, cy: 68 }, G: { color: '#FFE27A', glow: '#fff3c4', cy: 64 } }[ty] || { color: vcol(ty, v), cy: 70 };
-      drawCuteMood(ty, 84, 86, 1.55, { ...look, t: 0 });
+      drawCuteMood(ty, 84, 86, 1.55, { ...moodLook(ty, v), t: 0 });
       if (!known) { ctx.globalCompositeOperation = 'source-in'; ctx.fillStyle = 'rgba(243,236,255,.16)'; ctx.fillRect(0, 0, 168, 168); }
     } finally { ctx = main; }
     return (bookPortraits[key] = c.toDataURL());
