@@ -96,8 +96,11 @@
 
   // ---------- audio ----------
   let ac = null;
+  // sound effects from the Cat & Moodlings pack (js/tc-sfx.js); safe to call even if the file is missing
+  const sfx = (kind, a) => { try { if (window.TCSfx) TCSfx[kind](a); } catch (e) {} };
   function tone(f, d = .12, type = 'sine', v = .1, slide = 0) {
     if (!ac) return;
+    const lv = window.TCSfx ? TCSfx.level() : 1; if (lv <= 0) return; v *= lv / .8;
     try {
       const t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
       o.type = type; o.frequency.setValueAtTime(f, t0);
@@ -615,7 +618,7 @@
     ms.prog[id] = Math.min(d.goal, p + n); saveMissions();
     if (ms.prog[id] >= d.goal) {
       runDone.push(d.text);
-      if (state === 'play' || state === 'ending') { announce('Mission complete!', GOLD, 1.6); tone(880, .2, 'triangle', .06); setTimeout(() => tone(1175, .3, 'sine', .05), 120); }
+      if (state === 'play' || state === 'ending') { announce('Mission complete!', GOLD, 1.6); sfx('cat', 'trill'); }
     }
   }
   loadMissions();
@@ -761,7 +764,7 @@
   function panic(m, dx) {
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     m.state = 'panic'; m.st = chapter?.nervousPanicTime ?? 1.1; m.dir = -(Math.sign(dx) || 1); m.alarm = 0; startles++;
-    float(m.x, m.y - 34, 'Startled!', VIOLET); tone(900, .15, 'square', .03, 400);
+    float(m.x, m.y - 34, 'Startled!', VIOLET); sfx('moodling', 'N');
   }
   function detachTrail(count) {
     let dropped = 0;
@@ -779,7 +782,7 @@
   }
   function hitCat(m) {
     hits++; cat.inv = 1.2; cat.vx = m.dir * 420; cat.vy = -420; cat.on = false; cat.pounce = 0;
-    combo = 0; comboT = 0; tone(90, .3, 'sawtooth', .08, -40);
+    combo = 0; comboT = 0; sfx('cat', 'sad');
     shake = Math.max(shake, m.ambush ? 16 : 10);
     if (mode === 'free') { timeLeft = Math.max(0, timeLeft - 3); float(cat.x, cat.y - 88, '−3s', RED); }
     if (m.ambush) {
@@ -929,7 +932,7 @@
     burst(m.x, m.y, col(m.type), m.type === 'G' ? 40 : 22);
     float(m.x, m.y - 36, `+${pts}${combo > 1 ? '  ×' + combo : ''}${mode === 'free' && m.type !== 'G' ? '  +2s' : ''}`, col(m.type));
     const f = 523.25 * Math.pow(2, (combo - 1) * 2 / 12);
-    tone(f, .18, 'triangle', .09); setTimeout(() => tone(f * 1.5, .22, 'sine', .07), 70);
+    if (window.TCSfx) sfx('caught', m.type); else { tone(f, .18, 'triangle', .09); setTimeout(() => tone(f * 1.5, .22, 'sine', .07), 70); }
     if (mode === 'story' && Object.entries(need).every(([type, count]) => got[type] >= count) && state === 'play') { state = 'ending'; endT = 1.1; announce(moonHollow() ? 'The sun is up. Every feeling is home!' : 'All feelings found!', GOLD, 1.2); }
   }
 
@@ -974,7 +977,7 @@
       const dx = cat.x - m.x, dy = cat.y - (m.y + 20);
       if (m.state === 'patrol') {
         const asleep = !m.ambush && t < frustWakeAt; if (asleep && !m.slept) m.slept = 1;
-        if (!asleep && m.slept === 1) { m.slept = 2; float(m.x, m.y - 46, 'grr!', RED); tone(140, .25, 'sawtooth', .025, -30); }
+        if (!asleep && m.slept === 1) { m.slept = 2; float(m.x, m.y - 46, 'grr!', RED); sfx('moodling', 'F'); }
         if (!asleep) m.x += m.dir * 55 * dt * sp; if (Math.abs(m.x - m.home) > 140) m.dir = Math.sign(m.home - m.x) || 1;
         m.x = clamp(m.x, 40, WORLD - 40); m.cd -= dt;
         if (m.cd <= 0 && t >= frustWakeAt && Math.abs(dx) < 4 * T && Math.abs(dy) < 90) { m.state = 'windup'; m.st = chapter.frustratedWindup; m.dir = Math.sign(dx) || 1; tone(120, .45, 'sawtooth', .035, -40); }
@@ -1031,13 +1034,13 @@
         if (m.st <= 0) { m.state = 'emerging'; m.st = .38; m.alpha = .04; m.spot.used = true; m.spot.usedAt = t; m.spot.scratching = false; burst(m.x, floorY - 22, m.type === 'C' ? '#a8e7a3' : '#c8a47a', 14); float(m.x, floorY - 68, m.type === 'C' ? 'A quiet glow!' : 'Someone was hiding here', moodColor); tone(m.type === 'C' ? 740 : 988, .2, 'sine', .045); }
       } else if (m.state === 'emerging') {
         m.alpha = Math.min(1, m.alpha + dt * 2.7); m.st -= dt;
-        if (m.st <= 0) { m.state = 'revealed'; m.alpha = 1; tone(m.type === 'C' ? 988 : 1318, .24, 'sine', .035); }
+        if (m.st <= 0) { m.state = 'revealed'; m.alpha = 1; sfx('moodling', m.type === 'C' ? 'C' : 'L'); }
       } else if (m.state === 'revealed' || m.state === 'flee') {
         m.y = floorY - (m.type === 'C' ? 46 : 30) + Math.sin(t * 2 + m.phase) * 4;
         if (m.state === 'revealed' && m.type === 'L') {
           const close = Math.abs(dx) < 115, startled = !cat.on || cat.justLanded || Math.abs(cat.vx) > 110;
           m.fleeAlarm = close && startled ? m.fleeAlarm + dt : Math.max(0, m.fleeAlarm - dt * 1.8);
-          if (m.fleeAlarm > .48) { m.state = 'flee'; m.st = .72; m.dir = -(Math.sign(dx) || 1); m.sit = 0; float(m.x, m.y - 36, 'Lonely darted away!', BLUE); tone(840, .16, 'sine', .035, -300); }
+          if (m.fleeAlarm > .48) { m.state = 'flee'; m.st = .72; m.dir = -(Math.sign(dx) || 1); m.sit = 0; float(m.x, m.y - 36, 'Lonely darted away!', BLUE); sfx('moodling', 'L'); }
         }
         if (m.state === 'flee') {
           m.x += m.dir * 240 * sp * dt; m.alpha = Math.max(0, m.alpha - dt * .7); m.st -= dt;
@@ -1079,7 +1082,7 @@
       } else if (m.state === 'turn') { m.st -= dt; if (m.st <= 0) { m.state = 'look'; m.st = 1.3; } }
       else if (m.state === 'look') {
         m.st -= dt; const moving = Math.abs(cat.vx) > 30 || !cat.on;
-        if (Math.abs(dx) < 6 * T && moving && t >= 3) { m.state = 'hide'; m.st = 2.2; float(m.x, m.y - 40, 'Shy saw you move and hid!', SHY); tone(700, .15, 'sine', .035, -250); startles++; }
+        if (Math.abs(dx) < 6 * T && moving && t >= 3) { m.state = 'hide'; m.st = 2.2; float(m.x, m.y - 40, 'Shy saw you move and hid!', SHY); sfx('moodling', 'S'); startles++; }
         else if (m.st <= 0) { m.state = 'walk'; m.st = 1.8 + Math.random() * 1.6; m.dir = -(Math.sign(dx) || 1); }
       } else if (m.state === 'hide') {
         m.alpha = Math.max(0, m.alpha - dt * 3); m.st -= dt;
@@ -1094,7 +1097,7 @@
         if (m.cd <= 0 && trail.length && cat.inv <= 0 && Math.abs(dx) < 2.6 * T && Math.abs(cat.y - 24 - m.y) < 70 && t >= 4) {
           const l = trail.pop(); if (got[l.type] !== undefined) got[l.type] = Math.max(0, got[l.type] - 1);
           m.stolen.push(l); m.state = 'flee'; m.st = 1.5; m.dir = -(Math.sign(dx) || 1); combo = 0; comboT = 0;
-          float(cat.x, cat.y - 84, 'Jealous stole a light!', JEAL); tone(300, .2, 'sawtooth', .04, -150);
+          float(cat.x, cat.y - 84, 'Jealous stole a light!', JEAL); sfx('moodling', 'J');
         }
       } else if (m.state === 'flee') {
         m.x += m.dir * 7.5 * T * sp * dt; m.y = floor + Math.sin(t * 14) * 3; m.st -= dt;
@@ -1146,7 +1149,7 @@
       if (m.type === 'B' && m.state === 'buried') { cat.bounced = true; cat.vx = -cat.face * 260; cat.pounce = 0; float(cat.x, cat.y - 70, 'It’s still buried. Scratch the rock.', '#a67646'); tone(150, .12, 'square', .05); continue; }
       if (m.alpha < .5) continue;
       if (m.type === 'F' && m.state !== 'dizzy') {
-        if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 300; cat.pounce = 0; float(m.x, m.y - 40, "Wait until it's dizzy", RED); tone(150, .12, 'square', .05); }
+        if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 300; cat.pounce = 0; float(m.x, m.y - 40, "Wait until it's dizzy", RED); sfx('cat', 'hiss'); }
         continue;
       }
       if (m.type === 'L' && mode === 'story' && storyNight === 1) {
@@ -1160,11 +1163,11 @@
       }
       if (m.type === 'N' && m.state !== 'wander') continue;
       if (m.type === 'E' && !m.apex) {
-        if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 260; cat.pounce = 0; float(m.x, m.y - 40, 'Too bouncy! Catch it at the top', EXC); tone(180, .12, 'square', .04); }
+        if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 260; cat.pounce = 0; float(m.x, m.y - 40, 'Too bouncy! Catch it at the top', EXC); sfx('moodling', 'E'); }
         continue;
       }
       if (m.type === 'S' && (m.state === 'look' || m.state === 'hide')) {
-        if (m.state === 'look') { m.state = 'hide'; m.st = 2.2; float(m.x, m.y - 40, 'It saw you coming!', SHY); tone(700, .15, 'sine', .035, -250); }
+        if (m.state === 'look') { m.state = 'hide'; m.st = 2.2; float(m.x, m.y - 40, 'It saw you coming!', SHY); sfx('moodling', 'S'); }
         continue;
       }
       if (m.type === 'J' && m.state === 'flee') {
@@ -1184,7 +1187,7 @@
     const pop = mood.filter(m => m.type !== 'G').length, want = Math.min(14, 6 + level * 2);
     const lonely = mood.filter(m => m.type === 'L').length;
     if (pop < want && Math.random() < dt * 2) { const r = Math.random(); spawn(lonely < 2 && r < .2 ? 'L' : level >= 1 && r > .82 ? ['E', 'S', 'J'][Math.floor(Math.random() * 3)] : Math.random() < .5 ? 'F' : 'N'); }
-    if (freeT >= nextGold) { nextGold += 25; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); announce('Golden Moodling! +5 seconds', GOLD); tone(1046, .3, 'sine', .06); }
+    if (freeT >= nextGold) { nextGold += 25; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); sfx('moodling', 'G'); announce('Golden Moodling! +5 seconds', GOLD); tone(1046, .3, 'sine', .06); }
   }
   function update(dt) {
     t += dt;
@@ -1194,7 +1197,7 @@
     if (!last || Math.hypot(last.x - cat.x, last.y - cat.y) > 3) { hist.push({ x: cat.x, y: cat.y }); if (hist.length > 500) hist.shift(); }
     if (purrQ && upg.purr > 0 && purrCd <= 0) {
       purrT = 3; purrCd = uv('purr');
-      float(cat.x, cat.y - 70, 'Purrr…', '#c8ff8a'); tone(110, .7, 'sine', .09, -15); setTimeout(() => tone(165, .6, 'sine', .05, -20), 60);
+      float(cat.x, cat.y - 70, 'Purrr…', '#c8ff8a'); sfx('cat', 'purr');
     }
     purrQ = false; purrT = Math.max(0, purrT - dt); purrCd = Math.max(0, purrCd - dt);
     if (eyesQ && eyesCd <= 0) { eyesT = 4; eyesCd = 9; tone(740, .25, 'sine', .05, 300); }
@@ -1216,8 +1219,8 @@
       const chapter = mode === 'story' ? chapterFor(storyNight) : null;
       if (mode === 'story') maybeSpawnSky();
       if (mode === 'free' || chapter.goldensAllowed > 0) {
-        if (!goldDone.a && timeLeft <= 62 && (mode === 'free' || chapter.goldensAllowed >= 1)) { goldDone.a = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); announce('A golden Moodling appeared!', GOLD); tone(1046, .3, 'sine', .06); }
-        if (!goldDone.b && timeLeft <= 28 && (mode === 'free' || chapter.goldensAllowed >= 2)) { goldDone.b = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); announce('Golden Moodling! Catch it!', GOLD); tone(1046, .3, 'sine', .06); }
+        if (!goldDone.a && timeLeft <= 62 && (mode === 'free' || chapter.goldensAllowed >= 1)) { goldDone.a = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); sfx('moodling', 'G'); announce('A golden Moodling appeared!', GOLD); tone(1046, .3, 'sine', .06); }
+        if (!goldDone.b && timeLeft <= 28 && (mode === 'free' || chapter.goldensAllowed >= 2)) { goldDone.b = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); sfx('moodling', 'G'); announce('Golden Moodling! Catch it!', GOLD); tone(1046, .3, 'sine', .06); }
       }
       if (!chaos && timeLeft <= 15 && (mode === 'free' || chapter.chaosWave)) {
         chaos = true;
@@ -2567,7 +2570,7 @@
     const homeLine = { F: 'Her frustration came home', N: 'Her nerves came home', L: 'Her loneliness came home', C: 'A little calm came home', B: 'A buried feeling came home', E: 'Her excitement came home', S: 'Her shyness came home', J: 'Her jealousy came home', G: 'A bright feeling came home' }[L.type] || 'A feeling came home';
     h.floats.push({ x: THIRI.x + 60, y: THIRI.y - 40 - (cnt % 2) * 24, text: homeLine, c: col(L.type), life: 1.6 });
     const f = 523.25 * Math.pow(2, (cnt - 1) * 2 / 12);
-    tone(f, .3, 'sine', .07); setTimeout(() => tone(f * 1.5, .35, 'triangle', .04), 90);
+    if (window.TCSfx) sfx('caught', L.type); else { tone(f, .3, 'sine', .07); setTimeout(() => tone(f * 1.5, .35, 'triangle', .04), 90); }
   }
   function homeKey() {
     if (!H) return;
@@ -2807,7 +2810,7 @@
   function startGame(m, night = storyNight) {
     if (typeof m === 'string') mode = m;
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 7) : 1;
-    initAudio();
+    initAudio(); setTimeout(() => sfx('cat', 'meow'), 400);
     cv.hidden = false;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
