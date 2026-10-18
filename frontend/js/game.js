@@ -880,6 +880,8 @@
     if (m.y >= m.skyTargetY) landSkyMood(m, chapter);
   }
   function catchIt(m) {
+    // an angry Frustrated from the rocks still counts if Shwe needs more of that feeling tonight
+    if (m.ambush && mode === 'story' && Object.prototype.hasOwnProperty.call(got, m.type) && got[m.type] < need[m.type]) m.ambush = false;
     if (m.ambush) {
       const gain = 8 + 2 * combo;
       glowRun += gain; bump('glow', gain);
@@ -890,6 +892,8 @@
       return;
     }
     if (mode === 'story' && m.type !== 'G' && got[m.type] >= need[m.type]) {
+      // only once per pounce: stop the pounce and give this Moodling a moment before it can be caught again
+      cat.pounce = 0; cat.bounced = true; m.noCatchUntil = t + 1.5;
       float(m.x, m.y - 34, 'Not needed tonight  −3s', MUTED);
       timeLeft = Math.max(0, timeLeft - 3); combo = 0; comboT = 0;
       if (m.type === 'N') panic(m, cat.x - m.x);
@@ -1137,6 +1141,7 @@
         continue;
       }
       if (m.sky && m.skyGroundStun > 0) continue;
+      if (m.noCatchUntil && t < m.noCatchUntil) continue;
       if (Math.hypot(m.x - cx, m.y - cy) > uv('pounce')) continue;
       if (m.type === 'B' && m.state === 'buried') { cat.bounced = true; cat.vx = -cat.face * 260; cat.pounce = 0; float(cat.x, cat.y - 70, 'It’s still buried. Scratch the rock.', '#a67646'); tone(150, .12, 'square', .05); continue; }
       if (m.alpha < .5) continue;
