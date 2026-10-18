@@ -2414,7 +2414,7 @@
     const rects = ROOM_PARTS[ty], pad = 30;
     const bx = Math.max(0, Math.min(...rects.map(r => r[0])) - pad), by = Math.max(0, Math.min(...rects.map(r => r[1])) - pad);
     const bx1 = Math.min(ROOM_W, Math.max(...rects.map(r => r[0] + r[2])) + pad), by1 = Math.min(ROOM_H, Math.max(...rects.map(r => r[1] + r[3])) + pad);
-    const sc = .7, c = document.createElement('canvas'); c.width = Math.ceil((bx1 - bx) * sc); c.height = Math.ceil((by1 - by) * sc);
+    const sc = 1.3, c = document.createElement('canvas'); c.width = Math.ceil((bx1 - bx) * sc); c.height = Math.ceil((by1 - by) * sc);
     const g = c.getContext('2d'), off = c.width + 4000;
     // soft-edged mask: draw the shapes far away and keep only their blurred shadow
     g.save(); g.shadowColor = '#000'; g.shadowBlur = 26 * sc; g.shadowOffsetX = off; g.fillStyle = '#000';
@@ -2433,50 +2433,45 @@
   }
   const roomWash = pose => pose >= 7 ? 1 : clamp(pose, 0, 7) / 7 * .45;  // how much colour the walls and floor have
 
-  // Thiri asleep in her bed, drawn in room units. pose goes 0 (curled away, crying) to 7 (awake).
+  // Thiri asleep in her bed: painted poses (colour and grey), placed over the bed in room units.
+  const THIRI_POSES = ['s0', 's1', 's2', 's3', 's5', 's7'], THIRI_AT = [0, 1, 2, 3, 5, 7];
+  const THIRI_IMG = {};
+  THIRI_POSES.forEach(k => { const c = new Image(), g = new Image(); c.src = `assets/home/thiri-${k}.webp`; g.src = `assets/home/thiri-${k}-grey.webp`; THIRI_IMG[k] = { c, g }; });
+  const imgOk = im => im && im.complete && im.naturalWidth > 0;
   function drawThiriInBed(pose, warm, dawn, breath) {
-    const skin = mix('#8e8798', '#f2c4a0', warm), hair = mix('#2e2b37', '#35213f', warm), hairHi = mix('#45424f', '#5a3a68', warm), ink = '#2a1c2e';
-    const blanket = mix('#5d5268', '#d0466f', warm), blanketHi = mix('#6e6479', '#e5658b', warm), pj = mix('#77728a', '#b9a2ff', warm);
-    const hx = 238, hy = 462 - clamp(pose, 0, 6) * .5;
-    // long hair spread over the pillow
-    ctx.fillStyle = hair; ctx.beginPath(); ctx.ellipse(hx - 16, hy - 4, 30, 21, -.35, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(hx - 30, hy + 12, 16, 10, .5, 0, 7); ctx.fill();
-    // pyjama shoulder
-    ctx.fillStyle = pj; ctx.beginPath(); ctx.ellipse(hx + 30, hy + 27 + breath * .3, 22, 12, -.15, 0, 7); ctx.fill();
-    if (pose < .5) {
-      // curled away from the room: only the back of her head
-      ctx.fillStyle = hair; ctx.beginPath(); ctx.arc(hx + 2, hy + 2, 24, 0, 7); ctx.fill();
-      ctx.strokeStyle = hairHi; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(hx - 2, hy - 2, 15, 3.5, 4.7); ctx.stroke();
-      ctx.beginPath(); ctx.arc(hx + 6, hy + 4, 17, 4.9, 5.8); ctx.stroke();
-    } else {
-      ctx.fillStyle = hair; ctx.beginPath(); ctx.arc(hx + 2, hy, 24, 0, 7); ctx.fill();
-      ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(hx + 4, hy + 6, 18, 17, 0, 0, 7); ctx.fill();
-      // fringe
-      ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(hx - 15, hy + 6); ctx.quadraticCurveTo(hx - 14, hy - 18, hx + 6, hy - 17); ctx.quadraticCurveTo(hx + 24, hy - 15, hx + 23, hy + 7);
-      ctx.quadraticCurveTo(hx + 18, hy - 3, hx + 12, hy - 2); ctx.quadraticCurveTo(hx + 7, hy + 1, hx + 2, hy - 3); ctx.quadraticCurveTo(hx - 4, hy + 1, hx - 9, hy - 1); ctx.quadraticCurveTo(hx - 13, hy + 1, hx - 15, hy + 6); ctx.fill();
-      ctx.strokeStyle = hairHi; ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(hx + 2, hy - 2, 17, 3.7, 4.6); ctx.stroke();
-      ctx.fillStyle = `rgba(255,130,155,${.12 + .4 * clamp((pose - 2) / 4, 0, 1) * warm})`; ctx.beginPath(); ctx.ellipse(hx - 6, hy + 13, 4.2, 2.8, 0, 0, 7); ctx.ellipse(hx + 15, hy + 13, 4.2, 2.8, 0, 0, 7); ctx.fill();
-      ctx.strokeStyle = ink; ctx.lineWidth = 1.9;
-      const open = pose >= 7 ? clamp(dawn * 1.4, 0, 1) : 0;
-      [hx - 3, hx + 12].forEach(ex => {
-        if (open > .5) { ctx.fillStyle = ink; ctx.beginPath(); ctx.ellipse(ex, hy + 8, 2.2, 2.9 * open, 0, 0, 7); ctx.fill(); }
-        else { ctx.beginPath(); ctx.arc(ex, hy + 6, 3.4, .15 * Math.PI, .85 * Math.PI); ctx.stroke(); }
-      });
-      const sad = clamp((3 - pose) / 3, 0, 1);
-      if (sad > 0) { ctx.globalAlpha = sad; ctx.beginPath(); ctx.moveTo(hx - 7, hy + 1); ctx.lineTo(hx - 1, hy - 1); ctx.moveTo(hx + 16, hy + 1); ctx.lineTo(hx + 10, hy - 1); ctx.stroke(); ctx.globalAlpha = 1; }
-      const smile = clamp((pose - 3) / 3, 0, 1) * 3 - sad * 1.3;
-      ctx.beginPath(); ctx.moveTo(hx + 1, hy + 17); ctx.quadraticCurveTo(hx + 4.5, hy + 17 + smile, hx + 8, hy + 17); ctx.stroke();
+    // pick the two nearest poses and blend between them
+    const p = clamp(pose, 0, 7); let i = 0; while (i < THIRI_AT.length - 1 && THIRI_AT[i + 1] <= p) i++;
+    const j = Math.min(THIRI_AT.length - 1, i + 1), f = j === i ? 0 : clamp(p - (THIRI_AT[j] - 1), 0, 1);  // change pose during the last hour before the next one
+    const layers = [[THIRI_POSES[i], 1 - f], [THIRI_POSES[j], f]];
+    // soft moonlight on her so she is easy to find
+    const gl = ctx.createRadialGradient(250, 470, 10, 250, 470, 150); gl.addColorStop(0, `rgba(214,206,255,${.16 + .08 * warm})`); gl.addColorStop(1, 'rgba(214,206,255,0)');
+    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = gl; ctx.fillRect(100, 320, 300, 300); ctx.globalCompositeOperation = 'source-over';
+    const lift = breath * .35;
+    for (const [k, a] of layers) {
+      if (a <= .01) continue; const im = THIRI_IMG[k];
+      if (imgOk(im.g) && warm < 1) { ctx.globalAlpha = a; ctx.drawImage(im.g, 150, 400 + lift, 300, 150); }
+      if (imgOk(im.c) && warm > 0) { ctx.globalAlpha = a * warm; ctx.drawImage(im.c, 150, 400 + lift, 300, 150); }
     }
-    // the blanket pulled up over her, rising and falling as she breathes
-    ctx.fillStyle = blanket; ctx.beginPath(); ctx.moveTo(244, 500);
-    ctx.bezierCurveTo(250, 482 + breath, 300, 476 + breath, 360, 478 + breath * .7); ctx.bezierCurveTo(420, 480, 470, 488, 500, 500); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = blanketHi; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(252, 488 + breath); ctx.bezierCurveTo(300, 478 + breath, 380, 478 + breath, 440, 486); ctx.stroke();
-    // her hand comes out and reaches toward Shwe
-    const reach = clamp(pose - 2, 0, 1);
-    if (reach > 0) {
-      ctx.strokeStyle = pj; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(276, 490); ctx.quadraticCurveTo(298, 480 - 4 * reach, 304 + 26 * reach, 487); ctx.stroke();
-      ctx.fillStyle = skin; ctx.beginPath(); ctx.arc(308 + 28 * reach, 487, 5.5, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  // calm night details drawn over the painting: moonbeam, drifting dust, twinkling stars
+  const ROOM_STARS = [[548, 120], [596, 170], [652, 104], [688, 214], [742, 162], [560, 248], [1770, 110], [1812, 150], [1856, 102], [1838, 214]];
+  function drawRoomNight(dawn) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const [w, a] of [[0, .035], [28, .03], [56, .025]]) {  // three soft layers so the moonbeam has gentle edges
+      const beam = ctx.createLinearGradient(640, 300, 470, 760); beam.addColorStop(0, `rgba(190,184,255,${a * (1 - dawn)})`); beam.addColorStop(1, 'rgba(190,184,255,0)');
+      ctx.fillStyle = beam; ctx.beginPath(); ctx.moveTo(520 + w, 382); ctx.lineTo(778 - w, 382); ctx.lineTo(660 - w * 1.4, 770); ctx.lineTo(300 + w * 1.4, 770); ctx.closePath(); ctx.fill();
     }
+    for (let i = 0; i < 18; i++) {
+      const ph = (t * .025 + i * .137) % 1, x = 380 + ((i * 97) % 300) + Math.sin(t * .6 + i) * 14 - ph * 60, y = 400 + ph * 340;
+      const a = Math.sin(ph * Math.PI) * (.35 + .25 * Math.sin(t * 1.3 + i)) * (1 - dawn);
+      ctx.fillStyle = `rgba(236,232,255,${Math.max(0, a)})`; ctx.beginPath(); ctx.arc(x, y, 1.6 + (i % 3) * .6, 0, 7); ctx.fill();
+    }
+    ROOM_STARS.forEach(([x, y], i) => {
+      const a = (.35 + .45 * Math.max(0, Math.sin(t * (.8 + i * .13) + i * 2))) * (1 - dawn * .8);
+      ctx.fillStyle = `rgba(255,250,232,${a})`; ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x + 1.3, y - 1.3); ctx.lineTo(x + 5, y); ctx.lineTo(x + 1.3, y + 1.3); ctx.lineTo(x, y + 5); ctx.lineTo(x - 1.3, y + 1.3); ctx.lineTo(x - 5, y); ctx.lineTo(x - 1.3, y - 1.3); ctx.closePath(); ctx.fill();
+    });
+    ctx.restore();
   }
   // Draws the bedroom. cam = { x, y, z } (room point at the screen centre, zoom). W/H = screen size.
   function drawRoomScene(W, H, cam, look) {
@@ -2504,6 +2499,7 @@
       }
       ctx.fillStyle = `rgba(255,200,150,${.1 * look.dawn})`; ctx.fillRect(0, 0, ROOM_W, ROOM_H);
     }
+    drawRoomNight(look.dawn || 0);
     // Thiri, then Shwe curled up beside her
     const warm = Math.max(look.wash * 1.6, look.col.F || 0) * .85 + (look.pose >= 7 ? .15 : 0);
     drawThiriInBed(look.pose, clamp(warm, 0, 1), look.dawn || 0, Math.sin(t * 2.2) * 1.4);
@@ -2705,9 +2701,9 @@
   // camera for the coming-home scene: the whole bed-to-dresser side of the room, zooming in on Thiri at the end
   function homeCam(h) {
     const fullH = VH + OY * 2;
-    const z0 = Math.max(VW / 1300, fullH / ROOM_H);
+    const z0 = Math.max(VW / 1150, fullH / ROOM_H);
     const settle = h.zoom || 0, z = z0 * (1 + .45 * settle);
-    let cx = 640 + (330 - 640) * settle, cy = 430 + (470 - 430) * settle;
+    let cx = 575 + (330 - 575) * settle, cy = 440 + (470 - 440) * settle;
     if (h.focus && h.focus.k > 0) { const f = ease(clamp(h.focus.k, 0, 1)); cx += (h.focus.x - cx) * f; cy += (h.focus.y - cy) * f * .5; }
     const hw = VW / 2 / z, hh = fullH / 2 / z;
     return { x: clamp(cx, hw, ROOM_W - hw), y: clamp(cy, hh, ROOM_H - hh), z };
