@@ -79,7 +79,7 @@
   const col = ty => ty === 'F' ? RED : ty === 'N' ? VIOLET : ty === 'L' ? BLUE : ty === 'C' ? CALM : ty === 'B' ? '#a67646' : ty === 'E' ? EXC : ty === 'S' ? SHY : ty === 'J' ? JEAL : GOLD;
 
   // ---------- sizing ----------
-  let VW = 960, S = 1, OY = 0, dpr = 1;
+  let VW = 960, S = 1, OY = 0, dpr = 1, HUD_X = 68, HUD_CARD_W = 158;
   (function capGlow(c) {
     const d = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'shadowBlur');
     Object.defineProperty(c, 'shadowBlur', { get() { return d.get.call(this); }, set(v) { d.set.call(this, Math.min(v, 7)); } });
@@ -91,6 +91,11 @@
     cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
     S = h / VH; VW = w / S; OY = 0;
     if (VW < 760) { S = w / 760; VW = 760; OY = (h / S - VH) / 2; }
+    const pauseStyle = getComputedStyle(pauseBtn);
+    const pauseLeft = parseFloat(pauseStyle.left) || 10;
+    const pauseWidth = parseFloat(pauseStyle.width) || 48;
+    HUD_X = (pauseLeft + pauseWidth + 10) / S;
+    HUD_CARD_W = innerWidth <= 400 ? 150 : 158;
   }
   addEventListener('resize', resize); resize();
 
@@ -2504,17 +2509,18 @@
     const tl = Math.max(0, timeLeft), m = Math.floor(tl / 60), s = Math.floor(tl % 60);
     const urgent = tl <= 15 && state === 'play';
     ctx.textAlign = 'left';
-    ctx.fillStyle = uiToken('--glass'); rrect(10, top - 2, 158, 74, 22); ctx.fill();
-    ctx.font = `800 ${urgent ? 38 + Math.sin(t * 10) * 2 : 36}px ${DISP}`; ctx.fillStyle = urgent ? RED : INK;
-    ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, 20, top + 34);
-    ctx.font = `600 15px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText('SCORE', 22, top + 60);
-    ctx.font = `800 22px ${DISP}`; ctx.fillStyle = INK; ctx.fillText(score.toLocaleString(), 82, top + 61);
+    const hudCompact = innerWidth <= 400;
+    ctx.fillStyle = uiToken('--glass'); rrect(HUD_X, top - 2, HUD_CARD_W, 74, 22); ctx.fill();
+    ctx.font = `800 ${urgent ? (hudCompact ? 34 : 38) + Math.sin(t * 10) * 2 : hudCompact ? 32 : 36}px ${DISP}`; ctx.fillStyle = urgent ? RED : INK;
+    ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, HUD_X + 10, top + 34);
+    ctx.font = `600 ${hudCompact ? 13 : 15}px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText('SCORE', HUD_X + 12, top + 60);
+    ctx.font = `800 ${hudCompact ? 20 : 22}px ${DISP}`; ctx.fillStyle = INK; ctx.fillText(score.toLocaleString(), HUD_X + 72, top + 61);
     const hudChapter = mode === 'story' ? chapterFor(storyNight) : null;
     const skyEnabled = !!hudChapter && skyTotalFor(hudChapter) > 0;
     const skyLive = skyEnabled && mood.some(m => m.sky && !m.dead && ['wait', 'falling', 'struck', 'scratchReq', 'scratched'].includes(m.skyPhase));
     const compactSky = VW < 900;
     if (skyEnabled) {
-      const sx = compactSky ? 22 : 122, sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
+      const sx = compactSky ? HUD_X : HUD_X + HUD_CARD_W + 10, sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
       ctx.save(); ctx.globalAlpha = skyLive ? .84 + .16 * Math.sin(t * 5) : 1;
       ctx.fillStyle = 'rgba(22,15,44,.78)'; ctx.strokeStyle = skyLive ? 'rgba(205,224,255,.62)' : 'rgba(243,236,255,.22)'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.roundRect ? ctx.roundRect(sx, sy, sw, sh, 14) : ctx.rect(sx, sy, sw, sh); ctx.fill(); ctx.stroke();
