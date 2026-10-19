@@ -67,7 +67,8 @@
   else mobilePortraitQuery.addListener(syncMobileOrientationGate);
   if (mobileScreenOrientation && typeof mobileScreenOrientation.addEventListener === 'function') mobileScreenOrientation.addEventListener('change', syncMobileOrientationGate);
 
-  const T = 48, VH = 540, WORLD = 4200, GROUND = 470;
+  const T = 48, VH = 540, GROUND = 470;
+  let WORLD = 4200;
   // Canvas UI shares the same palette and typography as the DOM menus.
   const uiTheme = getComputedStyle(document.documentElement);
   const uiToken = name => uiTheme.getPropertyValue(name).trim();
@@ -125,10 +126,13 @@
 
   // ---------- input ----------
   const keys = {};
+  const DEBUG_ALLOWED = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).get('debug') === '1';
+  let debugLayout = false;
   let jumpQ = false, pounceQ = false, scratchQ = false, scratchHeld = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
   addEventListener('keydown', e => {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
+    if (e.code === 'F2' && DEBUG_ALLOWED) { e.preventDefault(); debugLayout = !debugLayout; return; }
     if (e.repeat) return;
     if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'play') { e.preventDefault(); pauseGame(); return; }
     if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'paused') { e.preventDefault(); sfx('ui', 'resume'); resumeGame(); return; }
@@ -192,19 +196,76 @@
   addEventListener('touchstart', () => { if (state === 'play') touchUI.hidden = false; }, { passive: true });
 
   // ---------- world ----------
-  const plats = [[300, 385, 170], [640, 330, 150], [930, 390, 210], [1260, 305, 170], [1520, 385, 190], [1830, 325, 160], [2120, 390, 210], [2380, 315, 150], [2730, 360, 180], [3100, 330, 190], [3500, 370, 170], [3920, 330, 180]];
-  let activePlats = plats;
-  const CAVE_XS = [430, 960, 1480, 2020, 2440, 2780, 3320, 3860];
-  const TRAIL_PROFILE = [[0,425],[120,432],[225,454],[320,480],[390,494],[470,486],[540,455],[620,415],[700,388],[820,382],[905,396],[980,438],[1030,476],[1100,490],[1180,478],[1240,438],[1310,390],[1390,365],[1510,360],[1600,372],[1680,398],[1770,405],[1850,396],[1920,430],[1990,474],[2070,496],[2160,482],[2230,448],[2300,405],[2360,375],[2440,360],[2530,385],[2600,430],[2700,462],[2800,490],[2880,480],[3000,438],[3120,390],[3210,368],[3300,380],[3400,420],[3500,470],[3580,494],[3650,487],[3760,445],[3860,400],[3960,368],[4050,385],[4140,440],[4200,470]];
-  function terrainY(x) {
-    if (inHill()) return hillY(x);
-    if (inSchool() || inFestival() || inPark() || inLake()) return GROUND;
-    if (x <= TRAIL_PROFILE[0][0]) return TRAIL_PROFILE[0][1];
-    for (let i = 1; i < TRAIL_PROFILE.length; i++) {
-      const a = TRAIL_PROFILE[i-1], b = TRAIL_PROFILE[i];
-      if (x <= b[0]) return a[1] + (b[1]-a[1]) * ((x-a[0])/(b[0]-a[0]));
+  let currentLevel = window.TC_LEVELS?.[1] || { width: 4200, ground: { points: [[0, GROUND], [4200, GROUND]], gaps: [] }, platforms: [], hideSpots: [], burySpots: [], spawnZones: [[120, 4080]], catStart: 200, props: [] };
+  let activePlats = [];
+  let currentProps = [];
+  const levelGroundY = x => {
+    const pts = currentLevel.ground.points, px = clamp(x, 0, currentLevel.width);
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1], b = pts[i];
+      if (px <= b[0]) return a[1] + (b[1] - a[1]) * ((px - a[0]) / Math.max(1, b[0] - a[0]));
     }
-    return TRAIL_PROFILE[TRAIL_PROFILE.length-1][1];
+    return pts[pts.length - 1][1];
+  };
+  function terrainY(x) {
+    const gap = (currentLevel.gaps || []).find(([a, b]) => x >= a && x <= b);
+    if (!gap) return levelGroundY(x);
+    const [a, b, lower] = gap, ramp = Math.min(30, (b - a) * .24), left = levelGroundY(a), right = levelGroundY(b);
+    if (x < a + ramp) return left + (lower - left) * ((x - a) / ramp);
+    if (x > b - ramp) return lower + (right - lower) * ((x - (b - ramp)) / ramp);
+    return lower;
+  }
+  function loadLevelGeometry() {
+    WORLD = currentLevel.width;
+    currentProps = (currentLevel.props || []).map(prop => ({ ...prop, baseX: prop.x, baseY: prop.y || 0 }));
+    activePlats = (currentLevel.platforms || []).map(spec => {
+      const info = spec[4] || {}, p = [spec[0], spec[1], spec[2]];
+      Object.assign(p, { type: spec[3] || 'static', path: info.path || null, speed: info.speed || 0, baseX: spec[0], baseY: spec[1], active: true, crumbleRemaining: 0, restRemaining: 0, movingPhase: 0 });
+      return p;
+    });
+  }
+  function updateLevelPlatforms(dt) {
+    for (const p of activePlats) {
+      p.prevX = p[0]; p.prevY = p[1];
+      if (p.type === 'moving' && p.path?.length > 1) {
+        const phase = ((t * p.speed) % 1 + 1) % 1, u = (1 - Math.cos(phase * Math.PI * 2)) * .5;
+        p[0] = p.path[0][0] + (p.path[1][0] - p.path[0][0]) * u;
+        p[1] = p.path[0][1] + (p.path[1][1] - p.path[0][1]) * u;
+      }
+      if (p.type === 'crumbling') {
+        if (p.crumbleRemaining > 0) { p.crumbleRemaining -= dt; if (p.crumbleRemaining <= 0) { p.active = false; p.restRemaining = 2.5; } }
+        else if (!p.active) { p.restRemaining -= dt; if (p.restRemaining <= 0) p.active = true; }
+      }
+      if (cat?.platform === p && cat.on && p.active) { cat.x += p[0] - p.prevX; cat.y += p[1] - p.prevY; }
+    }
+    for (const prop of currentProps) if (prop.path?.length > 1) {
+      const phase = ((t * (prop.speed || .5)) % 1 + 1) % 1, u = (1 - Math.cos(phase * Math.PI * 2)) * .5;
+      prop.x = prop.path[0][0] + (prop.path[1][0] - prop.path[0][0]) * u;
+      prop.y = prop.path[0][1] + (prop.path[1][1] - prop.path[0][1]) * u;
+    }
+  }
+  function safeLevelX(x) {
+    x = clamp(x, 80, WORLD - 80);
+    const gap = (currentLevel.gaps || []).find(([a, b]) => x > a && x < b);
+    return gap ? (x - gap[0] < gap[1] - x ? gap[0] - 48 : gap[1] + 48) : x;
+  }
+  function levelSpawnX() {
+    const zones = currentLevel.spawnZones?.length ? currentLevel.spawnZones : [[100, WORLD - 100]];
+    const clear = x => !(currentProps || []).some(p => x >= p.x - 34 && x <= p.x + (p.w || 80) + 34);
+    for (let i = 0; i < 48; i++) { const [a,b] = zones[Math.floor(Math.random() * zones.length)], x = safeLevelX(a + Math.random() * (b-a)); if (clear(x)) return x; }
+    return safeLevelX(zones[0][0]);
+  }
+  function safeSpawnX(x) {
+    x = safeLevelX(x);
+    if (!(currentProps || []).some(p => x >= p.x - 34 && x <= p.x + (p.w || 80) + 34)) return x;
+    const zones = currentLevel.spawnZones || [[100, WORLD - 100]], candidates = [];
+    for (const [a,b] of zones) { candidates.push(a+40,b-40,(a+b)/2); for (const p of currentProps) candidates.push(p.x-45,p.x+(p.w||80)+45); }
+    return candidates.map(safeLevelX).filter(v => v >= 80 && v <= WORLD-80 && zones.some(([a,b]) => v >= a && v <= b) && !(currentProps || []).some(p => v >= p.x-34 && v <= p.x+(p.w||80)+34)).sort((a,b) => Math.abs(a-x)-Math.abs(b-x))[0] ?? levelSpawnX();
+  }
+  function selectLevelForRun() {
+    if (mode === 'story') return window.TC_LEVELS[storyNight];
+    const variants = window.TC_LEVELS.free.variants;
+    return variants[Math.floor(Math.random() * variants.length)];
   }
   let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
   const FRUST_SLEEP = 5; // Frustrated sleeps for the first 5 seconds of the night clock
@@ -226,14 +287,7 @@
   const HILL_NIGHTS = [5];
   function inHill() { return mode === 'story' && HILL_NIGHTS.includes(storyNight); }
   const HILL_W = 1400;
-  const HILL_PROFILE = [[0,440],[330,440],[352,460],[600,460],[620,478],[880,478],[905,502],[1150,502],[1172,478],[1290,478],[1312,458],[1378,458],[1400,440]];
-  function hillY(x) {
-    const m = ((x % HILL_W) + HILL_W) % HILL_W;
-    for (let i = 1; i < HILL_PROFILE.length; i++) { const a = HILL_PROFILE[i - 1], b = HILL_PROFILE[i]; if (m <= b[0]) return a[1] + (b[1] - a[1]) * ((m - a[0]) / (b[0] - a[0])); }
-    return HILL_PROFILE[0][1];
-  }
-  const HILL_PLATS = [];
-  for (let o = 0; o < 4200; o += HILL_W) HILL_PLATS.push([o + 165, 330, 120], [o + 655, 420, 90], [o + 1185, 348, 120]);
+  function hillY(x) { return terrainY(x); }
   const HILL_VISTA = new Image();
   HILL_VISTA.src = 'assets/hill/hill-vista.webp';
   function drawHillSky() {
@@ -491,8 +545,7 @@
     return 'free';
   }
   const CAVE_LABELS = { school: 'locker', park: 'bush', festival: 'stall', hill: 'tree hollow', lake: 'reed bed', free: 'cave' };
-  const CAVE_XS_BY_MAP = { hill: [1345, 2745, 4145] };
-  function caveXsForMap() { return CAVE_XS_BY_MAP[currentMapKey()] || CAVE_XS; }
+  function caveXsForMap() { return currentLevel.hideSpots || []; }
   const NIGHT_CHAPTERS = [
     { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
     { night: 2, name: 'The Winners’ Wall', sub: 'Move quietly around Nervous, and watch for Jealous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 1, N: 3, J: 2 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce. Jealous steals lights from your trail; catch it when it is tired.', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 2, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' , sky: { A: 1, B: 0, C: 0, types: { A: ['N'], B: [], C: [] }, wait: 2.5, fallSpeed: 70, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
@@ -502,17 +555,6 @@
     { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 135, rareChance: .22, feelingsNeeded: { L: 2, C: 2, S: 1, E: 1 }, newMoodling: 'Calm is too dim to come home. Walk slowly to gather 3 fireflies, then bring them to Calm', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { L: 1, C: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: false, tutorialHint: 'Calm sits dim by the lake. Walk slowly into 3 fireflies, then bring their light to Calm.' , sky: { A: 2, B: 1, C: 0, types: { A: ['L'], B: ['E'], C: [] }, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
     { night: 7, name: 'Sunrise', sub: 'Bring every feeling home before the sun rises', theme: '#d6a866', musicRoot: 293.66, timeLimit: 150, rareChance: .30, feelingsNeeded: { F: 3, N: 2, J: 2, L: 2, S: 2, E: 2, B: 2, C: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 1, N: 1, J: 1, L: 1, S: 1, E: 1, B: 1, C: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
   ];
-  const PERCH_BUDGET = { 1: 12, 2: 10, 3: 9, 4: 8, 5: 6, 6: 4, 7: 2 };
-  function activePlatsForNight(night) {
-    if (mode === 'story' && HILL_NIGHTS.includes(night)) return HILL_PLATS;
-    if (mode !== 'story') return plats;
-    const budget = PERCH_BUDGET[night] ?? plats.length;
-    if (budget >= plats.length) return plats;
-    const step = (plats.length - 1) / Math.max(1, budget - 1);
-    const kept = [];
-    for (let i = 0; i < budget; i++) kept.push(plats[Math.round(i * step)]);
-    return kept;
-  }
   const chapterFor = night => NIGHT_CHAPTERS[clamp(night - 1, 0, NIGHT_CHAPTERS.length - 1)];
   // The whole story is one night: each level is one hour, from 11 PM to sunrise.
   const NIGHT_HOURS = ['11 PM', 'Midnight', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM'];
@@ -729,11 +771,11 @@
     free: { kind: 'classic stones', label: 'rock', labelMarked: 'marked rock', xs: [], draw: drawClassicRockBase, debris: [{ shape: 'chip', color: '#77736f' }, { shape: 'chip', color: '#a29b8d' }, { shape: 'chip', color: '#5f6260' }], glow: '#c8baff' }
   };
 
-  function newCat() { return { x: 200, y: terrainY(200), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false }; }
-  function pickX() { let x, n = 0; do { x = 150 + Math.random() * (WORLD - 300); n++; } while ((Math.abs(x - cat.x) < 380 || (mode === 'story' && rocks.some(spot => Math.abs(x - spot.x) < 100))) && n < 40); return x; }
+  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null }; }
+  function pickX() { let x, n = 0; do { x = levelSpawnX(); n++; } while ((Math.abs(x - cat.x) < 380 || (mode === 'story' && rocks.some(spot => Math.abs(x - spot.x) < 100))) && n < 40); return x; }
   function pickCaveX() {
     const occupied = new Set(mood.filter(m => !m.dead && m.caveX != null).map(m => m.caveX));
-    const caveXs = caveXsForMap();
+    const caveXs = currentLevel.hideSpots || [];
     const open = caveXs.filter(x => !occupied.has(x));
     const distant = open.filter(x => Math.abs(x - cat.x) > 220);
     const pool = distant.length ? distant : open.length ? open : caveXs;
@@ -757,21 +799,21 @@
   }
   function flySpotNear(x) {
     let fx, n = 0;
-    do { fx = clamp(x + (Math.random() < .5 ? -1 : 1) * (200 + Math.random() * 480), 120, WORLD - 120); n++; }
+    do { fx = safeLevelX(clamp(x + (Math.random() < .5 ? -1 : 1) * (200 + Math.random() * 480), 120, WORLD - 120)); n++; }
     while (n < 24 && (Math.abs(fx - cat.x) < 170 || fireflies.some(f => f.state === 'free' && Math.abs(f.hx - fx) < 110)));
     return fx;
   }
   function addFireflies(m) {
     for (let i = 0; i < FLY_NEED; i++) {
       const fx = flySpotNear(m.x);
-      fireflies.push({ x: fx, y: GROUND - 46, hx: fx, hy: GROUND - 34 - Math.random() * 30, ox: m.x, state: 'free', phase: Math.random() * 7, st: 0, fast: 0, calm: null, dead: false });
+      fireflies.push({ x: fx, y: terrainY(fx) - 46, hx: fx, hy: terrainY(fx) - 34 - Math.random() * 30, ox: m.x, state: 'free', phase: Math.random() * 7, st: 0, fast: 0, calm: null, dead: false });
     }
   }
   const carriedFlies = () => fireflies.filter(f => f.state === 'follow');
   function scatterFly(f, fromCat) {
     if (!fromCat && activeItems.jar) { activeItems.jar = false; f.state = 'follow'; float(f.x, f.y - 26, '🫙 The jar caught it!', '#e8ff8a'); tone(1046, .14, 'sine', .045); return; }
     const fx = flySpotNear(f.ox);
-    f.state = 'free'; f.hx = fx; f.hy = GROUND - 34 - Math.random() * 30; f.fast = 1.4;
+    f.state = 'free'; f.hx = fx; f.hy = terrainY(fx) - 34 - Math.random() * 30; f.fast = 1.4;
     for (let k = 0; k < 6; k++) parts.push({ x: f.x, y: f.y, vx: (Math.random() - .5) * 120, vy: (Math.random() - .5) * 120, life: .5, max: .5, c: '#e8ff8a', r: 2, g: 0 });
     if (!fromCat && t - flyMsgAt > 1.2) {
       flyMsgAt = t; float(f.x, f.y - 26, 'Too fast! The firefly flew off', '#e8ff8a');
@@ -864,7 +906,8 @@
   }
   function spawn(type, x) {
     const hidesInCave = type === 'C' || (type === 'L' && moonHollow());
-    x = x ?? (hidesInCave ? pickCaveX() : pickX());
+    x = safeLevelX(x ?? (hidesInCave ? pickCaveX() : pickX()));
+    if (!hidesInCave && type !== 'B') x = safeSpawnX(x);
     const m = { type, x, y: 0, dir: Math.random() < .5 ? -1 : 1, phase: Math.random() * 6, alpha: 1, cd: 1 + Math.random(), st: 0, alarm: 0, state: '', home: x, dead: false, life: 0, caveX: hidesInCave ? x : null, sky: false, skyFeature: null, skyPhase: 'ground', skyTimer: 0, skyStartY: 0, skyTargetY: 0, skyVY: 0, skyHit: false, scratchNeed: 0, ambushWave: [], hitCooldown: 0, skyGroundStun: 0 };
     const rareChance = mode === 'story' ? chapterFor(storyNight).rareChance : .1;
     m.v = (type === 'F' || type === 'N' || type === 'L' || type === 'B') && Math.random() < rareChance ? (Math.random() < .5 ? 1 : 2) : 0;
@@ -937,7 +980,8 @@
     skyNextAt = elapsed + (maxGap >= 8 ? clamp(desiredGap, 8, maxGap) : Math.max(.2, maxGap));
   }
   function reset() {
-    activePlats = activePlatsForNight(storyNight);
+    currentLevel = selectLevelForRun();
+    loadLevelGeometry();
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     t = 0; warmup = mode === 'free' ? 0 : 1.5; frustWakeAt = warmup + FRUST_SLEEP; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0;
     nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
@@ -948,7 +992,7 @@
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
     scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false; breathTipShown = false;
     const buryStyle = BURY_SPOTS[currentMapKey()];
-    rocks = buryStyle.xs.map((x, i) => {
+    rocks = (currentLevel.burySpots || []).map((x, i) => {
       const variant = i % (buryStyle.labels?.length || 1), label = buryStyle.labels?.[variant] || buryStyle.label;
       return { x, y: terrainY(x), marked: false, scratched: false, wrongUsed: false, phase: Math.random() * Math.PI * 2, holeDepth: 0, burialKind: buryStyle.kind, variant, label, labelMarked: label === buryStyle.label ? buryStyle.labelMarked : `marked ${label}`, draw: buryStyle.draw, debris: buryStyle.debris, glow: buryStyle.glow };
     });
@@ -956,8 +1000,10 @@
     if (need.B > 0) { buriedHome = rocks[Math.floor(Math.random() * rocks.length)]; buriedHome.marked = true; }
     if (mode === 'free') {
       goldDone = { a: true, b: true }; chaos = true;
-      [700, 1000, 1350, 1650, 2050, 2300].forEach((x, i) => spawn(i % 2 ? 'N' : 'F', x));
-      [1180, 2480].forEach(x => spawn('L', x));
+      const zones = currentLevel.spawnZones || [[120, WORLD - 120]];
+      const atZone = i => { const [a, b] = zones[i % zones.length]; return safeLevelX(a + (b - a) * (.28 + .44 * ((i * .37) % 1))); };
+      for (let i = 0; i < 6; i++) spawn(i % 2 ? 'N' : 'F', atZone(i));
+      [0, 2].forEach(i => spawn('L', atZone(i + 1)));
       return;
     }
     for (const type of Object.keys(need)) {
@@ -1177,13 +1223,14 @@
     pounceQ = false;
     c.pcd -= dt; c.inv -= dt; c.squash = Math.max(0, c.squash - dt);
     const wasOn = c.on, py = c.y, wasOnTrail = wasOn && Math.abs(c.y - terrainY(c.x)) < 2;
+    if (c.platform && !c.platform.active) c.platform = null;
     c.vy += 2300 * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.x = clamp(c.x, 30, WORLD - 30);
-    let landed = false;
+    let landed = false, landedOn = null;
     const floorY = terrainY(c.x);
     if (c.y >= floorY || (wasOnTrail && c.vy >= 0)) { c.y = floorY; landed = true; }
-    else if (c.vy >= 0) { for (const p of activePlats) { if (c.x > p[0] - 6 && c.x < p[0] + p[2] + 6 && py <= p[1] + .5 && c.y >= p[1]) { c.y = p[1]; landed = true; break; } } }
-    if (landed) { if (!wasOn) { c.justLanded = true; if (c.vy > 500) { c.squash = .16; sfx('ui', 'land'); } } c.vy = 0; }
-    c.on = landed;
+    else if (c.vy >= 0) { for (const p of activePlats) { if (!p.active) continue; if (c.x > p[0] - 6 && c.x < p[0] + p[2] + 6 && py <= p[1] + .5 && c.y >= p[1]) { c.y = p[1]; landed = true; landedOn = p; break; } } }
+    if (landed) { if (!wasOn) { c.justLanded = true; if (c.vy > 500) { c.squash = .16; sfx('ui', 'land'); } } c.vy = 0; c.platform = landedOn; if (landedOn?.type === 'crumbling' && landedOn.crumbleRemaining <= 0) landedOn.crumbleRemaining = 1; if (landedOn?.type === 'bouncy' && !wasOn) { c.vy = -960; c.on = false; c.bounced = true; sfx('ui', 'jump'); } } else c.platform = null;
+    c.on = landed && !(landedOn?.type === 'bouncy' && !wasOn);
     if (c.on && Math.abs(c.vx) > 90) {
       c.walk += dt * Math.abs(c.vx) / 30;
       const stepBeat = Math.floor(c.walk / 1.7);
@@ -1458,6 +1505,7 @@
   function update(dt) {
     t += dt;
     shake = Math.max(0, shake - dt * 24);
+    updateLevelPlatforms(dt);
     updCat(dt);
     const last = hist[hist.length - 1];
     if (!last || Math.hypot(last.x - cat.x, last.y - cat.y) > 3) { hist.push({ x: cat.x, y: cat.y }); if (hist.length > 500) hist.shift(); }
@@ -2129,13 +2177,86 @@
     for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
+  function drawLevelDecor(x0, x1) {
+    const map = currentLevel.map, palette = map === 'school' ? ['#8a5e4c','#d4a66b','#f5d8a5'] : map === 'park' ? ['#3f9b83','#8ed7a1','#f4c985'] : map === 'festival' ? ['#77503f','#d6aa5a','#ef8fbd'] : map === 'hill' ? ['#555078','#9a8cc4','#64aa8b'] : map === 'lake' ? ['#5a3d4b','#a77a5a','#9fe8ff'] : ['#4d5054','#818b83','#c0b1ff'];
+    const [dark, mid, light] = palette;
+    if (map !== 'hill') {
+      const bottom = VH + OY + 60, floor = ctx.createLinearGradient(0, GROUND - 28, 0, bottom);
+      floor.addColorStop(0, map === 'festival' ? '#76513e' : map === 'lake' ? '#694a57' : map === 'park' ? '#3c705f' : map === 'school' ? '#58475c' : '#47514d');
+      floor.addColorStop(.22, map === 'festival' ? '#46313a' : map === 'lake' ? '#493247' : map === 'park' ? '#2a4550' : map === 'school' ? '#342b43' : '#303a38'); floor.addColorStop(1, '#151421');
+      const left = Math.max(0, Math.floor(x0 / 8) * 8), right = Math.min(WORLD, x1 + 8);
+      ctx.fillStyle = floor; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
+      for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x));
+      ctx.lineTo(right, bottom); ctx.lineTo(left, bottom); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = map === 'festival' ? 'rgba(218,174,120,.65)' : map === 'lake' ? 'rgba(170,232,244,.48)' : map === 'park' ? 'rgba(133,210,157,.52)' : 'rgba(255,226,180,.36)';
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
+      for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x)); ctx.stroke();
+    }
+    // A quiet contour trace makes the authored steps and slopes legible over the existing place art.
+    ctx.strokeStyle = map === 'school' ? 'rgba(255,226,180,.38)' : map === 'festival' ? 'rgba(255,210,160,.46)' : map === 'lake' ? 'rgba(170,232,244,.5)' : 'rgba(195,220,180,.42)';
+    ctx.lineWidth = 2; ctx.beginPath();
+    const start = Math.max(0, Math.floor(x0 / 18) * 18), end = Math.min(WORLD, x1);
+    for (let x = start; x <= end; x += 18) { const y = terrainY(x); x === start ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+    ctx.stroke();
+    // Pits are short drops to a visible lower path, never lethal voids.
+    for (const [a,b,lower] of currentLevel.gaps || []) {
+      if (b < x0 || a > x1) continue;
+      const g = ctx.createLinearGradient(0, levelGroundY(a), 0, lower + 26);
+      g.addColorStop(0, map === 'festival' || map === 'lake' ? 'rgba(30,48,78,.9)' : 'rgba(16,14,30,.86)'); g.addColorStop(1, 'rgba(8,10,22,.98)');
+      ctx.fillStyle = g; ctx.fillRect(a, levelGroundY(a) - 2, b - a, lower - levelGroundY(a) + 30);
+      ctx.fillStyle = map === 'festival' ? 'rgba(255,193,124,.75)' : map === 'lake' ? 'rgba(143,222,241,.72)' : 'rgba(150,150,180,.45)';
+      ctx.fillRect(a, lower, b - a, 4);
+      if (map === 'lake' || map === 'festival') { ctx.strokeStyle = 'rgba(195,235,255,.34)'; ctx.lineWidth = 1; for (let y = lower + 10; y < lower + 24; y += 8) { ctx.beginPath(); ctx.moveTo(a + 4, y + Math.sin(t * 2 + y) * 2); ctx.lineTo(b - 4, y + Math.sin(t * 2 + y) * 2); ctx.stroke(); } }
+    }
+    // Existing map-specific platform rendering remains; this adds distinct type cues and state.
+    for (const p of activePlats) {
+      if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
+      const x=p[0], y=p[1], w=p[2];
+      if (p.type === 'moving') { ctx.strokeStyle='rgba(255,233,165,.42)'; ctx.lineWidth=1; ctx.setLineDash([5,5]); ctx.strokeRect(x-3,y-5,w+6,17); ctx.setLineDash([]); }
+      if (p.type === 'crumbling') { const fade = p.crumbleRemaining > 0 ? .45 + .4 * p.crumbleRemaining : 1; ctx.globalAlpha=fade; ctx.strokeStyle=dark; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x+w*.34,y+1); ctx.lineTo(x+w*.42,y+7); ctx.lineTo(x+w*.48,y+3); ctx.moveTo(x+w*.68,y+1); ctx.lineTo(x+w*.61,y+6); ctx.stroke(); ctx.globalAlpha=1; }
+      if (p.type === 'bouncy') { ctx.fillStyle=mid; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.fill(); ctx.strokeStyle=light; ctx.lineWidth=1.5; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.stroke(); }
+    }
+    for (const prop of currentProps) {
+      const x=prop.x, w=prop.w || 80, gy=terrainY(x+w/2); if (x+w < x0 || x > x1) continue;
+      ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+      if (prop.kind === 'desk') { ctx.fillStyle=dark; ctx.fillRect(x,gy-32,w,8); ctx.fillRect(x+8,gy-24,7,24); ctx.fillRect(x+w-15,gy-24,7,24); ctx.fillStyle=light; ctx.fillRect(x+12,gy-38,24,5); ctx.fillStyle=mid; ctx.fillRect(x+42,gy-40,18,8); }
+      else if (prop.kind === 'chairs') { for(let i=0;i<3;i++){const xx=x+i*18;ctx.strokeStyle=dark;ctx.lineWidth=4;ctx.strokeRect(xx,gy-34-i*4,15,17);ctx.fillStyle=mid;ctx.fillRect(xx,gy-18-i*4,17,4);ctx.fillRect(xx+2,gy-14-i*4,3,14);ctx.fillRect(xx+13,gy-14-i*4,3,14);} }
+      else if (prop.kind === 'slide') { ctx.strokeStyle=mid;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x+15,gy-75);ctx.lineTo(x+15,gy);ctx.moveTo(x+48,gy-75);ctx.lineTo(x+48,gy);ctx.stroke();ctx.strokeStyle=light;ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(x+15,gy-70);ctx.lineTo(x+w*.65,gy-62);ctx.lineTo(x+w,gy-4);ctx.stroke();for(let yy=gy-58;yy<gy;yy+=14){ctx.strokeStyle=dark;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+17,yy);ctx.lineTo(x+45,yy);ctx.stroke();} }
+      else if (prop.kind === 'bench') { ctx.fillStyle=dark;ctx.fillRect(x,gy-28,w,6);ctx.fillRect(x,gy-42,w,6);ctx.fillRect(x+8,gy-22,6,22);ctx.fillRect(x+w-14,gy-22,6,22);ctx.strokeStyle=light;ctx.lineWidth=1;ctx.strokeRect(x+2,gy-40,w-4,3); }
+      else if (prop.kind === 'swing') { ctx.strokeStyle=dark;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x,gy);ctx.lineTo(x+12,gy-88);ctx.lineTo(x+w-12,gy-88);ctx.lineTo(x+w,gy);ctx.stroke();ctx.strokeStyle=light;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+35,gy-86);ctx.lineTo(x+35,gy-24);ctx.moveTo(x+w-35,gy-86);ctx.lineTo(x+w-35,gy-24);ctx.stroke();ctx.fillStyle=mid;ctx.fillRect(x+27,gy-25,w-54,6); }
+      else if (prop.kind === 'stall') { ctx.fillStyle=dark;ctx.fillRect(x+10,gy-54,7,54);ctx.fillRect(x+w-17,gy-54,7,54);ctx.fillStyle=mid;ctx.beginPath();ctx.moveTo(x,gy-50);ctx.lineTo(x+w/2,gy-82);ctx.lineTo(x+w,gy-50);ctx.closePath();ctx.fill();ctx.fillStyle=light;for(let k=0;k<4;k++)ctx.fillRect(x+8+k*(w-16)/4,gy-52,(w-16)/8,7); }
+      else if (prop.kind === 'lanterns') { ctx.strokeStyle=dark;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,gy-102);ctx.quadraticCurveTo(x+w/2,gy-62,x+w,gy-102);ctx.stroke();for(let k=1;k<6;k++){const lx=x+k*w/6,ly=gy-102+40*(4*k/6)*(1-k/6);ctx.fillStyle=light;ctx.beginPath();ctx.roundRect(lx-5,ly,10,15,3);ctx.fill();ctx.fillRect(lx-1,ly+15,2,7);} }
+      else if (prop.kind === 'boat' || prop.kind === 'log') { const yy=prop.kind==='boat'?gy-9:gy-12;ctx.fillStyle=dark;ctx.beginPath();ctx.moveTo(x,yy);ctx.lineTo(x+w,yy);ctx.quadraticCurveTo(x+w*.8,yy+19,x+w*.5,yy+18);ctx.quadraticCurveTo(x+w*.15,yy+18,x,yy);ctx.fill();ctx.fillStyle=mid;ctx.fillRect(x+8,yy-4,w-16,5);if(prop.kind==='boat'){ctx.strokeStyle=light;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+w*.5,yy-6);ctx.lineTo(x+w*.5,yy-42);ctx.lineTo(x+w*.75,yy-10);ctx.stroke();} }
+      else if (prop.kind === 'branch') { ctx.strokeStyle=dark;ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(x,gy-12);ctx.quadraticCurveTo(x+w*.45,gy-50,x+w,gy-30);ctx.stroke();ctx.strokeStyle=mid;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+w*.4,gy-28);ctx.lineTo(x+w*.3,gy-56);ctx.moveTo(x+w*.72,gy-32);ctx.lineTo(x+w*.82,gy-58);ctx.stroke(); }
+      else if (prop.kind === 'stone' || prop.kind === 'stones') { for(let k=0;k<3;k++){const xx=x+k*(w/3),ww=Math.min(40,w/3-4),yy=gy-7-(k%2)*7;ctx.fillStyle=k%2?mid:dark;ctx.beginPath();ctx.ellipse(xx+ww/2,yy,ww/2,7,0,Math.PI,Math.PI*2);ctx.fill();ctx.strokeStyle=light;ctx.lineWidth=1;ctx.stroke();} }
+      else if (prop.kind === 'jetty') { ctx.fillStyle=dark;for(let k=0;k<5;k++)ctx.fillRect(x+k*w/5,gy-5,w/5-2,7);ctx.fillStyle=mid;ctx.fillRect(x+4,gy-8,w-8,4); }
+      else if (prop.kind === 'bush') { for(const [dx,dy,r] of [[18,-20,20],[48,-30,25],[75,-18,20]]){ctx.fillStyle=mid;ctx.beginPath();ctx.arc(x+dx,gy+dy,r,0,Math.PI*2);ctx.fill();} }
+      ctx.restore();
+    }
+    if (currentLevel.homeLight) {
+      const [hx, hy] = currentLevel.homeLight;
+      if (hx >= x0 - 60 && hx <= x1 + 60) { const glow=ctx.createRadialGradient(hx,hy,2,hx,hy,48);glow.addColorStop(0,'rgba(255,229,165,.42)');glow.addColorStop(1,'rgba(255,211,133,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(hx,hy,48,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffd98a';ctx.beginPath();ctx.arc(hx,hy,5+Math.sin(t*3)*.7,0,Math.PI*2);ctx.fill(); }
+    }
+  }
+  function drawLevelDebug() {
+    if (!debugLayout) return;
+    ctx.save(); ctx.strokeStyle='#ff5c88'; ctx.fillStyle='#ffe78a'; ctx.lineWidth=2;
+    for (const p of activePlats) { if (!p.active) continue; ctx.strokeRect(p[0],p[1],p[2],12); }
+    for (const x of currentLevel.hideSpots || []) { ctx.fillStyle='#80f0ce';ctx.beginPath();ctx.arc(x,terrainY(x)-8,6,0,Math.PI*2);ctx.fill(); }
+    for (const x of currentLevel.burySpots || []) { ctx.fillStyle='#ffcf72';ctx.beginPath();ctx.moveTo(x,terrainY(x)-12);ctx.lineTo(x-6,terrainY(x));ctx.lineTo(x+6,terrainY(x));ctx.closePath();ctx.fill(); }
+    // approximate jump arc at the current player jump impulse for quick reach inspection
+    ctx.strokeStyle='rgba(255,245,170,.85)';ctx.beginPath();
+    for(let i=0;i<=28;i++){const q=i/28, xx=cat.x+cat.face*360*q, yy=cat.y-830*(.72*q)+.5*2300*(.72*q)*(.72*q);i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}ctx.stroke();
+    ctx.restore();
+  }
   function drawWorld() {
     const x0=camX-50,x1=camX+VW+50;
-    if (inSchool()) { drawSchoolWorld(x0, x1); return; }
-    if (inFestival()) { drawFestivalWorld(x0, x1); return; }
-    if (inPark()) { drawParkWorld(x0, x1); return; }
-    if (inLake()) { drawLakeWorld(x0, x1); return; }
-    if (inHill()) { drawHillWorld(x0, x1); return; }
+    if (inSchool()) drawSchoolWorld(x0, x1);
+    else if (inFestival()) drawFestivalWorld(x0, x1);
+    else if (inPark()) drawParkWorld(x0, x1);
+    else if (inLake()) drawLakeWorld(x0, x1);
+    else if (inHill()) drawHillWorld(x0, x1);
+    else {
     drawParallaxLayer(0,.10);drawParallaxLayer(1,.38);drawParallaxLayer(2,.78);
     const ground=ctx.createLinearGradient(0,410,0,VH+OY+60);ground.addColorStop(0,'#394440');ground.addColorStop(.18,'#303a38');ground.addColorStop(1,'#151f27');
     const rockEdge=x=>{const seed=Math.sin(x*12.9898+7.31)*43758.5453;return terrainY(x)+(seed-Math.floor(seed)-.5)*4;};
@@ -2161,6 +2282,8 @@
     // Small fern silhouettes frame the near trail.
     for(let x=Math.floor(x0/190)*190;x<x1;x+=190){const y=terrainY(x)+6;ctx.strokeStyle='rgba(90,129,82,.65)';ctx.lineWidth=1.5;for(let k=0;k<5;k++){const side=k%2?1:-1,yy=y-k*4;ctx.beginPath();ctx.moveTo(x,yy);ctx.quadraticCurveTo(x+side*9,yy-8,x+side*17,yy-12);ctx.stroke();}}
     for(let x=Math.floor((x0+95)/330)*330;x<x1;x+=330){const y=terrainY(x)+3;ctx.strokeStyle='rgba(91,135,91,.68)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x,y+6);ctx.quadraticCurveTo(x+1,y,x,y-5);ctx.stroke();for(let k=0;k<5;k++){const a=k*Math.PI*2/5;ctx.fillStyle=k%2?'#e5c28b':'#e7d5bc';ctx.beginPath();ctx.arc(x+Math.cos(a)*3,y-5+Math.sin(a)*3,1.7,0,Math.PI*2);ctx.fill();}ctx.fillStyle='#d4a84f';ctx.beginPath();ctx.arc(x,y-5,1.5,0,Math.PI*2);ctx.fill();}
+    }
+    drawLevelDecor(x0, x1);
   }
   // ---------- cute Moodling art (from the character sheet; drawn with SVG paths) ----------
   const MP = s => new Path2D(s);
@@ -2675,7 +2798,7 @@
     drawBG();
     ctx.save(); ctx.translate(-camX, 0);
     drawWorld(); drawMoods(); drawFireflies(); drawTrail();
-    drawCat(); drawParts();
+    drawCat(); drawParts(); drawLevelDebug();
     ctx.restore();
     if (eyesT > 0) {
       const sx = cat.x - camX, sy = cat.y - 24, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (eyesDur() - eyesT) / .25);
