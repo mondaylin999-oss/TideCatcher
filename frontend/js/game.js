@@ -551,20 +551,23 @@
   }
 
   // ---------- upgrades (Glow treats) ----------
+  // 7 levels each. Every second level matches the old 3-level values, so older saves keep their power (old level n = new level 2n).
+  const UPG_MAX = 7;
   const UPG = [
-    { id: 'pounce', name: 'Pounce', desc: 'A bigger, more forgiving pounce.', costs: [50, 150, 400], vals: [46, 54, 62, 72], fmt: v => `catch reach ${v}` },
-    { id: 'swift', name: 'Swift paws', desc: 'Run faster across the Night Side.', costs: [60, 180, 400], vals: [6, 6.6, 7.2, 7.8], fmt: v => `${v} tiles per second` },
-    { id: 'paws', name: 'Soft paws', desc: 'Nervous Moodlings hear you from less far away.', costs: [100, 250, 500], vals: [5, 4, 3.2, 2.5], fmt: v => `heard from ${v} tiles` },
-    { id: 'eyes', name: 'Night eyes', desc: 'Press E (or the Eyes button) to highlight nearby scratch spots. Upgrades let Shwe find them from further away.', costs: [80, 200, 450], vals: [4, 5, 6, 7], fmt: v => `see ${v} tiles` },
-    { id: 'purr', name: 'Purr', desc: 'Press K (or the Purr button) to slow nearby Moodlings for 3 seconds.', costs: [120, 300, 600], vals: [0, 15, 10, 6], fmt: v => v ? `${v}s cooldown` : 'not unlocked' }
+    { id: 'pounce', name: 'Pounce', desc: 'A bigger, more forgiving pounce.', costs: [40, 80, 130, 200, 290, 400, 540], vals: [46, 50, 54, 58, 62, 67, 72, 76], fmt: v => `catch reach ${v}` },
+    { id: 'swift', name: 'Swift paws', desc: 'Run faster across the Night Side.', costs: [50, 90, 140, 210, 300, 410, 550], vals: [6, 6.3, 6.6, 6.9, 7.2, 7.5, 7.8, 8.1], fmt: v => `${v} tiles per second` },
+    { id: 'paws', name: 'Soft paws', desc: 'Nervous Moodlings hear you from less far away.', costs: [70, 120, 180, 260, 360, 480, 620], vals: [5, 4.5, 4, 3.6, 3.2, 2.85, 2.5, 2.2], fmt: v => `heard from ${v} tiles` },
+    { id: 'eyes', name: 'Night eyes', desc: 'Press E (or the Eyes button) to highlight nearby scratch spots. Upgrades let Shwe find them from further away.', costs: [60, 100, 160, 240, 340, 460, 600], vals: [4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5], fmt: v => `see ${v} tiles` },
+    { id: 'purr', name: 'Purr', desc: 'Press K (or the Purr button) to slow nearby Moodlings for 3 seconds.', costs: [100, 150, 220, 300, 400, 520, 660], vals: [0, 16, 15, 12, 10, 8, 6, 5], fmt: v => v ? `${v}s cooldown` : 'not unlocked' }
   ];
   let upg = { pounce: 0, swift: 0, paws: 0, eyes: 0, purr: 0 }, glow = 0, glowRun = 0, lastGlow = 0;
   try {
     const s = JSON.parse(localStorage.getItem('mk-upg') || '{}');
-    for (const k in upg) if (Number.isInteger(s[k])) upg[k] = clamp(s[k], 0, 3);
+    const v7 = localStorage.getItem('mk-upg-v') === '7';
+    for (const k in upg) if (Number.isInteger(s[k])) upg[k] = clamp(v7 ? s[k] : s[k] * 2, 0, UPG_MAX);
     glow = Math.max(0, +localStorage.getItem('mk-glow') || 0);
   } catch (e) {}
-  function saveUpg() { try { localStorage.setItem('mk-upg', JSON.stringify(upg)); localStorage.setItem('mk-glow', String(glow)); } catch (e) {} }
+  function saveUpg() { try { localStorage.setItem('mk-upg-v', '7'); localStorage.setItem('mk-upg', JSON.stringify(upg)); localStorage.setItem('mk-glow', String(glow)); } catch (e) {} }
   // Cats: everyone starts with the story cat (Ginger Tabby, as in the intro). The others are bought with Glow; each has one small perk.
   const CAT_SHOP = {
     ginger: { cost: 0, perk: 'Shwe from the story. Good at everything, best at nothing.' },
@@ -2759,7 +2762,7 @@
   let shopTab = 'upgrades';
   (function () {
     const st = document.createElement('style');
-    st.textContent = '.shop-tabs{display:flex;gap:8px;flex-wrap:wrap}.shop-tab{font-family:var(--display);font-weight:800;font-size:15px;border:2px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer}.shop-tab[aria-selected="true"]{background:var(--honey);border-color:var(--honey);color:var(--bg-deep)}.shop-cat{height:44px;width:56px;object-fit:contain;vertical-align:middle;margin-right:8px}.shop-icon{font-size:26px;vertical-align:middle;margin-right:8px}.swatch{display:inline-block;width:26px;height:26px;border-radius:50%;vertical-align:middle;margin-right:8px;border:2px solid rgba(255,255,255,.6)}.item.in-use{border-color:var(--honey)}';
+    st.textContent = '.shop-tabs{display:flex;gap:8px;flex-wrap:wrap}.shop-tab{font-family:var(--display);font-weight:800;font-size:15px;border:2px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer}.shop-tab[aria-selected="true"]{background:var(--honey);border-color:var(--honey);color:var(--bg-deep)}.shop-cat{height:44px;width:56px;object-fit:contain;vertical-align:middle;margin-right:8px}.shop-icon{font-size:26px;vertical-align:middle;margin-right:8px}.swatch{display:inline-block;width:26px;height:26px;border-radius:50%;vertical-align:middle;margin-right:8px;border:2px solid rgba(255,255,255,.6)}.item.in-use{border-color:var(--honey)}.pips .pip{width:13px}';
     document.head.appendChild(st);
     const tabs = document.createElement('div'); tabs.className = 'shop-tabs'; tabs.setAttribute('role', 'tablist');
     [['upgrades', 'Upgrades'], ['cats', 'Cats'], ['items', 'Comfort items'], ['style', 'Style']].forEach(([id, label]) => {
@@ -2793,11 +2796,11 @@
       return;
     }
     $('#shopList').innerHTML = UPG.map(u => {
-      const lv = upg[u.id], max = lv >= 3, cost = u.costs[lv];
+      const lv = upg[u.id], max = lv >= UPG_MAX, cost = u.costs[lv];
       const now = u.fmt(u.vals[lv]), next = max ? '' : ` · next: ${u.fmt(u.vals[lv + 1])}`;
       const btn = max ? '<button class="buy" disabled>Maxed</button>'
         : `<button class="buy" data-id="${u.id}" ${glow < cost ? 'disabled' : ''}>${glow < cost ? '🔒 Can’t afford' : lv === 0 && u.id === 'purr' ? 'Unlock' : 'Buy'} · ${cost} Glow</button>`;
-      return `<div class="item" data-upgrade="${u.id}"><h3>${u.name}</h3><div class="side"><div class="pips" aria-label="Level ${lv} of 3">${[0, 1, 2].map(i => `<span class="pip${i < lv ? ' on' : ''}"></span>`).join('')}</div>${btn}</div><p>${u.desc}</p><p>Now: ${now}${next}</p></div>`;
+      return `<div class="item" data-upgrade="${u.id}"><h3>${u.name}</h3><div class="side"><div class="pips" aria-label="Level ${lv} of ${UPG_MAX}">${Array.from({ length: UPG_MAX }, (_, i) => i).map(i => `<span class="pip${i < lv ? ' on' : ''}"></span>`).join('')}</div>${btn}</div><p>${u.desc}</p><p>Now: ${now}${next}</p></div>`;
     }).join('');
   }
   function openShop(from) {
@@ -2831,7 +2834,7 @@
     }
     const b = e.target.closest('button[data-id]'); if (!b) return;
     const u = UPG.find(x => x.id === b.dataset.id), lv = upg[u.id];
-    if (lv >= 3 || glow < u.costs[lv]) return;
+    if (lv >= UPG_MAX || glow < u.costs[lv]) return;
     initAudio(); glow -= u.costs[lv]; upg[u.id]++; saveUpg();
     tone(660, .15, 'triangle', .07); setTimeout(() => tone(990, .25, 'sine', .06), 90);
     renderShop(); refreshShopBtns();
