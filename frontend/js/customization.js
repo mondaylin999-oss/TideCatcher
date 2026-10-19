@@ -3,6 +3,7 @@
    (Thiri / Shwe); every piece of on-screen text is swapped to the chosen names here,
    both in the page and on the canvas. */
 var MK_COATS = {
+  ginger: { name: 'Ginger Tabby', body: '#f0a050', dark: '#c0702c', belly: '#fbd2a0', alt: '#f0a050', img: 'assets/cats/ginger.png' },
   burmese: { name: 'Burmese', body: '#efb44a', dark: '#c98a2c', belly: '#fbd98f', alt: '#efb44a', img: 'assets/cats/burmese.png' },
   siamese: { name: 'Siamese', body: '#efdcc0', dark: '#4a2c22', belly: '#f8ecd8', alt: '#efdcc0', img: 'assets/cats/siamese.png' },
   persian: { name: 'Persian', body: '#f1ebe4', dark: '#c9bcb0', belly: '#fffaf4', alt: '#f1ebe4', img: 'assets/cats/persian.png' },
@@ -12,12 +13,13 @@ var MK_COATS = {
   bengal: { name: 'Bengal', body: '#d98a2c', dark: '#3a2414', belly: '#f2c98a', alt: '#d98a2c', img: 'assets/cats/bengal.png' },
   sphynx: { name: 'Sphynx', body: '#f0a6a6', dark: '#c97a80', belly: '#f8c4c0', alt: '#f0a6a6', img: 'assets/cats/sphynx.png' }
 };
-var MK_OLD_COATS = { golden: 'burmese', silver: 'british', midnight: 'british', calico: 'ragdoll' };
+var MK_OLD_COATS = { golden: 'ginger', silver: 'british', midnight: 'british', calico: 'ragdoll' };
 var MK_SPRITES = {};
 Object.keys(MK_COATS).forEach(function (k) { var im = new Image(); im.src = MK_COATS[k].img; MK_SPRITES[k] = im; });
 /* Cat animation rig: each sprite is cut into body, tail, back legs and front legs,
    which bend separately to make walk, jump, pounce, scratch and idle poses. */
 var MK_RIGS = {
+  ginger: { hip: .750, split: .519, tailW: .318, tailH: .628, tailAmp: .75 },
   burmese: { hip: .725, split: .452, tailW: .286, tailH: .576, tailAmp: 1 },
   siamese: { hip: .706, split: .469, tailW: .304, tailH: .547, tailAmp: 1 },
   persian: { hip: .793, split: .462, tailW: .333, tailH: .647, tailAmp: .6 },
@@ -57,7 +59,7 @@ function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   return true;
 }
 
-var MK_PROFILE = { girl: 'Thiri', cat: 'Shwe', coat: 'burmese' };
+var MK_PROFILE = { girl: 'Thiri', cat: 'Shwe', coat: 'ginger' };
 var MK_HAS_PROFILE = false;
 try {
   var _p = JSON.parse(localStorage.getItem('mk-profile') || 'null');
