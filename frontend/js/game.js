@@ -574,10 +574,10 @@
   };
   // Comfort items: bought with Glow, used up on your next story hour.
   const ITEMS = [
-    { id: 'scarf', icon: '🧣', name: 'Cozy Scarf', cost: 80, desc: 'The first time a Frustrated bumps you, you keep all your lights.' },
-    { id: 'bell', icon: '🔔', name: 'Soft Bell', cost: 100, desc: 'Nervous Moodlings hear you 20% less far for the whole hour.' },
-    { id: 'jar', icon: '🫙', name: 'Firefly Jar', cost: 60, desc: 'At the lake, the first firefly you scare stays with you instead of flying off.' },
-    { id: 'sand', icon: '⏳', name: 'Moon Sand', cost: 70, desc: '+10 seconds on the clock.' }
+    { id: 'scarf', icon: '🧣', name: 'Cozy Scarf', cost: 350, desc: 'The first time a Frustrated bumps you, you keep all your lights.' },
+    { id: 'bell', icon: '🔔', name: 'Soft Bell', cost: 400, desc: 'Nervous Moodlings hear you 20% less far for the whole hour.' },
+    { id: 'jar', icon: '🫙', name: 'Firefly Jar', cost: 250, desc: 'At the lake, the first firefly you scare stays with you instead of flying off.' },
+    { id: 'sand', icon: '⏳', name: 'Moon Sand', cost: 300, desc: '+10 seconds on the clock.' }
   ];
   const TRAILS = {
     honey: { name: 'Honey', c: '246,196,83', cost: 0 },
@@ -612,6 +612,8 @@
     if (id === 'paws') { if (catPerk() === 'persian') v *= .85; if (activeItems.bell) v *= .8; }
     return v;
   };
+  const FREE_GLOW_CAP = 150;
+  let freeCapShown = false;
   const purrDur = () => catPerk() === 'siamese' ? 4 : 3;
   const eyesDur = () => catPerk() === 'sphynx' ? 5.5 : 4;
   const sitNeed = () => catPerk() === 'ragdoll' ? 1.4 : 2;
@@ -927,7 +929,7 @@
     t = 0; warmup = mode === 'free' ? 0 : 1.5; frustWakeAt = warmup + FRUST_SLEEP; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0;
     nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
     combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
-    activeItems = {}; perkShield = catPerk() === 'mainecoon' ? 1 : 0;
+    freeCapShown = false; activeItems = {}; perkShield = catPerk() === 'mainecoon' ? 1 : 0;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
@@ -1122,7 +1124,13 @@
     combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 4; bestCombo = Math.max(bestCombo, combo);
     const pts = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170, G: 500 }[m.type] * combo; score += pts;
     const gain = { F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16, G: 40 }[m.type] + 2 * (combo - 1) + (m.type === 'G' && catPerk() === 'burmese' ? 10 : 0);
-    glowRun += gain; bump('glow', gain);
+    // Free mode is for fun and practice: half Glow, and at most FREE_GLOW_CAP per run, so the story stays the best way to earn
+    let glowGain = gain;
+    if (mode === 'free') {
+      glowGain = Math.min(Math.ceil(gain / 2), Math.max(0, FREE_GLOW_CAP - glowRun));
+      if (glowGain === 0 && !freeCapShown) { freeCapShown = true; announce('Glow full for this run. The story earns more!', GOLD, 2.4); }
+    }
+    glowRun += glowGain; bump('glow', glowGain);
     caughtN++;
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
     else if (mode === 'free') { timeLeft += 2; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 12) trail.shift(); }
