@@ -552,14 +552,14 @@
   // Cats: everyone starts with the story cat (Ginger Tabby, as in the intro). The others are bought with Glow; each has one small perk.
   const CAT_SHOP = {
     ginger: { cost: 0, perk: 'Shwe from the story. Good at everything, best at nothing.' },
-    burmese: { cost: 200, perk: 'Lucky golden coat: Golden Moodlings give +10 extra Glow.' },
-    bengal: { cost: 250, perk: 'Runs 8% faster.' },
-    persian: { cost: 200, perk: 'So fluffy and quiet: Nervous hears you 15% less far.' },
-    mainecoon: { cost: 300, perk: 'Big and sturdy: the first bump each hour drops no light.' },
-    siamese: { cost: 200, perk: 'Talkative: Purr lasts 1 second longer.' },
-    sphynx: { cost: 250, perk: 'Sharp eyes: Night Eyes stay open 1.5 seconds longer.' },
-    ragdoll: { cost: 200, perk: 'Loves to cuddle: sitting with Lonely takes 30% less time.' },
-    british: { cost: 250, perk: 'Long paws: pounce reaches 10% further.' }
+    burmese: { cost: 600, perk: 'Lucky golden coat: Golden Moodlings give +10 extra Glow.' },
+    bengal: { cost: 800, perk: 'Runs 8% faster.' },
+    persian: { cost: 700, perk: 'So fluffy and quiet: Nervous hears you 15% less far.' },
+    mainecoon: { cost: 800, perk: 'Big and sturdy: the first bump each hour drops no light.' },
+    siamese: { cost: 600, perk: 'Talkative: Purr lasts 1 second longer.' },
+    sphynx: { cost: 600, perk: 'Sharp eyes: Night Eyes stay open 1.5 seconds longer.' },
+    ragdoll: { cost: 700, perk: 'Loves to cuddle: sitting with Lonely takes 30% less time.' },
+    british: { cost: 700, perk: 'Long paws: pounce reaches 10% further.' }
   };
   // Comfort items: bought with Glow, used up on your next story hour.
   const ITEMS = [
@@ -570,10 +570,11 @@
   ];
   const TRAILS = {
     honey: { name: 'Honey', c: '246,196,83', cost: 0 },
-    mint: { name: 'Mint', c: '125,220,139', cost: 60 },
-    rose: { name: 'Rose', c: '255,122,184', cost: 60 },
-    sky: { name: 'Sky', c: '111,182,255', cost: 60 },
-    lilac: { name: 'Lilac', c: '185,162,255', cost: 60 }
+    mint: { name: 'Mint', c: '125,220,139', cost: 150 },
+    rose: { name: 'Rose', c: '255,122,184', cost: 150 },
+    sky: { name: 'Sky', c: '111,182,255', cost: 150 },
+    lilac: { name: 'Lilac', c: '185,162,255', cost: 150 },
+    rainbow: { name: 'Rainbow', c: '255,255,255', cost: 180, rainbow: true }
   };
   let ownedCats = ['ginger'], itemStock = {}, ownedTrails = ['honey'], trailPick = 'honey', activeItems = {}, perkShield = 0;
   try {
@@ -2351,8 +2352,15 @@
 
   function drawTrail() {
     if (trail.length > 1) {
-      ctx.strokeStyle = `rgba(${TRAILS[trailPick].c},${trailPick === 'honey' ? .18 : .45})`; ctx.lineWidth = trailPick === 'honey' ? 2 : 3; ctx.beginPath();
-      ctx.moveTo(cat.x, cat.y - 34); trail.forEach(l => ctx.lineTo(l.x, l.y)); ctx.stroke();
+      if (TRAILS[trailPick].rainbow) {
+        // each piece of the trail gets the next colour of the rainbow, slowly shifting
+        ctx.lineWidth = 5; ctx.lineCap = 'round';
+        let px = cat.x, py = cat.y - 34;
+        trail.forEach((l, i) => { ctx.strokeStyle = `hsla(${(i * 40 + t * 90) % 360},90%,65%,.85)`; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(l.x, l.y); ctx.stroke(); px = l.x; py = l.y; });
+      } else {
+        ctx.strokeStyle = `rgba(${TRAILS[trailPick].c},${trailPick === 'honey' ? .18 : .45})`; ctx.lineWidth = trailPick === 'honey' ? 2 : 3; ctx.beginPath();
+        ctx.moveTo(cat.x, cat.y - 34); trail.forEach(l => ctx.lineTo(l.x, l.y)); ctx.stroke();
+      }
     }
     trail.forEach(l => lightShape(l.type, l.x, l.y, 1, l.v));
   }
@@ -2655,7 +2663,7 @@
       $('#shopList').innerHTML = Object.entries(TRAILS).map(([k, tr]) => {
         const owned = ownedTrails.includes(k), using = trailPick === k;
         const btn = using ? '<button class="buy" disabled>In use</button>' : owned ? `<button class="buy" data-trail="${k}" data-act="use">Use</button>` : price(tr.cost, `data-trail="${k}" data-act="buy"`);
-        return `<div class="item${using ? ' in-use' : ''}"><h3><span class="swatch" style="background:rgb(${tr.c})"></span>${tr.name} trail</h3><div class="side">${btn}</div><p>The colour of the light trail that follows your cat.</p></div>`;
+        return `<div class="item${using ? ' in-use' : ''}"><h3><span class="swatch" style="background:${tr.rainbow ? 'conic-gradient(#ff6b6b,#ffd23f,#7ddc8b,#6fb6ff,#b9a2ff,#ff6b6b)' : `rgb(${tr.c})`}"></span>${tr.name} trail</h3><div class="side">${btn}</div><p>The colour of the light trail that follows your cat.</p></div>`;
       }).join('');
       return;
     }
