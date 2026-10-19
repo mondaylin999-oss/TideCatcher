@@ -115,7 +115,7 @@
 
   // ---------- input ----------
   const keys = {};
-  let jumpQ = false, pounceQ = false, scratchQ = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
+  let jumpQ = false, pounceQ = false, scratchQ = false, scratchHeld = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
   addEventListener('keydown', e => {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
@@ -131,7 +131,7 @@
     if (e.code === 'KeyS') scratchQ = true;
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
-  addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
+  addEventListener('blur', () => { for (const k in keys) keys[k] = false; scratchHeld = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
   function axisNow() {
     const kb = ((keys.ArrowRight || keys.KeyD) ? 1 : 0) - ((keys.ArrowLeft || keys.KeyA) ? 1 : 0);
     const scale = (keys.ShiftLeft || keys.ShiftRight || mouseSneakHeld) ? .4 : 1;
@@ -176,7 +176,8 @@
   $('#bPounce').addEventListener('pointerdown', e => { e.preventDefault(); pounceQ = true; });
   $('#bPurr').addEventListener('pointerdown', e => { e.preventDefault(); purrQ = true; });
   $('#bEyes').addEventListener('pointerdown', e => { e.preventDefault(); eyesQ = true; });
-  $('#bScratch').addEventListener('pointerdown', e => { e.preventDefault(); scratchQ = true; });
+  $('#bScratch').addEventListener('pointerdown', e => { e.preventDefault(); scratchQ = true; scratchHeld = true; });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('#bScratch').addEventListener(ev, () => { scratchHeld = false; }));
   const coarse = matchMedia('(pointer: coarse)').matches;
   addEventListener('touchstart', () => { if (state === 'play') touchUI.hidden = false; }, { passive: true });
 
@@ -572,14 +573,17 @@
     E: [{ n: 'Excited', c: '#ffd23f', r: 'Common', d: 'Bounces higher and higher. Jump, then pounce at the very top of its bounce.', line: '“I used to count the days until art club.”' }],
     S: [{ n: 'Shy', c: '#ff7ab8', r: 'Common', d: 'Peeks back over its shoulder. Freeze while it looks; move while it hides its face.', line: '“I wanted to show my drawing to Hnin, but I was too shy to ask.”' }],
     J: [{ n: 'Jealous', c: '#ff9a3c', r: 'Common', d: 'Steals lights from your trail, then runs. Catch it when it gets tired to win them back.', line: '“The winning drawing really was good. That is why it hurt.”' }],
-    C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Gather three fireflies slowly, then bring their light to Calm.', line: '“It’s okay. You can rest now.”', lock: 'Meet it by the lake at 4 AM.' }],
+    C: [
+      { n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Gather three fireflies slowly, then bring their light to Calm.', line: '“It’s okay. You can rest now.”', lock: 'Meet it by the lake at 4 AM.' },
+      { n: 'Breathing Calm', c: '#a8f0c8', r: 'Rare', d: 'Floats in a soft bubble. Hold S while it grows, let go while it shrinks. Three slow breaths.', line: '“Breathe in… and out. There. That’s better.”', lock: 'A rare Calm by the lake. Look for a bubble.' }
+    ],
     B: [
       { n: 'Buried', c: '#a67646', r: 'Common', d: 'Hides deep under a rock. Reveal it with Night Eyes, then scratch the marked rock. A wrong rock shakes the ground.', line: '“I put it somewhere deep so I wouldn’t have to look at it.”' },
       { n: 'Petrified Buried', c: '#8c5a3a', r: 'Rare', d: 'So deep it has almost turned to stone. Same scratch rules.', line: '“It was easier to be numb than to feel it.”' },
       { n: 'Fossil Buried', c: '#c8a56a', r: 'Rare', d: 'Leaves a faint amber trail when it flees.', line: '“Some things stay with you even after you bury them.”' }
     ]
   };
-  const BOOK_ORDER = ['F0', 'F1', 'F2', 'N0', 'N1', 'N2', 'L0', 'L1', 'L2', 'B0', 'B1', 'B2', 'E0', 'S0', 'J0', 'C0', 'G0'];
+  const BOOK_ORDER = ['F0', 'F1', 'F2', 'N0', 'N1', 'N2', 'L0', 'L1', 'L2', 'B0', 'B1', 'B2', 'E0', 'S0', 'J0', 'C0', 'C1', 'G0'];
   let book = {};
   try { book = JSON.parse(localStorage.getItem('mk-book') || '{}') || {}; } catch (e) { book = {}; }
   const saveBook = () => { try { localStorage.setItem('mk-book', JSON.stringify(book)); } catch (e) {} };
@@ -686,6 +690,42 @@
     }
     tone(1400, .08, 'sine', .03, -500);
   }
+  // Breathing Calm (rare): its bubble grows for 2 s (hold S = breathe in) and shrinks for 2 s (let go = breathe out).
+  const BREATH = 4, BREATHS_NEED = 3;
+  let breathTipShown = false;
+  function resetBreath(m) { m.breaths = 0; m.watch = false; m.inHeld = 0; m.outFree = 0; m.tried = false; m.wasHeld = false; }
+  const breathSize = p => { const u = p < .5 ? p * 2 : 1 - (p - .5) * 2; return u * u * (3 - 2 * u); };
+  const nearBreath = m => cat.on && Math.abs(cat.x - m.x) < 2.2 * T && Math.abs(cat.y - terrainY(m.x)) < 60;
+  function updBreath(m, dt) {
+    m.y = terrainY(m.x) - 74 + Math.sin(t * 1.2 + m.phase) * 3;
+    if (m.state === 'popping') { m.st -= dt; if (m.st <= 0) { m.state = 'bubble'; resetBreath(m); catchIt(m); } return; }
+    const prev = m.bphase; m.bphase = (m.bphase + dt / BREATH) % 1;
+    if (!breathTipShown && state === 'play' && Math.abs(cat.x - m.x) < 5 * T) {
+      breathTipShown = true; announce('A rare Calm! Hold S as its bubble grows, let go as it shrinks', CALM, 3.2);
+    }
+    const held = !!(keys.KeyS || scratchHeld);
+    if (!nearBreath(m) || cat.pounce > 0) { if (m.watch && m.breaths) float(m.x, m.y - 80, 'Stay close and breathe slowly', MUTED); if (m.watch) resetBreath(m); return; }
+    if (prev > m.bphase) {   // one full breath just finished
+      if (m.watch) {
+        if (m.inHeld >= .6 && m.outFree >= .6) {
+          m.breaths++;
+          tone(523 * Math.pow(2, m.breaths * 2 / 12), .35, 'sine', .05);
+          float(m.x, m.y - 84, m.breaths >= BREATHS_NEED ? 'Ahh… calm.' : `Breath ${m.breaths}/${BREATHS_NEED}`, CALM);
+          if (m.breaths >= BREATHS_NEED) {
+            m.state = 'popping'; m.st = .55;
+            for (let k = 0; k < 18; k++) { const a = k / 18 * Math.PI * 2; parts.push({ x: m.x + Math.cos(a) * 50, y: m.y - 6 + Math.sin(a) * 50, vx: Math.cos(a) * 90, vy: Math.sin(a) * 90, life: .6, max: .6, c: '#c9fff0', r: 2.5, g: 0 }); }
+            tone(988, .25, 'sine', .05); return;
+          }
+        } else if (m.tried) float(m.x, m.y - 84, 'Follow the bubble: in… and out', MUTED);
+      }
+      m.watch = true; m.inHeld = 0; m.outFree = 0; m.tried = false;
+    }
+    if (m.watch) {
+      if (m.bphase < .5) { if (held) { m.inHeld += dt / (BREATH / 2); m.tried = true; if (!m.wasHeld) tone(392, .6, 'sine', .025, 180); } }
+      else { if (!held) m.outFree += dt / (BREATH / 2); else m.tried = true; }
+    }
+    m.wasHeld = held;
+  }
   function updFireflies(dt) {
     if (!fireflies.length) return;
     const gentle = cat.on && Math.abs(cat.vx) <= FLY_SLOW && cat.pounce <= 0;
@@ -739,6 +779,7 @@
     const m = { type, x, y: 0, dir: Math.random() < .5 ? -1 : 1, phase: Math.random() * 6, alpha: 1, cd: 1 + Math.random(), st: 0, alarm: 0, state: '', home: x, dead: false, life: 0, caveX: hidesInCave ? x : null, sky: false, skyFeature: null, skyPhase: 'ground', skyTimer: 0, skyStartY: 0, skyTargetY: 0, skyVY: 0, skyHit: false, scratchNeed: 0, ambushWave: [], hitCooldown: 0, skyGroundStun: 0 };
     const rareChance = mode === 'story' ? chapterFor(storyNight).rareChance : .1;
     m.v = (type === 'F' || type === 'N' || type === 'L' || type === 'B') && Math.random() < rareChance ? (Math.random() < .5 ? 1 : 2) : 0;
+    if (type === 'C') m.v = Math.random() < rareChance ? 1 : 0;   // rare Calm = Breathing Calm
     if (type === 'F') { m.y = terrainY(x) - 20; m.state = 'patrol'; }
     if (type === 'N') { m.y = terrainY(x) - 46; m.state = 'wander'; }
     if (type === 'G') { m.y = 200; m.state = 'fly'; m.life = 6.5; }
@@ -747,8 +788,9 @@
     if (type === 'J') { m.y = terrainY(x) - 30; m.state = 'wander'; m.cd = 3; m.stolen = []; }
     if (type === 'B') { const rock = rocks.find(r => r.marked) || rocks[0]; m.x = rock.x; m.y = rock.y - 12; m.state = 'buried'; m.alpha = 0; m.rock = rock; m.chime = 0; }
     if (type === 'C') {
-      m.x = x = clamp(x + 125, 80, WORLD - 80); m.y = terrainY(x) - 44; m.state = 'dim'; m.light = 0; m.alpha = 0; m.st = 0; m.sit = 0;
-      addFireflies(m);
+      m.x = x = clamp(x + 125, 80, WORLD - 80); m.alpha = 0; m.st = 0; m.sit = 0;
+      if (m.v === 1) { m.y = terrainY(x) - 74; m.state = 'bubble'; m.light = 1; resetBreath(m); m.bphase = Math.random(); }
+      else { m.y = terrainY(x) - 44; m.state = 'dim'; m.light = 0; addFireflies(m); }
     }
     if (type === 'L') {
       m.y = terrainY(x) - 30; m.st = 0; m.rev = 0; m.sit = 0; m.chime = 0; m.fleeAlarm = 0;
@@ -813,7 +855,7 @@
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
-    scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false;
+    scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false; breathTipShown = false;
     rocks = mode === 'story' ? ROCK_XS.map(x => ({ x, y: terrainY(x), marked: false, scratched: false, wrongUsed: false, phase: Math.random() * Math.PI * 2, holeDepth: 0 })) : [];
     buriedHome = null;
     if (need.B > 0) { buriedHome = rocks[Math.floor(Math.random() * rocks.length)]; buriedHome.marked = true; }
@@ -979,17 +1021,19 @@
     }
     if (mode === 'story' && m.type !== 'G' && got[m.type] >= need[m.type]) {
       // only once per pounce: stop the pounce and give this Moodling a moment before it can be caught again
+      // an extra catch (this feeling is already home): no penalty, half the usual Glow, and it goes back to roam again
       cat.pounce = 0; cat.bounced = true; m.noCatchUntil = t + 1.5;
-      float(m.x, m.y - 34, 'Not needed tonight  −3s', MUTED);
-      timeLeft = Math.max(0, timeLeft - 3); combo = 0; comboT = 0;
+      const extra = Math.ceil({ F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16 }[m.type] / 2);
+      glowRun += extra; bump('glow', extra);
+      float(m.x, m.y - 34, `+${extra} Glow · extra`, col(m.type)); burst(m.x, m.y, col(m.type), 10);
       if (m.type === 'N') panic(m, cat.x - m.x);
       else if (m.type === 'L') hideFeeling(m);
-      else if (m.type === 'C') { m.state = 'dim'; m.light = 0; }
+      else if (m.type === 'C') { if (m.v === 1) { m.state = 'bubble'; resetBreath(m); } else { m.state = 'dim'; m.light = 0; addFireflies(m); } }
       else if (m.type === 'B') { if (m.rock) m.rock.scratched = false; m.dead = false; m.state = 'buried'; m.alpha = 0; m.rock = buriedHome; m.x = buriedHome.x; m.y = buriedHome.y - 12; m.chime = 0; }
       else if (m.type === 'S') { m.state = 'hide'; m.st = 2; }
       else if (m.type === 'E' || m.type === 'J') { if (m.type === 'J') { m.state = 'wander'; m.cd = 4; } }
       else { m.state = 'patrol'; m.cd = 2; m.home = m.x; }
-      tone(200, .2, 'sine', .05, -80); return;
+      tone(880, .12, 'sine', .05); return;
     }
     if (m.sky) { m.skyPhase = 'cleared'; m.skyTimer = 0; }
     combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 4; bestCombo = Math.max(bestCombo, combo);
@@ -1115,11 +1159,12 @@
       else if (m.state === 'revealed') { rock.holeDepth = 1; }
     } else if (m.type === 'C') {
       m.alpha = Math.min(1, m.alpha + dt * 2);
-      m.y = terrainY(m.x) - 44 + Math.sin(t * 1.6 + m.phase) * 3;
-      if (m.state === 'dim') {
+      if (m.v === 1) updBreath(m, dt);
+      else m.y = terrainY(m.x) - 44 + Math.sin(t * 1.6 + m.phase) * 3;
+      if (m.v === 1) { /* breathing handled above */ }
+      else if (m.state === 'dim') {
         const carried = carriedFlies();
-        const needed = mode !== 'story' || (got.C || 0) < (need.C || 0);
-        if (needed && carried.length >= FLY_NEED && cat.on && Math.abs(cat.x - m.x) < 1.6 * T && Math.abs(cat.y - terrainY(m.x)) < 60) {
+        if (carried.length >= FLY_NEED && cat.on && Math.abs(cat.x - m.x) < 1.6 * T && Math.abs(cat.y - terrainY(m.x)) < 60) {
           carried.slice(0, FLY_NEED).forEach((f, i) => { f.state = 'give'; f.st = .55 + i * .15; f.calm = m; });
           m.state = 'glowing'; m.st = 1.2;
           float(m.x, m.y - 64, '“It’s okay. You can rest now.”', CALM);
@@ -1260,6 +1305,10 @@
         m.state = 'revealed'; m.alpha = 1; m.sit = 0; cat.pounce = 0;
         float(cat.x, cat.y - 70, 'Sit quietly beside Lonely', BLUE); tone(330, .15, 'sine', .035); continue;
       }
+      if (m.type === 'C' && m.v === 1) {
+        if (!cat.bounced && m.state === 'bubble') { cat.bounced = true; cat.vx = -cat.face * 220; cat.pounce = 0; resetBreath(m); float(m.x, m.y - 70, 'Shh… breathe slowly with it', CALM); tone(300, .2, 'sine', .04, -100); }
+        continue;
+      }
       if (m.type === 'C') {
         if (!cat.bounced && m.state === 'dim') {
           cat.bounced = true; cat.vx = -cat.face * 240; cat.pounce = 0;
@@ -1373,6 +1422,8 @@
       $('#bScratch').hidden = !scratchTarget || touchUI.hidden;
       return scratchTarget;
     }
+    const breathCalm = mood.find(m => !m.dead && m.type === 'C' && m.v === 1 && m.state === 'bubble' && nearBreath(m));
+    if (breathCalm) { scratchTarget = { type: 'breath', mood: breathCalm }; $('#bScratch').hidden = touchUI.hidden; return scratchTarget; }
     let best = 74;
     const reachableHeight = Math.abs(cat.y - terrainY(cat.x)) <= 115;
     for (const m of mood) {
@@ -1386,6 +1437,7 @@
     return scratchTarget;
   }
   function performScratch() {
+    if (scratchTarget?.type === 'breath') return false;
     if (scratchTarget?.type === 'sky') {
       const m = scratchTarget.mood;
       if (!m || m.dead || m.skyPhase !== 'scratchReq') { if (m) failSkyChallenge(m); return false; }
@@ -2116,6 +2168,23 @@
         ctx.globalAlpha = m.alpha;
         mEll(m.x, floorY - 8, 36, 8, 0, '#3f8a4c', '#24583a', 2); ctx.fillStyle = '#5fae6a'; ctx.beginPath(); ctx.ellipse(m.x - 6, floorY - 10, 22, 4, 0, 0, 7); ctx.fill();
         ctx.fillStyle = '#1b3a2a'; ctx.beginPath(); ctx.moveTo(m.x, floorY - 8); ctx.lineTo(m.x + 30, floorY - 12); ctx.lineTo(m.x + 30, floorY - 5); ctx.closePath(); ctx.fill();
+        if (m.v === 1) {
+          const pop = m.state === 'popping' ? 1 - m.st / .55 : 0, r = (34 + 26 * breathSize(m.bphase)) * (1 + pop * .4), by = m.y - 6;
+          drawCuteMood('C', m.x, m.y, .5, { color: '#a8f0c8', glow: '#c9fff0', look: 0, cy: 70 });
+          ctx.globalAlpha = m.alpha * (1 - pop);
+          const bg = ctx.createRadialGradient(m.x - r * .3, by - r * .35, r * .1, m.x, by, r);
+          bg.addColorStop(0, 'rgba(233,255,244,.22)'); bg.addColorStop(.8, 'rgba(159,240,200,.1)'); bg.addColorStop(1, 'rgba(201,255,240,.5)');
+          ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(m.x, by, r, 0, 7); ctx.fill();
+          ctx.strokeStyle = 'rgba(201,255,240,.75)'; ctx.lineWidth = 2; ctx.stroke();
+          ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(m.x, by, r * .78, Math.PI * 1.15, Math.PI * 1.45); ctx.stroke();
+          ctx.globalAlpha = m.alpha;
+          if (m.v) drawRare(m);
+          if (m.state === 'bubble') {
+            for (let k = 0; k < BREATHS_NEED; k++) { ctx.beginPath(); ctx.arc(m.x - 18 + k * 18, by - r - 16, 6, 0, 7); ctx.lineWidth = 2; ctx.strokeStyle = CALM; ctx.stroke(); if (k < m.breaths) { ctx.fillStyle = CALM; ctx.fill(); } }
+            if (near) { const inhale = m.bphase < .5; moodLabel(m, inhale ? 'Breathe in… hold S' : '…and out, let go', inhale ? '#9ff0c8' : '#ffd9a0', r + 38); }
+          }
+          ctx.restore(); continue;
+        }
         if (li < 1) { ctx.globalAlpha = m.alpha * (1 - li); ctx.filter = 'grayscale(.85) brightness(.8)'; drawCuteMood('C', m.x, m.y, .55, { color: '#7f9a88', glow: '#33413b', look: 0, cy: 70 }); ctx.filter = 'none'; }
         if (li > 0) { ctx.globalAlpha = m.alpha * li; drawCuteMood('C', m.x, m.y, .55 + li * .05, { color: '#4FDB92', glow: CALM, look, cy: 70 }); }
         ctx.globalAlpha = m.alpha;
@@ -2304,7 +2373,7 @@
     }
     if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
-      const prompt = scratchTarget.type === 'sky' ? 'Scratch it! (S)' : scratchTarget.kind === 'rock' ? `S  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? 'marked rock' : 'rock'}` : `S  Scratch ${scratchTarget.type==='C'?(inLake()?'reed bed':'cave mark'):'hiding spot'}`, py=VH-74;
+      const prompt = scratchTarget.type === 'breath' ? (scratchTarget.mood.bphase < .5 ? 'Hold S · breathe in…' : 'Let go · breathe out…') : scratchTarget.type === 'sky' ? 'Scratch it! (S)' : scratchTarget.kind === 'rock' ? `S  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? 'marked rock' : 'rock'}` : `S  Scratch ${scratchTarget.type==='C'?(inLake()?'reed bed':'cave mark'):'hiding spot'}`, py=VH-74;
       ctx.strokeText(prompt,VW/2,py);ctx.fillText(prompt,VW/2,py);
     } else if (scratchAnim>0) {
       ctx.textAlign='center';ctx.font=`800 16px ${DISP}`;ctx.fillStyle='#f4e8c7';ctx.fillText('Scratching…',VW/2,VH-74);
@@ -2459,7 +2528,7 @@
   const bookPortraits = {};
   function moodLook(ty, v = 0) {
     return { F: { color: vcol('F', v), cy: 70 }, N: { color: vcol('N', v), cy: 70 }, L: { color: vcol('L', v), cy: 70 }, B: { color: vcol('B', v), cy: 70 },
-      C: { color: '#4FDB92', glow: CALM, cy: 70 }, E: { color: EXC, cy: 72 }, S: { color: SHY, cy: 70 }, J: { color: JEAL, cy: 68 }, G: { color: '#FFE27A', glow: '#fff3c4', cy: 64 } }[ty] || { color: vcol(ty, v), cy: 70 };
+      C: v === 1 ? { color: '#a8f0c8', glow: '#c9fff0', cy: 70 } : { color: '#4FDB92', glow: CALM, cy: 70 }, E: { color: EXC, cy: 72 }, S: { color: SHY, cy: 70 }, J: { color: JEAL, cy: 68 }, G: { color: '#FFE27A', glow: '#fff3c4', cy: 64 } }[ty] || { color: vcol(ty, v), cy: 70 };
   }
   function bookPortrait(ty, v, known) {
     const key = ty + v + (known ? 'k' : 'u');
