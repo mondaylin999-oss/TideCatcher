@@ -5,7 +5,9 @@
    TCSfx.caught('G')    -> soft "pon" catch chime + the Moodling's happy voice
    TCSfx.cat('meow')    -> meow | trill | purr | sad | hiss
    TCSfx.level()        -> 0..1 effects volume (0 when muted); game.js uses it for its small tone() blips too
-   Settings: the "Sound effects" slider and "Mute all" switch in the hub settings are saved in localStorage. */
+   TCMusic.play('school') -> loops that place's night music, fading from the previous one
+   TCMusic.stop(), TCMusic.duck(0.45) (quieter during the bedroom scene and pauses), TCMusic.duck(1) to restore
+   Settings: the "Music" and "Sound effects" sliders and the "Mute all" switch are saved in localStorage. */
 (function () {
   const ogg = (() => { try { return !!new Audio().canPlayType('audio/ogg; codecs="vorbis"'); } catch (e) { return false; } })();
   const BASE = ogg ? 'assets/audio/ogg/' : 'assets/audio/mp3/', EXT = ogg ? '.ogg' : '.mp3';
@@ -16,9 +18,9 @@
     sad: 'sfx_cat_sad_mew', hiss: 'sfx_cat_hiss' };
   const LEVEL = { sfx_cat_purr: .5, sfx_mood_golden_sparkle: .55, sfx_mood_calm_chime: .7 };  // keep loudness even
   const names = [...new Set([...Object.values(VOICE), ...Object.values(CAT), 'sfx_catch_happy_chime'])];
-  let ctx = null, master = null, volume = 0.8, muted = false;
-  try { const s = JSON.parse(localStorage.getItem('tc-audio') || 'null'); if (s) { if (typeof s.effects === 'number') volume = s.effects; muted = !!s.mute; } } catch (e) {}
-  const save = () => { try { localStorage.setItem('tc-audio', JSON.stringify({ effects: volume, mute: muted })); } catch (e) {} };
+  let ctx = null, master = null, volume = 0.8, muted = false, musicVol = 0.75;
+  try { const s = JSON.parse(localStorage.getItem('tc-audio') || 'null'); if (s) { if (typeof s.effects === 'number') volume = s.effects; if (typeof s.music === 'number') musicVol = s.music; muted = !!s.mute; } } catch (e) {}
+  const save = () => { try { localStorage.setItem('tc-audio', JSON.stringify({ effects: volume, music: musicVol, mute: muted })); } catch (e) {} };
   const buffers = {}, elems = {}, last = {};
 
   function ensure() {
@@ -57,16 +59,44 @@
     caught: (type) => { play('sfx_catch_happy_chime', .8); if (VOICE[type]) setTimeout(() => play(VOICE[type], .7), 140); },
     level: () => muted ? 0 : volume,
     setVolume: v => { volume = Math.max(0, Math.min(1, v)); save(); },
-    mute: m => { muted = !!m; save(); },
+    mute: m => { muted = !!m; save(); if (window.TCMusic) TCMusic.refresh(); },
   };
   window.TCSfx = api;
   // browsers only allow sound after a tap/key: unlock + preload on first interaction
   const unlock = () => { ensure(); api.preload(); removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock); };
   addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
 
+  // ---------- night music: one looping track per place ----------
+  const MBASE = ogg ? 'assets/audio/music/ogg/' : 'assets/audio/music/mp3/';
+  const music = { cur: null, el: null, want: null, duck: 1, fadeT: 0 };
+  const musicGain = () => muted ? 0 : Math.min(1, musicVol * 1.15 * music.duck);   // the files are already mixed quieter than the sound effects
+  function fadeTo(el, target, ms, done) {
+    const from = el.volume, t0 = performance.now();
+    const step = now => { const k = Math.min(1, (now - t0) / ms); el.volume = Math.max(0, Math.min(1, from + (target - from) * k)); if (k < 1) requestAnimationFrame(step); else if (done) done(); };
+    requestAnimationFrame(step);
+  }
+  const TCMusic = {
+    play(name) {
+      music.want = name;
+      if (music.cur === name && music.el) { music.el.play().catch(() => {}); fadeTo(music.el, musicGain(), 600); return; }
+      const old = music.el; if (old) fadeTo(old, 0, 1200, () => { old.pause(); });
+      if (!name) { music.cur = null; music.el = null; return; }
+      const el = new Audio(MBASE + 'music_' + name + EXT); el.loop = true; el.preload = 'auto'; el.volume = 0;
+      music.cur = name; music.el = el;
+      const go = () => el.play().then(() => fadeTo(el, musicGain(), 1500)).catch(() => {});
+      go(); addEventListener('pointerdown', go, { once: true }); addEventListener('keydown', go, { once: true });   // in case the browser waits for a tap or key
+    },
+    stop() { TCMusic.play(null); },
+    duck(k) { music.duck = k; if (music.el) fadeTo(music.el, musicGain(), 500); },
+    refresh() { if (music.el) fadeTo(music.el, musicGain(), 300); },
+    setVolume(v) { musicVol = Math.max(0, Math.min(1, v)); save(); TCMusic.refresh(); },
+  };
+  window.TCMusic = TCMusic;
+
   // connect the "Sounds of the night" settings (Sound effects slider + Mute all)
   function bindSettings() {
-    const fx = document.querySelector('[data-audio="effects"]'), mute = document.querySelector('[data-audio="mute"]');
+    const fx = document.querySelector('[data-audio="effects"]'), mute = document.querySelector('[data-audio="mute"]'), mus = document.querySelector('[data-audio="music"]');
+    if (mus) { mus.disabled = false; mus.value = Math.round(musicVol * 100); mus.addEventListener('input', () => TCMusic.setVolume(mus.value / 100)); }
     if (fx) {
       fx.value = Math.round(volume * 100);
       fx.addEventListener('input', () => api.setVolume(fx.value / 100));
