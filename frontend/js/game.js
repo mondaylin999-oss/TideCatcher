@@ -344,8 +344,8 @@
   }
   // ---------- Lakeside map (Nights 6-7) ----------
   // Painted entirely in code: dawn sky that warms up (and on Night 7 the sun rises as the timer runs),
-  // mountains, a lake with the sun's reflection, a rowboat, then the shore path, reed beds (Calm's
-  // hiding places) and wooden jetties (platforms).
+  // mountains, a lake with the sun's reflection, a rowboat, then the shore path, reed beds and
+  // Calm's lily pads and wooden jetties (platforms).
   const LAKE_NIGHTS = [6, 7];
   function inLake() { return mode === 'story' && LAKE_NIGHTS.includes(storyNight); }
   const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
@@ -430,7 +430,7 @@
     ctx.fillStyle = grass; ctx.beginPath(); ctx.moveTo(x0, GROUND + 7);
     for (let x = Math.floor(x0 / 8) * 8; x < x1 + 8; x += 8) ctx.lineTo(x, GROUND - 2 - Math.abs(Math.sin(x * 1.3)) * 5);
     ctx.lineTo(x1 + 8, GROUND + 7); ctx.closePath(); ctx.fill();
-    // reed beds (Calm's hiding places)
+    // reed beds (Calm sits on a lily pad beside one)
     for (const rx of CAVE_XS) {
       if (rx < x0 - 90 || rx > x1 + 90) continue;
       for (let k = 0; k < 16; k++) {
@@ -477,7 +477,7 @@
     { night: 3, name: 'The Park', sub: 'Sit still beside Lonely, and freeze when Shy peeks', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2, S: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' , sky: { A: 2, B: 1, C: 0, wait: 2.2, fallSpeed: 85, gravity: 800, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.20, hintShown: false }},
     { night: 4, name: 'Lighting Festival', sub: 'Scratch to reveal what is buried', theme: '#c17679', musicRoot: 233.08, timeLimit: 122, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2, B: 1, E: 2 }, newMoodling: 'A feeling is buried under the rocks: use Night Eyes to spot the right rock, then scratch it. Excited bounces high: pounce at the top of its bounce.', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0, B: 1, E: 1 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Something is buried under the rocks. Press E for Night Eyes, then scratch the glowing rock. Excited bounces high: pounce at the top.' , sky: { A: 2, B: 1, C: 1, wait: 2.0, fallSpeed: 100, gravity: 900, scratchWindow: 2.0, ambushBase: 2, pounceWindowMul: 1.10, hintShown: false }},
     { night: 5, name: 'Hilltop Park', sub: 'Climb the old park above the sleeping city', theme: '#7181aa', musicRoot: 246.94, timeLimit: 117, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1, J: 2 }, newMoodling: 'Up on the hill, sparkling Golden feelings appear more often; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1, J: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Golden feelings sparkle more often up here. They are worth extra Glow.' , sky: { A: 3, B: 2, C: 1, wait: 1.6, fallSpeed: 115, gravity: 1000, scratchWindow: 1.7, ambushBase: 2, pounceWindowMul: 1.00, hintShown: false }},
-    { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2, S: 2, E: 1 }, newMoodling: 'Calm hides in the reeds; find the marked reed bed, scratch, then sit quietly', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 1, B: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm hides in the reeds. Scratch the marked reed bed, then sit quietly.' , sky: { A: 3, B: 2, C: 2, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
+    { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2, S: 2, E: 1 }, newMoodling: 'Calm is too dim to come home. Walk slowly to gather 3 fireflies, then bring them to Calm', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 1, B: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm sits dim by the lake. Walk slowly into 3 fireflies, then bring their light to Calm.' , sky: { A: 3, B: 2, C: 2, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
     { night: 7, name: 'Sunrise', sub: 'Bring every feeling home before the sun rises', theme: '#d6a866', musicRoot: 293.66, timeLimit: 135, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3, B: 2, E: 2, S: 1, J: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 1, B: 1, E: 1, S: 1, J: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
   ];
   const PERCH_BUDGET = { 1: 12, 2: 10, 3: 9, 4: 8, 5: 6, 6: 4, 7: 2 };
@@ -572,7 +572,7 @@
     E: [{ n: 'Excited', c: '#ffd23f', r: 'Common', d: 'Bounces higher and higher. Jump, then pounce at the very top of its bounce.', line: '“I used to count the days until art club.”' }],
     S: [{ n: 'Shy', c: '#ff7ab8', r: 'Common', d: 'Peeks back over its shoulder. Freeze while it looks; move while it hides its face.', line: '“I wanted to show my drawing to Hnin, but I was too shy to ask.”' }],
     J: [{ n: 'Jealous', c: '#ff9a3c', r: 'Common', d: 'Steals lights from your trail, then runs. Catch it when it gets tired to win them back.', line: '“The winning drawing really was good. That is why it hurt.”' }],
-    C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Scratch a marked reed bed, then sit quietly beside Calm.', line: '“It’s okay. You can rest now.”', lock: 'Meet it in the reeds at 4 AM.' }],
+    C: [{ n: 'Calm', c: '#7ddc8b', r: 'Story', d: 'Gather three fireflies slowly, then bring their light to Calm.', line: '“It’s okay. You can rest now.”', lock: 'Meet it by the lake at 4 AM.' }],
     B: [
       { n: 'Buried', c: '#a67646', r: 'Common', d: 'Hides deep under a rock. Reveal it with Night Eyes, then scratch the marked rock. A wrong rock shakes the ground.', line: '“I put it somewhere deep so I wouldn’t have to look at it.”' },
       { n: 'Petrified Buried', c: '#8c5a3a', r: 'Rare', d: 'So deep it has almost turned to stone. Same scratch rules.', line: '“It was easier to be numb than to feel it.”' },
@@ -631,6 +631,10 @@
   const caughtTotal = () => Object.values(got).reduce((sum, n) => sum + n, 0);
   let cat, mood = [], parts = [], floats = [], trail = [], hist = [], camX = 0, respawnQ = [], banner = null;
   let scratchSpots = [], scratchTarget = null, scratchAnim = 0, rocks = [], buriedHome = null, shake = 0;
+  // Calm (4 AM, Lakeside): it sits dim on a lily pad. Shwe gathers FLY_NEED fireflies by walking slowly,
+  // then brings them to Calm, which lights up and comes home. Running/jumping/pouncing near a firefly scatters it.
+  const FLY_NEED = 3, FLY_SLOW = 140;
+  let fireflies = [], flyMsgAt = -9, flyHintShown = false;
   let skyUsed = { A: 0, B: 0, C: 0 }, skyPerfect = 0, skySpawned = 0, skyNextAt = 15;
   const ROCK_XS = [560, 1120, 1680, 2260, 2520, 2860, 3180, 3560, 3940];
 
@@ -659,6 +663,76 @@
     m.alpha = tutorialLonely ? 1 : 0; m.state = tutorialLonely ? 'revealed' : 'hide';
     m.spot = tutorialLonely ? null : makeScratchSpot(m.x, m.type);
   }
+  function flySpotNear(x) {
+    let fx, n = 0;
+    do { fx = clamp(x + (Math.random() < .5 ? -1 : 1) * (200 + Math.random() * 480), 120, WORLD - 120); n++; }
+    while (n < 24 && (Math.abs(fx - cat.x) < 170 || fireflies.some(f => f.state === 'free' && Math.abs(f.hx - fx) < 110)));
+    return fx;
+  }
+  function addFireflies(m) {
+    for (let i = 0; i < FLY_NEED; i++) {
+      const fx = flySpotNear(m.x);
+      fireflies.push({ x: fx, y: GROUND - 46, hx: fx, hy: GROUND - 34 - Math.random() * 30, ox: m.x, state: 'free', phase: Math.random() * 7, st: 0, fast: 0, calm: null, dead: false });
+    }
+  }
+  const carriedFlies = () => fireflies.filter(f => f.state === 'follow');
+  function scatterFly(f, fromCat) {
+    const fx = flySpotNear(f.ox);
+    f.state = 'free'; f.hx = fx; f.hy = GROUND - 34 - Math.random() * 30; f.fast = 1.4;
+    for (let k = 0; k < 6; k++) parts.push({ x: f.x, y: f.y, vx: (Math.random() - .5) * 120, vy: (Math.random() - .5) * 120, life: .5, max: .5, c: '#e8ff8a', r: 2, g: 0 });
+    if (!fromCat && t - flyMsgAt > 1.2) {
+      flyMsgAt = t; float(f.x, f.y - 26, 'Too fast! The firefly flew off', '#e8ff8a');
+      if (!flyHintShown) { flyHintShown = true; announce('Walk slowly to gather fireflies (hold Shift)', CALM, 2.6); }
+    }
+    tone(1400, .08, 'sine', .03, -500);
+  }
+  function updFireflies(dt) {
+    if (!fireflies.length) return;
+    const gentle = cat.on && Math.abs(cat.vx) <= FLY_SLOW && cat.pounce <= 0;
+    let k = 0;
+    for (const f of fireflies) {
+      f.phase += dt; f.fast = Math.max(0, f.fast - dt);
+      if (f.state === 'free') {
+        const rate = Math.min(1, dt * (f.fast > 0 ? 2.4 : 1.6));
+        f.x += (f.hx + Math.sin(f.phase * .9) * 18 - f.x) * rate;
+        f.y += (f.hy + Math.sin(f.phase * 1.7) * 8 - f.y) * rate;
+        if (f.fast > 0) continue;
+        const d = Math.hypot(cat.x - f.x, cat.y - 24 - f.y);
+        if (d < 90 && !gentle) scatterFly(f, false);
+        else if (d < 36) {
+          f.state = 'follow';
+          const n = carriedFlies().length;
+          float(f.x, f.y - 24, n >= FLY_NEED ? 'Bring the light to Calm!' : `Firefly ${n}/${FLY_NEED}`, '#e8ff8a');
+          tone(1046 + n * 160, .14, 'sine', .045);
+        }
+      } else if (f.state === 'follow') {
+        k++;
+        const tx = cat.x - cat.face * (14 + k * 20), ty = cat.y - 58 - Math.sin(t * 3 + k * 1.7) * 7;
+        f.x += (tx - f.x) * Math.min(1, dt * 5); f.y += (ty - f.y) * Math.min(1, dt * 5);
+      } else if (f.state === 'give') {
+        f.st -= dt; const c = f.calm;
+        f.x += (c.x - f.x) * Math.min(1, dt * 4); f.y += (c.y - f.y) * Math.min(1, dt * 4);
+        if (f.st <= 0) f.dead = true;
+      }
+    }
+    fireflies = fireflies.filter(f => !f.dead);
+  }
+  function drawFireflies() {
+    for (const f of fireflies) {
+      const tw = .7 + .3 * Math.sin(f.phase * 6), a = f.state === 'give' ? clamp(f.st / .4, 0, 1) : 1;
+      const r = 15 * tw;
+      const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r * 1.8);
+      g.addColorStop(0, `rgba(255,251,194,${.95 * a})`); g.addColorStop(.35, `rgba(232,255,138,${.6 * a})`); g.addColorStop(1, 'rgba(200,255,106,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, r * 1.8, 0, 7); ctx.fill();
+      ctx.fillStyle = `rgba(255,253,224,${a})`; ctx.beginPath(); ctx.arc(f.x, f.y, 2.8, 0, 7); ctx.fill();
+      if (f.state === 'free') { ctx.strokeStyle = `rgba(255,255,255,${.35 * tw})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(f.x - 4, f.y - 3, 4, 2, -.5, 0, 7); ctx.ellipse(f.x + 4, f.y - 3, 4, 2, .5, 0, 7); ctx.stroke(); }
+    }
+    const n = carriedFlies().length;
+    if (n && state === 'play') {
+      ctx.font = `800 14px ${DISP}`; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(18,12,36,.8)'; ctx.fillStyle = '#e8ff8a';
+      const s = `✦ ${Math.min(n, FLY_NEED)}/${FLY_NEED}`; ctx.strokeText(s, cat.x, cat.y - 88); ctx.fillText(s, cat.x, cat.y - 88);
+    }
+  }
   function spawn(type, x) {
     const hidesInCave = type === 'C' || (type === 'L' && moonHollow());
     x = x ?? (hidesInCave ? pickCaveX() : pickX());
@@ -672,8 +746,12 @@
     if (type === 'S') { m.y = terrainY(x) - 26; m.state = 'walk'; m.st = 2 + Math.random() * 1.5; }
     if (type === 'J') { m.y = terrainY(x) - 30; m.state = 'wander'; m.cd = 3; m.stolen = []; }
     if (type === 'B') { const rock = rocks.find(r => r.marked) || rocks[0]; m.x = rock.x; m.y = rock.y - 12; m.state = 'buried'; m.alpha = 0; m.rock = rock; m.chime = 0; }
-    if (type === 'L' || type === 'C') {
-      m.y = terrainY(x) - (type === 'C' ? 46 : 30); m.st = 0; m.rev = 0; m.sit = 0; m.chime = 0; m.fleeAlarm = 0;
+    if (type === 'C') {
+      m.x = x = clamp(x + 125, 80, WORLD - 80); m.y = terrainY(x) - 44; m.state = 'dim'; m.light = 0; m.alpha = 0; m.st = 0; m.sit = 0;
+      addFireflies(m);
+    }
+    if (type === 'L') {
+      m.y = terrainY(x) - 30; m.st = 0; m.rev = 0; m.sit = 0; m.chime = 0; m.fleeAlarm = 0;
       const tutorialLonely = type === 'L' && mode === 'story' && storyNight <= 3;
       m.state = tutorialLonely ? 'revealed' : 'hide'; m.alpha = tutorialLonely ? 1 : 0; m.spot = tutorialLonely ? null : makeScratchSpot(x, type);
     }
@@ -735,7 +813,7 @@
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
-    scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0;
+    scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false;
     rocks = mode === 'story' ? ROCK_XS.map(x => ({ x, y: terrainY(x), marked: false, scratched: false, wrongUsed: false, phase: Math.random() * Math.PI * 2, holeDepth: 0 })) : [];
     buriedHome = null;
     if (need.B > 0) { buriedHome = rocks[Math.floor(Math.random() * rocks.length)]; buriedHome.marked = true; }
@@ -905,7 +983,8 @@
       float(m.x, m.y - 34, 'Not needed tonight  −3s', MUTED);
       timeLeft = Math.max(0, timeLeft - 3); combo = 0; comboT = 0;
       if (m.type === 'N') panic(m, cat.x - m.x);
-      else if (m.type === 'L' || m.type === 'C') hideFeeling(m);
+      else if (m.type === 'L') hideFeeling(m);
+      else if (m.type === 'C') { m.state = 'dim'; m.light = 0; }
       else if (m.type === 'B') { if (m.rock) m.rock.scratched = false; m.dead = false; m.state = 'buried'; m.alpha = 0; m.rock = buriedHome; m.x = buriedHome.x; m.y = buriedHome.y - 12; m.chime = 0; }
       else if (m.type === 'S') { m.state = 'hide'; m.st = 2; }
       else if (m.type === 'E' || m.type === 'J') { if (m.type === 'J') { m.state = 'wander'; m.cd = 4; } }
@@ -1034,7 +1113,24 @@
       else if (m.state === 'scratching') { m.alpha = 0; m.st -= dt; if (m.st <= 0) { m.state = 'emerging'; m.st = .5; rock.holeDepth = 0; } }
       else if (m.state === 'emerging') { m.alpha = Math.min(1, m.alpha + dt * 2.4); m.st -= dt; rock.holeDepth = Math.min(1, rock.holeDepth + dt * 2); if (m.st <= 0) { m.state = 'revealed'; m.alpha = 1; } }
       else if (m.state === 'revealed') { rock.holeDepth = 1; }
-    } else if (m.type === 'L' || m.type === 'C') {
+    } else if (m.type === 'C') {
+      m.alpha = Math.min(1, m.alpha + dt * 2);
+      m.y = terrainY(m.x) - 44 + Math.sin(t * 1.6 + m.phase) * 3;
+      if (m.state === 'dim') {
+        const carried = carriedFlies();
+        const needed = mode !== 'story' || (got.C || 0) < (need.C || 0);
+        if (needed && carried.length >= FLY_NEED && cat.on && Math.abs(cat.x - m.x) < 1.6 * T && Math.abs(cat.y - terrainY(m.x)) < 60) {
+          carried.slice(0, FLY_NEED).forEach((f, i) => { f.state = 'give'; f.st = .55 + i * .15; f.calm = m; });
+          m.state = 'glowing'; m.st = 1.2;
+          float(m.x, m.y - 64, '“It’s okay. You can rest now.”', CALM);
+          tone(659, .3, 'sine', .05); setTimeout(() => tone(784, .3, 'sine', .05), 180); setTimeout(() => tone(988, .4, 'sine', .05), 360);
+        }
+      } else if (m.state === 'glowing') {
+        m.st -= dt; m.light = clamp(1 - m.st / 1.2, 0, 1);
+        if (Math.random() < .4) parts.push({ x: m.x + (Math.random() - .5) * 40, y: m.y + (Math.random() - .5) * 30, vx: 0, vy: -30, life: .7, max: .7, c: CALM, r: 2, g: 0 });
+        if (m.st <= 0) { m.state = 'lit'; m.light = 1; catchIt(m); }
+      }
+    } else if (m.type === 'L') {
       const dx = cat.x - m.x, moodColor = m.type === 'C' ? CALM : BLUE, floorY = terrainY(m.x);
       if (m.state === 'hide') { m.alpha = 0; m.sit = 0; }
       else if (m.state === 'scratching') {
@@ -1164,9 +1260,18 @@
         m.state = 'revealed'; m.alpha = 1; m.sit = 0; cat.pounce = 0;
         float(cat.x, cat.y - 70, 'Sit quietly beside Lonely', BLUE); tone(330, .15, 'sine', .035); continue;
       }
-      if (m.type === 'L' || m.type === 'C') {
+      if (m.type === 'C') {
+        if (!cat.bounced && m.state === 'dim') {
+          cat.bounced = true; cat.vx = -cat.face * 240; cat.pounce = 0;
+          const lost = carriedFlies()[0];
+          if (lost) scatterFly(lost, true);
+          float(m.x, m.y - 56, lost ? 'Too quick! A firefly flew away' : 'Too quick! Calm needs gentle light', CALM); tone(300, .2, 'sine', .04, -100);
+        }
+        continue;
+      }
+      if (m.type === 'L') {
         hideFeeling(m);
-        float(cat.x, cat.y - 70, m.type === 'C' ? 'Too quick. Calm slipped back into the reeds' : 'Too fast. It hid again', m.type === 'C' ? CALM : BLUE); tone(300, .2, 'sine', .04, -100);
+        float(cat.x, cat.y - 70, 'Too fast. It hid again', BLUE); tone(300, .2, 'sine', .04, -100);
         continue;
       }
       if (m.type === 'N' && m.state !== 'wander') continue;
@@ -1215,6 +1320,7 @@
     if (scratchQ) performScratch();
     scratchQ = false;
     for (const m of mood) updMood(m, purrT > 0 && Math.abs(m.x - cat.x) < 6 * T ? dt * .4 : dt);
+    updFireflies(dt);
     checkCatches();
     mood = mood.filter(m => !m.dead);
     for (const r of respawnQ) r.at -= dt;
@@ -2003,8 +2109,20 @@
         drawCuteMood('L', m.x, m.y, .5, { color: vcol('L', m.v), look, cy: 70 });
         if (!sitRing(m, BLUE, 30) && near) moodLabel(m, 'Sit still beside me', BLUE, 34);
       } else if (m.type === 'C') {
-        drawCuteMood('C', m.x, m.y, .55, { color: '#4FDB92', glow: CALM, look, cy: 70 });
-        if (!sitRing(m, CALM, 32) && near) moodLabel(m, 'Sit quietly with Calm', CALM, 38);
+        const floorY = terrainY(m.x), li = m.light || 0;
+        // lily pad on the water, with soft ripples
+        ctx.strokeStyle = 'rgba(190,220,255,.25)'; ctx.lineWidth = 1.5;
+        for (let k = 0; k < 2; k++) { const rr = 34 + ((t * 14 + k * 16) % 32); ctx.globalAlpha = m.alpha * (1 - (rr - 34) / 32) * .8; ctx.beginPath(); ctx.ellipse(m.x, floorY - 8, rr, rr * .22, 0, 0, 7); ctx.stroke(); }
+        ctx.globalAlpha = m.alpha;
+        mEll(m.x, floorY - 8, 36, 8, 0, '#3f8a4c', '#24583a', 2); ctx.fillStyle = '#5fae6a'; ctx.beginPath(); ctx.ellipse(m.x - 6, floorY - 10, 22, 4, 0, 0, 7); ctx.fill();
+        ctx.fillStyle = '#1b3a2a'; ctx.beginPath(); ctx.moveTo(m.x, floorY - 8); ctx.lineTo(m.x + 30, floorY - 12); ctx.lineTo(m.x + 30, floorY - 5); ctx.closePath(); ctx.fill();
+        if (li < 1) { ctx.globalAlpha = m.alpha * (1 - li); ctx.filter = 'grayscale(.85) brightness(.8)'; drawCuteMood('C', m.x, m.y, .55, { color: '#7f9a88', glow: '#33413b', look: 0, cy: 70 }); ctx.filter = 'none'; }
+        if (li > 0) { ctx.globalAlpha = m.alpha * li; drawCuteMood('C', m.x, m.y, .55 + li * .05, { color: '#4FDB92', glow: CALM, look, cy: 70 }); }
+        ctx.globalAlpha = m.alpha;
+        if (m.state === 'dim' && near) {
+          const n = carriedFlies().length;
+          moodLabel(m, n >= FLY_NEED ? 'Come close… share the light' : `Bring me fireflies  ✦ ${n}/${FLY_NEED}`, CALM, 42);
+        }
       } else if (m.type === 'B') {
         drawCuteMood('B', m.x, m.y, .52, { color: vcol('B', m.v), look, cy: 70 });
       } else if (m.type === 'E') {
@@ -2216,7 +2334,7 @@
     if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
     ctx.save(); ctx.translate(-camX, 0);
-    drawWorld(); drawMoods(); drawTrail();
+    drawWorld(); drawMoods(); drawFireflies(); drawTrail();
     drawCat(); drawParts();
     ctx.restore();
     if (eyesT > 0) {
