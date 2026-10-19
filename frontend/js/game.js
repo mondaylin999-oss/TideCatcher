@@ -101,6 +101,7 @@
 
   // ---------- audio ----------
   let ac = null;
+  const activeTones = new Map();
   // sound effects from the Cat & Moodlings pack (js/tc-sfx.js); safe to call even if the file is missing
   const sfx = (kind, a) => { try { if (window.TCSfx) TCSfx[kind](a); } catch (e) {} };
   // night music per place (js/tc-sfx.js): School 11 PM–Midnight, Park 1 AM, Festival 2 AM, Hilltop 3 AM, Lakeside 4–5 AM
@@ -109,13 +110,17 @@
   function tone(f, d = .12, type = 'sine', v = .1, slide = 0) {
     if (!ac) return;
     const lv = window.TCSfx ? TCSfx.level() : 1; if (lv <= 0) return; v *= lv / .8;
+    const key = `${type}:${Math.round(f / 10)}`;
+    const copies = activeTones.get(key) || 0; if (copies >= 4) return;
+    activeTones.set(key, copies + 1);
     try {
       const t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
-      o.type = type; o.frequency.setValueAtTime(f, t0);
-      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, f + slide), t0 + d);
+      const pitch = .95 + Math.random() * .1;
+      o.type = type; o.frequency.setValueAtTime(f * pitch, t0);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, (f + slide) * pitch), t0 + d);
       g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(.0001, t0 + d);
-      o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + d + .03);
-    } catch (e) {}
+      o.connect(g).connect(ac.destination); o.onended = () => activeTones.set(key, Math.max(0, (activeTones.get(key) || 1) - 1)); o.start(t0); o.stop(t0 + d + .03);
+    } catch (e) { activeTones.set(key, Math.max(0, copies)); }
   }
 
   // ---------- input ----------
@@ -126,7 +131,7 @@
     keys[e.code] = true;
     if (e.repeat) return;
     if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'play') { e.preventDefault(); pauseGame(); return; }
-    if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'paused') { e.preventDefault(); resumeGame(); return; }
+    if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'paused') { e.preventDefault(); sfx('ui', 'resume'); resumeGame(); return; }
     if ($('#nightWakeScreen') && !$('#nightWakeScreen').hidden) { if (['Space','Enter','Escape'].includes(e.code)) { e.preventDefault(); closeNightWake(); } return; }
     if (state === 'home' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); homeKey(); return; }
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') jumpQ = true;
@@ -997,7 +1002,7 @@
   }
   function hitCat(m) {
     hits++; cat.inv = 1.2; cat.vx = m.dir * 420; cat.vy = -420; cat.on = false; cat.pounce = 0;
-    combo = 0; comboT = 0; sfx('cat', 'sad');
+    combo = 0; comboT = 0; sfx('cat', 'sad'); sfx('ui', 'hit'); sfx('ui', 'comboLost');
     shake = Math.max(shake, m.ambush ? 16 : 10);
     if (mode === 'free') { timeLeft = Math.max(0, timeLeft - 3); float(cat.x, cat.y - 88, '−3s', RED); }
     if (m.ambush) {
@@ -1125,7 +1130,7 @@
       return;
     }
     if (m.sky) { m.skyPhase = 'cleared'; m.skyTimer = 0; }
-    combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 4; bestCombo = Math.max(bestCombo, combo);
+    combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 4; bestCombo = Math.max(bestCombo, combo); sfx('combo', combo);
     const pts = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170, G: 500 }[m.type] * combo; score += pts;
     const gain = { F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16, G: 40 }[m.type] + 2 * (combo - 1) + (m.type === 'G' && catPerk() === 'burmese' ? 10 : 0);
     // Free mode is for fun and practice: half Glow, and at most FREE_GLOW_CAP per run, so the story stays the best way to earn
@@ -1166,9 +1171,9 @@
     c.sneak = sneaking;
     if (c.pounce > 0) c.pounce -= dt;
     else { const acc = c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
-    if (jumpQ && c.on && c.pounce <= 0) { c.vy = -830; c.on = false; tone(380, .12, 'triangle', .05, 240); }
+    if (jumpQ && c.on && c.pounce <= 0) { c.vy = -830; c.on = false; if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240); }
     jumpQ = false;
-    if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; tone(240, .1, 'square', .035, 320); }
+    if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) sfx('ui', 'pounce'); else tone(240, .1, 'square', .035, 320); }
     pounceQ = false;
     c.pcd -= dt; c.inv -= dt; c.squash = Math.max(0, c.squash - dt);
     const wasOn = c.on, py = c.y, wasOnTrail = wasOn && Math.abs(c.y - terrainY(c.x)) < 2;
@@ -1177,9 +1182,13 @@
     const floorY = terrainY(c.x);
     if (c.y >= floorY || (wasOnTrail && c.vy >= 0)) { c.y = floorY; landed = true; }
     else if (c.vy >= 0) { for (const p of activePlats) { if (c.x > p[0] - 6 && c.x < p[0] + p[2] + 6 && py <= p[1] + .5 && c.y >= p[1]) { c.y = p[1]; landed = true; break; } } }
-    if (landed) { if (!wasOn) { c.justLanded = true; if (c.vy > 500) c.squash = .16; } c.vy = 0; }
+    if (landed) { if (!wasOn) { c.justLanded = true; if (c.vy > 500) { c.squash = .16; sfx('ui', 'land'); } } c.vy = 0; }
     c.on = landed;
-    if (c.on && Math.abs(c.vx) > 10) c.walk += dt * Math.abs(c.vx) / 30;
+    if (c.on && Math.abs(c.vx) > 90) {
+      c.walk += dt * Math.abs(c.vx) / 30;
+      const stepBeat = Math.floor(c.walk / 1.7);
+      if (stepBeat !== c.stepBeat) { c.stepBeat = stepBeat; sfx('ui', 'step'); }
+    }
   }
 
   function updMood(m, dt) {
@@ -1457,7 +1466,7 @@
       float(cat.x, cat.y - 70, 'Purrr…', '#c8ff8a'); sfx('cat', 'purr');
     }
     purrQ = false; purrT = Math.max(0, purrT - dt); purrCd = Math.max(0, purrCd - dt);
-    if (eyesQ && eyesCd <= 0) { eyesT = eyesDur(); eyesCd = 9; tone(740, .25, 'sine', .05, 300); }
+    if (eyesQ && eyesCd <= 0) { eyesT = eyesDur(); eyesCd = 9; if (window.TCSfx) sfx('ui', 'eyes'); else tone(740, .25, 'sine', .05, 300); }
     eyesQ = false; eyesT = Math.max(0, eyesT - dt); eyesCd = Math.max(0, eyesCd - dt);
     scratchAnim = Math.max(0, scratchAnim - dt);
     checkScratchProximity();
@@ -1469,7 +1478,7 @@
     mood = mood.filter(m => !m.dead);
     for (const r of respawnQ) r.at -= dt;
     respawnQ = respawnQ.filter(r => { if (r.at <= 0) { spawn(r.type); return false; } return true; });
-    if (comboT > 0) { comboT -= dt; if (comboT <= 0) combo = 0; }
+    if (comboT > 0) { comboT -= dt; if (comboT <= 0) { combo = 0; sfx('ui', 'comboLost'); } }
     if (state === 'play') {
       if (mode === 'story') warmup = Math.max(0, warmup - dt);
       if (warmup <= 0) timeLeft -= dt;
@@ -1487,8 +1496,8 @@
         announce('Last 15 seconds!', RED, 1.6);
       }
       const sec = Math.ceil(timeLeft);
-      if (sec <= 10 && sec < lastTick) { lastTick = sec; tone(sec <= 3 ? 1200 : 880, .06, 'square', .03); }
-      if (timeLeft <= 0) { timeLeft = 0; finish(false); }
+      if (sec <= 10 && sec < lastTick) { lastTick = sec; if (window.TCSfx) sfx('ui', sec <= 3 ? 'urgent' : 'countdown'); else tone(sec <= 3 ? 1200 : 880, .06, 'square', .03); }
+      if (timeLeft <= 0) { timeLeft = 0; sfx('ui', 'timeup'); finish(false); }
     } else if (state === 'ending') {
       endT -= dt; if (endT <= 0) finish(true);
     }
@@ -1537,7 +1546,7 @@
       const m = scratchTarget.mood;
       if (!m || m.dead || m.skyPhase !== 'scratchReq') { if (m) failSkyChallenge(m); return false; }
       if (Math.abs(cat.x - m.skyAnchorX) > 120 || Math.abs(cat.x - m.x) > 165) { failSkyChallenge(m); scratchTarget = null; return false; }
-      m.skyPhase = 'scratched'; m.skyTimer = 0; m.scratchNeed = 0; m.skyVY = Math.max(260, chapterFor(storyNight).sky.fallSpeed * 2);
+      m.skyPhase = 'scratched'; m.skyTimer = 0; m.scratchNeed = 0; m.skyVY = Math.max(260, chapterFor(storyNight).sky.fallSpeed * 2); sfx('ui', 'scratch');
       scratchAnim = .45; scratchTarget = null; burst(m.x, m.y, RED, 16); float(m.x, m.y - 58, 'Scratched! Let it land', RED); tone(520, .18, 'triangle', .07, 300);
       return true;
     }
@@ -1545,14 +1554,14 @@
     if (activeSkyChallenge) { failSkyChallenge(activeSkyChallenge); return false; }
     if (scratchTarget?.kind === 'rock') {
       const rock = scratchTarget.rock; if (!rock || rock.scratched || !cat.on || Math.abs(cat.y - rock.y) > 115) return false;
-      rock.scratched = true; rock.holeDepth = 0; scratchAnim = .8; shake = Math.max(shake, rock.marked ? 0 : 10);
+      rock.scratched = true; rock.holeDepth = 0; scratchAnim = .8; shake = Math.max(shake, rock.marked ? 0 : 10); sfx('ui', 'scratch');
       if (rock.marked) { const m = mood.find(x => x.type === 'B' && !x.dead); if (m) { m.state = 'scratching'; m.st = .8; m.rock = rock; } burst(rock.x, rock.y - 22, rock.debris?.[0]?.color || '#8a6a45', 12); float(rock.x, rock.y - 68, 'Something was buried here.', '#a67646'); tone(190 + Math.random() * 40, .12, 'triangle', .03, 100); }
       else { rock.wrongUsed = true; tone(80, .5, 'sawtooth', .09, -40); announce('The ground rumbles…', RED, 2); triggerBuriedAmbush(); }
       scratchTarget = null; return true;
     }
     const m = scratchTarget;
     if (!m || m.dead || m.state !== 'hide' || !m.spot || m.spot.used || !cat.on || Math.abs(cat.y - m.spot.y) > 115) return false;
-    m.state = 'scratching'; m.st = .58; m.spot.scratching = true; m.spot.scratchAt = t; m.sit = 0; scratchAnim = .58;
+    m.state = 'scratching'; m.st = .58; m.spot.scratching = true; m.spot.scratchAt = t; m.sit = 0; scratchAnim = .58; sfx('ui', 'scratch');
     cat.vx = 0; cat.walk = 0;
     const dirt = m.spot.kind === 'leaf pile' ? '#c78d57' : m.spot.kind === 'under bush' ? '#7ea66a' : '#b99a70';
     for (let i = 0; i < 12; i++) parts.push({ x: m.x + (Math.random() - .5) * 30, y: m.spot.y - 7, vx: (Math.random() - .5) * 130, vy: -55 - Math.random() * 95, life: .45 + Math.random() * .25, max: .7, c: dirt, r: 2 + Math.random() * 2.5, g: 260 });
@@ -2756,7 +2765,7 @@
       return `<div class="entry unknown">${iconSVG(ty, v, false)}<h3>???</h3>${tag}<p>${hint}</p></div>`;
     }).join('');
   }
-  $('#bookBtn').addEventListener('click', () => { $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
+  $('#bookBtn').addEventListener('click', () => { music('play', 'menu'); music('ambience', 'menu'); $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
   $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; showMainMenu(true); });
   let shopFrom = null;
   let shopTab = 'upgrades';
@@ -2804,6 +2813,7 @@
     }).join('');
   }
   function openShop(from) {
+    music('play', 'menu'); music('ambience', 'menu');
     shopFrom = from; $('#startScreen').hidden = true; $('#endScreen').hidden = true;
     renderShop(); $('#shopScreen').hidden = false; $('#shopScreen').scrollTop = 0; $('#shopBack').focus({ preventScroll: true });
   }
@@ -2816,7 +2826,7 @@
     const x = e.target.closest('button[data-cat],button[data-item],button[data-trail]');
     if (x && !x.disabled) {
       initAudio();
-      const ding = () => { tone(660, .15, 'triangle', .07); setTimeout(() => tone(990, .25, 'sine', .06), 90); };
+      const ding = () => sfx('ui', 'buy');
       if (x.dataset.cat) {
         const k = x.dataset.cat;
         if (x.dataset.act === 'buy') { const c = CAT_SHOP[k].cost; if (glow < c) return; glow -= c; ownedCats.push(k); saveUpg(); ding(); sfx('cat', 'meow'); }
@@ -2836,7 +2846,7 @@
     const u = UPG.find(x => x.id === b.dataset.id), lv = upg[u.id];
     if (lv >= UPG_MAX || glow < u.costs[lv]) return;
     initAudio(); glow -= u.costs[lv]; upg[u.id]++; saveUpg();
-    tone(660, .15, 'triangle', .07); setTimeout(() => tone(990, .25, 'sine', .06), 90);
+    sfx('ui', 'buy');
     renderShop(); refreshShopBtns();
     const again = $(`#shopList button[data-id="${u.id}"]`);
     $(`#shopList [data-upgrade="${u.id}"]`)?.classList.add('cozy-purchased');
@@ -2862,6 +2872,8 @@
   }
 
   function showEnd() {
+    music('play', 'results'); music('ambience', null); sfx('ui', R.won ? 'reward' : 'result');
+    if (R.final > 0 && R.final >= R.best) setTimeout(() => sfx('ui', 'sparkle'), 420);
     state = 'over'; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     $('#sGlow').textContent = '+' + lastGlow;
     $('#endReplayBtn').hidden = !R.won || R.free;
@@ -3320,8 +3332,9 @@
   function startGame(m, night = storyNight) {
     if (typeof m === 'string') mode = m;
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 7) : 1;
-    initAudio(); setTimeout(() => sfx('cat', 'meow'), 400);
+    initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
     music('duck', 1); music('play', mode === 'story' ? NIGHT_MUSIC[storyNight - 1] : 'park');
+    music('ambience', mode === 'story' ? NIGHT_MUSIC[storyNight - 1] : 'park');
     cv.hidden = false;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
@@ -3477,13 +3490,14 @@
   }
   $('#storyMapScreen').addEventListener('scroll', syncStoryMapBackdrop, { passive: true });
   function showHub(focus = true) {
+    music('duck', 1); music('play', 'menu'); music('ambience', 'menu');
     $('#startScreen').hidden = false; $('#menuHub').hidden = false; $('#storyMapScreen').hidden = true;
     $('#hubSettingsScreen').hidden = true;
     refreshHubStats();
     if (focus) $('#storyBtn').focus({ preventScroll: true });
   }
   function showStoryMap(focus = true) {
-    music('stop');
+    music('duck', 1); music('play', 'menu'); music('ambience', 'menu');
     $('#startScreen').hidden = false; $('#menuHub').hidden = true; $('#storyMapScreen').hidden = false;
     $('#hubSettingsScreen').hidden = true; $('#levelBriefingScreen').hidden = true;
     buildLevelMap(); requestAnimationFrame(() => { focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); });
@@ -3494,7 +3508,7 @@
   }
   addEventListener('resize', () => { if (!$('#storyMapScreen').hidden) requestAnimationFrame(() => { focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); }); }, { passive: true });
   function showMainMenu(focusCurrent = true) {
-    music('stop');
+    music('duck', 1); music('play', 'menu'); music('ambience', 'menu');
     state = 'menu'; cv.hidden = true; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
@@ -3509,7 +3523,7 @@
     jumpQ = false; pounceQ = false; scratchQ = false; purrQ = false; eyesQ = false;
     touchAxis = 0; sid = null; stick.hidden = true; knob.style.transform = 'translate(-50%,-50%)';
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
-    pauseScreen.hidden = false; pauseContinueBtn.focus({ preventScroll: true }); music('duck', .35);
+    pauseScreen.hidden = false; pauseContinueBtn.focus({ preventScroll: true }); music('duck', .3);
   }
   function resumeGame() {
     if (state !== 'paused') return;
@@ -3584,6 +3598,7 @@
   }
   function introShowScene(i) {
     const sc = INTRO_SCENES[i], shots = [$('#introShotA'), $('#introShotB')];
+    sfx('ui', 'page');
     introShot ^= 1;
     const inc = shots[introShot], out = shots[introShot ^ 1];
     inc.src = introImgs[i].src; inc.alt = sc.alt;
@@ -3617,7 +3632,7 @@
     introTyped = reduce ? line.full.length : 0; el.textContent = reduce ? line.full : '';
     introLineStart = performance.now(); introDoneAt = reduce ? introLineStart : 0;
     $('#introHint').classList.remove('show');
-    if (line.sfx) { tone(820, .2, 'sawtooth', .03, -600); setTimeout(() => tone(620, .16, 'sawtooth', .024, -450), 90); }
+    if (line.sfx) { sfx('ui', 'swish'); tone(820, .2, 'sawtooth', .03, -600); setTimeout(() => tone(620, .16, 'sawtooth', .024, -450), 90); }
   }
   function introFinish() {
     $('#introHint').classList.remove('show');
@@ -3656,7 +3671,7 @@
     if (introReturnView === 'hub') showHub(true); else showStoryMap(true);
   }
   function playIntro(returnView = 'storyMap') {
-    music('stop');
+    music('play', 'intro'); music('ambience', 'intro');
     introReturnView = returnView;
     initAudio(); state = 'intro'; cv.hidden = true;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
