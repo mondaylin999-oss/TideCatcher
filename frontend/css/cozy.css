@@ -98,10 +98,11 @@ body{position:fixed;inset:0}
   .hub-side-btn svg{width:18px;height:18px;flex-basis:18px}.hub-side-reset{margin-left:0}
 }
 @media (min-width:560px) and (max-width:1050px) and (max-height:600px) and (orientation:landscape){
-  #menuHub{height:calc(100dvh - 56px);min-height:0;grid-template-columns:minmax(0,1.58fr) minmax(150px,.76fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"content hero" "content side";gap:6px;padding:6px;overflow:hidden}
+  #menuHub{height:calc(100dvh - 56px);min-height:0;grid-template-columns:minmax(0,1.58fr) minmax(150px,.76fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"content hero";gap:6px;padding:6px;overflow:hidden}
   .hub-content{min-height:0;grid-template-rows:auto minmax(68px,.85fr) minmax(82px,1.15fr);gap:5px}
   .hub-content-heading h1{font-size:clamp(16px,2.6vh,23px)}.hub-small-grid{min-height:0;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:minmax(0,1fr);gap:5px}
   .hub-small-card{min-height:0}.hub-small-head{left:7px;right:7px;top:6px}.hub-small-head>span{font-size:clamp(7px,1.5vw,9px)}
+  .hub-card{height:auto;min-height:0;padding:10px}
   .hub-small-copy{left:7px;right:7px;bottom:22px;font-size:clamp(7px,1.35vw,9px)}.hub-small-value{left:7px;right:7px;bottom:6px;font-size:7px}
   .hub-hero{grid-area:hero;position:relative;inset:auto;min-width:0;min-height:0;height:auto;align-self:stretch}.hub-hero-art{height:100%;width:100%;bottom:0;left:50%;transform:translateX(-50%)}
   .hub-hero-label{left:7px;bottom:6px;gap:2px}.hub-hero-label span{font-size:6px}.hub-hero-label strong{font-size:clamp(14px,2.4vh,20px)}.hub-hero-label i{font-size:8px}
