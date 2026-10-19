@@ -2966,12 +2966,25 @@
     }
     $('#mapScenery').innerHTML = parts.join('');
   }
+  function syncStoryMapBackdrop() {
+    const screen = $('#storyMapScreen'), track = $('#levelMapTrack');
+    const backdrop = $('#storyMapBackdrop'), fill = $('#storyMapBackdropFill'), scenery = $('#storyMapBackdropScenery');
+    const height = Math.max(1, Math.ceil(screen.clientHeight || innerHeight));
+    backdrop.setAttribute('viewBox', `0 0 100 ${height}`);
+    fill.setAttribute('height', String(height));
+    const visibleMapY = Math.max(0, -track.getBoundingClientRect().top);
+    scenery.setAttribute('transform', `translate(0 ${-visibleMapY})`);
+  }
   function buildLevelMap() {
     const track = $('#levelMapTrack'), path = $('#levelMapPath'), route = $('#levelMapRoute'), svg = $('#levelMapSvg');
     track.querySelectorAll('.level-entry').forEach(entry => entry.remove());
     const height = LEVEL_MAP_LIMIT * LEVEL_MAP_STEP;
-    track.style.height = `${height}px`; svg.setAttribute('viewBox', `0 0 100 ${height}`);
+    track.style.height = `${height}px`; svg.style.height = `${height}px`; svg.setAttribute('viewBox', `0 0 100 ${height}`);
     buildMapScenery(height);
+    const sourceScenery = $('#mapScenery'), backdropScenery = $('#storyMapBackdropScenery');
+    backdropScenery.replaceChildren(...Array.from(sourceScenery.children).filter(node => node.tagName.toLowerCase() !== 'rect').map(node => node.cloneNode(true)));
+    sourceScenery.replaceChildren();
+    syncStoryMapBackdrop();
     let d = '', prev = null;
     for (let level = LEVEL_MAP_LIMIT; level >= 1; level--) {
       const point = { x: levelMapX(level), y: (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2 };
@@ -3008,10 +3021,14 @@
     }
   }
   function focusLevelMap(level = unlockedLevel) {
-    const viewport = $('#levelMapViewport');
-    const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
-    viewport.scrollTop = Math.max(0, y - 34);
+    const screen = $('#storyMapScreen');
+    const target = $(`#levelMapTrack button[data-level="${level}"]`);
+    if (!target) return;
+    const targetCenter = target.getBoundingClientRect().top + target.offsetHeight / 2;
+    const desired = screen.scrollTop + targetCenter - screen.clientHeight / 2;
+    screen.scrollTop = Math.max(0, Math.min(screen.scrollHeight - screen.clientHeight, desired));
   }
+  $('#storyMapScreen').addEventListener('scroll', syncStoryMapBackdrop, { passive: true });
   function showHub(focus = true) {
     $('#startScreen').hidden = false; $('#menuHub').hidden = false; $('#storyMapScreen').hidden = true;
     $('#hubSettingsScreen').hidden = true;
@@ -3022,12 +3039,13 @@
     music('stop');
     $('#startScreen').hidden = false; $('#menuHub').hidden = true; $('#storyMapScreen').hidden = false;
     $('#hubSettingsScreen').hidden = true; $('#levelBriefingScreen').hidden = true;
-    buildLevelMap(); focusLevelMap(unlockedLevel);
+    buildLevelMap(); requestAnimationFrame(() => { focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); });
     let mapTipSeen = false;
     try { mapTipSeen = localStorage.getItem('mk-map-guide-seen') === '1'; } catch (e) {}
     if (mapGuidePending || !mapTipSeen) showMapGuide();
     else if (focus) $(`#levelMapTrack button[data-level="${unlockedLevel}"]`)?.focus({ preventScroll: true });
   }
+  addEventListener('resize', () => { if (!$('#storyMapScreen').hidden) requestAnimationFrame(() => { focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); }); }, { passive: true });
   function showMainMenu(focusCurrent = true) {
     music('stop');
     state = 'menu'; cv.hidden = true; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true;
@@ -3038,7 +3056,7 @@
   }
   function pauseGame() {
     if (state !== 'play') return;
-    pauseTouchWasHidden = touchUI.hidden;
+    $('#pauseChaptersBtn').textContent = mode === 'story' ? 'Back to chapters' : 'Back to menu';    pauseTouchWasHidden = touchUI.hidden;
     state = 'paused'; pauseBtn.hidden = true; touchUI.hidden = true;
     for (const key in keys) keys[key] = false;
     jumpQ = false; pounceQ = false; scratchQ = false; purrQ = false; eyesQ = false;
@@ -3529,6 +3547,11 @@
   syncMobileOrientationGate();
   pauseBtn.addEventListener('click', pauseGame);
   pauseContinueBtn.addEventListener('click', resumeGame);
+  $('#pauseRestartBtn').addEventListener('click', () => startGame(mode, storyNight));
+  $('#pauseChaptersBtn').addEventListener('click', () => {
+    pauseScreen.hidden = true; touchUI.hidden = true; cv.hidden = true; state = 'menu';
+    if (mode === 'story') showStoryMap(true); else showMainMenu(true);
+  });
   pauseQuitBtn.addEventListener('click', quitPausedRun);
   pauseScreen.addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); resumeGame(); return; }
