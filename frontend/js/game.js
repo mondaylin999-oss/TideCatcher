@@ -1012,7 +1012,7 @@
       if (mode === 'story') timeLeft = Math.max(0, timeLeft - 2);
       announce("The angry ground tore a light away", RED, 1.6);
     } else if (trail.length && (activeItems.scarf || perkShield > 0)) {
-      if (activeItems.scarf) { activeItems.scarf = false; float(cat.x, cat.y - 72, '🧣 The scarf kept your lights safe', GOLD); }
+      if (activeItems.scarf) { activeItems.scarf = false; burst(cat.x, cat.y - 44, '#e0565b', 12); float(cat.x, cat.y - 72, '🧣 The scarf kept your lights safe', GOLD); }
       else { perkShield--; float(cat.x, cat.y - 72, 'Big and sturdy! No light lost', GOLD); }
     } else if (trail.length) detachTrail(1);
     else float(cat.x, cat.y - 64, 'Ouch!', RED);
@@ -2423,6 +2423,70 @@
     }
   }
 
+  // Comfort items packed for this hour are worn by the cat: scarf + bell on the neck, jar + hourglass on the back.
+  // Positions are fractions of each cat picture: n = [neck x, neck y, neck half-width], b = [back x, back y].
+  const GEAR_POS = {
+    ginger: { n: [.73, .54, .13], b: [.40, .44] }, mainecoon: { n: [.73, .54, .13], b: [.40, .44] },
+    burmese: { n: [.69, .53, .11], b: [.38, .52] }, siamese: { n: [.69, .54, .11], b: [.40, .56] },
+    persian: { n: [.67, .60, .14], b: [.36, .48] }, ragdoll: { n: [.63, .60, .14], b: [.34, .50] },
+    british: { n: [.68, .59, .14], b: [.36, .50] }, bengal: { n: [.73, .53, .11], b: [.42, .52] },
+    sphynx: { n: [.73, .53, .10], b: [.40, .56] }
+  };
+  function drawCatGear(c, x0, y0, ww, hh, moving) {
+    const has = activeItems || {};
+    if (state !== 'play' && state !== 'paused' && state !== 'ending') return;
+    if (!has.scarf && !has.bell && !has.jar && !has.sand) return;
+    const P = GEAR_POS[MK_PROFILE.coat] || GEAR_POS.ginger;
+    const nx = x0 + (P.n[0] - .03) * ww, ny = y0 + (P.n[1] + .12) * hh, nr = P.n[2] * ww * .85;
+    const bx = x0 + (P.b[0] - .04) * ww, by = y0 + (P.b[1] - .03) * hh;
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (has.jar || has.sand) {   // little strap over the back
+      ctx.fillStyle = '#c98a4a'; ctx.strokeStyle = '#7a4a2a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect(bx - 11, by - 1, 22, 4, 2); ctx.fill(); ctx.stroke();   // little saddle pad
+    }
+    if (has.sand) {   // tiny hourglass
+      const hx = has.jar ? bx - 8 : bx, hy = by - 6;
+      ctx.fillStyle = '#8a5a3a'; ctx.fillRect(hx - 4, hy - 6, 8, 1.8); ctx.fillRect(hx - 4, hy + 4.4, 8, 1.8);
+      ctx.fillStyle = 'rgba(220,240,255,.75)'; ctx.beginPath(); ctx.moveTo(hx - 3, hy - 4.4); ctx.lineTo(hx + 3, hy - 4.4); ctx.lineTo(hx, hy); ctx.lineTo(hx + 3, hy + 4.4); ctx.lineTo(hx - 3, hy + 4.4); ctx.lineTo(hx, hy); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#f6c453'; ctx.beginPath(); ctx.moveTo(hx - 2, hy + 4.4); ctx.lineTo(hx + 2, hy + 4.4); ctx.lineTo(hx, hy + 1.5); ctx.closePath(); ctx.fill();
+      ctx.fillRect(hx - .4, hy - 1, .8, 2.5);
+    }
+    if (has.jar) {   // glass jar with a glowing firefly inside
+      const jx = has.sand ? bx + 5 : bx, jy = by - 7, pulse = .6 + .4 * Math.sin(t * 5);
+      const g = ctx.createRadialGradient(jx, jy + 1, 0, jx, jy + 1, 9); g.addColorStop(0, `rgba(232,255,138,${.55 * pulse})`); g.addColorStop(1, 'rgba(232,255,138,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(jx, jy + 1, 9, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(200,235,255,.35)'; ctx.strokeStyle = 'rgba(230,248,255,.9)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.roundRect(jx - 4.5, jy - 4, 9, 10, 2.5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#9a6a42'; ctx.fillRect(jx - 4, jy - 6, 8, 2.4);
+      ctx.fillStyle = '#fffbc2'; ctx.beginPath(); ctx.arc(jx + Math.sin(t * 3) * 1.5, jy + 1 + Math.cos(t * 4) * 1.5, 1.6, 0, 7); ctx.fill();
+    }
+    if (has.bell && !has.scarf) {   // thin blue collar when there is no scarf
+      ctx.strokeStyle = '#4a6cff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(nx - nr, ny - 3); ctx.quadraticCurveTo(nx, ny + 4, nx + nr, ny - 4); ctx.stroke();
+    }
+    if (has.scarf) {   // cozy red knitted scarf with a tail that flutters behind
+      const flap = Math.sin(t * (moving ? 12 : 3)) * (moving ? .25 : .08), lift = moving ? -.5 : 0;
+      ctx.save(); ctx.translate(nx - nr * .7, ny - 2);
+      for (let k = 0; k < 2; k++) {
+        ctx.save(); ctx.rotate(.55 - lift + flap + k * .22);
+        ctx.fillStyle = k ? '#c8434a' : '#e0565b'; ctx.beginPath(); ctx.roundRect(-3, 0, 6, 13 - k * 2, 2.5); ctx.fill();
+        ctx.fillStyle = '#ffd6a0'; ctx.fillRect(-3, 5, 6, 1.4); ctx.fillRect(-3, 8.5, 6, 1.4);
+        ctx.strokeStyle = '#ffd6a0'; ctx.lineWidth = 1; ctx.beginPath(); for (let f = -2; f <= 2; f += 2) { ctx.moveTo(f, 13 - k * 2); ctx.lineTo(f, 15.5 - k * 2); } ctx.stroke();
+        ctx.restore();
+      }
+      ctx.restore();
+      ctx.strokeStyle = '#8f2a33'; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(nx - nr, ny - 3); ctx.quadraticCurveTo(nx, ny + 2.5, nx + nr, ny - 4); ctx.stroke();
+      ctx.strokeStyle = '#e0565b'; ctx.lineWidth = 5; ctx.stroke();
+      ctx.strokeStyle = '#ffd6a0'; ctx.lineWidth = 1.2; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(nx - nr, ny - 3); ctx.quadraticCurveTo(nx, ny + 2.5, nx + nr, ny - 4); ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (has.bell) {   // small golden bell that swings as Shwe moves
+      ctx.save(); ctx.translate(nx + nr * .3, ny + 1); ctx.rotate(Math.sin(t * (moving ? 14 : 4)) * (moving ? .35 : .12));
+      ctx.strokeStyle = '#8a6a1a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, 2.5); ctx.stroke();
+      ctx.fillStyle = '#f6c453'; ctx.strokeStyle = '#8a6a1a'; ctx.beginPath(); ctx.arc(0, 5.5, 3.3, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#fff3c4'; ctx.beginPath(); ctx.arc(-1.1, 4.4, 1, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#8a6a1a'; ctx.beginPath(); ctx.moveTo(-2, 6.8); ctx.lineTo(2, 6.8); ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
   function mkDrawSprite(c) {
     const spr = MK_SPRITES[MK_PROFILE.coat];
     if (!spr || !spr.complete || !spr.naturalWidth) return false;
@@ -2439,6 +2503,7 @@
     const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, -hh + 6 + bob, ww, hh, { back, front, tail, breath });
     if (!ok) ctx.drawImage(spr, -ww / 2 - 2, -hh + 6 + bob, ww, hh);
     ctx.shadowBlur = 0;
+    drawCatGear(c, -ww / 2 - 2, -hh + 6 + bob, ww, hh, moving);
     return true;
   }
   function drawCat() {
