@@ -3008,11 +3008,12 @@
     }
   }
   function focusLevelMap(level = unlockedLevel) {
-    const viewport = $('#levelMapViewport');
-    const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
-    const track = $('#levelMapTrack');
-    track.style.minHeight = `${LEVEL_MAP_LIMIT * LEVEL_MAP_STEP + viewport.clientHeight / 2}px`;
-    viewport.scrollTop = Math.max(0, Math.min(viewport.scrollHeight - viewport.clientHeight, y - viewport.clientHeight / 2));
+    const screen = $('#storyMapScreen');
+    const target = $(`#levelMapTrack button[data-level="${level}"]`);
+    if (!target) return;
+    const targetCenter = target.getBoundingClientRect().top + target.offsetHeight / 2;
+    const desired = screen.scrollTop + targetCenter - screen.clientHeight / 2;
+    screen.scrollTop = Math.max(0, Math.min(screen.scrollHeight - screen.clientHeight, desired));
   }
   function showHub(focus = true) {
     $('#startScreen').hidden = false; $('#menuHub').hidden = false; $('#storyMapScreen').hidden = true;

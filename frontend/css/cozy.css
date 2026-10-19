@@ -165,7 +165,7 @@ body{position:fixed;inset:0}
 .orientation-gate>.orientation-card{max-height:calc(100dvh - 32px);min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
 
 
-/* Full-viewport chapter map: the map is the only scrollable region. */
+/* Full-viewport chapter screen: scroll the complete screen, not an inner map panel. */
 html,body{height:100%;height:100dvh;overflow:hidden}
 #startScreen.hub-screen{height:100vh;height:100dvh;overflow:hidden}
 .story-map-screen{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;justify-content:stretch;align-items:stretch;height:100vh;height:100dvh;min-height:0;padding:0;overflow:hidden;overscroll-behavior:none;touch-action:auto}
@@ -180,7 +180,7 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .story-map-panel>.level-map-hint,.story-map-panel>.map-guide,.story-map-panel>.level-map-key{flex:0 0 auto}
 .story-map-panel>.level-map-hint{font-size:12px;line-height:1.25}
 .story-map-panel>.level-map-window{flex:1 1 auto;width:100%;height:auto;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:none}
-.story-map-panel>.level-map-window::-webkit-scrollbar{display:none}
+
 .story-map-panel>.level-map-key{padding-bottom:env(safe-area-inset-bottom,0px)}
 /* Pin the existing sub-screen back controls to the safe top-left. */
 #shopBack,#bookBack,#settingsCloseBtn,#levelBriefingBack{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:1000;width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:2px solid var(--lilac);border-radius:50%;background:var(--glass);color:var(--cream);box-shadow:var(--shadow-glow);font-size:0!important;display:grid;place-items:center}
@@ -211,3 +211,17 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 
 .story-map-heading .map-hub-back{width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:2px solid var(--lilac);border-radius:50%;background:var(--glass);color:var(--cream);box-shadow:var(--shadow-glow);font-size:0!important;display:grid;place-items:center}
 .story-map-heading .map-hub-back::before{content:"←";font:700 25px/1 var(--display)}
+
+
+/* Keep chapter selection on one full-screen scroll surface; the map itself never scrolls. */
+.story-map-screen{display:block;height:100vh;height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.story-map-panel{display:flex;width:min(820px,100%);height:auto;min-height:100vh;min-height:100dvh;max-height:none;overflow:visible;overscroll-behavior:auto;flex:none}
+.story-map-panel>.level-map-window{display:block;flex:0 0 auto;width:100%;height:auto;min-height:0;overflow:visible;overscroll-behavior:auto;-webkit-overflow-scrolling:auto;touch-action:auto;scrollbar-width:auto}
+
+.story-map-panel::after{content:"";display:block;flex:0 0 50vh;pointer-events:none}
+.story-map-panel>.level-map-key{padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (orientation:landscape) and (max-height:500px){.story-map-panel{padding-bottom:6px}.story-map-panel::after{flex-basis:50vh}}
+
+#mapHubBackBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:1000;width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:2px solid var(--lilac);border-radius:50%;background:var(--glass);color:var(--cream);box-shadow:var(--shadow-glow);font-size:0!important;display:grid;place-items:center}
+#mapHubBackBtn::before{content:"←";font:700 25px/1 var(--display)}
+#storyMapScreen[hidden] + #mapHubBackBtn{display:none}
