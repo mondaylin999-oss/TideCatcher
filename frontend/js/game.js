@@ -98,6 +98,9 @@
   let ac = null;
   // sound effects from the Cat & Moodlings pack (js/tc-sfx.js); safe to call even if the file is missing
   const sfx = (kind, a) => { try { if (window.TCSfx) TCSfx[kind](a); } catch (e) {} };
+  // night music per place (js/tc-sfx.js): School 11 PM–Midnight, Park 1 AM, Festival 2 AM, Hilltop 3 AM, Lakeside 4–5 AM
+  const NIGHT_MUSIC = ['school', 'school', 'park', 'festival', 'hilltop', 'lakeside', 'lakeside'];
+  const music = (fn, a) => { try { if (window.TCMusic) TCMusic[fn](a); } catch (e) {} };
   function tone(f, d = .12, type = 'sine', v = .1, slide = 0) {
     if (!ac) return;
     const lv = window.TCSfx ? TCSfx.level() : 1; if (lv <= 0) return; v *= lv / .8;
@@ -194,6 +197,7 @@
   }
   let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
   const FRUST_SLEEP = 5; // Frustrated sleeps for the first 5 seconds of the night clock
+  const FRUST_WARN = 3;  // a Frustrated that appears later shows a 3-second warning before it can charge
   let frustWakeAt = FRUST_SLEEP + 1.5;
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
   // ---------- School map (Nights 1-2) ----------
@@ -673,6 +677,7 @@
       const tutorialLonely = type === 'L' && mode === 'story' && storyNight <= 3;
       m.state = tutorialLonely ? 'revealed' : 'hide'; m.alpha = tutorialLonely ? 1 : 0; m.spot = tutorialLonely ? null : makeScratchSpot(x, type);
     }
+    if (type === 'F' && !m.sky && state === 'play' && t > frustWakeAt - .5) { m.state = 'warn'; m.st = FRUST_WARN; }
     mood.push(m); return m;
   }
   function skyTypeFor(feature) {
@@ -806,7 +811,7 @@
       const type = options?.frustratedOnly ? 'F' : i === n - 1 && n >= 3 ? 'N' : 'F';
       const amb = spawn(type, x);
       amb.ambush = true; amb.dir = -side;
-      if (type === 'F') { amb.state = 'windup'; amb.st = .4; }
+      if (type === 'F') { amb.state = 'warn'; amb.st = FRUST_WARN; }
       else { amb.state = 'panic'; amb.st = 1.2; }
     }
     announce(message || `The ground woke ${n} angrier feelings`, RED, 2); shake = Math.max(shake, options?.shake ?? 10);
@@ -981,6 +986,9 @@
         if (!asleep) m.x += m.dir * 55 * dt * sp; if (Math.abs(m.x - m.home) > 140) m.dir = Math.sign(m.home - m.x) || 1;
         m.x = clamp(m.x, 40, WORLD - 40); m.cd -= dt;
         if (m.cd <= 0 && t >= frustWakeAt && Math.abs(dx) < 4 * T && Math.abs(dy) < 90) { m.state = 'windup'; m.st = chapter.frustratedWindup; m.dir = Math.sign(dx) || 1; tone(120, .45, 'sawtooth', .035, -40); }
+      } else if (m.state === 'warn') {
+        m.st -= dt; m.dir = Math.sign(dx) || m.dir;
+        if (m.st <= 0) { float(m.x, m.y - 46, 'grr!', RED); sfx('moodling', 'F'); if (m.ambush) { m.state = 'windup'; m.st = .4; } else { m.state = 'patrol'; m.cd = .8; m.home = m.x; } }
       } else if (m.state === 'windup') {
         m.st -= dt; if (Math.random() < .5) puff(m); if (m.st <= 0) { m.state = 'charge'; m.st = m.ambush ? 2.2 : 1.5; }
       } else if (m.state === 'charge') {
@@ -1768,8 +1776,8 @@
     if (hi) { mEll(lx + look + rw * .35, y - rh * .35, hi, hi, 0, '#fff'); mEll(rx + look + rw * .35, y - rh * .35, hi, hi, 0, '#fff'); mEll(lx + look - rw * .3, y + rh * .45, hi * .45, hi * .45, 0, '#fff'); mEll(rx + look - rw * .3, y + rh * .45, hi * .45, hi * .45, 0, '#fff'); }
   }
   // draws one Moodling centred on (x, y); k = size, o = per-state options
-  function drawFrustSleep(x, y) {
-    const p = clamp(t / frustWakeAt, 0, 1), left = frustWakeAt - t, waking = left < 1.5;
+  function drawFrustSleep(x, y, p = clamp(t / frustWakeAt, 0, 1), left = frustWakeAt - t, warn = false) {
+    const waking = warn || left < 1.5;
     const cx = x, cy = y - 56, r = 16;
     ctx.save();
     ctx.lineWidth = 4; ctx.lineCap = 'round';
@@ -1778,7 +1786,7 @@
     ctx.strokeStyle = waking ? `rgba(255,97,104,${pulse})` : 'rgba(243,236,255,.9)';
     ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2); ctx.stroke();
     ctx.fillStyle = waking ? '#ff6168' : '#f3ecff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = '800 16px Lexend, Arial, sans-serif'; ctx.fillText(waking ? '!' : 'z', cx, cy + 1);
+    ctx.font = '800 16px Lexend, Arial, sans-serif'; ctx.fillText(warn ? String(Math.max(1, Math.ceil(left))) : waking ? '!' : 'z', cx, cy + 1);
     if (!waking) {
       for (let k = 0; k < 2; k++) {
         const ph = (t * .7 + k * .5) % 1;
@@ -1788,9 +1796,9 @@
       }
       ctx.globalAlpha = 1;
     }
-    if (mode === 'story' && chapterFor(storyNight).tutorialHints) {
+    if (warn || (mode === 'story' && chapterFor(storyNight).tutorialHints)) {
       ctx.font = '700 13px Lexend, Arial, sans-serif'; ctx.fillStyle = waking ? '#ff8a8f' : 'rgba(243,236,255,.8)';
-      ctx.fillText(waking ? 'waking up!' : 'sleepy', cx, cy - 27);
+      ctx.fillText(warn ? 'angry soon!' : waking ? 'waking up!' : 'sleepy', cx, cy - 27);
     }
     ctx.restore();
   }
@@ -1922,6 +1930,7 @@
         const sleepy = m.state === 'patrol' && !m.ambush && t < frustWakeAt;
         drawCuteMood('F', x, y, .62 * puffUp, { color: vcol('F', m.v), look, dizzy: m.state === 'dizzy', sleepy: sleepy && t < frustWakeAt - 1.2, t, flash: m.state === 'windup' ? .25 + .25 * Math.sin(t * 30) : 0, cy: 70 });
         if (sleepy) drawFrustSleep(x, y);
+        else if (m.state === 'warn') drawFrustSleep(x, y, clamp(1 - m.st / FRUST_WARN, 0, 1), m.st, true);
         if (m.state === 'dizzy') for (let k = 0; k < 3; k++) { const a = t * 4 + k * 2.1; ctx.fillStyle = GOLD; star(x + Math.cos(a) * 20, y - 30 + Math.sin(a) * 5, 5, 5, 2, 0); ctx.fill(); }
       } else if (m.type === 'N') {
         const d = Math.hypot(cat.x - m.x, cat.y - 24 - m.y), R = uv('paws') * T;
@@ -2542,6 +2551,7 @@
   let H = null;
 
   function startHome(won, types, preview, night = storyNight) {
+    music('duck', .45);
     const n = types.length, stage = Math.min(7, thiriSleepStage);
     const poseTo = stage, poseFrom = won && night >= stage ? Math.max(0, night - 1) : stage;
     const base = roomColoursFor(poseFrom);
@@ -2811,6 +2821,7 @@
     if (typeof m === 'string') mode = m;
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 7) : 1;
     initAudio(); setTimeout(() => sfx('cat', 'meow'), 400);
+    music('duck', 1); music('play', mode === 'story' ? NIGHT_MUSIC[storyNight - 1] : 'park');
     cv.hidden = false;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
@@ -2950,6 +2961,7 @@
     if (focus) $('#storyBtn').focus({ preventScroll: true });
   }
   function showStoryMap(focus = true) {
+    music('stop');
     $('#startScreen').hidden = false; $('#menuHub').hidden = true; $('#storyMapScreen').hidden = false;
     $('#hubSettingsScreen').hidden = true; $('#levelBriefingScreen').hidden = true;
     buildLevelMap(); focusLevelMap(unlockedLevel);
@@ -2959,6 +2971,7 @@
     else if (focus) $(`#levelMapTrack button[data-level="${unlockedLevel}"]`)?.focus({ preventScroll: true });
   }
   function showMainMenu(focusCurrent = true) {
+    music('stop');
     state = 'menu'; cv.hidden = true; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
@@ -2973,11 +2986,11 @@
     jumpQ = false; pounceQ = false; scratchQ = false; purrQ = false; eyesQ = false;
     touchAxis = 0; sid = null; stick.hidden = true; knob.style.transform = 'translate(-50%,-50%)';
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
-    pauseScreen.hidden = false; pauseContinueBtn.focus({ preventScroll: true });
+    pauseScreen.hidden = false; pauseContinueBtn.focus({ preventScroll: true }); music('duck', .35);
   }
   function resumeGame() {
     if (state !== 'paused') return;
-    pauseScreen.hidden = true; state = 'play'; touchUI.hidden = pauseTouchWasHidden;
+    pauseScreen.hidden = true; state = 'play'; touchUI.hidden = pauseTouchWasHidden; music('duck', 1);
     pauseBtn.hidden = false; pauseBtn.focus({ preventScroll: true });
   }
   function quitPausedRun() {
@@ -3120,6 +3133,7 @@
     if (introReturnView === 'hub') showHub(true); else showStoryMap(true);
   }
   function playIntro(returnView = 'storyMap') {
+    music('stop');
     introReturnView = returnView;
     initAudio(); state = 'intro'; cv.hidden = true;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
@@ -3167,6 +3181,7 @@
     $('#awakeningCompleteLine').hidden = false; $('#awakeningActions').hidden = false; $('#awakeningReplayBtn').focus({ preventScroll: true });
   }
   function playFinalAwakening() {
+    music('stop');
     if (finalAwakeningSeen) { showEnd(); return; }
     finalAwakeningSeen = true;
     if (thiriSleepStage < 7) { thiriSleepStage = 7; saveStoryProgress(); }
