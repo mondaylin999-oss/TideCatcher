@@ -11,6 +11,7 @@
 - **Mood Book:** silhouettes, feeling-colored tags, rare sparkle borders and striped collection progress.
 - **Briefing/Ready:** night chip, sunrise time pill, padded objectives and contained decorative wave.
 - **Gameplay:** translucent timer/score and combo pills, combo color/size progression, speech-bubble announcements and softer joystick. Movement, hitboxes, scoring, timers, keyboard/touch bindings and saves unchanged.
+- **Per-night level layouts:** Nights 1–7 now load independent ground profiles, world widths, platform sets, safe lower-floor gaps, spawn zones and hide/burial markers from `frontend/js/levels.js`. School, park, festival, hilltop and lake props follow their authored places; moving shelves/logs/boat, bouncy and crumbling platforms are supported. Free Play randomly selects one of three trails per run. Moodling rules, controls, scoring, saves and existing place art remain unchanged.
 - **Buried-feeling props:** school books/bag/box, park leaf/sand/flower mounds, festival baskets/pots/mats, hill stones/branches/leaves and lakeshore sand/driftwood/pebbles. Map-specific labels, debris and Night Eyes glow; burial interaction and scoring unchanged.
 - **Results:** bold stat cards, home progress, best-score sticker, Continue and separate replay action after a story win.
 - **Settings:** styled missions and controls; disabled, explicitly unconnected Music/Sound effects/Ambience/Mute placeholders with `data-audio` hooks. No audio added.
@@ -26,5 +27,6 @@
 - Additional **360px** hub check; touch portrait orientation prompt and **812×375** landscape transition checked. The existing touch-device landscape requirement remains intact; narrow menu layout checks use a non-touch browser viewport.
 - Verified movement, pause/resume timer behavior, purchase spending/feedback, profile validation and persistence, keyboard setup, reset cancellation, quit confirmation and reduced-motion styles. Late-game presentation states used isolated browser fixtures without adding test hooks to shipped code.
 - Burial visual changes: static placement checks passed for all six map configs; the headless regression renders Nights 1–7 and Free Play, checks per-map labels/counts, and confirms Free Play retains its original stone scene.
+- **Layout validation:** `node tests/level-layouts.test.js` checks all seven nights plus three Free Play variants for safe pits, spawn zones, spot/prop/platform clearance, platform path bounds and jump-rise reachability. Development overlay: `?debug=1` on localhost, then `F2`. Layout sketches: `docs/levels.md`.
 - Contrast: cream/card **14.21:1**; muted/raised card **8.0:1**; dark text on honey/lilac/coral buttons exceeds **6:1**.
-- JavaScript syntax and `git diff --check` pass. No full seven-night playthrough was performed.
+- JavaScript syntax, `git diff --check` and the 10-layout reachability regression pass. A local browser smoke test reached the Free Play canvas with no console errors; a full seven-night playthrough was not performed.
