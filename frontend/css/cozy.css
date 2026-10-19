@@ -163,3 +163,51 @@ body{position:fixed;inset:0}
 /* The mobile rotate prompt is a fixed gate, not an outer-page scroll region. */
 .orientation-gate{overflow:hidden;overscroll-behavior:none}
 .orientation-gate>.orientation-card{max-height:calc(100dvh - 32px);min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
+
+
+/* Full-viewport chapter map: the map is the only scrollable region. */
+html,body{height:100%;height:100dvh;overflow:hidden}
+#startScreen.hub-screen{height:100vh;height:100dvh;overflow:hidden}
+.story-map-screen{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;justify-content:stretch;align-items:stretch;height:100vh;height:100dvh;min-height:0;padding:0;overflow:hidden;overscroll-behavior:none;touch-action:auto}
+.story-map-panel{width:min(820px,100%);max-width:none;height:100%;max-height:none;min-height:0;flex:1 1 auto;display:flex;flex-direction:column;gap:8px;margin:0 auto;padding:64px clamp(12px,2vw,22px) 10px;overflow:hidden;overscroll-behavior:none;border-radius:0}
+.story-map-heading{flex:0 0 auto;grid-template-columns:minmax(0,1fr) auto auto;gap:3px 10px;padding-left:40px}
+.story-map-heading>div{grid-row:span 2}
+.story-map-heading h2{font-size:clamp(20px,3vw,30px)}
+.story-map-heading .level-map-count,.story-map-heading .room-status{grid-column:2 / 4}
+.story-map-heading .level-map-count{grid-row:1;align-self:end}
+.story-map-heading .room-status{grid-row:2;align-self:start}
+.story-map-heading .map-hub-back{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:1000;grid-column:auto;grid-row:auto;justify-self:auto}
+.story-map-panel>.level-map-hint,.story-map-panel>.map-guide,.story-map-panel>.level-map-key{flex:0 0 auto}
+.story-map-panel>.level-map-hint{font-size:12px;line-height:1.25}
+.story-map-panel>.level-map-window{flex:1 1 auto;width:100%;height:auto;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:none}
+.story-map-panel>.level-map-window::-webkit-scrollbar{display:none}
+.story-map-panel>.level-map-key{padding-bottom:env(safe-area-inset-bottom,0px)}
+/* Pin the existing sub-screen back controls to the safe top-left. */
+#shopBack,#bookBack,#settingsCloseBtn,#levelBriefingBack{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:1000;width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:2px solid var(--lilac);border-radius:50%;background:var(--glass);color:var(--cream);box-shadow:var(--shadow-glow);font-size:0!important;display:grid;place-items:center}
+#shopBack::before,#bookBack::before,#settingsCloseBtn::before,#levelBriefingBack::before{content:"←";font:700 25px/1 var(--display)}
+#pauseBtn.game-pause-btn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:1000;width:48px;height:48px;min-width:48px;min-height:48px;border:2px solid var(--lilac);border-radius:50%;background:var(--glass);color:var(--cream);box-shadow:var(--shadow-glow)}
+#pauseBtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.pause-screen{z-index:1001!important}
+.pause-panel{max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain}
+#hubSettingsScreen{z-index:50}
+#shopScreen,#bookScreen,#levelBriefingScreen{z-index:50}
+#shopScreen>.panel,#bookScreen>.panel,#levelBriefingScreen>.panel{padding-top:70px}
+#hubSettingsScreen>.hub-settings-panel{padding-top:70px}
+@media (orientation:landscape) and (max-height:500px){
+  .story-map-panel{gap:4px;padding:60px 10px 6px}
+  .story-map-heading{gap:1px 8px;padding-left:38px}
+  .story-map-heading h2{font-size:clamp(17px,4.4vh,22px);line-height:1.02}
+  .story-map-heading .eyebrow{font-size:9px;letter-spacing:.1em}
+  .story-map-heading .level-map-count,.story-map-heading .room-status{font-size:10px;line-height:1.1}
+  .story-map-panel>.level-map-hint{font-size:10px;line-height:1.15}
+  .story-map-panel>.map-guide{padding:6px 8px;gap:6px}
+  .story-map-panel>.map-guide .map-guide-cat{width:36px;height:36px}
+  .story-map-panel>.level-map-key{gap:9px;font-size:9px;line-height:1.1}
+  .story-map-panel>.level-map-key span{gap:4px}
+  .story-map-panel>.level-map-key i{width:9px;height:9px}
+  .story-map-panel>.level-map-window{min-height:0}
+  #shopScreen>.panel,#bookScreen>.panel,#levelBriefingScreen>.panel,#hubSettingsScreen>.hub-settings-panel{padding-top:62px}
+}
+
+.story-map-heading .map-hub-back{width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:2px solid var(--lilac);border-radius:50%;background:var(--glass);color:var(--cream);box-shadow:var(--shadow-glow);font-size:0!important;display:grid;place-items:center}
+.story-map-heading .map-hub-back::before{content:"←";font:700 25px/1 var(--display)}
