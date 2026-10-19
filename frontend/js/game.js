@@ -3149,7 +3149,6 @@
   }
   $('#storyBtn').addEventListener('click', () => showStoryMap(true));
   $('#mapHubBackBtn').addEventListener('click', () => showHub(true));
-  $('#mapHubBackBtnSecondary').addEventListener('click', () => showHub(true));
   $('#infoBtn').addEventListener('click', () => playIntro('hub'));
   $('#introSkipBtn').addEventListener('click', leaveIntro);
   $('#introContinueBtn').addEventListener('click', leaveIntro);
@@ -3491,7 +3490,6 @@
   });
   $('#endReplayBtn').addEventListener('click', () => startGame(mode, storyNight));
   $('#menuBtn').addEventListener('click', () => { mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns(); showMainMenu(true); });
-  $('#previewBtn').addEventListener('click', () => { initAudio(); startHome(true, ['F', 'F', 'F', 'F', 'L', 'N', 'N', 'N', 'N', 'L'], true); });
 
   let last = performance.now();
   function frame(now) {
