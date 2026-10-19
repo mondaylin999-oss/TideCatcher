@@ -1110,20 +1110,16 @@
       return;
     }
     if (mode === 'story' && m.type !== 'G' && got[m.type] >= need[m.type]) {
-      // only once per pounce: stop the pounce and give this Moodling a moment before it can be caught again
-      // an extra catch (this feeling is already home): no penalty, half the usual Glow, and it goes back to roam again
-      cat.pounce = 0; cat.bounced = true; m.noCatchUntil = t + 1.5;
+      // an extra catch (this feeling is already home): no penalty, half the usual Glow, and it floats home too
+      cat.pounce = 0; cat.bounced = true;
       const extra = Math.ceil({ F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16 }[m.type] / 2);
       glowRun += extra; bump('glow', extra);
-      float(m.x, m.y - 34, `+${extra} Glow · extra`, col(m.type)); burst(m.x, m.y, col(m.type), 10);
-      if (m.type === 'N') panic(m, cat.x - m.x);
-      else if (m.type === 'L') hideFeeling(m);
-      else if (m.type === 'C') { if (m.v === 1) { m.state = 'bubble'; resetBreath(m); } else { m.state = 'dim'; m.light = 0; addFireflies(m); } }
-      else if (m.type === 'B') { if (m.rock) m.rock.scratched = false; m.dead = false; m.state = 'buried'; m.alpha = 0; m.rock = buriedHome; m.x = buriedHome.x; m.y = buriedHome.y - 12; m.chime = 0; }
-      else if (m.type === 'S') { m.state = 'hide'; m.st = 2; }
-      else if (m.type === 'E' || m.type === 'J') { if (m.type === 'J') { m.state = 'wander'; m.cd = 4; } }
-      else { m.state = 'patrol'; m.cd = 2; m.home = m.x; }
-      tone(880, .12, 'sine', .05); return;
+      float(m.x, m.y - 34, `+${extra} Glow · extra`, col(m.type)); burst(m.x, m.y, col(m.type), 16);
+      if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; }
+      if (m.sky) { m.skyPhase = 'cleared'; m.skyTimer = 0; }
+      m.dead = true; m.alpha = 0; hitstop = .05;
+      if (window.TCSfx) sfx('caught', m.type); else tone(880, .12, 'sine', .05);
+      return;
     }
     if (m.sky) { m.skyPhase = 'cleared'; m.skyTimer = 0; }
     combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 4; bestCombo = Math.max(bestCombo, combo);
