@@ -54,9 +54,3 @@ U = (650, 1150, 2500)       # "uh" (pouty)
 I = (380, 2300, 3000)       # "ee"
 A = (750, 1250, 2600)       # "ah"
 
-# Final: just a pouty "Hmph!" (nasal rise, sharp fall, puff of air)
-h = np.zeros(int(.42 * SR))
-place(h, voice(.24, [(0, 400), (.13, 600), (.24, 450)], [(0, M), (.12, U), (.24, U)], [(0, 0), (.03, .8), (.17, 1), (.24, 0)], nasal=.8), 0)
-place(h, noise_burst(.13, 1200, 5000, [(0, 0), (.01, .6), (.13, 0)]), .19)
-sf.write('jealous_hmph.wav', finish(room(h)), SR, subtype='PCM_16')
-print('ok')
