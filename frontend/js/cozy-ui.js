@@ -23,11 +23,80 @@
     }
     new MutationObserver(sync).observe(source, { childList:true, characterData:true, subtree:true }); sync();
   }
-  $('pauseQuitBtn').addEventListener('click', event => {
-    if (!window.confirm('Leave this night? Unbanked run rewards will be lost.')) {
+  let activeLeavePromise = null;
+  const replayedPauseActions = new WeakSet();
+  function confirmLeave(options = {}) {
+    if (activeLeavePromise) return activeLeavePromise;
+    const screen = $('leaveNightScreen'), pauseScreen = $('pauseScreen');
+    const stay = $('leaveNightStay'), confirm = $('leaveNightConfirm');
+    const opener = document.activeElement, wasInert = pauseScreen.inert;
+    const settings = Object.assign({
+      title: 'Leave this night?',
+      text: "Shwe hasn't brought these lights home yet. If you leave now, this run's rewards will be lost.",
+      confirmLabel: 'Leave night'
+    }, options);
+    $('leaveNightTitle').textContent = settings.title;
+    $('leaveNightText').textContent = settings.text;
+    confirm.textContent = settings.confirmLabel;
+    let resolvePromise;
+    const promise = new Promise(resolve => { resolvePromise = resolve; });
+    activeLeavePromise = promise;
+    const focusable = () => Array.from(screen.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter(el => !el.hidden && el.offsetParent !== null);
+    const finish = result => {
+      if (activeLeavePromise !== promise) return;
+      screen.removeEventListener('click', onBackground);
+      screen.removeEventListener('keydown', onKeydown);
+      stay.removeEventListener('click', onStay);
+      confirm.removeEventListener('click', onConfirm);
+      screen.hidden = true;
+      pauseScreen.inert = wasInert;
+      activeLeavePromise = null;
+      if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus({ preventScroll: true });
+      resolvePromise(result);
+    };
+    const onStay = () => finish(false);
+    const onConfirm = () => finish(true);
+    const onBackground = event => { if (event.target === screen) finish(false); };
+    const onKeydown = event => {
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); finish(false); return; }
+      if (event.key !== 'Tab') return;
+      const items = focusable();
+      if (!items.length) { event.preventDefault(); screen.focus(); return; }
+      const first = items[0], last = items[items.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !screen.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && (document.activeElement === last || !screen.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+    };
+    stay.addEventListener('click', onStay);
+    confirm.addEventListener('click', onConfirm);
+    screen.addEventListener('click', onBackground);
+    screen.addEventListener('keydown', onKeydown);
+    pauseScreen.inert = true;
+    screen.hidden = false;
+    stay.focus({ preventScroll: true });
+    return promise;
+  }
+  window.confirmLeave = confirmLeave;
+  function confirmPauseAction(id, options) {
+    const button = $(id);
+    button.addEventListener('click', event => {
+      if (replayedPauseActions.has(button)) { replayedPauseActions.delete(button); return; }
       event.preventDefault(); event.stopImmediatePropagation();
-    }
-  }, true);
+      const settings = typeof options === 'function' ? options() : options;
+      confirmLeave(settings).then(confirmed => {
+        if (!confirmed) return;
+        replayedPauseActions.add(button);
+        button.click();
+      });
+    }, true);
+  }
+  const lostRunText = "Shwe hasn't brought these lights home yet. If you leave now, this run's rewards will be lost.";
+  confirmPauseAction('pauseQuitBtn', { title: 'Leave this night?', text: lostRunText, confirmLabel: 'Leave night' });
+  confirmPauseAction('pauseRestartBtn', { title: 'Restart this night?', text: "Shwe hasn't brought these lights home yet. If you restart now, this run's rewards will be lost.", confirmLabel: 'Restart night' });
+  confirmPauseAction('pauseChaptersBtn', () => {
+    const toChapters = $('pauseChaptersBtn').textContent.toLowerCase().includes('chapters');
+    return { title: toChapters ? 'Back to chapters?' : 'Back to menu?', text: lostRunText, confirmLabel: toChapters ? 'Back to chapters' : 'Back to menu' };
+  });
   // Two presentation steps; the original submit handler still validates and saves.
   let setupStep = 1;
   function showSetupStep(step, focus = true) {
