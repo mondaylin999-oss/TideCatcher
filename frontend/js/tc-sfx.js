@@ -17,7 +17,7 @@
   const CAT = { meow: 'sfx_cat_meow', trill: 'sfx_cat_happy_trill', purr: 'sfx_cat_purr',
     sad: 'sfx_cat_sad_mew', hiss: 'sfx_cat_hiss' };
   const LEVEL = { sfx_cat_purr: .5, sfx_mood_golden_sparkle: .55, sfx_mood_calm_chime: .7 };  // keep loudness even
-  const names = [...new Set([...Object.values(VOICE), ...Object.values(CAT), 'sfx_catch_happy_chime'])];
+  const names = [...new Set([...Object.values(VOICE), ...Object.values(CAT), 'sfx_catch_happy_chime', 'sfx_mood_frustrated_charge', 'sfx_mood_frustrated_dizzy'])];
   let ctx = null, master = null, volume = 0.8, muted = false, musicVol = 0.75;
   try { const s = JSON.parse(localStorage.getItem('tc-audio') || 'null'); if (s) { if (typeof s.effects === 'number') volume = s.effects; if (typeof s.music === 'number') musicVol = s.music; muted = !!s.mute; } } catch (e) {}
   const save = () => { try { localStorage.setItem('tc-audio', JSON.stringify({ effects: volume, music: musicVol, mute: muted })); } catch (e) {} };

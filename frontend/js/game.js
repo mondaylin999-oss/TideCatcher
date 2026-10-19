@@ -985,10 +985,10 @@
         if (!asleep && m.slept === 1) { m.slept = 2; float(m.x, m.y - 46, 'grr!', RED); sfx('moodling', 'F'); }
         if (!asleep) m.x += m.dir * 55 * dt * sp; if (Math.abs(m.x - m.home) > 140) m.dir = Math.sign(m.home - m.x) || 1;
         m.x = clamp(m.x, 40, WORLD - 40); m.cd -= dt;
-        if (m.cd <= 0 && t >= frustWakeAt && Math.abs(dx) < 4 * T && Math.abs(dy) < 90) { m.state = 'windup'; m.st = chapter.frustratedWindup; m.dir = Math.sign(dx) || 1; tone(120, .45, 'sawtooth', .035, -40); }
+        if (m.cd <= 0 && t >= frustWakeAt && Math.abs(dx) < 4 * T && Math.abs(dy) < 90) { m.state = 'windup'; m.st = chapter.frustratedWindup; m.dir = Math.sign(dx) || 1; sfx('play', 'sfx_mood_frustrated_charge'); }
       } else if (m.state === 'warn') {
         m.st -= dt; m.dir = Math.sign(dx) || m.dir;
-        if (m.st <= 0) { float(m.x, m.y - 46, 'grr!', RED); sfx('moodling', 'F'); if (m.ambush) { m.state = 'windup'; m.st = .4; } else { m.state = 'patrol'; m.cd = .8; m.home = m.x; } }
+        if (m.st <= 0) { float(m.x, m.y - 46, 'grr!', RED); sfx('moodling', 'F'); if (m.ambush) { m.state = 'windup'; m.st = .4; sfx('play', 'sfx_mood_frustrated_charge'); } else { m.state = 'patrol'; m.cd = .8; m.home = m.x; } }
       } else if (m.state === 'windup') {
         m.st -= dt; if (Math.random() < .5) puff(m); if (m.st <= 0) { m.state = 'charge'; m.st = m.ambush ? 2.2 : 1.5; }
       } else if (m.state === 'charge') {
@@ -1003,10 +1003,10 @@
         m.st -= dt; if (Math.random() < .6) dust(m);
         if (m.x < 40 || m.x > WORLD - 40) { m.x = clamp(m.x, 40, WORLD - 40); m.st = 0; }
         if (cat.inv <= 0 && Math.abs(dx) < 34 && Math.abs(dy) < 46) {
-          if (storyNight <= 3 && cat.sneak) { m.state = 'dizzy'; m.st = 3; float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); }
+          if (storyNight <= 3 && cat.sneak) { m.state = 'dizzy'; m.st = 3; float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); sfx('play', 'sfx_mood_frustrated_dizzy'); }
           else { hitCat(m); m.state = 'patrol'; m.cd = 2.2; m.home = m.x; }
         }
-        else if (m.st <= 0) { m.state = 'dizzy'; m.st = 3; tone(660, .3, 'triangle', .05, -300); float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); }
+        else if (m.st <= 0) { m.state = 'dizzy'; m.st = 3; sfx('play', 'sfx_mood_frustrated_dizzy'); float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); }
       } else if (m.state === 'dizzy') {
         m.st -= dt; if (m.st <= 0) { m.state = 'patrol'; m.cd = 1.2; m.home = m.x; }
       }
