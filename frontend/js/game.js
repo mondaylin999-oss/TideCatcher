@@ -473,13 +473,13 @@
   const festCol = i => FEST_COLORS[((Math.floor(i) % FEST_COLORS.length) + FEST_COLORS.length) % FEST_COLORS.length];
   function inFestival() { return mode === 'story' && FESTIVAL_NIGHTS.includes(storyNight); }
   const NIGHT_CHAPTERS = [
-    { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1, N: 0, L: 0, C: 0 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
-    { night: 2, name: 'The Winners’ Wall', sub: 'Move quietly around Nervous, and watch for Jealous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 3, N: 3, J: 1 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce. Jealous steals lights from your trail; catch it when it is tired.', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 1, L: 0, C: 0, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' , sky: { A: 1, B: 0, C: 0, wait: 2.5, fallSpeed: 70, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
-    { night: 3, name: 'The Park', sub: 'Sit still beside Lonely, and freeze when Shy peeks', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { F: 3, N: 3, L: 2, S: 2 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { F: 2, N: 1, L: 0, C: 0, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' , sky: { A: 2, B: 1, C: 0, wait: 2.2, fallSpeed: 85, gravity: 800, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.20, hintShown: false }},
-    { night: 4, name: 'Lighting Festival', sub: 'Scratch to reveal what is buried', theme: '#c17679', musicRoot: 233.08, timeLimit: 122, rareChance: .14, feelingsNeeded: { F: 4, N: 3, L: 2, B: 1, E: 2 }, newMoodling: 'A feeling is buried under the rocks: use Night Eyes to spot the right rock, then scratch it. Excited bounces high: pounce at the top of its bounce.', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 2, N: 2, L: 0, C: 0, B: 1, E: 1 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Something is buried under the rocks. Press E for Night Eyes, then scratch the glowing rock. Excited bounces high: pounce at the top.' , sky: { A: 2, B: 1, C: 1, wait: 2.0, fallSpeed: 100, gravity: 900, scratchWindow: 2.0, ambushBase: 2, pounceWindowMul: 1.10, hintShown: false }},
-    { night: 5, name: 'Hilltop Park', sub: 'Climb the old park above the sleeping city', theme: '#7181aa', musicRoot: 246.94, timeLimit: 117, rareChance: .22, feelingsNeeded: { F: 5, N: 4, L: 3, B: 1, J: 2 }, newMoodling: 'Up on the hill, sparkling Golden feelings appear more often; they are worth extra Glow', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 3, N: 2, L: 1, C: 0, B: 1, J: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 1, N: 1 }, tutorialHints: false, tutorialHint: 'Golden feelings sparkle more often up here. They are worth extra Glow.' , sky: { A: 3, B: 2, C: 1, wait: 1.6, fallSpeed: 115, gravity: 1000, scratchWindow: 1.7, ambushBase: 2, pounceWindowMul: 1.00, hintShown: false }},
-    { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 125, rareChance: .22, feelingsNeeded: { F: 4, N: 4, L: 2, C: 2, B: 2, S: 2, E: 1 }, newMoodling: 'Calm is too dim to come home. Walk slowly to gather 3 fireflies, then bring them to Calm', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { F: 3, N: 3, L: 1, C: 1, B: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 1 }, tutorialHints: false, tutorialHint: 'Calm sits dim by the lake. Walk slowly into 3 fireflies, then bring their light to Calm.' , sky: { A: 3, B: 2, C: 2, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
-    { night: 7, name: 'Sunrise', sub: 'Bring every feeling home before the sun rises', theme: '#d6a866', musicRoot: 293.66, timeLimit: 135, rareChance: .30, feelingsNeeded: { F: 5, N: 5, L: 3, C: 3, B: 2, E: 2, S: 1, J: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 3, N: 3, L: 2, C: 1, B: 1, E: 1, S: 1, J: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
+    { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
+    { night: 2, name: 'The Winners’ Wall', sub: 'Move quietly around Nervous, and watch for Jealous', theme: '#8e78ae', musicRoot: 207.65, timeLimit: 130, rareChance: 0, feelingsNeeded: { F: 1, N: 3, J: 2 }, newMoodling: 'Nervous hears running; sneak or walk slowly, then pounce. Jealous steals lights from your trail; catch it when it is tired.', diary: 'She turned a little toward the window.', moodlingSpeed: .75, frustratedChargeSpeed: .70, frustratedWindup: .95, nervousHearingMul: .70, nervousPanicTime: .80, nervousAlarmThreshold: .55, initialSpawns: { F: 1, N: 2, J: 1 }, respawnDelay: 3.2, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Nervous hears you running. Sneak with Shift. Watch out: Jealous steals trail lights. Catch it when it is tired.' , sky: { A: 1, B: 0, C: 0, types: { A: ['N'], B: [], C: [] }, wait: 2.5, fallSpeed: 70, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
+    { night: 3, name: 'The Park', sub: 'Sit still beside Lonely, and freeze when Shy peeks', theme: '#628aa0', musicRoot: 220, timeLimit: 130, rareChance: .05, feelingsNeeded: { N: 1, L: 3, S: 3 }, newMoodling: 'Lonely stays visible; walk slowly, then sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.', diary: 'Her hand found Shwe in the dark.', moodlingSpeed: .85, frustratedChargeSpeed: .80, frustratedWindup: .85, nervousHearingMul: .80, nervousPanicTime: .90, initialSpawns: { N: 1, L: 1, S: 1 }, respawnDelay: 3.0, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Lonely hides in the open. Sit still beside it. Shy peeks back: freeze when it looks, move when it hides its face.' , sky: { A: 2, B: 0, C: 0, types: { A: ['L', 'N'], B: [], C: [] }, wait: 2.2, fallSpeed: 85, gravity: 800, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.20, hintShown: false }},
+    { night: 4, name: 'Lighting Festival', sub: 'Catch Excited at the top of its bounce', theme: '#c17679', musicRoot: 233.08, timeLimit: 130, rareChance: .14, feelingsNeeded: { F: 1, N: 2, S: 2, E: 3 }, newMoodling: 'Excited bounces higher and higher: jump, then pounce at the very top of its bounce', diary: 'She dreamed of the drawing, not the tearing.', moodlingSpeed: .95, frustratedChargeSpeed: .90, frustratedWindup: .75, nervousHearingMul: .90, nervousPanicTime: 1.00, initialSpawns: { F: 1, N: 1, S: 1, E: 2 }, respawnDelay: 2.8, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'The festival is full of Excited. Jump, then pounce at the very top of its bounce.' , sky: { A: 1, B: 2, C: 1, types: { A: ['N'], B: ['E'], C: ['F'] }, wait: 2.0, fallSpeed: 100, gravity: 900, scratchWindow: 2.0, ambushBase: 2, pounceWindowMul: 1.10, hintShown: false }},
+    { night: 5, name: 'Hilltop Park', sub: 'Dig up what is buried on the quiet hill', theme: '#7181aa', musicRoot: 246.94, timeLimit: 135, rareChance: .22, feelingsNeeded: { F: 2, L: 3, B: 2 }, newMoodling: 'A feeling is buried under the rocks: use Night Eyes to spot the right rock, then scratch it. Golden feelings sparkle more often up here', diary: 'Almost a smile.', moodlingSpeed: 1.10, frustratedChargeSpeed: 1.05, frustratedWindup: .65, nervousHearingMul: 1.00, nervousPanicTime: 1.10, initialSpawns: { F: 1, L: 1, B: 1 }, respawnDelay: 2.5, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2 }, tutorialHints: false, tutorialHint: 'Something is buried under the rocks. Press E for Night Eyes, then scratch the glowing rock.' , sky: { A: 2, B: 0, C: 1, types: { A: ['L'], B: [], C: ['F'] }, wait: 1.6, fallSpeed: 115, gravity: 1000, scratchWindow: 1.7, ambushBase: 2, pounceWindowMul: 1.00, hintShown: false }},
+    { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 135, rareChance: .22, feelingsNeeded: { L: 2, C: 2, S: 1, E: 1 }, newMoodling: 'Calm is too dim to come home. Walk slowly to gather 3 fireflies, then bring them to Calm', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { L: 1, C: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: false, tutorialHint: 'Calm sits dim by the lake. Walk slowly into 3 fireflies, then bring their light to Calm.' , sky: { A: 2, B: 1, C: 0, types: { A: ['L'], B: ['E'], C: [] }, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
+    { night: 7, name: 'Sunrise', sub: 'Bring every feeling home before the sun rises', theme: '#d6a866', musicRoot: 293.66, timeLimit: 150, rareChance: .30, feelingsNeeded: { F: 3, N: 2, J: 2, L: 2, S: 2, E: 2, B: 2, C: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 1, N: 1, J: 1, L: 1, S: 1, E: 1, B: 1, C: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
   ];
   const PERCH_BUDGET = { 1: 12, 2: 10, 3: 9, 4: 8, 5: 6, 6: 4, 7: 2 };
   function activePlatsForNight(night) {
@@ -549,7 +549,60 @@
     glow = Math.max(0, +localStorage.getItem('mk-glow') || 0);
   } catch (e) {}
   function saveUpg() { try { localStorage.setItem('mk-upg', JSON.stringify(upg)); localStorage.setItem('mk-glow', String(glow)); } catch (e) {} }
-  const uv = id => UPG.find(u => u.id === id).vals[upg[id]];
+  // Cats: everyone starts with the story cat (Ginger Tabby, as in the intro). The others are bought with Glow; each has one small perk.
+  const CAT_SHOP = {
+    ginger: { cost: 0, perk: 'Shwe from the story. Good at everything, best at nothing.' },
+    burmese: { cost: 200, perk: 'Lucky golden coat: Golden Moodlings give +10 extra Glow.' },
+    bengal: { cost: 250, perk: 'Runs 8% faster.' },
+    persian: { cost: 200, perk: 'So fluffy and quiet: Nervous hears you 15% less far.' },
+    mainecoon: { cost: 300, perk: 'Big and sturdy: the first bump each hour drops no light.' },
+    siamese: { cost: 200, perk: 'Talkative: Purr lasts 1 second longer.' },
+    sphynx: { cost: 250, perk: 'Sharp eyes: Night Eyes stay open 1.5 seconds longer.' },
+    ragdoll: { cost: 200, perk: 'Loves to cuddle: sitting with Lonely takes 30% less time.' },
+    british: { cost: 250, perk: 'Long paws: pounce reaches 10% further.' }
+  };
+  // Comfort items: bought with Glow, used up on your next story hour.
+  const ITEMS = [
+    { id: 'scarf', icon: '🧣', name: 'Cozy Scarf', cost: 80, desc: 'The first time a Frustrated bumps you, you keep all your lights.' },
+    { id: 'bell', icon: '🔔', name: 'Soft Bell', cost: 100, desc: 'Nervous Moodlings hear you 20% less far for the whole hour.' },
+    { id: 'jar', icon: '🫙', name: 'Firefly Jar', cost: 60, desc: 'At the lake, the first firefly you scare stays with you instead of flying off.' },
+    { id: 'sand', icon: '⏳', name: 'Moon Sand', cost: 70, desc: '+10 seconds on the clock.' }
+  ];
+  const TRAILS = {
+    honey: { name: 'Honey', c: '246,196,83', cost: 0 },
+    mint: { name: 'Mint', c: '125,220,139', cost: 60 },
+    rose: { name: 'Rose', c: '255,122,184', cost: 60 },
+    sky: { name: 'Sky', c: '111,182,255', cost: 60 },
+    lilac: { name: 'Lilac', c: '185,162,255', cost: 60 }
+  };
+  let ownedCats = ['ginger'], itemStock = {}, ownedTrails = ['honey'], trailPick = 'honey', activeItems = {}, perkShield = 0;
+  try {
+    const oc = JSON.parse(localStorage.getItem('mk-cats') || 'null');
+    // (an earlier build saved ["burmese"] as the starter: that was never bought, so it is dropped)
+    if (Array.isArray(oc)) ownedCats = ['ginger', ...oc.filter((k, i) => k !== 'ginger' && CAT_SHOP[k] && !(k === 'burmese' && i === 0))];
+    else if (MK_HAS_PROFILE && !['ginger', 'burmese'].includes(MK_PROFILE.coat)) ownedCats.push(MK_PROFILE.coat);   // keep a cat an older save chose
+    const it = JSON.parse(localStorage.getItem('mk-items') || '{}'); ITEMS.forEach(i => { itemStock[i.id] = Math.max(0, Math.floor(+it[i.id] || 0)); });
+    const tr = JSON.parse(localStorage.getItem('mk-trails') || 'null'); if (Array.isArray(tr)) ownedTrails = ['honey', ...tr.filter(k => k !== 'honey' && TRAILS[k])];
+    const tp = localStorage.getItem('mk-trail'); if (TRAILS[tp] && ownedTrails.includes(tp)) trailPick = tp;
+  } catch (e) {}
+  if (!ownedCats.includes(MK_PROFILE.coat)) { MK_PROFILE.coat = 'ginger'; COAT = MK_COATS.ginger; }
+  function saveShop() {
+    try {
+      localStorage.setItem('mk-cats', JSON.stringify(ownedCats)); localStorage.setItem('mk-items', JSON.stringify(itemStock));
+      localStorage.setItem('mk-trails', JSON.stringify(ownedTrails)); localStorage.setItem('mk-trail', trailPick);
+    } catch (e) {}
+  }
+  const catPerk = () => MK_PROFILE.coat;
+  const uv = id => {
+    let v = UPG.find(u => u.id === id).vals[upg[id]];
+    if (id === 'swift' && catPerk() === 'bengal') v *= 1.08;
+    if (id === 'pounce' && catPerk() === 'british') v *= 1.1;
+    if (id === 'paws') { if (catPerk() === 'persian') v *= .85; if (activeItems.bell) v *= .8; }
+    return v;
+  };
+  const purrDur = () => catPerk() === 'siamese' ? 4 : 3;
+  const eyesDur = () => catPerk() === 'sphynx' ? 5.5 : 4;
+  const sitNeed = () => catPerk() === 'ragdoll' ? 1.4 : 2;
   let purrT = 0, purrCd = 0, purrQ = false, eyesT = 0, eyesCd = 0, eyesQ = false;
 
   // ---------- Mood Book (collection with rare variants) ----------
@@ -681,6 +734,7 @@
   }
   const carriedFlies = () => fireflies.filter(f => f.state === 'follow');
   function scatterFly(f, fromCat) {
+    if (!fromCat && activeItems.jar) { activeItems.jar = false; f.state = 'follow'; float(f.x, f.y - 26, '🫙 The jar caught it!', '#e8ff8a'); tone(1046, .14, 'sine', .045); return; }
     const fx = flySpotNear(f.ox);
     f.state = 'free'; f.hx = fx; f.hy = GROUND - 34 - Math.random() * 30; f.fast = 1.4;
     for (let k = 0; k < 6; k++) parts.push({ x: f.x, y: f.y, vx: (Math.random() - .5) * 120, vy: (Math.random() - .5) * 120, life: .5, max: .5, c: '#e8ff8a', r: 2, g: 0 });
@@ -801,7 +855,8 @@
     mood.push(m); return m;
   }
   function skyTypeFor(feature) {
-    const choices = feature === 'A' ? ['N', 'L'] : feature === 'B' ? ['E', 'J'] : ['F'];
+    const own = chapterFor(storyNight).sky?.types?.[feature];
+    const choices = own && own.length ? own : feature === 'A' ? ['N', 'L'] : feature === 'B' ? ['E', 'J'] : ['F'];
     const stillNeeded = choices.filter(type => (need[type] || 0) > (got[type] || 0));
     const pool = stillNeeded.length ? stillNeeded : choices;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -852,6 +907,7 @@
     t = 0; warmup = mode === 'free' ? 0 : 1.5; frustWakeAt = warmup + FRUST_SLEEP; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0;
     nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
     combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
+    activeItems = {}; perkShield = catPerk() === 'mainecoon' ? 1 : 0;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
@@ -916,6 +972,9 @@
       float(cat.x, cat.y - 100, `−${dropped} feeling${dropped === 1 ? '' : 's'}`, RED);
       if (mode === 'story') timeLeft = Math.max(0, timeLeft - 2);
       announce("The angry ground tore a light away", RED, 1.6);
+    } else if (trail.length && (activeItems.scarf || perkShield > 0)) {
+      if (activeItems.scarf) { activeItems.scarf = false; float(cat.x, cat.y - 72, '🧣 The scarf kept your lights safe', GOLD); }
+      else { perkShield--; float(cat.x, cat.y - 72, 'Big and sturdy! No light lost', GOLD); }
     } else if (trail.length) detachTrail(1);
     else float(cat.x, cat.y - 64, 'Ouch!', RED);
   }
@@ -1038,7 +1097,7 @@
     if (m.sky) { m.skyPhase = 'cleared'; m.skyTimer = 0; }
     combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 4; bestCombo = Math.max(bestCombo, combo);
     const pts = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170, G: 500 }[m.type] * combo; score += pts;
-    const gain = { F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16, G: 40 }[m.type] + 2 * (combo - 1);
+    const gain = { F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16, G: 40 }[m.type] + 2 * (combo - 1) + (m.type === 'G' && catPerk() === 'burmese' ? 10 : 0);
     glowRun += gain; bump('glow', gain);
     caughtN++;
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
@@ -1200,7 +1259,7 @@
           if (still && Math.abs(dx) < sitRadius) {
             if (m.sit === 0) tone(523, .2, 'sine', .03);
             m.sit += dt;
-            if (m.sit >= 2) { m.sit = 0; catchIt(m); }
+            if (m.sit >= sitNeed()) { m.sit = 0; catchIt(m); }
           } else m.sit = Math.max(0, m.sit - dt * 2);
         }
       } else if (m.state === 'rest') {
@@ -1358,11 +1417,11 @@
     const last = hist[hist.length - 1];
     if (!last || Math.hypot(last.x - cat.x, last.y - cat.y) > 3) { hist.push({ x: cat.x, y: cat.y }); if (hist.length > 500) hist.shift(); }
     if (purrQ && upg.purr > 0 && purrCd <= 0) {
-      purrT = 3; purrCd = uv('purr');
+      purrT = purrDur(); purrCd = uv('purr');
       float(cat.x, cat.y - 70, 'Purrr…', '#c8ff8a'); sfx('cat', 'purr');
     }
     purrQ = false; purrT = Math.max(0, purrT - dt); purrCd = Math.max(0, purrCd - dt);
-    if (eyesQ && eyesCd <= 0) { eyesT = 4; eyesCd = 9; tone(740, .25, 'sine', .05, 300); }
+    if (eyesQ && eyesCd <= 0) { eyesT = eyesDur(); eyesCd = 9; tone(740, .25, 'sine', .05, 300); }
     eyesQ = false; eyesT = Math.max(0, eyesT - dt); eyesCd = Math.max(0, eyesCd - dt);
     scratchAnim = Math.max(0, scratchAnim - dt);
     checkScratchProximity();
@@ -2106,7 +2165,7 @@
   function sitRing(m, c, r) {
     if (m.sit > 0) {
       ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(m.x, m.y + 2, r, 0, 7); ctx.stroke();
-      ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(m.x, m.y + 2, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (m.sit / 2)); ctx.stroke(); return true;
+      ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(m.x, m.y + 2, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, m.sit / sitNeed())); ctx.stroke(); return true;
     }
     return false;
   }
@@ -2292,7 +2351,7 @@
 
   function drawTrail() {
     if (trail.length > 1) {
-      ctx.strokeStyle = 'rgba(246,196,83,.18)'; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.strokeStyle = `rgba(${TRAILS[trailPick].c},${trailPick === 'honey' ? .18 : .45})`; ctx.lineWidth = trailPick === 'honey' ? 2 : 3; ctx.beginPath();
       ctx.moveTo(cat.x, cat.y - 34); trail.forEach(l => ctx.lineTo(l.x, l.y)); ctx.stroke();
     }
     trail.forEach(l => lightShape(l.type, l.x, l.y, 1, l.v));
@@ -2358,6 +2417,8 @@
         ay += 20; ctx.fillStyle = purrCd > 0 ? MUTED : '#c8ff8a';
         ctx.fillText(purrCd > 0 ? `Purr in ${Math.ceil(purrCd)}s` : 'Purr ready · K', 22, ay);
       }
+      const packed = ITEMS.filter(i => activeItems[i.id] && i.id !== 'sand').map(i => i.icon).join(' ');
+      if (packed) { ay += 20; ctx.fillStyle = INK; ctx.fillText(packed, 22, ay); }
     }
     if (mode === 'story') {
       const types = Object.keys(need).filter(type => need[type] > 0), width = types.length >= 7 ? 64 : types.length >= 5 ? 78 : types.length === 4 ? 88 : 96, gap = 8;
@@ -2407,7 +2468,7 @@
     drawCat(); drawParts();
     ctx.restore();
     if (eyesT > 0) {
-      const sx = cat.x - camX, sy = cat.y - 24, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (4 - eyesT) / .25);
+      const sx = cat.x - camX, sy = cat.y - 24, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (eyesDur() - eyesT) / .25);
       const g = ctx.createRadialGradient(sx, sy, r * .75, sx, sy, r * 1.15);
       g.addColorStop(0, 'rgba(6,12,24,0)'); g.addColorStop(1, `rgba(6,12,24,${.6 * fade})`);
       ctx.fillStyle = g; ctx.fillRect(0, -OY, VW, VH + OY * 2);
@@ -2562,8 +2623,42 @@
   $('#bookBtn').addEventListener('click', () => { $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
   $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; showMainMenu(true); });
   let shopFrom = null;
+  let shopTab = 'upgrades';
+  (function () {
+    const st = document.createElement('style');
+    st.textContent = '.shop-tabs{display:flex;gap:8px;flex-wrap:wrap}.shop-tab{font-family:var(--display);font-weight:800;font-size:15px;border:2px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer}.shop-tab[aria-selected="true"]{background:var(--honey);border-color:var(--honey);color:var(--bg-deep)}.shop-cat{height:44px;width:56px;object-fit:contain;vertical-align:middle;margin-right:8px}.shop-icon{font-size:26px;vertical-align:middle;margin-right:8px}.swatch{display:inline-block;width:26px;height:26px;border-radius:50%;vertical-align:middle;margin-right:8px;border:2px solid rgba(255,255,255,.6)}.item.in-use{border-color:var(--honey)}';
+    document.head.appendChild(st);
+    const tabs = document.createElement('div'); tabs.className = 'shop-tabs'; tabs.setAttribute('role', 'tablist');
+    [['upgrades', 'Upgrades'], ['cats', 'Cats'], ['items', 'Comfort items'], ['style', 'Style']].forEach(([id, label]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'shop-tab'; b.dataset.tab = id; b.textContent = label; b.setAttribute('role', 'tab');
+      b.addEventListener('click', () => { shopTab = id; renderShop(); }); tabs.appendChild(b);
+    });
+    $('#shopList').before(tabs);
+  })();
   function renderShop() {
     $('#glowAmt').textContent = glow;
+    document.querySelectorAll('.shop-tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === shopTab)));
+    const price = (cost, attrs, verb = 'Buy') => `<button class="buy" ${attrs} ${glow < cost ? 'disabled' : ''}>${glow < cost ? '🔒 Can’t afford' : verb} · ${cost} Glow</button>`;
+    if (shopTab === 'cats') {
+      $('#shopList').innerHTML = Object.keys(MK_COATS).map(k => {
+        const owned = ownedCats.includes(k), using = MK_PROFILE.coat === k, info = CAT_SHOP[k];
+        const btn = using ? '<button class="buy" disabled>With you now</button>' : owned ? `<button class="buy" data-cat="${k}" data-act="use">Choose</button>` : price(info.cost, `data-cat="${k}" data-act="buy"`);
+        return `<div class="item${using ? ' in-use' : ''}"><h3><img class="shop-cat" src="${MK_COATS[k].img}" alt="">${MK_COATS[k].name}</h3><div class="side">${btn}</div><p>${info.perk}</p><p>${owned ? 'Yours' : 'Not yet yours'}</p></div>`;
+      }).join('');
+      return;
+    }
+    if (shopTab === 'items') {
+      $('#shopList').innerHTML = ITEMS.map(i => `<div class="item"><h3><span class="shop-icon">${i.icon}</span>${i.name}</h3><div class="side">${price(i.cost, `data-item="${i.id}"`)}</div><p>${i.desc}</p><p>Packed for your next hour: ${itemStock[i.id] || 0}. Used up when the hour starts.</p></div>`).join('');
+      return;
+    }
+    if (shopTab === 'style') {
+      $('#shopList').innerHTML = Object.entries(TRAILS).map(([k, tr]) => {
+        const owned = ownedTrails.includes(k), using = trailPick === k;
+        const btn = using ? '<button class="buy" disabled>In use</button>' : owned ? `<button class="buy" data-trail="${k}" data-act="use">Use</button>` : price(tr.cost, `data-trail="${k}" data-act="buy"`);
+        return `<div class="item${using ? ' in-use' : ''}"><h3><span class="swatch" style="background:rgb(${tr.c})"></span>${tr.name} trail</h3><div class="side">${btn}</div><p>The colour of the light trail that follows your cat.</p></div>`;
+      }).join('');
+      return;
+    }
     $('#shopList').innerHTML = UPG.map(u => {
       const lv = upg[u.id], max = lv >= 3, cost = u.costs[lv];
       const now = u.fmt(u.vals[lv]), next = max ? '' : ` · next: ${u.fmt(u.vals[lv + 1])}`;
@@ -2576,7 +2671,31 @@
     shopFrom = from; $('#startScreen').hidden = true; $('#endScreen').hidden = true;
     renderShop(); $('#shopScreen').hidden = false; $('#shopScreen').scrollTop = 0; $('#shopBack').focus({ preventScroll: true });
   }
+  function chooseCat(k) {
+    MK_PROFILE.coat = k; COAT = MK_COATS[k];
+    try { localStorage.setItem('mk-profile', JSON.stringify(MK_PROFILE)); } catch (err) {}
+    paintCoat(COAT); refreshShopBtns(); syncSetupCats();
+  }
   $('#shopList').addEventListener('click', e => {
+    const x = e.target.closest('button[data-cat],button[data-item],button[data-trail]');
+    if (x && !x.disabled) {
+      initAudio();
+      const ding = () => { tone(660, .15, 'triangle', .07); setTimeout(() => tone(990, .25, 'sine', .06), 90); };
+      if (x.dataset.cat) {
+        const k = x.dataset.cat;
+        if (x.dataset.act === 'buy') { const c = CAT_SHOP[k].cost; if (glow < c) return; glow -= c; ownedCats.push(k); saveUpg(); ding(); sfx('cat', 'meow'); }
+        chooseCat(k);
+      } else if (x.dataset.item) {
+        const it = ITEMS.find(i => i.id === x.dataset.item); if (glow < it.cost) return;
+        glow -= it.cost; itemStock[it.id] = (itemStock[it.id] || 0) + 1; saveUpg(); ding();
+      } else if (x.dataset.trail) {
+        const k = x.dataset.trail;
+        if (x.dataset.act === 'buy') { const c = TRAILS[k].cost; if (glow < c) return; glow -= c; ownedTrails.push(k); saveUpg(); ding(); }
+        trailPick = k;
+      }
+      saveShop(); renderShop(); refreshShopBtns(); $('#shopBack').focus({ preventScroll: true });
+      return;
+    }
     const b = e.target.closest('button[data-id]'); if (!b) return;
     const u = UPG.find(x => x.id === b.dataset.id), lv = upg[u.id];
     if (lv >= 3 || glow < u.costs[lv]) return;
@@ -2667,7 +2786,7 @@
     C: [[0, 25, 115, 220], [292, 205, 82, 100], [488, 296, 76, 94], [942, 110, 96, 190], [1100, 215, 210, 200], [1326, 86, 82, 222], [1872, 262, 125, 165], [0, 436, 48, 96], [1945, 185, 55, 215]], // Calm: the plants
     G: [[508, 72, 274, 320], [1742, 72, 150, 255]]                                           // Golden: the night sky in the windows
   };
-  const NIGHT_TYPES = [[], ['F'], ['N', 'J'], ['L', 'S'], ['B', 'E'], ['G'], ['C'], ['F', 'N', 'J', 'L', 'S', 'B', 'E', 'G', 'C']];
+  const NIGHT_TYPES = [[], ['F'], ['N', 'J'], ['L', 'S'], ['E'], ['B', 'G'], ['C'], ['F', 'N', 'J', 'L', 'S', 'B', 'E', 'G', 'C']];
   const ROOM_ORDER = ['F', 'N', 'J', 'L', 'S', 'B', 'E', 'G', 'C'];
   const partCentre = ty => { const r = ROOM_PARTS[ty][0]; return { x: r[0] + r[2] / 2, y: r[1] + r[3] / 2 }; };
   const roomLayers = {};
@@ -3072,6 +3191,11 @@
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#bPurr').hidden = upg.purr === 0; $('#bScratch').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; reset(); state = 'play';
+    if (mode === 'story') {   // pack one of each comfort item for this hour
+      ITEMS.forEach(i => { if (itemStock[i.id] > 0) { itemStock[i.id]--; activeItems[i.id] = true; } });
+      if (activeItems.sand) { timeLeft += 10; float(cat.x, cat.y - 90, '⏳ +10 seconds', GOLD); }
+      saveShop();
+    }
     $('#startScreen').hidden = true; $('#endScreen').hidden = true; pauseScreen.hidden = true; pauseBtn.hidden = false;
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
@@ -3500,6 +3624,15 @@
     const sp = document.createElement('span'); sp.textContent = MK_COATS[k].name;
     lab.append(r, im, sp); breedBox.appendChild(lab);
   });
+  function syncSetupCats() {
+    breedBox.querySelectorAll('label.coat-opt').forEach(lab => {
+      const r = lab.querySelector('input'), owned = ownedCats.includes(r.value);
+      r.disabled = !owned; lab.style.opacity = owned ? '' : '.45'; lab.title = owned ? '' : 'Unlock this cat in the Shop with Glow';
+      const sp = lab.querySelector('span'); sp.textContent = MK_COATS[r.value].name + (owned ? '' : ' 🔒');
+    });
+    const r = breedBox.querySelector(`input[value="${MK_PROFILE.coat}"]`); if (r) r.checked = true;
+  }
+  syncSetupCats();
   function paintCoat(c, scope) {
     if (!scope) sceneCats.forEach(im => im.setAttribute('href', c.img));
     if (scope) { $('#breedName').textContent = c.name; }
@@ -3544,7 +3677,7 @@
   let setupFirstRun = false;
   [girlIn, catIn].forEach(i => i.addEventListener('keydown', e => e.stopPropagation()));
   setupEl.addEventListener('keydown', e => { if (e.target.name === 'coat') e.stopPropagation(); });
-  function setupCoat() { return (setupEl.querySelector('input[name="coat"]:checked') || {}).value || 'burmese'; }
+  function setupCoat() { const v = (setupEl.querySelector('input[name="coat"]:checked') || {}).value; return ownedCats.includes(v) ? v : 'ginger'; }
   function refreshSetupPreview() {
     paintCoat(MK_COATS[setupCoat()], setupEl);
     $('#setupCatTag').textContent = catIn.value.trim() || 'Shwe';
@@ -3575,7 +3708,7 @@
     state = 'menu'; cv.hidden = true;
     ['#setupScreen', '#prologueScreen', '#startScreen', '#endScreen', '#awakeningScreen', '#levelBriefingScreen', '#nightReadyScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
     welcome.hidden = false;
-    const coat = MK_COATS[MK_PROFILE.coat] || MK_COATS.burmese;
+    const coat = MK_COATS[MK_PROFILE.coat] || MK_COATS.ginger;
     $('#welcomeCat').src = coat.img; $('#welcomeCat').alt = `${MK_PROFILE.cat}, ready to follow the night lights`;
     $('#welcomeCatName').textContent = MK_PROFILE.cat;
     $('#welcomeLoadStatus').textContent = 'Gathering the moonlight…';
@@ -3603,7 +3736,7 @@
   }
   function showMapGuide() {
     mapGuidePending = true;
-    const coat = MK_COATS[MK_PROFILE.coat] || MK_COATS.burmese;
+    const coat = MK_COATS[MK_PROFILE.coat] || MK_COATS.ginger;
     $('#mapGuideCat').src = coat.img; $('#mapGuideName').textContent = MK_PROFILE.cat;
     $('#mapGuideText').textContent = `${MK_PROFILE.cat} will follow the glowing path with you. Choose the lit hour at its base to see the first goal.`;
     $('#mapGuide').hidden = false; $('#mapGuideDismiss').focus({ preventScroll: true });
@@ -3660,7 +3793,7 @@
     state = 'menu'; cv.hidden = true;
     ['#welcomeScreen', '#startScreen', '#hubSettingsScreen', '#prologueScreen', '#endScreen', '#levelBriefingScreen', '#nightReadyScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
     girlIn.value = MK_HAS_PROFILE ? MK_PROFILE.girl : ''; catIn.value = MK_HAS_PROFILE ? MK_PROFILE.cat : '';
-    const r = setupEl.querySelector(`input[name="coat"][value="${MK_PROFILE.coat}"]`); if (r) r.checked = true;
+    syncSetupCats();
     $('#setupGo').textContent = firstRun ? 'Begin the story →' : 'Save';
     $('#setupBackBtn').hidden = !firstRun;
     $('#setupNote').textContent = firstRun ? 'You can change these later from the menu.' : 'Your progress stays the same.';

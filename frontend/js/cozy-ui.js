@@ -38,7 +38,7 @@
     $('setupNext').hidden = step !== 1;
     $('setupPrevious').hidden = step !== 2;
     $('setupGo').hidden = step !== 2;
-    $('setupTitle').textContent = step === 1 ? 'Who are you?' : 'Who’s your cat?';
+    $('setupTitle').textContent = step === 1 ? 'Who are you?' : 'Who\u2019s your cat?';
     if (focus) (step === 1 ? $('girlNameInput') : $('catNameInput')).focus({preventScroll:true});
   }
   $('setupNext').addEventListener('click', () => showSetupStep(2));
