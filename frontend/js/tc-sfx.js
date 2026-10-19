@@ -66,29 +66,41 @@
   const unlock = () => { ensure(); api.preload(); removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock); };
   addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
 
-  // ---------- night music: one looping track per place ----------
-  const MBASE = ogg ? 'assets/audio/music/ogg/' : 'assets/audio/music/mp3/';
-  const music = { cur: null, el: null, want: null, duck: 1, fadeT: 0 };
-  const musicGain = () => muted ? 0 : Math.min(1, musicVol * 1.15 * music.duck);   // the files are already mixed quieter than the sound effects
+  // ---------- night music: one piece per place, played like a calm sandbox game ----------
+  // A piano piece plays once, then the night is quiet for a while, then it plays again.
+  // To use the team's looping tracks instead, set STYLE to 'loop' (files music_<place>).
+  const STYLE = 'piano';
+  const MBASE = (ogg ? 'assets/audio/music/ogg/' : 'assets/audio/music/mp3/') + (STYLE === 'piano' ? 'piano_' : 'music_');
+  const GAP = [25, 45];          // seconds of quiet between plays
+  const music = { cur: null, el: null, duck: 1, timer: 0 };
+  const musicGain = () => muted ? 0 : Math.min(1, musicVol * 1.15 * music.duck);
   function fadeTo(el, target, ms, done) {
     const from = el.volume, t0 = performance.now();
     const step = now => { const k = Math.min(1, (now - t0) / ms); el.volume = Math.max(0, Math.min(1, from + (target - from) * k)); if (k < 1) requestAnimationFrame(step); else if (done) done(); };
     requestAnimationFrame(step);
   }
+  function startEl(el) {
+    const go = () => { if (music.el !== el) return; el.volume = 0; el.play().then(() => fadeTo(el, musicGain(), 2500)).catch(() => {}); };
+    go(); addEventListener('pointerdown', go, { once: true }); addEventListener('keydown', go, { once: true });   // in case the browser waits for a tap or key
+  }
   const TCMusic = {
     play(name) {
-      music.want = name;
-      if (music.cur === name && music.el) { music.el.play().catch(() => {}); fadeTo(music.el, musicGain(), 600); return; }
-      const old = music.el; if (old) fadeTo(old, 0, 1200, () => { old.pause(); });
+      clearTimeout(music.timer);
+      if (music.cur === name && music.el) { fadeTo(music.el, musicGain(), 600); return; }
+      const old = music.el; if (old) fadeTo(old, 0, 1500, () => old.pause());
       if (!name) { music.cur = null; music.el = null; return; }
-      const el = new Audio(MBASE + 'music_' + name + EXT); el.loop = true; el.preload = 'auto'; el.volume = 0;
+      const el = new Audio(MBASE + name + EXT); el.preload = 'auto'; el.loop = STYLE !== 'piano'; el.volume = 0;
       music.cur = name; music.el = el;
-      const go = () => el.play().then(() => fadeTo(el, musicGain(), 1500)).catch(() => {});
-      go(); addEventListener('pointerdown', go, { once: true }); addEventListener('keydown', go, { once: true });   // in case the browser waits for a tap or key
+      el.addEventListener('ended', () => {
+        if (music.el !== el) return;
+        const wait = (GAP[0] + Math.random() * (GAP[1] - GAP[0])) * 1000;
+        music.timer = setTimeout(() => { if (music.el === el) { el.currentTime = 0; startEl(el); } }, wait);
+      });
+      music.timer = setTimeout(() => startEl(el), STYLE === 'piano' ? 2500 : 0);   // let the night settle before the first notes
     },
     stop() { TCMusic.play(null); },
-    duck(k) { music.duck = k; if (music.el) fadeTo(music.el, musicGain(), 500); },
-    refresh() { if (music.el) fadeTo(music.el, musicGain(), 300); },
+    duck(k) { music.duck = k; if (music.el && !music.el.paused) fadeTo(music.el, musicGain(), 500); },
+    refresh() { if (music.el && !music.el.paused) fadeTo(music.el, musicGain(), 300); },
     setVolume(v) { musicVol = Math.max(0, Math.min(1, v)); save(); TCMusic.refresh(); },
   };
   window.TCMusic = TCMusic;
