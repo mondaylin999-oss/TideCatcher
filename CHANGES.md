@@ -2,6 +2,8 @@
 
 ## Screen changes
 
+- **Organic map layout:** Varied chapter spacing, river bend heights and curve lengths with a repeatable seed. Trees now appear in uneven clusters with varied sizes, while lanterns and landmarks have irregular placement. The trail stays stable when revisiting chapters and resizing.
+
 - **Moonlit adventure map:** A winding river with rocky banks, stepping-stone chapter stops, glowing lanterns, pine trees, fireflies and school/park/festival/hill/lake landmarks now fills the landscape chapter map. Completed, current and locked chapters keep their existing progression and show clear status labels.
 
 - **Landscape chapter map:** Replaced the vertical 50-level tower and stretched scenery with a left-to-right trail using the full screen width. Added swipe, mouse-wheel, keyboard and previous/current/next navigation, readable chapter cards, and compact controls for mobile landscape. Unlocks and gameplay are unchanged.

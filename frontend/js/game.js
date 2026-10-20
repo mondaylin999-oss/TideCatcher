@@ -4046,13 +4046,21 @@
   }
   const LEVEL_MAP_LIMIT = 50, LEVEL_MAP_STEP = 240;
   const LEVEL_MAP_CHAPTERS = new Map(NIGHT_CHAPTERS.map(chapter => [chapter.night, chapter]));
+  // Seeded variation gives each stretch its own shape and keeps it stable on revisit.
+  const mapRandom = seed => { const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
+  const mapStops = [];
+  for (let level = 1, x = 140; level <= LEVEL_MAP_LIMIT; level++) {
+    if (level > 1) x += 230 + mapRandom(level + 91) * 100;
+    mapStops.push({ x, bend: mapRandom(level + 17) });
+  }
   function mapPoint(level) {
     const height = Math.max(180, $('#levelMapViewport').clientHeight);
-    return { x: (level - .5) * LEVEL_MAP_STEP, y: height * .43 + Math.sin((level - 1) * Math.PI / 2) * Math.min(110, height * .18) };
+    const stop = mapStops[level - 1];
+    return { x: stop.x, y: height * (.25 + stop.bend * .41) };
   }
   // Pixel coordinates keep the illustrated terrain proportional at every screen size.
   function drawNightMap(width, height, river) {
-    const random = seed => { const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
+    const random = mapRandom;
     const parts = [
       `<defs><linearGradient id="trailGround" x2="0" y2="1"><stop stop-color="#243d45"/><stop offset="1" stop-color="#172d39"/></linearGradient><linearGradient id="trailWater" x2="0" y2="1"><stop stop-color="#367a91"/><stop offset="1" stop-color="#224b70"/></linearGradient></defs>`,
       `<rect width="${width}" height="${height}" fill="url(#trailGround)"/>`
@@ -4067,21 +4075,28 @@
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const point = mapPoint(level), x = point.x;
       const scale = Math.min(1.3, height / 310);
-      parts.push(tree(x - 86, height - 14, scale), tree(x + 74, 76 * scale, scale * .8));
+      const treeCount = Math.floor(random(level + 200) * 4);
+      for (let j = 0; j < treeCount; j++) {
+        const seed = level * 19 + j;
+        const size = scale * (.55 + random(seed + 400) * .55);
+        const tx = x - 100 + random(seed + 500) * 190;
+        const ty = random(seed + 600) > .5 ? height - 8 - random(seed + 700) * 20 : 76 * size + random(seed + 800) * 10;
+        parts.push(tree(tx, ty, size));
+      }
       // River stones and fireflies sit outside the chapter labels and hit areas.
       parts.push(`<path d="M${x - 27} ${point.y + 17}q27-15 55 0l-5 17q-22 9-47-1Z" fill="#102b43" opacity=".6"/>`);
       for (let j = 0; j < 4; j++) {
         const fx = x - 105 + random(level * 9 + j) * 200, fy = height * (.12 + random(level * 8 + j) * .76);
         parts.push(`<circle cx="${fx}" cy="${fy}" r="6" fill="#ffe9a0" opacity=".05"/><circle cx="${fx}" cy="${fy}" r="1.5" fill="#ffe9a0" opacity=".8"/>`);
       }
-      if (level % 3 === 1) {
-        const ly = Math.max(34, height * .14), lx = x + 95;
+      if (random(level + 1000) < .36) {
+        const ly = Math.max(34, height * (.11 + random(level + 1100) * .09)), lx = x + 75 + random(level + 1200) * 30;
         parts.push(`<g transform="translate(${lx} ${ly})"><circle r="30" fill="#ffe6a0" opacity=".06"/><path d="M0 22V-10h-12" fill="none" stroke="#a69b89" stroke-width="3"/><rect x="-20" y="-12" width="15" height="20" rx="4" fill="#efd58b"/><path d="M-18-6h11M-18 2h11" stroke="#ad8d64"/></g>`);
       }
-      if (level % 5 === 1) {
+      if (random(level + 1300) < .27) {
         parts.push(`<g transform="translate(${x + 30} 30)"><circle r="25" fill="#eff3cf" opacity=".05"/><path d="M6-15A17 17 0 1 0 16 10 15 15 0 0 1 6-15Z" fill="#e6ebc9" opacity=".9"/></g>`);
-        const ly = height - 25, lx = x + 50, scale = Math.min(.85, height / 420);
-        const kind = Math.floor(level / 5) % 5;
+        const ly = height - 12 - random(level + 1400) * 25, lx = x - 65 + random(level + 1500) * 130, scale = Math.min(.85, height / 420) * (.8 + random(level + 1600) * .3);
+        const kind = Math.floor(random(level + 1700) * 5);
         const landmarks = [
           '<path d="M-40 0v-52h80V0Z" fill="#576378"/><path d="M-47-52L0-77l47 25Z" fill="#aa8190"/><path d="M-9 0v-26H9V0" fill="#d6b675"/><path d="M-27-39h12v13h-12m42-13h12v13H15" fill="#f8dca0"/>',
           '<path d="M-38 0v-27m76 27v-27M-45-23h90M-42-34h84" stroke="#ba9d86" stroke-width="6"/><path d="M-42-60h84" stroke="#536c6d" stroke-width="3"/>',
@@ -4102,14 +4117,18 @@
   function buildLevelMap() {
     const track = $('#levelMapTrack'), path = $('#levelMapPath'), route = $('#levelMapRoute'), svg = $('#levelMapSvg');
     track.querySelectorAll('.level-entry').forEach(entry => entry.remove());
-    const height = Math.max(180, $('#levelMapViewport').clientHeight), width = LEVEL_MAP_LIMIT * LEVEL_MAP_STEP;
+    const height = Math.max(180, $('#levelMapViewport').clientHeight), width = mapStops[LEVEL_MAP_LIMIT - 1].x + 150;
     track.style.height = `${height}px`; track.style.width = `${width}px`;
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     let d = '', prev = null;
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const point = mapPoint(level);
       if (!prev) d = `M ${point.x} ${point.y}`;
-      else d += ` C ${prev.x + LEVEL_MAP_STEP / 2} ${prev.y} ${point.x - LEVEL_MAP_STEP / 2} ${point.y} ${point.x} ${point.y}`;
+      else {
+        const span = point.x - prev.x;
+        const bend = .28 + mapRandom(level + 1800) * .4;
+        d += ` C ${prev.x + span * bend} ${prev.y} ${point.x - span * (1 - bend)} ${point.y} ${point.x} ${point.y}`;
+      }
       prev = point;
     }
     drawNightMap(width, height, d);
