@@ -59,7 +59,7 @@ function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   return true;
 }
 
-var MK_PROFILE = { girl: 'Thiri', cat: 'Shwe', coat: 'ginger' };
+var MK_PROFILE = { girl: 'Thiri', cat: 'Shwe', coat: 'ginger', welcomeSeen: false, tutorialDone: false, tipsSeen: [], showTips: true, tipLanguage: 'en' };
 var MK_HAS_PROFILE = false;
 try {
   var _p = JSON.parse(localStorage.getItem('mk-profile') || 'null');
@@ -68,8 +68,25 @@ try {
     if (typeof _p.girl === 'string' && _p.girl.trim()) MK_PROFILE.girl = _p.girl.trim().slice(0, 12);
     if (typeof _p.cat === 'string' && _p.cat.trim()) MK_PROFILE.cat = _p.cat.trim().slice(0, 12);
     if (MK_COATS[_p.coat]) MK_PROFILE.coat = _p.coat; else if (MK_OLD_COATS[_p.coat]) MK_PROFILE.coat = MK_OLD_COATS[_p.coat];
+    MK_PROFILE.welcomeSeen = typeof _p.welcomeSeen === 'boolean' ? _p.welcomeSeen : true;
+    MK_PROFILE.tutorialDone = typeof _p.tutorialDone === 'boolean' ? _p.tutorialDone : true;
+    MK_PROFILE.tipsSeen = Array.isArray(_p.tipsSeen) ? _p.tipsSeen.filter(function (key) { return typeof key === 'string' && key.length < 60; }).slice(-100) : [];
+    MK_PROFILE.showTips = _p.showTips !== false;
+    MK_PROFILE.tipLanguage = _p.tipLanguage === 'my' ? 'my' : 'en';
   }
 } catch (e) {}
+if (!MK_HAS_PROFILE) {
+  try {
+    var _o = JSON.parse(localStorage.getItem('mk-onboarding') || 'null');
+    if (_o && typeof _o === 'object') {
+      if (typeof _o.welcomeSeen === 'boolean') MK_PROFILE.welcomeSeen = _o.welcomeSeen;
+      if (typeof _o.tutorialDone === 'boolean') MK_PROFILE.tutorialDone = _o.tutorialDone;
+      if (Array.isArray(_o.tipsSeen)) MK_PROFILE.tipsSeen = _o.tipsSeen.filter(function (key) { return typeof key === 'string' && key.length < 60; }).slice(-100);
+      if (typeof _o.showTips === 'boolean') MK_PROFILE.showTips = _o.showTips;
+      if (_o.tipLanguage === 'my') MK_PROFILE.tipLanguage = 'my';
+    }
+  } catch (e) {}
+}
 var COAT = MK_COATS[MK_PROFILE.coat];
 function mkName(str) {
   if (typeof str !== 'string' || !/Thiri|Shwe|SHWE/.test(str)) return str;
