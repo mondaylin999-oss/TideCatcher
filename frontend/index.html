@@ -36,6 +36,7 @@
       <button class="btn" id="pauseContinueBtn" type="button">Resume</button>
       <button class="btn ghost" id="pauseRestartBtn" type="button">Restart</button>
       <button class="btn ghost" id="pauseChaptersBtn" type="button">Back to chapters</button>
+      <button class="btn ghost" id="pauseHelpBtn" type="button" data-sfx="toggle">How to play</button>
       <button class="btn danger" id="pauseQuitBtn" type="button">Quit to menu</button>
     </div>
   </section>
@@ -52,6 +53,12 @@
       <button class="btn danger" id="leaveNightConfirm" type="button">Leave night</button>
     </div>
   </section>
+</div>
+<div class="tip-coach" id="tipCoach" hidden role="region" aria-live="polite" aria-atomic="true" aria-label="Gameplay tip">
+  <div class="tip-coach-card">
+    <div class="tip-coach-copy"><span class="tip-coach-kicker" id="tipCoachKicker"></span><strong id="tipCoachTitle"></strong><p id="tipCoachText"></p><div class="tip-coach-control" id="tipCoachControl" aria-label="Suggested control"></div></div>
+    <button class="btn ghost tip-coach-skip" id="tutorialSkipBtn" type="button" data-sfx="back" hidden>Skip tutorial</button>
+  </div>
 </div>
 <div class="overlay" id="resetScreen" hidden role="dialog" aria-modal="true" aria-labelledby="resetTitle" aria-describedby="resetText">
   <div class="panel reset-panel">
@@ -99,6 +106,25 @@
     </div>
     <button class="btn welcome-begin" id="welcomeBeginBtn" type="button" disabled>Begin the story →</button>
     <p class="welcome-note">One quiet night. A long journey home.</p>
+  </section>
+</div>
+<div class="overlay welcome-cards-screen" id="welcomeCardsScreen" hidden role="dialog" aria-modal="true" aria-labelledby="welcomeCardsTitle">
+  <section class="panel welcome-cards-panel">
+    <p class="eyebrow" id="welcomeCardsKicker">WELCOME TO THE NIGHT SIDE</p>
+    <h2 id="welcomeCardsTitle">A little light to bring home</h2>
+    <div class="welcome-carousel" id="welcomeCarousel" tabindex="0" role="group" aria-label="Welcome story cards">
+      <div class="welcome-card-track" id="welcomeCardTrack">
+        <article class="welcome-card" data-welcome-slide="0" aria-roledescription="slide" aria-label="1 of 3"><span class="welcome-card-mark" aria-hidden="true">☾</span><h3></h3><p></p></article>
+        <article class="welcome-card" data-welcome-slide="1" aria-roledescription="slide" aria-label="2 of 3"><span class="welcome-card-mark" aria-hidden="true">✦</span><h3></h3><p></p></article>
+        <article class="welcome-card" data-welcome-slide="2" aria-roledescription="slide" aria-label="3 of 3"><span class="welcome-card-mark" aria-hidden="true">☀</span><h3></h3><p></p></article>
+      </div>
+    </div>
+    <div class="welcome-dots" id="welcomeDots" role="tablist" aria-label="Welcome card pages">
+      <button type="button" class="welcome-dot is-active" data-slide="0" role="tab" aria-label="Card 1 of 3" aria-selected="true"></button>
+      <button type="button" class="welcome-dot" data-slide="1" role="tab" aria-label="Card 2 of 3" aria-selected="false"></button>
+      <button type="button" class="welcome-dot" data-slide="2" role="tab" aria-label="Card 3 of 3" aria-selected="false"></button>
+    </div>
+    <div class="welcome-card-actions"><button class="btn ghost" id="welcomeSkipBtn" type="button" data-sfx="back">Skip</button><button class="btn" id="welcomeNextBtn" type="button" data-sfx="toggle">Next</button></div>
   </section>
 </div>
 
@@ -150,7 +176,7 @@
         <defs><linearGradient id="hubHeroSky" x2="0" y2="1"><stop stop-color="#23384a"/><stop offset=".56" stop-color="#122738"/><stop offset="1" stop-color="#0b1620"/></linearGradient><radialGradient id="hubHeroMoon"><stop stop-color="#f9f2d6" stop-opacity=".9"/><stop offset="1" stop-color="#a9c4d4" stop-opacity="0"/></radialGradient><linearGradient id="hubHeroWater" x2="0" y2="1"><stop stop-color="#315266" stop-opacity=".55"/><stop offset="1" stop-color="#09151e"/></linearGradient></defs>
         <ellipse cx="264" cy="154" rx="156" ry="156" fill="url(#hubHeroMoon)"/><circle cx="264" cy="154" r="57" fill="#d9e6df" opacity=".78"/><path d="M0 308q76-44 143 0t134 0 132 0 111 0v312H0Z" fill="url(#hubHeroSky)"/><path d="M0 404q72-28 142 0t138 0 135 0 105 0v216H0Z" fill="url(#hubHeroWater)"/><path d="M0 445q65-18 129 0t129 0 129 0 133 0M0 490q74-15 143 0t130 0 128 0 119 0M0 538q60-12 123 0t130 0 136 0 131 0" fill="none" stroke="#a9c4d4" stroke-opacity=".22" stroke-width="2"/>
         <path d="M35 397 143 330l91 67M143 330v-43m0 17 37 25M405 398l65-45v48" fill="none" stroke="#607987" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".66"/><path d="M52 395h415v27H52zM77 423v105m351-105v105M112 423v86m277-86v86" fill="#172832" stroke="#8098a0" stroke-opacity=".58" stroke-width="3"/>
-        <image id="hubHeroCat" href="assets/cats/ginger.png" x="210" y="267" width="164" height="171" preserveAspectRatio="xMidYMid meet" image-rendering="pixelated" aria-hidden="true"/><path d="M372 325 408 270m-20 2q22-13 39 2l-17 26q-18 4-27-8Z" fill="none" stroke="#a9c4d4" stroke-width="3" stroke-linejoin="round"/><path d="M393 273 410 292m-12-24 19 22m-24-10 23 8" stroke="#a9c4d4" stroke-width="1.5" opacity=".75"/><path d="M407 377v-36q0-10 10-10t10 10v36m-24 0h28" fill="none" stroke="#e0b04a" stroke-width="4" stroke-linecap="round"/><circle cx="417" cy="350" r="11" fill="#e0b04a" opacity=".28"/><circle cx="417" cy="350" r="5" fill="#f5df9b"/><ellipse cx="280" cy="430" rx="95" ry="8" fill="#a9c4d4" opacity=".14"/>
+        <image id="hubHeroCat" href="assets/cats/ginger-realistic.png" x="175" y="255" width="210" height="190" preserveAspectRatio="xMidYMax meet" aria-hidden="true"/><path d="M372 325 408 270m-20 2q22-13 39 2l-17 26q-18 4-27-8Z" fill="none" stroke="#a9c4d4" stroke-width="3" stroke-linejoin="round"/><path d="M393 273 410 292m-12-24 19 22m-24-10 23 8" stroke="#a9c4d4" stroke-width="1.5" opacity=".75"/><path d="M407 377v-36q0-10 10-10t10 10v36m-24 0h28" fill="none" stroke="#e0b04a" stroke-width="4" stroke-linecap="round"/><circle cx="417" cy="350" r="11" fill="#e0b04a" opacity=".28"/><circle cx="417" cy="350" r="5" fill="#f5df9b"/><ellipse cx="280" cy="430" rx="95" ry="8" fill="#a9c4d4" opacity=".14"/>
         <g fill="#e8f1f5" opacity=".62"><circle cx="116" cy="293" r="2"/><circle cx="170" cy="257" r="1.5"/><circle cx="365" cy="224" r="2"/><circle cx="436" cy="302" r="1.4"/><circle cx="93" cy="366" r="1.5"/></g>
       </svg>
       <div class="hub-hero-label"><span>YOUR COMPANION</span><strong id="hubCatName">SHWE</strong><i>Keep the little lights close.</i></div>
@@ -177,6 +203,14 @@
         </button>
 
       </div>
+      <section class="hub-goals" id="hubGoals" aria-labelledby="hubGoalsTitle">
+        <h2 id="hubGoalsTitle">Your goals</h2>
+        <div class="hub-goals-grid">
+          <button class="hub-goal" id="goalNightBtn" type="button" data-sfx="toggle"><span>Next night</span><strong id="goalNightText">Night 1 · First Night</strong></button>
+          <button class="hub-goal" id="goalBookBtn" type="button" data-sfx="toggle"><span>Mood Book</span><strong id="goalBookText">0 / 17 feelings</strong></button>
+          <button class="hub-goal" id="goalUpgradeBtn" type="button" data-sfx="toggle"><span>Next upgrade</span><strong id="goalUpgradeText">Pounce · 40 Glow</strong></button>
+        </div>
+      </section>
     </section>
   </main>
   <section class="story-map-screen" id="storyMapScreen" hidden aria-labelledby="storyMapTitle">
@@ -196,23 +230,23 @@
   <section class="panel hub-settings-panel"><p class="eyebrow">SETTINGS</p><h2 id="hubSettingsTitle">Settings &amp; daily missions</h2><p class="muted">Check today’s goals, claim Glow, or review the ways to guide Shwe.</p>
     <section class="missions hub-missions" aria-labelledby="mTitle"><div class="mhead"><b id="mTitle">Today’s missions</b><span class="muted" id="mReset"></span></div><div id="mList"></div></section>
     <fieldset class="audio-settings" aria-describedby="audioNote"><legend>Sounds of the night</legend><p class="muted" id="audioNote">Music, sound effects, map ambience and Mute are adjustable here.</p><label>Music<input type="range" min="0" max="100" value="70" data-audio="music" data-sfx="toggle"></label><label>Sound effects<input type="range" min="0" max="100" value="80" data-audio="effects" data-sfx="toggle"></label><label>Ambience<input type="range" min="0" max="100" value="60" data-audio="ambience" data-sfx="toggle"></label><label>Mute all<input class="cozy-toggle" type="checkbox" role="switch" data-audio="mute" data-sfx="toggle"></label></fieldset>
-    <p class="muted">Use your device’s reduced-motion preference for gentler movement. The current controls are listed below.</p>
-    <details class="howto" open>
-    <summary>How to play and controls</summary>
-    <p class="muted">Catch within 4 seconds of your last catch to build a combo, up to ×5. If a charge hits you, the last light in your trail drifts away. Look out for <b class="gold">rare Moodlings</b> with sparkles: they fill new pages of the Mood Book.</p>
-    <p class="muted"><b class="violet">Free Mode</b> is endless: every catch adds 2 seconds, getting hit costs 3, and more feelings appear every 20 seconds. How long can you last?</p>
-    <div class="controls">
-      <span><kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd></span><span>Run</span>
-      <span>Hold <kbd>Shift</kbd> or the left mouse button while moving</span><span>Sneak</span>
-      <span><kbd>Space</kbd> or <kbd>↑</kbd></span><span>Jump</span>
-      <span><kbd>J</kbd>, <kbd>X</kbd>, or quick left-click</span><span>Pounce</span>
-      <span><kbd>E</kbd></span><span>Night eyes: highlight nearby hiding spots</span>
-      <span><kbd>S</kbd></span><span>Scratch a nearby hiding spot</span>
-      <span><kbd>K</kbd></span><span>Purr, once you buy it: slows nearby Moodlings</span>
-      <span>On a phone</span><span>Stick on the left (push halfway to sneak). On desktop, hold Shift or left mouse to sneak; quick left-click pounces like X. Landscape works best.</span>
+    <p class="muted">Use your device’s reduced-motion preference for gentler movement. Open the guide anytime for controls and feelings.</p>
+    <div class="guidance-settings">
+      <label class="guidance-toggle"><span>Show tips</span><input class="cozy-toggle" id="showTipsToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
+      <label class="guidance-language">Tip language<select id="tipLanguageSelect"><option value="en">English</option><option value="my">မြန်မာ</option></select></label>
+      <p class="muted guidance-status" id="settingsGuidanceStatus" aria-live="polite"></p>
+      <div class="guidance-actions"><button class="btn ghost" id="settingsHelpBtn" type="button" data-sfx="toggle">How to play</button><button class="btn ghost" id="settingsReplayTutorial" type="button" data-sfx="toggle">Replay tutorial</button></div>
     </div>
-    </details>
     <button class="btn ghost" id="settingsCloseBtn" type="button">Back to home</button>
+  </section>
+</div>
+<div class="overlay help-screen" id="helpScreen" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <section class="panel help-panel">
+    <header class="help-heading"><div><p class="eyebrow" id="helpSubtitle">A small guide for the Night Side.</p><h2 id="helpTitle">How to play</h2></div><button class="btn ghost help-close" id="helpCloseBtn" type="button" aria-label="Close Help">×</button></header>
+    <section class="help-section" aria-labelledby="helpControlsTitle"><h3 id="helpControlsTitle">Controls</h3><div class="help-controls" id="helpControls"></div></section>
+    <section class="help-section" aria-labelledby="helpMoodsTitle"><h3 id="helpMoodsTitle">Moodlings</h3><p class="muted" id="helpMoodsNote">Unknown feelings stay hidden until you meet them.</p><div class="help-moods" id="helpMoods" role="list"></div></section>
+    <div class="help-extras"><section class="help-section"><h3 id="helpGlowTitle">Glow &amp; upgrades</h3><p id="helpGlowText"></p></section><section class="help-section"><h3 id="helpCombosTitle">Combos</h3><p id="helpComboText"></p></section></div>
+    <div class="actions help-actions"><button class="btn ghost" id="helpReplayStory" type="button" data-sfx="toggle">Replay the story</button><button class="btn" id="helpDoneBtn" type="button" data-sfx="back">Back</button></div>
   </section>
 </div>
 <div class="overlay level-briefing-screen" id="levelBriefingScreen" hidden role="dialog" aria-modal="true" aria-labelledby="levelBriefingTitle" aria-describedby="levelBriefingSub">
@@ -329,6 +363,7 @@
 </div>
 
 <script src="js/customization.js"></script>
+<script src="js/tips.js"></script>
 <script src="js/levels.js"></script>
 <script src="js/tc-sfx.js"></script>
 <script src="js/game.js"></script>

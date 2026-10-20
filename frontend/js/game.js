@@ -7,7 +7,9 @@
   const pauseScreen = document.getElementById('pauseScreen');
   const pauseContinueBtn = document.getElementById('pauseContinueBtn');
   const pauseQuitBtn = document.getElementById('pauseQuitBtn');
+  const pauseHelpBtn = document.getElementById('pauseHelpBtn');
   let pauseTouchWasHidden = true;
+  let pauseCoachWasHidden = true;
   const orientationGate = document.getElementById('orientationGate');
   const orientationTryBtn = document.getElementById('orientationTryBtn');
   const orientationStatus = document.getElementById('orientationStatus');
@@ -268,6 +270,8 @@
     return variants[Math.floor(Math.random() * variants.length)];
   }
   let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
+  const nightGuide = { active: false, step: 0, success: 0, pendingWin: false, buffered: [] };
+  let jitTipQueue = [], activeJitTip = null, struggleTimer = 0, guidanceCaught = 0, guidanceHits = {}, helpReturn = 'hub', helpReturnFocus = null, welcomeCardIndex = 0, welcomeCardScrollTimer = 0;
   const FRUST_SLEEP = 5; // Frustrated sleeps for the first 5 seconds of the night clock
   const FRUST_WARN = 3;  // a Frustrated that appears later shows a 3-second warning before it can charge
   let frustWakeAt = FRUST_SLEEP + 1.5;
@@ -578,18 +582,13 @@
     try { localStorage.setItem('mk-progress', String(unlockedLevel)); localStorage.setItem('mk-thiri', String(thiriSleepStage)); } catch (e) {}
   }
   const moonHollow = () => mode === 'story' && storyNight === 7;
-  const SKY_TUTORIALS = {
-    A: 'A feeling is falling. Wait for it to land, then pounce.',
-    B: 'Hit it mid-air! Pounce while it is falling.',
-    C: 'Pounce it mid-air, then scratch with S before it escapes.'
-  };
   let skyTutorialSeen = {};
   try { const saved = JSON.parse(localStorage.getItem('mk-skyTutorial') || '{}'); if (saved && typeof saved === 'object' && !Array.isArray(saved)) skyTutorialSeen = saved; } catch (e) {}
   function showSkyTutorial(feature) {
     if (skyTutorialSeen[feature]) return;
     skyTutorialSeen[feature] = true;
     try { localStorage.setItem('mk-skyTutorial', JSON.stringify(skyTutorialSeen)); } catch (e) {}
-    announce(SKY_TUTORIALS[feature], feature === 'C' ? RED : feature === 'B' ? GOLD : BLUE, 2.8);
+    announce(guideCopy().sky?.[feature] || 'Watch the sky, then bring the feeling home.', feature === 'C' ? RED : feature === 'B' ? GOLD : BLUE, 2.8);
   }
   function skyTotalFor(chapter) { return chapter?.sky ? chapter.sky.A + chapter.sky.B + chapter.sky.C : 0; }
   function skyRemaining(chapter = chapterFor(storyNight)) {
@@ -711,6 +710,215 @@
   const saveBook = () => { try { localStorage.setItem('mk-book', JSON.stringify(book)); } catch (e) {} };
   const vinfo = (ty, v = 0) => VARS[ty][v] || VARS[ty][0];
   const vcol = (ty, v = 0) => vinfo(ty, v).c;
+  const BOOK_GOAL_KEYS = BOOK_ORDER.filter(key => key !== 'G0');
+  const guideCopy = () => { const bank = window.TC_TIPS || {}; return bank[MK_PROFILE.tipLanguage] || bank.en || {}; };
+  function persistGuidanceProgress() {
+    const data = { welcomeSeen: !!MK_PROFILE.welcomeSeen, tutorialDone: !!MK_PROFILE.tutorialDone, tipsSeen: Array.isArray(MK_PROFILE.tipsSeen) ? MK_PROFILE.tipsSeen.slice(-100) : [], showTips: MK_PROFILE.showTips !== false, tipLanguage: MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en' };
+    try { localStorage.setItem('mk-onboarding', JSON.stringify(data)); if (MK_HAS_PROFILE) localStorage.setItem('mk-profile', JSON.stringify(MK_PROFILE)); } catch (e) {}
+  }
+  function guidanceSeen(key) { return Array.isArray(MK_PROFILE.tipsSeen) && MK_PROFILE.tipsSeen.includes(key); }
+  function rememberGuidance(key) {
+    if (!Array.isArray(MK_PROFILE.tipsSeen)) MK_PROFILE.tipsSeen = [];
+    if (!MK_PROFILE.tipsSeen.includes(key)) { MK_PROFILE.tipsSeen.push(key); MK_PROFILE.tipsSeen = MK_PROFILE.tipsSeen.slice(-100); persistGuidanceProgress(); }
+  }
+  function renderTipControl(action) {
+    const host = $('#tipCoachControl'); host.replaceChildren();
+    if (!action) { host.hidden = true; return; }
+    const labels = guideCopy().controlLabels?.[action] || guideCopy().controlLabels?.move;
+    const isTouch = touchUI && !touchUI.hidden;
+    host.hidden = false;
+    if (isTouch) {
+      if (['move', 'dodge', 'sneak'].includes(action)) {
+        const joystick = document.createElement('span'); joystick.className = 'tip-joystick-icon'; joystick.setAttribute('aria-hidden', 'true'); host.appendChild(joystick);
+      } else {
+        const icon = document.createElement('span'); icon.className = 'tip-touch-icon'; icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = action === 'jump' ? 'JUMP' : action === 'eyes' ? 'EYES' : action === 'scratch' ? 'SCRATCH' : 'POUNCE'; host.appendChild(icon);
+      }
+      const label = document.createElement('span'); label.textContent = labels?.touch || ''; host.appendChild(label);
+    } else {
+      const icon = document.createElement('span'); icon.className = 'tip-key-icon'; icon.textContent = '⌨'; icon.setAttribute('aria-hidden', 'true'); host.appendChild(icon);
+      const label = document.createElement('span'); label.className = 'tip-key-label'; label.textContent = labels?.keyboard || ''; host.appendChild(label);
+    }
+  }
+  function showCoachTip({ kicker = '', title = '', text = '', action = null, skip = false, success = false } = {}) {
+    $('#tipCoachKicker').textContent = kicker; $('#tipCoachTitle').textContent = title; $('#tipCoachText').textContent = text;
+    $('#tutorialSkipBtn').textContent = guideCopy().skipTutorial || 'Skip tutorial';
+    $('#tipCoach').hidden = false; $('#tutorialSkipBtn').hidden = !skip;
+    $('#tipCoach').querySelector('.tip-coach-card').classList.toggle('tip-success', !!success);
+    renderTipControl(action);
+  }
+  function hideCoachTip() { $('#tipCoach').hidden = true; $('#tutorialSkipBtn').hidden = true; $('#tipCoachControl').replaceChildren(); }
+  function renderWelcomeCard(index, scroll = true) {
+    const list = guideCopy().welcome || [], carousel = $('#welcomeCarousel');
+    welcomeCardIndex = clamp(index, 0, Math.max(0, list.length - 1));
+    Array.from($('#welcomeCardTrack').querySelectorAll('.welcome-card')).forEach((card, i) => {
+      const item = list[i] || { title: '', text: '' };
+      card.querySelector('h3').textContent = item.title; card.querySelector('p').textContent = item.text;
+      card.setAttribute('aria-hidden', String(i !== welcomeCardIndex));
+    });
+    $('#welcomeDots').querySelectorAll('.welcome-dot').forEach((dot, i) => {
+      const active = i === welcomeCardIndex; dot.classList.toggle('is-active', active); dot.setAttribute('aria-selected', String(active));
+    });
+    const copy = guideCopy(); $('#welcomeNextBtn').textContent = welcomeCardIndex === list.length - 1 ? copy.finishWelcome : copy.next;
+    $('#welcomeSkipBtn').textContent = copy.skipWelcome; $('#welcomeCardsKicker').textContent = copy.welcomeLabel;
+    if (scroll && carousel) carousel.scrollTo({ left: welcomeCardIndex * carousel.clientWidth, behavior: reduce ? 'auto' : 'smooth' });
+  }
+  function showWelcomeCards(startIndex = 0) {
+    state = 'menu'; cv.hidden = true; $('#welcomeScreen').hidden = true; $('#setupScreen').hidden = true; $('#startScreen').hidden = true;
+    $('#prologueScreen').hidden = true; $('#welcomeCardsScreen').hidden = false; renderWelcomeCard(startIndex, false); $('#welcomeNextBtn').focus({ preventScroll: true });
+  }
+  function finishWelcomeCards() {
+    MK_PROFILE.welcomeSeen = true; persistGuidanceProgress(); $('#welcomeCardsScreen').hidden = true; showSetup(true);
+  }
+  function welcomeNext() { if (welcomeCardIndex >= (guideCopy().welcome || []).length - 1) finishWelcomeCards(); else renderWelcomeCard(welcomeCardIndex + 1); }
+  function welcomePrevious() { if (welcomeCardIndex > 0) renderWelcomeCard(welcomeCardIndex - 1); }
+  const MECHANIC_TIP_BY_TYPE = { N: ['nervous', 'nervous'], J: ['jealous', 'jealous'], L: ['lonely', 'lonely'], S: ['shy', 'shy'], E: ['excited', 'excited'], B: ['buried', 'buried'], C: ['calm', 'calm'] };
+  function tutorialSpotX() { const spots = currentLevel.hideSpots || []; return clamp(Number(spots[0]) || cat.x + 190, 80, WORLD - 80); }
+  function ensureTutorialCatchMoodling() {
+    let target = mood.find(m => !m.dead && m.tutorialCatch);
+    if (!target && nightGuide.active && storyNight === 1) {
+      target = spawn('F', clamp(cat.x + (cat.face || 1) * 130, 80, WORLD - 80));
+      target.tutorialOnly = true; target.tutorialCatch = true; target.state = 'dizzy'; target.st = Infinity; target.slept = 2; target.cd = 99; target.home = target.x;
+    }
+    return target;
+  }
+  function ensureTutorialFrustrated() {
+    let target = mood.find(m => !m.dead && m.tutorialDodge);
+    if (!target && nightGuide.active && storyNight === 1) {
+      target = spawn('F', clamp(cat.x + (cat.face || 1) * 220, 80, WORLD - 80));
+      target.tutorialOnly = true; target.tutorialDodge = true; target.state = 'patrol'; target.slept = 2; target.cd = .3; target.home = target.x;
+    }
+    return target;
+  }
+  function tutorialTarget() {
+    if (nightGuide.active) {
+      const action = (guideCopy().tutorial || [])[nightGuide.step]?.action;
+      if (action === 'catch') { const m = ensureTutorialCatchMoodling(); return m || { x: cat.x + cat.face * 110, y: terrainY(cat.x) - 34 }; }
+      if (action === 'dodge' || action === 'dizzy-pounce') { const m = ensureTutorialFrustrated(); return m || { x: cat.x + cat.face * 100, y: terrainY(cat.x) - 20 }; }
+      if (action === 'eyes' || action === 'scratch') { const x = tutorialSpotX(); return { x, y: terrainY(x) - 14 }; }
+      return { x: cat.x, y: cat.y - 28 };
+    }
+    return activeJitTip?.target || null;
+  }
+  function drawGuidanceMarker() {
+    if ((!nightGuide.active && !activeJitTip) || !MK_PROFILE.showTips) return;
+    const target = tutorialTarget(); if (!target) return;
+    const pulse = reduce ? 1 : .94 + Math.sin(performance.now() / 230) * .06;
+    const x = target.x, y = target.y;
+    ctx.save(); ctx.globalAlpha = .78; ctx.shadowColor = GOLD; ctx.shadowBlur = reduce ? 0 : 16;
+    ctx.strokeStyle = GOLD; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, y, 34 * pulse, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,216,112,.14)'; ctx.beginPath(); ctx.arc(x, y, 27 * pulse, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x, y - 59); ctx.lineTo(x - 8, y - 72); ctx.lineTo(x + 8, y - 72); ctx.closePath(); ctx.fillStyle = GOLD; ctx.fill();
+    ctx.restore();
+  }
+  function showTutorialStep() {
+    const step = (guideCopy().tutorial || [])[nightGuide.step];
+    if (!step) { finishGuidedTutorial(); return; }
+    showCoachTip({ kicker: guideCopy().tutorialLabel, title: step.title, text: step.text, action: step.action, skip: true });
+    if (step.action === 'catch') ensureTutorialCatchMoodling();
+    if (step.action === 'dodge' || step.action === 'dizzy-pounce') ensureTutorialFrustrated();
+    if (step.action === 'home' && nightGuide.pendingWin) onTutorialAction('home', cat);
+  }
+  function startGuidedTutorial() {
+    if (!MK_PROFILE.showTips || MK_PROFILE.tutorialDone || mode !== 'story' || storyNight !== 1) return false;
+    nightGuide.active = true; nightGuide.step = 0; nightGuide.success = 0; nightGuide.pendingWin = false; nightGuide.buffered = [];
+    showTutorialStep(); return true;
+  }
+  function beginStoryEnding() {
+    if (state !== 'play') return;
+    state = 'ending'; endT = 1.1; announce(moonHollow() ? 'The sun is up. Every feeling is home!' : 'All feelings found!', GOLD, 1.2);
+  }
+  function finishGuidedTutorial() {
+    nightGuide.active = false; nightGuide.success = 0; nightGuide.buffered = [];
+    mood = mood.filter(m => !m.tutorialOnly); hideCoachTip();
+    MK_PROFILE.tutorialDone = true; persistGuidanceProgress();
+    if (nightGuide.pendingWin) beginStoryEnding();
+  }
+  function skipGuidedTutorial() {
+    if (!nightGuide.active) return;
+    finishGuidedTutorial();
+  }
+  $('#tutorialSkipBtn').addEventListener('click', skipGuidedTutorial);
+  function onTutorialAction(action, target = null) {
+    if (!nightGuide.active) return;
+    const steps = guideCopy().tutorial || [], current = steps[nightGuide.step];
+    if (!current) return;
+    if (nightGuide.success > 0) {
+      if (steps[nightGuide.step + 1]?.action === action) nightGuide.buffered.push({ action, target });
+      return;
+    }
+    if (current.action !== action) return;
+    if (action === 'dodge' && target?.tutorialDodge) { target.state = 'dizzy'; target.st = 3; }
+    nightGuide.success = .52;
+    const point = target && Number.isFinite(target.x) ? target : cat;
+    burst(point.x, point.y - 18, GOLD, 13); sfx('ui', 'sparkle'); tone(880, .12, 'sine', .04, 180);
+    showCoachTip({ kicker: guideCopy().tutorialLabel, title: current.title, text: guideCopy().success, action: current.action, skip: true, success: true });
+  }
+  function guidanceTimerPaused() { return nightGuide.active || !!activeJitTip; }
+  function queueJitTip(key, target = null, title = null) {
+    if (!MK_PROFILE.showTips || nightGuide.active || guidanceSeen(`mechanic:${key}`)) return;
+    const id = `mechanic:${key}`;
+    if (activeJitTip?.id === id || jitTipQueue.some(item => item.id === id)) return;
+    jitTipQueue.push({ id, key, target: target && Number.isFinite(target.x) ? { x: target.x, y: target.y } : null, title });
+    if (state === 'play') showNextJitTip();
+  }
+  function showNextJitTip() {
+    if (state !== 'play' || nightGuide.active || activeJitTip || !jitTipQueue.length) return;
+    const item = jitTipQueue.shift(); if (guidanceSeen(item.id)) return showNextJitTip();
+    const copy = guideCopy().mechanics?.[item.key]; if (!copy) return showNextJitTip();
+    activeJitTip = { ...item, text: copy, time: 4 };
+    rememberGuidance(item.id);
+    if (mode === 'story') { const chapter = chapterFor(storyNight); if (chapter?.sky) chapter.sky.hintShown = true; }
+    showCoachTip({ kicker: guideCopy().jitLabel || 'A little tip', title: item.title || item.key[0].toUpperCase() + item.key.slice(1), text: copy });
+  }
+  function onGuidanceSpawn(m) {
+    if (!m || m.tutorialOnly || !MK_PROFILE.showTips || nightGuide.active || mode !== 'story') return;
+    const meta = MECHANIC_TIP_BY_TYPE[m.type], chapter = chapterFor(storyNight);
+    if (!meta || !chapter?.newMoodling) return;
+    const [key, sourceWord] = meta;
+    if (chapter.newMoodling.toLowerCase().includes(sourceWord) && !guidanceSeen(`mechanic:${key}`)) queueJitTip(key, m, guideCopy().mechanicTitles?.[key] || vinfo(m.type, m.v || 0).n);
+  }
+  let struggleTipShownThisRun = false;
+  function maybeStruggleTip(kind, target = null) {
+    if (!MK_PROFILE.showTips || nightGuide.active || activeJitTip || jitTipQueue.length) return;
+    if (struggleTipShownThisRun) return;
+    struggleTipShownThisRun = true;
+    const suffix = mode === 'free' ? 'free' : `night-${storyNight}`, id = `struggle:${suffix}`;
+    const key = kind === 'hits' ? 'struggleHits' : 'struggleQuiet';
+    activeJitTip = { id, key, text: guideCopy().mechanics?.[key] || '', target: target ? { x: target.x, y: target.y } : null, time: 4 };
+    showCoachTip({ kicker: guideCopy().struggleLabel || 'A gentle hint', title: guideCopy().struggleTitle || 'Take your time', text: activeJitTip.text });
+  }
+  function onGuidanceCatch(m) {
+    guidanceCaught = caughtN; struggleTimer = 0; guidanceHits = {};
+    if (nightGuide.active) onTutorialAction('catch', m);
+    if (combo >= 2 && !guidanceSeen('mechanic:combo')) queueJitTip('combo', m, guideCopy().mechanicTitles?.combo || 'Combo');
+  }
+  function updateGuidance(dt) {
+    if (nightGuide.active) {
+      const action = (guideCopy().tutorial || [])[nightGuide.step]?.action;
+      if (action === 'dodge' || action === 'dizzy-pounce') ensureTutorialFrustrated();
+    }
+    if (nightGuide.active && nightGuide.success > 0) {
+      nightGuide.success -= dt;
+      if (nightGuide.success <= 0) {
+        nightGuide.success = 0; nightGuide.step++;
+        if (nightGuide.step >= (guideCopy().tutorial || []).length) finishGuidedTutorial();
+        else {
+          const next = (guideCopy().tutorial || [])[nightGuide.step], bufferedAt = nightGuide.buffered.findIndex(item => item.action === next.action);
+          const buffered = bufferedAt >= 0 ? nightGuide.buffered.splice(bufferedAt, 1)[0] : null;
+          showTutorialStep(); if (buffered) onTutorialAction(buffered.action, buffered.target);
+        }
+      }
+    }
+    if (activeJitTip) {
+      activeJitTip.time -= dt;
+      if (activeJitTip.time <= 0) { activeJitTip = null; hideCoachTip(); showNextJitTip(); }
+    } else if (jitTipQueue.length) showNextJitTip();
+    if (state === 'play' && !nightGuide.active && !activeJitTip && MK_PROFILE.showTips) {
+      if (guidanceCaught !== caughtN) { guidanceCaught = caughtN; struggleTimer = 0; }
+      else { struggleTimer += dt; if (struggleTimer >= 30) { struggleTimer = 0; maybeStruggleTip('quiet'); } }
+    }
+  }
   let runNew = [], runDone = [], runN = 0;
 
   // ---------- Daily missions ----------
@@ -930,7 +1138,7 @@
       m.state = tutorialLonely ? 'revealed' : 'hide'; m.alpha = tutorialLonely ? 1 : 0; m.spot = tutorialLonely ? null : makeScratchSpot(x, type);
     }
     if (type === 'F' && !m.sky && state === 'play' && t > frustWakeAt - .5) { m.state = 'warn'; m.st = FRUST_WARN; }
-    mood.push(m); return m;
+    mood.push(m); onGuidanceSpawn(m); return m;
   }
   function skyTypeFor(feature) {
     const own = chapterFor(storyNight).sky?.types?.[feature];
@@ -983,7 +1191,7 @@
     currentLevel = selectLevelForRun();
     loadLevelGeometry();
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
-    t = 0; warmup = mode === 'free' ? 0 : 1.5; frustWakeAt = warmup + FRUST_SLEEP; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0;
+    t = 0; warmup = mode === 'free' ? 0 : 1.5; frustWakeAt = warmup + FRUST_SLEEP; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0; struggleTipShownThisRun = false;
     nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
     combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
     freeCapShown = false; activeItems = {}; perkShield = catPerk() === 'mainecoon' ? 1 : 0;
@@ -1048,6 +1256,7 @@
   }
   function hitCat(m) {
     hits++; cat.inv = 1.2; cat.vx = m.dir * 420; cat.vy = -420; cat.on = false; cat.pounce = 0;
+    if (m?.type) { guidanceHits[m.type] = (guidanceHits[m.type] || 0) + 1; if (guidanceHits[m.type] >= 3) maybeStruggleTip('hits', m); }
     combo = 0; comboT = 0; sfx('cat', 'sad'); sfx('ui', 'hit'); sfx('ui', 'comboLost');
     shake = Math.max(shake, m.ambush ? 16 : 10);
     if (mode === 'free') { timeLeft = Math.max(0, timeLeft - 3); float(cat.x, cat.y - 88, '−3s', RED); }
@@ -1152,6 +1361,7 @@
     if (m.y >= m.skyTargetY) landSkyMood(m, chapter);
   }
   function catchIt(m) {
+    if (m.tutorialOnly) { onTutorialAction('catch', m); m.dead = true; m.alpha = 0; cat.pounce = 0; burst(m.x, m.y, GOLD, 12); sfx('ui', 'catch'); return; }
     // an angry Frustrated from the rocks still counts if Shwe needs more of that feeling tonight
     if (m.ambush && mode === 'story' && Object.prototype.hasOwnProperty.call(got, m.type) && got[m.type] < need[m.type]) m.ambush = false;
     if (m.ambush) {
@@ -1187,6 +1397,7 @@
     }
     glowRun += glowGain; bump('glow', glowGain);
     caughtN++;
+    onGuidanceCatch(m);
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
     else if (mode === 'free') { timeLeft += 2; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 12) trail.shift(); }
     else { const chapter = chapterFor(storyNight); if (Object.prototype.hasOwnProperty.call(got, m.type)) { got[m.type]++; if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay + Math.random() * .8 }); } trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } }
@@ -1207,17 +1418,22 @@
     float(m.x, m.y - 36, `+${pts}${combo > 1 ? '  ×' + combo : ''}${mode === 'free' && m.type !== 'G' ? '  +2s' : ''}`, col(m.type));
     const f = 523.25 * Math.pow(2, (combo - 1) * 2 / 12);
     if (window.TCSfx) sfx('caught', m.type); else { tone(f, .18, 'triangle', .09); setTimeout(() => tone(f * 1.5, .22, 'sine', .07), 70); }
-    if (mode === 'story' && Object.entries(need).every(([type, count]) => got[type] >= count) && state === 'play') { state = 'ending'; endT = 1.1; announce(moonHollow() ? 'The sun is up. Every feeling is home!' : 'All feelings found!', GOLD, 1.2); }
+    if (mode === 'story' && Object.entries(need).every(([type, count]) => got[type] >= count) && state === 'play') {
+      if (nightGuide.active) { nightGuide.pendingWin = true; if (nightGuide.step === 8 && nightGuide.success <= 0) onTutorialAction('home', m); }
+      else beginStoryEnding();
+    }
   }
 
   function updCat(dt) {
     const c = cat; c.justLanded = false;
     const a = axisNow(), sneaking = a !== 0 && Math.abs(a) < .55;
+    if (a !== 0) onTutorialAction('move', c);
+    if (sneaking) onTutorialAction('sneak', c);
     const target = a === 0 ? 0 : Math.sign(a) * (sneaking ? 2 * T : uv('swift') * T);
     c.sneak = sneaking;
     if (c.pounce > 0) c.pounce -= dt;
     else { const acc = c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
-    if (jumpQ && c.on && c.pounce <= 0) { c.vy = -830; c.on = false; if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240); }
+    if (jumpQ && c.on && c.pounce <= 0) { c.vy = -830; c.on = false; onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240); }
     jumpQ = false;
     if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) sfx('ui', 'pounce'); else tone(240, .1, 'square', .035, 320); }
     pounceQ = false;
@@ -1276,11 +1492,13 @@
         } else m.x += m.dir * 8 * T * sp * chapter.frustratedChargeSpeed * dt;
         m.st -= dt; if (Math.random() < .6) dust(m);
         if (m.x < 40 || m.x > WORLD - 40) { m.x = clamp(m.x, 40, WORLD - 40); m.st = 0; }
+        if (m.tutorialDodge && Math.abs(cat.vx) > 60 && Math.abs(dx) > 44) { onTutorialAction('dodge', m); return; }
         if (cat.inv <= 0 && Math.abs(dx) < 34 && Math.abs(dy) < 46) {
-          if (storyNight <= 3 && cat.sneak) { m.state = 'dizzy'; m.st = 3; float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); sfx('play', 'sfx_mood_frustrated_dizzy'); }
+          if (m.tutorialOnly) { m.state = 'dizzy'; m.st = 3; if (Math.abs(cat.vx) > 60 || !cat.on) onTutorialAction('dodge', m); float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); sfx('play', 'sfx_mood_frustrated_dizzy'); }
+          else if (storyNight <= 3 && cat.sneak) { m.state = 'dizzy'; m.st = 3; onTutorialAction('dodge', m); float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); sfx('play', 'sfx_mood_frustrated_dizzy'); }
           else { hitCat(m); m.state = 'patrol'; m.cd = 2.2; m.home = m.x; }
         }
-        else if (m.st <= 0) { m.state = 'dizzy'; m.st = 3; sfx('play', 'sfx_mood_frustrated_dizzy'); float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); }
+        else if (m.st <= 0) { m.state = 'dizzy'; m.st = 3; onTutorialAction('dodge', m); sfx('play', 'sfx_mood_frustrated_dizzy'); float(m.x, m.y - 40, 'Dizzy! Pounce now', RED); }
       } else if (m.state === 'dizzy') {
         m.st -= dt; if (m.st <= 0) { m.state = 'patrol'; m.cd = 1.2; m.home = m.x; }
       }
@@ -1452,6 +1670,8 @@
         if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 300; cat.pounce = 0; float(m.x, m.y - 40, "Wait until it's dizzy", RED); sfx('cat', 'hiss'); }
         continue;
       }
+      if (m.type === 'F' && m.state === 'dizzy') onTutorialAction('dizzy-pounce', m);
+      if (m.tutorialOnly) { m.dead = true; m.alpha = 0; cat.pounce = 0; burst(m.x, m.y, GOLD, 12); continue; }
       if (m.type === 'L' && mode === 'story' && storyNight === 1) {
         m.state = 'revealed'; m.alpha = 1; m.sit = 0; cat.pounce = 0;
         float(cat.x, cat.y - 70, 'Sit quietly beside Lonely', BLUE); tone(330, .15, 'sine', .035); continue;
@@ -1514,7 +1734,7 @@
       float(cat.x, cat.y - 70, 'Purrr…', '#c8ff8a'); sfx('cat', 'purr');
     }
     purrQ = false; purrT = Math.max(0, purrT - dt); purrCd = Math.max(0, purrCd - dt);
-    if (eyesQ && eyesCd <= 0) { eyesT = eyesDur(); eyesCd = 9; if (window.TCSfx) sfx('ui', 'eyes'); else tone(740, .25, 'sine', .05, 300); }
+    if (eyesQ && eyesCd <= 0) { eyesT = eyesDur(); eyesCd = 9; onTutorialAction('eyes', cat); if (window.TCSfx) sfx('ui', 'eyes'); else tone(740, .25, 'sine', .05, 300); }
     eyesQ = false; eyesT = Math.max(0, eyesT - dt); eyesCd = Math.max(0, eyesCd - dt);
     scratchAnim = Math.max(0, scratchAnim - dt);
     checkScratchProximity();
@@ -1528,9 +1748,10 @@
     for (const r of respawnQ) r.at -= dt;
     respawnQ = respawnQ.filter(r => { if (r.at <= 0) { spawn(r.type); return false; } return true; });
     if (comboT > 0) { comboT -= dt; if (comboT <= 0) { combo = 0; sfx('ui', 'comboLost'); } }
+    updateGuidance(dt);
     if (state === 'play') {
       if (mode === 'story') warmup = Math.max(0, warmup - dt);
-      if (warmup <= 0) timeLeft -= dt;
+      if (warmup <= 0 && !guidanceTimerPaused()) timeLeft -= dt;
       if (mode === 'free') freeTick(dt);
       const chapter = mode === 'story' ? chapterFor(storyNight) : null;
       if (mode === 'story') maybeSpawnSky();
@@ -1586,10 +1807,18 @@
       if (d < best) { best = d; scratchTarget = m; }
     }
     if (need.B > 0) for (const rock of rocks) { if (rock.scratched || Math.abs(cat.y - rock.y) > 115) continue; const d = Math.hypot(cat.x - rock.x, Math.max(0, Math.abs(cat.y - rock.y) - 12)); if (d < best) { best = d; scratchTarget = { kind: 'rock', rock }; } }
+    if (nightGuide.active && (guideCopy().tutorial || [])[nightGuide.step]?.action === 'scratch' && reachableHeight) {
+      const x = tutorialSpotX(); if (Math.abs(cat.x - x) <= 74) scratchTarget = { kind: 'tutorial', x, y: terrainY(x) };
+    }
     $('#bScratch').hidden = !scratchTarget || touchUI.hidden;
     return scratchTarget;
   }
   function performScratch() {
+    if (scratchTarget?.kind === 'tutorial') {
+      const target = scratchTarget; if (!cat.on || Math.abs(cat.y - target.y) > 115 || Math.abs(cat.x - target.x) > 76) return false;
+      cat.vx = 0; cat.walk = 0; scratchAnim = .58; sfx('ui', 'scratch'); burst(target.x, target.y - 18, GOLD, 14); float(target.x, target.y - 58, 'A little light was hiding here', GOLD); tone(520, .18, 'triangle', .07, 300);
+      onTutorialAction('scratch', target); scratchTarget = null; return true;
+    }
     if (scratchTarget?.type === 'breath') return false;
     if (scratchTarget?.type === 'sky') {
       const m = scratchTarget.mood;
@@ -2846,7 +3075,7 @@
     if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
     ctx.save(); ctx.translate(-camX, 0);
-    drawWorld(); drawMoods(); drawFireflies(); drawTrail();
+    drawWorld(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); drawLevelDebug();
     ctx.restore();
     if (eyesT > 0) {
@@ -2919,15 +3148,25 @@
     };
     requestAnimationFrame(tick);
   }
-  function refreshHubStats(found = BOOK_ORDER.filter(k => book[k]).length) {
+  function updateHubGoals(found = BOOK_GOAL_KEYS.filter(key => book[key]).length) {
+    const copy = guideCopy().help || {}, night = clamp(unlockedLevel, 1, 7), chapter = chapterFor(night);
+    $('#goalNightText').textContent = `Night ${night} · ${chapter.name}`;
+    $('#goalBookText').textContent = `${found} / 17 feelings`;
+    const remaining = UPG.filter(item => upg[item.id] < UPG_MAX).map(item => ({ item, cost: item.costs[upg[item.id]] })).filter(entry => Number.isFinite(entry.cost));
+    const available = remaining.filter(entry => glow >= entry.cost).sort((a, b) => a.cost - b.cost)[0];
+    const next = available || remaining.sort((a, b) => a.cost - b.cost)[0];
+    $('#goalUpgradeText').textContent = next ? (available ? `${next.item.name} · ${next.cost} Glow` : `${copy.noAffordable || 'Save Glow for'} ${next.item.name} · ${next.cost} Glow`) : (copy.allUpgrades || 'All upgrades ready');
+  }
+  function refreshHubStats(found = BOOK_GOAL_KEYS.filter(key => book[key]).length) {
     animateHubNumber($('#hubGlowValue'), glow);
-    animateHubNumber($('#hubBookValue'), found, n => `${n} / ${BOOK_ORDER.length}`);
+    animateHubNumber($('#hubBookValue'), found, n => `${n} / 17`);
     $('#shopBtnValue').textContent = `${glow} Glow`;
-    $('#bookBtnValue').textContent = `${found} / ${BOOK_ORDER.length} found`;
+    $('#bookBtnValue').textContent = `${found} / 17 found`;
+    updateHubGoals(found);
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
     $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
     const heroCat = $('#hubHeroCat');
-    if (heroCat && COAT) heroCat.setAttribute('href', COAT.img);
+    if (heroCat && COAT) heroCat.setAttribute('href', COAT.heroImg || COAT.img);
     const heroSvg = $('#hubHeroSvg');
     if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
     $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
@@ -2991,9 +3230,61 @@
     const sparkle = known && v ? `<polygon points="${poly(4, 5, 1.6)}" transform="translate(19,-18)" fill="#fff6d6"/><polygon points="${poly(4, 4, 1.3)}" transform="translate(-20,15)" fill="#fff6d6"/>` : '';
     return `<svg viewBox="-28 -28 56 56" aria-hidden="true">${art}${mark}${sparkle}</svg>`;
   }
+  function renderHelp() {
+    const copy = guideCopy().help || {}, controls = guideCopy().controlLabels || {}, names = copy.controlNames || {};
+    $('#helpTitle').textContent = copy.title || 'How to play'; $('#helpSubtitle').textContent = copy.subtitle || '';
+    $('#helpControlsTitle').textContent = copy.controls || 'Controls'; $('#helpMoodsTitle').textContent = copy.moods || 'Moodlings';
+    $('#helpMoodsNote').textContent = `${copy.moodsNote || ''} ${copy.unknownHint || ''}`.trim();
+    $('#helpGlowTitle').textContent = copy.glow || 'Glow & upgrades'; $('#helpGlowText').textContent = copy.glowText || '';
+    $('#helpCombosTitle').textContent = copy.combos || 'Combos'; $('#helpComboText').textContent = copy.comboText || '';
+    $('#helpDoneBtn').textContent = copy.close || 'Back'; $('#helpReplayStory').textContent = copy.story || 'Replay the story';
+    $('#helpCloseBtn').setAttribute('aria-label', copy.close || 'Close Help');
+    const rows = $('#helpControls'); rows.replaceChildren();
+    for (const action of ['move', 'jump', 'sneak', 'catch', 'eyes', 'scratch', 'purr', 'pause']) {
+      const pair = controls[action]; if (!pair) continue;
+      const row = document.createElement('div'); row.className = 'help-control-row';
+      const title = document.createElement('strong'); title.textContent = names[action] || action; row.appendChild(title);
+      const values = document.createElement('div');
+      const keyboard = document.createElement('span'); keyboard.textContent = `${copy.keyboard || 'Keyboard'}: ${pair.keyboard}`;
+      const touch = document.createElement('span'); touch.textContent = `${copy.touch || 'Touch'}: ${pair.touch}`;
+      values.append(keyboard, touch); row.appendChild(values); rows.appendChild(row);
+    }
+    const moods = $('#helpMoods'); moods.replaceChildren(); moods.setAttribute('aria-label', copy.moods || 'Moodlings');
+    for (const key of BOOK_ORDER) {
+      const type = key[0], variant = +key[1], known = (book[key] || 0) > 0, info = vinfo(type, variant);
+      const item = document.createElement('article'); item.className = `help-mood-entry${known ? '' : ' unknown'}`; item.setAttribute('role', 'listitem');
+      const art = document.createElement('div'); art.className = 'help-mood-art'; art.setAttribute('aria-hidden', 'true'); art.innerHTML = iconSVG(type, variant, known); item.appendChild(art);
+      const details = document.createElement('div'), title = document.createElement('strong'), desc = document.createElement('span');
+      title.textContent = known ? info.n : (copy.unknown || '???'); desc.textContent = known ? info.d : (copy.unknownHint || 'Catch one to discover.');
+      details.append(title, desc); item.appendChild(details); moods.appendChild(item);
+    }
+  }
+  function openHelp(source = 'hub') {
+    helpReturn = source; helpReturnFocus = document.activeElement;
+    if (source === 'pause') { pauseScreen.hidden = true; $('#helpReplayStory').hidden = true; }
+    else { $('#helpReplayStory').hidden = false; if (source === 'settings') $('#hubSettingsScreen').hidden = true; }
+    renderHelp(); $('#helpScreen').hidden = false; $('#helpDoneBtn').focus({ preventScroll: true });
+  }
+  function closeHelp() {
+    $('#helpScreen').hidden = true;
+    if (helpReturn === 'pause') { pauseScreen.hidden = false; pauseHelpBtn.focus({ preventScroll: true }); }
+    else if (helpReturn === 'settings') { $('#hubSettingsScreen').hidden = false; $('#settingsHelpBtn').focus({ preventScroll: true }); }
+    else if (helpReturnFocus?.isConnected) helpReturnFocus.focus({ preventScroll: true });
+  }
+  $('#helpCloseBtn').addEventListener('click', closeHelp); $('#helpDoneBtn').addEventListener('click', closeHelp);
+  $('#helpScreen').addEventListener('click', e => { if (e.target.id === 'helpScreen') closeHelp(); });
+  $('#helpReplayStory').addEventListener('click', () => { $('#helpScreen').hidden = true; playIntro('hub'); });
+  $('#helpScreen').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeHelp(); return; }
+    if (e.key !== 'Tab') return;
+    const focusable = Array.from($('#helpScreen').querySelectorAll('button:not([disabled])')).filter(el => !el.hidden);
+    if (!focusable.length) return;
+    if (e.shiftKey && document.activeElement === focusable[0]) { e.preventDefault(); focusable[focusable.length - 1].focus(); }
+    else if (!e.shiftKey && document.activeElement === focusable[focusable.length - 1]) { e.preventDefault(); focusable[0].focus(); }
+  });
   function renderBook() {
     const found = BOOK_ORDER.filter(k => book[k]).length;
-    $('#bookCount').textContent = `${found} / ${BOOK_ORDER.length} found`; refreshHubStats(found);
+    $('#bookCount').textContent = `${found} / ${BOOK_ORDER.length} found`; refreshHubStats();
     $('#bookList').innerHTML = BOOK_ORDER.map(k => {
       const ty = k[0], v = +k[1], info = vinfo(ty, v), n = book[k] || 0, known = n > 0;
       const tag = `<span class="tag${info.r === 'Rare' || info.r === 'Special' ? ' rare' : ''}">${info.r}${known ? ` · caught ×${n}` : ''}</span>`;
@@ -3570,11 +3861,12 @@
   function startGame(m, night = storyNight) {
     if (typeof m === 'string') mode = m;
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 7) : 1;
+    nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
     music('duck', 1); music('play', mode === 'story' ? NIGHT_MUSIC[storyNight - 1] : 'park');
     music('ambience', mode === 'story' ? NIGHT_MUSIC[storyNight - 1] : 'park');
     cv.hidden = false;
-    $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
+    $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true; $('#welcomeCardsScreen').hidden = true; $('#helpScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#bPurr').hidden = upg.purr === 0; $('#bScratch').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; reset(); state = 'play';
@@ -3587,7 +3879,9 @@
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     announce(mode === 'free' ? 'Free Mode · every catch adds time' : `${chapter.name} · ${chapter.sub}`, INK, 2.1);
-    if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); if (chapter.tutorialHints) announce(chapter.tutorialHint, INK, 8); }
+    if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); }
+    if (mode === 'free') queueJitTip('free', cat, guideCopy().mechanicTitles?.free || 'Free Play');
+    if (!startGuidedTutorial()) showNextJitTip();
     cv.focus?.();
   }
   const LEVEL_MAP_LIMIT = 7, LEVEL_MAP_STEP = 92;
@@ -3748,14 +4042,14 @@
   function showMainMenu(focusCurrent = true) {
     music('duck', 1); music('play', 'menu'); music('ambience', 'menu');
     state = 'menu'; cv.hidden = true; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true;
-    $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
+    $('#welcomeScreen').hidden = true; $('#welcomeCardsScreen').hidden = true; $('#helpScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#endScreen').hidden = true; $('#shopScreen').hidden = true; $('#bookScreen').hidden = true;
     buildLevelMap(); showHub(focusCurrent);
   }
   function pauseGame() {
     if (state !== 'play') return;
-    $('#pauseChaptersBtn').textContent = mode === 'story' ? 'Back to chapters' : 'Back to menu';    pauseTouchWasHidden = touchUI.hidden;
+    $('#pauseChaptersBtn').textContent = mode === 'story' ? 'Back to chapters' : 'Back to menu';    pauseTouchWasHidden = touchUI.hidden; pauseCoachWasHidden = $('#tipCoach').hidden; $('#tipCoach').hidden = true;
     state = 'paused'; pauseBtn.hidden = true; touchUI.hidden = true;
     for (const key in keys) keys[key] = false;
     jumpQ = false; pounceQ = false; scratchQ = false; purrQ = false; eyesQ = false;
@@ -3767,6 +4061,7 @@
     if (state !== 'paused') return;
     pauseScreen.hidden = true; state = 'play'; touchUI.hidden = pauseTouchWasHidden; music('duck', 1);
     pauseBtn.hidden = false; pauseBtn.focus({ preventScroll: true });
+    if (!pauseCoachWasHidden && (nightGuide.active || activeJitTip)) $('#tipCoach').hidden = false;
   }
   function quitPausedRun() {
     if (state !== 'paused') return;
@@ -3870,6 +4165,8 @@
     introTyped = reduce ? line.full.length : 0; el.textContent = reduce ? line.full : '';
     introLineStart = performance.now(); introDoneAt = reduce ? introLineStart : 0;
     $('#introHint').classList.remove('show');
+    if (line.who === 'cat') sfx('cat', 'meow', .42);
+    else if (['F', 'N', 'L', 'C', 'S', 'J', 'E'].includes(line.who)) sfx('moodling', line.who, .34);
     if (line.sfx) { sfx('ui', 'swish'); tone(820, .2, 'sawtooth', .03, -600); setTimeout(() => tone(620, .16, 'sawtooth', .024, -450), 90); }
   }
   function introFinish() {
@@ -3906,13 +4203,15 @@
     cancelAnimationFrame(introRaf); $('#prologueScreen').hidden = true;
     [$('#introShotA'), $('#introShotB')].forEach(im => im.classList.remove('on', 'move'));
     introFx(null, 0); state = 'menu'; cv.hidden = true;
-    if (introReturnView === 'hub') showHub(true); else showStoryMap(true);
+    if (introReturnView === 'first-run') showWelcomeCards();
+    else if (introReturnView === 'hub') showHub(true);
+    else showStoryMap(true);
   }
   function playIntro(returnView = 'storyMap') {
     music('play', 'intro'); music('ambience', 'intro');
     introReturnView = returnView;
     initAudio(); state = 'intro'; cv.hidden = true;
-    $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
+    $('#welcomeScreen').hidden = true; $('#welcomeCardsScreen').hidden = true; $('#helpScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true;
     $('#startScreen').hidden = true; $('#endScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#prologueScreen').hidden = false; $('#introContinueBtn').hidden = true;
     introPreload();
@@ -3924,8 +4223,11 @@
     cancelAnimationFrame(introRaf); introRaf = requestAnimationFrame(introTick);
   }
   $('#storyBtn').addEventListener('click', () => showStoryMap(true));
+  $('#goalNightBtn').addEventListener('click', () => showStoryMap(true));
+  $('#goalBookBtn').addEventListener('click', () => $('#bookBtn').click());
+  $('#goalUpgradeBtn').addEventListener('click', () => $('#shopBtn').click());
   $('#mapHubBackBtn').addEventListener('click', () => showHub(true));
-  $('#infoBtn').addEventListener('click', () => playIntro('hub'));
+  $('#infoBtn').addEventListener('click', () => openHelp('hub'));
   $('#introSkipBtn').addEventListener('click', leaveIntro);
   $('#introContinueBtn').addEventListener('click', leaveIntro);
   $('#prologueScreen').addEventListener('click', e => { if (!e.target.closest('button')) introAdvance(); });
@@ -4180,7 +4482,7 @@
     setupFirstRun = firstRun;
     welcomeLoadRun++;
     state = 'menu'; cv.hidden = true;
-    ['#welcomeScreen', '#startScreen', '#hubSettingsScreen', '#prologueScreen', '#endScreen', '#levelBriefingScreen', '#nightReadyScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
+    ['#welcomeScreen', '#welcomeCardsScreen', '#helpScreen', '#startScreen', '#hubSettingsScreen', '#prologueScreen', '#endScreen', '#levelBriefingScreen', '#nightReadyScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
     girlIn.value = MK_HAS_PROFILE ? MK_PROFILE.girl : ''; catIn.value = MK_HAS_PROFILE ? MK_PROFILE.cat : '';
     syncSetupCats();
     $('#setupGo').textContent = firstRun ? 'Begin the story →' : 'Save';
@@ -4196,14 +4498,33 @@
     const girl = girlIn.value.trim() || 'Thiri', catName = catIn.value.trim() || 'Shwe';
     if (girl.toLowerCase() === catName.toLowerCase()) { $('#setupError').textContent = 'Give the girl and the cat different names.'; return; }
     MK_PROFILE.girl = girl.slice(0, 12); MK_PROFILE.cat = catName.slice(0, 12); MK_PROFILE.coat = setupCoat();
+    MK_PROFILE.welcomeSeen = true;
     COAT = MK_COATS[MK_PROFILE.coat]; MK_HAS_PROFILE = true;
+    persistGuidanceProgress();
     try { localStorage.setItem('mk-profile', JSON.stringify(MK_PROFILE)); } catch (err) {}
     paintCoat(COAT); renameAll();
     setupEl.hidden = true;
-    if (setupFirstRun) { mapGuidePending = true; playIntro(); } else showMainMenu(true);
+    if (setupFirstRun) { mapGuidePending = true; showStoryMap(true); } else showMainMenu(true);
   });
-  $('#welcomeBeginBtn').addEventListener('click', () => showSetup(true));
-  $('#setupBackBtn').addEventListener('click', () => { if (setupFirstRun) showWelcome(); });
+  $('#welcomeBeginBtn').addEventListener('click', () => playIntro('first-run'));
+  $('#welcomeSkipBtn').addEventListener('click', finishWelcomeCards);
+  $('#welcomeNextBtn').addEventListener('click', welcomeNext);
+  $('#welcomeDots').addEventListener('click', e => { const dot = e.target.closest('.welcome-dot'); if (dot) renderWelcomeCard(+dot.dataset.slide); });
+  $('#welcomeCarousel').addEventListener('scroll', () => {
+    clearTimeout(welcomeCardScrollTimer);
+    welcomeCardScrollTimer = setTimeout(() => { const width = $('#welcomeCarousel').clientWidth; if (width) renderWelcomeCard(Math.round($('#welcomeCarousel').scrollLeft / width), false); }, 70);
+  }, { passive: true });
+  $('#welcomeCardsScreen').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); finishWelcomeCards(); return; }
+    if (document.activeElement === $('#welcomeCarousel') && e.key === 'ArrowRight') { e.preventDefault(); welcomeNext(); }
+    if (document.activeElement === $('#welcomeCarousel') && e.key === 'ArrowLeft') { e.preventDefault(); welcomePrevious(); }
+    if (e.key !== 'Tab') return;
+    const focusable = Array.from($('#welcomeCardsScreen').querySelectorAll('button:not([disabled]),[tabindex="0"]')).filter(el => !el.hidden);
+    if (!focusable.length) return;
+    if (e.shiftKey && document.activeElement === focusable[0]) { e.preventDefault(); focusable[focusable.length - 1].focus(); }
+    else if (!e.shiftKey && document.activeElement === focusable[focusable.length - 1]) { e.preventDefault(); focusable[0].focus(); }
+  });
+  $('#setupBackBtn').addEventListener('click', () => { if (setupFirstRun) showWelcomeCards(2); });
   $('#mapGuideDismiss').addEventListener('click', () => { dismissMapGuide(); const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`); if (current) current.focus({ preventScroll: true }); });
   $('#levelBriefingBack').addEventListener('click', closeLevelBriefing);
   $('#levelBriefingStart').addEventListener('click', beginNightSequence);
@@ -4219,8 +4540,25 @@
     }
   });
   $('#profileBtn').addEventListener('click', () => showSetup(false));
-  $('#settingsBtn').addEventListener('click', () => { $('#hubSettingsScreen').hidden = false; $('#settingsCloseBtn').focus({ preventScroll: true }); });
+  $('#settingsBtn').addEventListener('click', () => {
+    $('#showTipsToggle').checked = MK_PROFILE.showTips !== false; $('#tipLanguageSelect').value = MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en';
+    $('#settingsReplayTutorial').disabled = MK_PROFILE.showTips === false;
+    $('#settingsGuidanceStatus').textContent = ''; $('#hubSettingsScreen').hidden = false; $('#settingsCloseBtn').focus({ preventScroll: true });
+  });
   $('#settingsCloseBtn').addEventListener('click', () => { $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); });
+  $('#settingsHelpBtn').addEventListener('click', () => openHelp('settings'));
+  $('#showTipsToggle').addEventListener('change', e => {
+    MK_PROFILE.showTips = !!e.target.checked;
+    if (!MK_PROFILE.showTips) { activeJitTip = null; jitTipQueue = []; hideCoachTip(); }
+    $('#settingsReplayTutorial').disabled = !MK_PROFILE.showTips; persistGuidanceProgress();
+  });
+  $('#tipLanguageSelect').addEventListener('change', e => { MK_PROFILE.tipLanguage = e.target.value === 'my' ? 'my' : 'en'; persistGuidanceProgress(); });
+  $('#settingsReplayTutorial').addEventListener('click', () => {
+    if (!MK_PROFILE.showTips) return;
+    MK_PROFILE.tutorialDone = false; persistGuidanceProgress(); $('#hubSettingsScreen').hidden = true; showStoryMap(false);
+    if (!$('#mapGuide').hidden) dismissMapGuide();
+    $(`#levelMapTrack button[data-level="1"]`)?.focus({ preventScroll: true });
+  });
   $('#hubSettingsScreen').addEventListener('click', e => { if (e.target.id === 'hubSettingsScreen') { $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); } });
   $('#hubSettingsScreen').addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); return; }
@@ -4251,11 +4589,13 @@
   paintCoat(COAT); renameAll();
 
   buildLevelMap();
-  if (!MK_HAS_PROFILE) showWelcome();
+  if (!MK_HAS_PROFILE && MK_PROFILE.welcomeSeen) showSetup(true);
+  else if (!MK_HAS_PROFILE) showWelcome();
   else showMainMenu(false);
   syncMobileOrientationGate();
   pauseBtn.addEventListener('click', pauseGame);
   pauseContinueBtn.addEventListener('click', resumeGame);
+  pauseHelpBtn.addEventListener('click', () => openHelp('pause'));
   $('#pauseRestartBtn').addEventListener('click', () => startGame(mode, storyNight));
   $('#pauseChaptersBtn').addEventListener('click', () => {
     pauseScreen.hidden = true; touchUI.hidden = true; cv.hidden = true; state = 'menu';
