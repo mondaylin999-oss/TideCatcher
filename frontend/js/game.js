@@ -3103,13 +3103,14 @@
     ctx.globalAlpha = 1;
   }
 
-  function chip(x, y, type, have, needN, width = 104) {
+  function chip(x, y, type, have, needN, width = 104, compact = false) {
     const done = have >= needN;
-    ctx.fillStyle = 'rgba(22,15,44,.75)'; ctx.strokeStyle = done ? col(type) : 'rgba(243,236,255,.16)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, width, 40, 20) : ctx.rect(x, y, width, 40); ctx.fill(); ctx.stroke();
-    lightShape(type, x + 22, y + 20, .95);
-    ctx.fillStyle = INK; ctx.font = `800 20px ${DISP}`; ctx.textAlign = 'left';
-    ctx.fillText(done ? '✓' : `${have}/${needN}`, x + 44, y + 27);
+    const h = compact ? 30 : 40, iconX = compact ? 17 : 22, iconY = compact ? 15 : 20;
+    ctx.fillStyle = 'rgba(22,15,44,.82)'; ctx.strokeStyle = done ? col(type) : 'rgba(243,236,255,.2)'; ctx.lineWidth = compact ? 1.5 : 2;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, width, h, h / 2) : ctx.rect(x, y, width, h); ctx.fill(); ctx.stroke();
+    lightShape(type, x + iconX, y + iconY, compact ? .74 : .95);
+    ctx.fillStyle = INK; ctx.font = `800 ${compact ? 13 : 20}px ${DISP}`; ctx.textAlign = 'left';
+    ctx.fillText(done ? '✓' : `${have}/${needN}`, x + (compact ? 31 : 44), y + (compact ? 20 : 27));
   }
   function drawHUD() {
     if (state === 'menu') return;
@@ -3172,11 +3173,17 @@
       if (packed) { ay += 20; ctx.fillStyle = INK; ctx.fillText(packed, 22, ay); }
     }
     if (mode === 'story') {
-      const types = Object.keys(need).filter(type => need[type] > 0), width = types.length >= 7 ? 64 : types.length >= 5 ? 78 : types.length === 4 ? 88 : 96, gap = 8;
-      let x = VW - 22 - types.length * (width + gap) + gap;
-      for (const type of types) { chip(x, top + 6, type, got[type] || 0, need[type], width); x += width + gap; }
+      const types = Object.keys(need).filter(type => need[type] > 0), compactNeeds = types.length >= 7 && VW < 1050;
+      if (compactNeeds) {
+        const columns = 4, width = 72, gap = 6, rowStep = 34, startX = VW - 22 - columns * (width + gap) + gap;
+        types.forEach((type, i) => chip(startX + (i % columns) * (width + gap), top + 6 + Math.floor(i / columns) * rowStep, type, got[type] || 0, need[type], width, true));
+      } else {
+        const width = types.length >= 7 ? 64 : types.length >= 5 ? 78 : types.length === 4 ? 88 : 96, gap = 8;
+        let x = VW - 22 - types.length * (width + gap) + gap;
+        for (const type of types) { chip(x, top + 6, type, got[type] || 0, need[type], width); x += width + gap; }
+      }
       ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.textAlign = 'right';
-      ctx.fillText(`${hourOf(storyNight).toUpperCase()} · ${chapterFor(storyNight).name.toUpperCase()}`, VW - 22, top + 64);
+      ctx.fillText(`${hourOf(storyNight).toUpperCase()} · ${chapterFor(storyNight).name.toUpperCase()}`, VW - 22, top + (compactNeeds ? 87 : 64));
     } else {
       ctx.textAlign = 'right'; ctx.font = `800 28px ${DISP}`; ctx.fillStyle = INK;
       ctx.fillText(`${caughtN} caught`, VW - 22, top + 34);
