@@ -107,6 +107,34 @@
     const disabledBuy = event.target.closest('button.buy:disabled');
     if (disabledBuy) playUi('error', .6);
   }, true);
+  // Pointer feedback remains visible on quick taps and supports simultaneous controls.
+  ['bEyes', 'bPounce', 'bJump'].forEach(id => {
+    const button = $(id);
+    if (!button) return;
+    const pointers = new Set();
+    let pressedAt = 0, releaseTimer;
+    const clearPress = () => {
+      clearTimeout(releaseTimer);
+      pointers.clear();
+      button.classList.remove('is-touch-pressed');
+    };
+    button.addEventListener('pointerdown', event => {
+      if (button.disabled) return;
+      clearTimeout(releaseTimer);
+      pointers.add(event.pointerId);
+      pressedAt = performance.now();
+      button.classList.add('is-touch-pressed');
+    });
+    window.addEventListener('pointerup', event => {
+      if (!pointers.delete(event.pointerId) || pointers.size) return;
+      releaseTimer = setTimeout(clearPress, Math.max(0, 150 - (performance.now() - pressedAt)));
+    });
+    window.addEventListener('pointercancel', event => {
+      if (pointers.delete(event.pointerId) && !pointers.size) clearPress();
+    });
+    window.addEventListener('blur', clearPress);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) clearPress(); });
+  });
   let lastTick = 0, lastLoadCount = 0;
   document.addEventListener('input', event => {
     if (!event.target.matches('input[type="range"][data-audio]')) return;
