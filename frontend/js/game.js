@@ -3296,21 +3296,11 @@
     };
     requestAnimationFrame(tick);
   }
-  function updateHubGoals(found = BOOK_GOAL_KEYS.filter(key => book[key]).length) {
-    const copy = guideCopy().help || {}, night = clamp(unlockedLevel, 1, 7), chapter = chapterFor(night);
-    $('#goalNightText').textContent = `Night ${night} · ${chapter.name}`;
-    $('#goalBookText').textContent = `${found} / 17 feelings`;
-    const remaining = UPG.filter(item => upg[item.id] < UPG_MAX).map(item => ({ item, cost: item.costs[upg[item.id]] })).filter(entry => Number.isFinite(entry.cost));
-    const available = remaining.filter(entry => glow >= entry.cost).sort((a, b) => a.cost - b.cost)[0];
-    const next = available || remaining.sort((a, b) => a.cost - b.cost)[0];
-    $('#goalUpgradeText').textContent = next ? (available ? `${next.item.name} · ${next.cost} Glow` : `${copy.noAffordable || 'Save Glow for'} ${next.item.name} · ${next.cost} Glow`) : (copy.allUpgrades || 'All upgrades ready');
-  }
   function refreshHubStats(found = BOOK_GOAL_KEYS.filter(key => book[key]).length) {
     animateHubNumber($('#hubGlowValue'), glow);
     animateHubNumber($('#hubBookValue'), found, n => `${n} / 17`);
     $('#shopBtnValue').textContent = `${glow} Glow`;
     $('#bookBtnValue').textContent = `${found} / 17 found`;
-    updateHubGoals(found);
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
     $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
     const heroCat = $('#hubHeroCat');
