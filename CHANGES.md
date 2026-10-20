@@ -2,6 +2,8 @@
 
 ## Screen changes
 
+- **One screen profile setup:** Removed the desktop height breakpoint from the compact profile editor so it also stays balanced at browser zoom and shorter landscape heights. The cat preview is capped to a short landscape card; both setup steps fit without page scrolling at desktop and mobile landscape sizes.
+
 - **Flexible profile editor:** The name and cat setup panel now sizes to its content on large screens, with a balanced landscape preview and aligned fields instead of a stretched full-height column. Kept the compact layout on short screens and portrait phones.
 
 - **Map road scale:** Narrowed the river channel and banks so chapter nodes remain the trail’s focus and the road reads smaller than the surrounding trees across screen sizes.
