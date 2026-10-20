@@ -106,7 +106,14 @@
   let ac = null;
   const activeTones = new Map();
   // sound effects from the Cat & Moodlings pack (js/tc-sfx.js); safe to call even if the file is missing
-  const sfx = (kind, a) => { try { if (window.TCSfx) TCSfx[kind](a); } catch (e) {} };
+  const sfx = (kind, ...args) => { try { if (window.TCSfx) TCSfx[kind](...args); } catch (e) {} };
+  let nextCatVoiceAt = 0;
+  function catVoice(kind, volume = .28, cooldown = 1100) {
+    const now = performance.now();
+    if (now < nextCatVoiceAt) return;
+    nextCatVoiceAt = now + cooldown;
+    sfx('cat', kind, volume);
+  }
   // night music per place (js/tc-sfx.js): School 11 PM–Midnight, Park 1 AM, Festival 2 AM, Hilltop 3 AM, Lakeside 4–5 AM
   const NIGHT_MUSIC = ['school', 'school', 'park', 'festival', 'hilltop', 'lakeside', 'lakeside'];
   const music = (fn, a) => { try { if (window.TCMusic) TCMusic[fn](a); } catch (e) {} };
@@ -1435,7 +1442,7 @@
     else { const acc = c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
     if (jumpQ && c.on && c.pounce <= 0) { c.vy = -830; c.on = false; onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240); }
     jumpQ = false;
-    if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) sfx('ui', 'pounce'); else tone(240, .1, 'square', .035, 320); }
+    if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) { sfx('ui', 'pounce'); catVoice('trill', .25); } else tone(240, .1, 'square', .035, 320); }
     pounceQ = false;
     c.pcd -= dt; c.inv -= dt; c.squash = Math.max(0, c.squash - dt);
     const wasOn = c.on, py = c.y, wasOnTrail = wasOn && Math.abs(c.y - terrainY(c.x)) < 2;
@@ -2877,7 +2884,7 @@
   // Shop preview: the current cat wearing one item, drawn straight into a <canvas> in the shop card
   // (no toDataURL, so it also works when the game is opened from a local file)
   function drawGearPreview(cvs, items) {
-    const spr = MK_SPRITES[MK_PROFILE.coat];
+    const spr = mkGetSprite(MK_PROFILE.coat);
     if (!spr || !spr.complete || !spr.naturalWidth) { spr && spr.addEventListener('load', () => drawGearPreview(cvs, items), { once: true }); return; }
     const main = ctx; ctx = cvs.getContext('2d');
     try {
@@ -2889,16 +2896,17 @@
     } finally { ctx = main; }
   }
   function mkDrawSprite(c) {
-    const spr = MK_SPRITES[MK_PROFILE.coat];
+    const spr = mkGetSprite(MK_PROFILE.coat);
     if (!spr || !spr.complete || !spr.naturalWidth) return false;
     const hh = 70, ww = hh * spr.naturalWidth / spr.naturalHeight;
-    const moving = c.on && Math.abs(c.vx) > 10, ph = c.walk, amp = c.sneak ? .2 : .34;
+    const speed = Math.abs(c.vx), moving = c.on && speed > 10, running = moving && speed > 285, ph = c.walk;
+    const amp = c.sneak ? .14 : running ? .52 : .34;
     let back = 0, front = 0, tail, breath = 0, bob = 0;
-    if (scratchAnim > 0 && c.on) { front = Math.sin(t * 28) * .45; back = -.05; tail = Math.sin(t * 9) * .2; }
-    else if (c.pounce > 0) { back = -.5; front = .55; tail = -.25; }
-    else if (!c.on) { back = c.vy < 0 ? -.4 : -.15; front = c.vy < 0 ? .3 : .45; tail = -.2; }
-    else if (moving) { back = Math.sin(ph) * amp; front = -Math.sin(ph) * amp; tail = Math.sin(t * 6) * .12; bob = -Math.abs(Math.sin(ph)) * (c.sneak ? 1 : 2.2); }
-    else { tail = Math.sin(t * 2.2) * .18; breath = Math.sin(t * 2.6) * .02; }
+    if (scratchAnim > 0 && c.on) { front = Math.sin(t * 20) * .58; back = -.08; tail = .28 + Math.sin(t * 8) * .12; breath = .01; bob = 1.3; }
+    else if (c.pounce > 0) { back = -.62; front = .72; tail = -.42; }
+    else if (!c.on) { const rising = c.vy < 0; back = rising ? -.38 : .25; front = rising ? .32 : -.24; tail = rising ? -.32 : .3; }
+    else if (moving) { back = Math.sin(ph) * amp; front = -Math.sin(ph + .18) * amp * .92; tail = Math.sin(ph * .48 + 1.1) * (running ? .28 : .18); bob = -Math.abs(Math.sin(ph)) * (c.sneak ? .55 : running ? 2.8 : 1.6); }
+    else { tail = Math.sin(t * 1.7) * .12 + Math.pow(Math.max(0, Math.sin(t * .83 + .7)), 8) * .28; breath = Math.sin(t * 2.2) * .016; }
     if (c.on) { ctx.fillStyle = 'rgba(8,10,24,.35)'; ctx.beginPath(); ctx.ellipse(-2, 2, ww * .36, 4.5, 0, 0, 7); ctx.fill(); }
     if (eyesT > 0) { ctx.shadowColor = '#c8ff8a'; ctx.shadowBlur = 16; }
     const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, -hh + 6 + bob, ww, hh, { back, front, tail, breath });
@@ -2912,7 +2920,8 @@
     if (c.inv > 0 && Math.floor(c.inv * 12) % 2) ctx.globalAlpha = .45;
     ctx.translate(c.x, c.y); ctx.scale(c.face, 1);
     let sxs = 1, sys = 1;
-    if (c.pounce > 0) { sxs = 1.22; sys = .84; } else if (c.squash > 0) { sxs = 1.15; sys = .85; } else if (c.sneak) { sys = .86; sxs = 1.06; } else if (!c.on) { sxs = .94; sys = 1.08; }
+    if (c.pounce > 0) { sxs = 1.12; sys = .9; } else if (scratchAnim > 0 && c.on) { sxs = 1.03; sys = .92; } else if (c.squash > 0) { sxs = 1.04; sys = .95; } else if (c.sneak) { sys = .91; sxs = .98; } else if (!c.on) { sxs = .96; sys = 1.06; }
+    if (c.on && Math.abs(c.vx) > 285) ctx.rotate(.035);
     ctx.scale(sxs, sys);
     if (!mkDrawSprite(c)) {
     const body = COAT.body, dark = COAT.dark, belly = COAT.belly;
@@ -4311,7 +4320,7 @@
   Object.keys(MK_COATS).forEach((k, i) => {
     const lab = document.createElement('label'); lab.className = 'coat-opt';
     const r = document.createElement('input'); r.type = 'radio'; r.name = 'coat'; r.value = k; if (i === 0) r.checked = true;
-    const im = document.createElement('img'); im.src = MK_COATS[k].img; im.alt = '';
+    const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.src = MK_COATS[k].img; im.alt = '';
     const sp = document.createElement('span'); sp.textContent = MK_COATS[k].name;
     lab.append(r, im, sp); breedBox.appendChild(lab);
   });
@@ -4379,14 +4388,16 @@
   let previewRaf = 0;
   function previewLoop(now) {
     if (setupEl.hidden) { previewRaf = 0; return; }
-    const cvp = $('#setupCatCanvas'), g = cvp.getContext('2d'), key = setupCoat(), spr = MK_SPRITES[key];
+    const cvp = $('#setupCatCanvas'), g = cvp.getContext('2d'), key = setupCoat(), spr = mkGetSprite(key);
     g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cvp.width, cvp.height);
     if (spr && spr.complete && spr.naturalWidth) {
-      const s2 = now / 1000, cyc = s2 % 6, hh = 230, ww = hh * spr.naturalWidth / spr.naturalHeight;
+      const s2 = now / 1000, cyc = s2 % 8, hh = 230, ww = hh * spr.naturalWidth / spr.naturalHeight;
       let pose, lift = 0;
-      if (cyc < 3.2) { const ph = s2 * 9; pose = { back: Math.sin(ph) * .34, front: -Math.sin(ph) * .34, tail: Math.sin(s2 * 6) * .12 }; lift = Math.abs(Math.sin(ph)) * 5; }
-      else if (cyc < 4.8) pose = { tail: Math.sin(s2 * 2.2) * .18, breath: Math.sin(s2 * 2.6) * .02 };
-      else { const j = (cyc - 4.8) / 1.2, up = Math.sin(j * Math.PI); pose = { back: -.4 * up, front: .35 * up, tail: -.2 * up }; lift = up * 34; }
+      if (cyc < 1.4) pose = { tail: Math.sin(s2 * 1.7) * .12, breath: Math.sin(s2 * 2.2) * .016 };
+      else if (cyc < 3.2) { const ph = s2 * 5; pose = { back: Math.sin(ph) * .34, front: -Math.sin(ph + .18) * .31, tail: Math.sin(ph * .48 + 1.1) * .18 }; lift = Math.abs(Math.sin(ph)) * 4; }
+      else if (cyc < 5.1) { const ph = s2 * 9; pose = { back: Math.sin(ph) * .52, front: -Math.sin(ph + .18) * .48, tail: Math.sin(ph * .48 + 1.1) * .28 }; lift = Math.abs(Math.sin(ph)) * 7; }
+      else if (cyc < 6.1) pose = { back: -.08, front: Math.sin(s2 * 20) * .58, tail: .28 + Math.sin(s2 * 8) * .12, breath: .01 };
+      else { const j = (cyc - 6.1) / 1.9, up = Math.sin(j * Math.PI), rising = j < .5; pose = { back: rising ? -.38 * up : .25 * up, front: rising ? .32 * up : -.24 * up, tail: rising ? -.32 * up : .3 * up }; lift = up * 34; }
       g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(170, 288, ww * .38 * (1 - lift / 90), 7, 0, 0, 7); g.fill();
       mkDrawRig(g, key, 170 - ww / 2, 290 - hh - lift, ww, hh, pose);
     }
