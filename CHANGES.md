@@ -2,6 +2,8 @@
 
 ## Screen changes
 
+- **Map cursor scrolling:** Added mouse drag-to-scroll with click protection for chapter stops, and a visible horizontal scrollbar for cursor users. Touch swipe, wheel and arrow navigation still work.
+
 - **Organic map layout:** Varied chapter spacing, river bend heights and curve lengths with a repeatable seed. Trees now appear in uneven clusters with varied sizes, while lanterns and landmarks have irregular placement. The trail stays stable when revisiting chapters and resizing.
 
 - **Moonlit adventure map:** A winding river with rocky banks, stepping-stone chapter stops, glowing lanterns, pine trees, fireflies and school/park/festival/hill/lake landmarks now fills the landscape chapter map. Completed, current and locked chapters keep their existing progression and show clear status labels.

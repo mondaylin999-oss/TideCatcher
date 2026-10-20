@@ -4167,6 +4167,31 @@
   }
   const mapViewport = $('#levelMapViewport');
   mapViewport.addEventListener('scroll', syncStoryMapBackdrop, { passive: true });
+  let mapPointerDrag = null, mapSuppressClickUntil = 0;
+  mapViewport.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('button,a,input')) return;
+    mapPointerDrag = { id: event.pointerId, x: event.clientX, scrollLeft: mapViewport.scrollLeft, moved: false };
+    mapViewport.setPointerCapture(event.pointerId);
+  });
+  mapViewport.addEventListener('pointermove', event => {
+    if (!mapPointerDrag || event.pointerId !== mapPointerDrag.id) return;
+    const distance = event.clientX - mapPointerDrag.x;
+    if (!mapPointerDrag.moved && Math.abs(distance) < 4) return;
+    mapPointerDrag.moved = true;
+    mapViewport.scrollLeft = mapPointerDrag.scrollLeft - distance;
+    event.preventDefault();
+  });
+  const finishMapDrag = event => {
+    if (!mapPointerDrag || event.pointerId !== mapPointerDrag.id) return;
+    if (mapPointerDrag.moved) mapSuppressClickUntil = performance.now() + 350;
+    mapPointerDrag = null;
+  };
+  mapViewport.addEventListener('pointerup', finishMapDrag);
+  mapViewport.addEventListener('pointercancel', finishMapDrag);
+  mapViewport.addEventListener('click', event => {
+    if (performance.now() > mapSuppressClickUntil) return;
+    event.preventDefault(); event.stopPropagation(); mapSuppressClickUntil = 0;
+  }, true);
   mapViewport.addEventListener('wheel', event => {
     if (event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
     event.preventDefault();
