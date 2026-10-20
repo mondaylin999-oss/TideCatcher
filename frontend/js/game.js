@@ -3166,7 +3166,7 @@
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
     $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
     const heroCat = $('#hubHeroCat');
-    if (heroCat && COAT) heroCat.setAttribute('href', COAT.img);
+    if (heroCat && COAT) heroCat.setAttribute('href', COAT.heroImg || COAT.img);
     const heroSvg = $('#hubHeroSvg');
     if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
     $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
