@@ -2,6 +2,8 @@
 
 ## Screen changes
 
+- **Map road scale:** Narrowed the river channel and banks so chapter nodes remain the trail’s focus and the road reads smaller than the surrounding trees across screen sizes.
+
 - **Map cursor scrolling:** Added mouse drag-to-scroll with click protection for chapter stops, and a visible horizontal scrollbar for cursor users. Touch swipe, wheel and arrow navigation still work.
 
 - **Organic map layout:** Varied chapter spacing, river bend heights and curve lengths with a repeatable seed. Trees now appear in uneven clusters with varied sizes, while lanterns and landmarks have irregular placement. The trail stays stable when revisiting chapters and resizing.
