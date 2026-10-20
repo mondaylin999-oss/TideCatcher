@@ -1,5 +1,12 @@
 # Cozy night sticker book
 
+## Audio packs
+
+- Added supplied intro, menu, bedroom and ending music to their matching scenes.
+- Added location ambience for the school, park, festival, hilltop and lake, using environment-only loops beneath the level music.
+- Added movement, sneaking, action, menu, completion, failure and unlock effects with existing volume/mute controls and synthesized fallbacks.
+- Bundled Ogg and MP3 versions and retained the supplied audio credits.
+
 ## Screen changes
 
 - **Profile badge spacing:** Sized the preview card and cat canvas together so the cat-name badge remains inside the card and clear of the footer note at different landscape heights.

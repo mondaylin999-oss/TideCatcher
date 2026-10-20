@@ -120,6 +120,7 @@
   // ---------- music: existing real place pieces plus procedural screen beds ----------
   const STYLE = 'piano';
   const MBASE = (ogg ? 'assets/audio/music/ogg/' : 'assets/audio/music/mp3/') + (STYLE === 'piano' ? 'piano_' : 'music_');
+  const STORY_TRACKS = new Set(['intro', 'menu', 'bedroom', 'ending']);
   const GAP = [25, 45];
   const music = { cur: null, el: null, media: null, generated: null, duck: 1, timer: 0 };
   const musicGain = () => muted ? 0 : Math.min(1, musicVol * 1.15 * music.duck);
@@ -172,14 +173,19 @@
       if (music.generated) stopGenerated(1500);
       music.el = null; music.media = null; music.cur = name || null;
       if (!name) return;
-      if (['menu', 'intro', 'results'].includes(name)) { startGenerated(name); return; }
-      const el = new Audio(MBASE + name + EXT); el.preload = 'auto'; el.loop = STYLE !== 'piano'; el.volume = 0; music.el = el;
+      if (name === 'results') { startGenerated(name); return; }
+      const story = STORY_TRACKS.has(name);
+      const el = new Audio(story ? `assets/audio/story/${name}${EXT}` : MBASE + name + EXT); el.preload = 'auto'; el.loop = story || STYLE !== 'piano'; el.volume = 0; music.el = el;
+      el.addEventListener('error', () => {
+        if (music.el !== el) return;
+        el.pause(); music.el = null; music.media = null; startGenerated(name);
+      }, { once: true });
       el.addEventListener('ended', () => {
         if (music.el !== el) return;
         const wait = (GAP[0] + Math.random() * (GAP[1] - GAP[0])) * 1000;
         music.timer = setTimeout(() => { if (music.el === el) { el.currentTime = 0; startEl(el); } }, wait);
       });
-      music.timer = setTimeout(() => startEl(el), STYLE === 'piano' ? 1800 : 0);
+      music.timer = setTimeout(() => startEl(el), !story && STYLE === 'piano' ? 1800 : 0);
     },
     stop() { TCMusic.play(null); },
     duck(k) {

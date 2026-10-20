@@ -1495,6 +1495,7 @@
     if (sneaking) onTutorialAction('sneak', c);
     const target = a === 0 ? 0 : Math.sign(a) * (sneaking ? 2 * T : uv('swift') * T);
     c.sneak = sneaking;
+    window.TCGameAudio?.setSneaking(sneaking);
     if (c.pounce > 0) c.pounce -= dt;
     else { const acc = c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
@@ -3550,6 +3551,7 @@
     $('#endDiaryLine').textContent = `“${chapter.diary}”`;
     $('#endStageLine').textContent = `Thiri’s room is changing · sleep stage ${thiriSleepStage} of 7`;
     $('#endUnlockBadge').hidden = !R.unlocked;
+    if (R.unlocked) setTimeout(() => { if (!$('#endScreen').hidden) sfx('ui', 'unlock'); }, 900);
     $('#endUnlockBadge').textContent = R.unlocked ? `${hourOf(next).toUpperCase()} UNLOCKED` : '';
     $('#endEyebrow').textContent = `${hourOf(night)} · ${chapter.name} · done`;
     $('#endTitle').textContent = night === 50 ? 'All 50 routes are home' : R.unlocked ? `${hourOf(night)} done. ${hourOf(next)} is open!` : night === 7 ? 'The lake is quiet' : 'A little more of Thiri returns';
@@ -3750,7 +3752,7 @@
   let H = null;
 
   function startHome(won, types, preview, night = storyNight) {
-    music('duck', .45);
+    music('duck', .65); music('play', 'bedroom'); music('ambience', null);
     const n = types.length, stage = Math.min(7, thiriSleepStage);
     const poseTo = stage, poseFrom = won && night >= stage ? Math.max(0, night - 1) : stage;
     const base = roomColoursFor(poseFrom);
@@ -3802,6 +3804,7 @@
     if (wakeStage === 7 && !finalAwakeningSeen) playFinalAwakening(); else showEnd();
   }
   function showNightWake(night) {
+    music('play', 'bedroom'); music('ambience', null);
     wakeStage = clamp(thiriSleepStage, 1, 7); const ch = chapterFor(night);
     $('#nightWakeEyebrow').textContent = `AFTER ${hourOf(night).toUpperCase()}`;
     $('#nightWakeTitle').textContent = night > 7 ? 'One more route brought home.' : wakeStage === 7 ? 'Morning is almost here.' : 'She stirs in her sleep.';
@@ -4458,7 +4461,7 @@
   // ---- Morning ending cutscene ----
   function playEnding() {
     csKind = 'ending'; CS_SCENES = ENDING_SCENES; CS_LINES = ENDING_LINES; csImgs = endingImgs;
-    music('stop'); initAudio(); state = 'intro'; cv.hidden = true;
+    music('duck', 1); music('play', 'ending'); music('ambience', null); initAudio(); state = 'intro'; cv.hidden = true;
     ['#welcomeScreen', '#welcomeCardsScreen', '#helpScreen', '#levelBriefingScreen', '#nightReadyScreen', '#startScreen', '#endScreen', '#awakeningScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
     const sm = $('#storyMapScreen'); if (sm) sm.hidden = true;
     $('#prologueScreen').hidden = false; $('#introContinueBtn').hidden = true; $('#introSkipBtn').textContent = 'Skip →';
@@ -4522,7 +4525,7 @@
     $('#awakeningCompleteLine').hidden = false; $('#awakeningActions').hidden = false; $('#awakeningReplayBtn').focus({ preventScroll: true });
   }
   function playFinalAwakening() {
-    music('stop');
+    music('duck', 1); music('play', 'ending'); music('ambience', null);
     if (finalAwakeningSeen) { showEnd(); return; }
     finalAwakeningSeen = true;
     if (thiriSleepStage < 7) { thiriSleepStage = 7; saveStoryProgress(); }
