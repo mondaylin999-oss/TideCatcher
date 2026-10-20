@@ -421,3 +421,33 @@ html,body{height:100%;height:100dvh;overflow:hidden}
  .story-map-heading>div{grid-row:auto}
  .story-map-panel>.level-map-hint{padding-left:0}
 }
+
+/* Moonlit river atlas, inspired by a winding adventure map. */
+.story-map-screen{background:linear-gradient(135deg,#151a32,#263a47)}
+.story-map-heading .eyebrow{color:#b0d6d5;letter-spacing:.18em}
+.story-map-panel>.level-map-window{background:#203642;border:1px solid #7fb2b32e;box-shadow:inset 0 0 60px #08162566}
+.map-river-cliff,.map-river-bank,.map-river-water,.map-river-ripple{fill:none;stroke-linejoin:round;stroke-linecap:round}
+.map-river-cliff{stroke:#101c2a;stroke-width:112}
+.map-river-bank{stroke:#6c8a7b;stroke-width:91}
+.map-river-water{stroke:url(#trailWater);stroke-width:80}
+.map-river-ripple{stroke:#99d9d2;stroke-width:2;stroke-dasharray:12 45;opacity:.25}
+#levelMapSvg .path-route,#levelMapSvg .path-halo{stroke:transparent}
+#levelMapSvg .path-line{stroke:#d5efdc;stroke-width:2;stroke-dasharray:2 13;opacity:.5}
+.level-entry .level-node{border:3px solid #8da6af;border-radius:45% 55% 48% 52%;background:linear-gradient(145deg,#6b818f,#3c5265);color:#d4dce0;box-shadow:0 7px 0 #132a3d,0 10px 15px #08162566;font-size:26px;text-shadow:0 2px 0 #152438}
+.level-entry .level-node.is-playable{background:linear-gradient(145deg,#f8e4a9,#c5a673);border-color:#fff0bf;color:#3c334b;text-shadow:none;box-shadow:0 7px 0 #786d66,0 0 24px #ffe8a533}
+.level-entry .level-node.is-current{background:linear-gradient(145deg,#bcf0d1,#6ec8bd);border-color:#e4ffe6;box-shadow:0 7px 0 #447880,0 0 35px #94ead255;animation:none}
+.level-entry .level-node.is-current::after{content:"◆";position:absolute;top:-25px;left:0;right:0;font-size:17px;color:#ffdf88;text-shadow:0 0 12px #ffd987}
+.level-entry .level-caption{top:48px;background:#101f31e8;border-color:#99c7c03b;border-radius:12px;gap:4px;padding:8px 10px}
+.level-entry.label-above .level-caption{top:auto;bottom:48px}
+.level-caption strong{font-size:15px;color:#fff0c7}
+.level-caption span{font-size:11px;color:#c2d6d5}
+.level-node:focus-visible{outline:3px solid #fff2ba;outline-offset:9px}
+@media(max-height:500px){
+ .map-river-cliff{stroke-width:86}.map-river-bank{stroke-width:69}.map-river-water{stroke-width:60}
+ .level-entry .level-caption{top:33px;padding:5px 8px;width:200px}
+ .level-entry.label-above .level-caption{top:auto;bottom:34px}
+ .level-caption strong{font-size:13px;line-height:1.15}.level-caption span{font-size:10px}
+ .level-entry .level-node{font-size:21px}.level-entry .level-node.is-current::after{top:-20px;font-size:13px}
+}
+
+.story-map-panel{animation:none}
