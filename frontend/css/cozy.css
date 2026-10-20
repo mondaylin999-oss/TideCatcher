@@ -311,15 +311,25 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .tip-coach-card.tip-success{border-color:var(--honey);box-shadow:var(--shadow-card),0 0 26px var(--honey-haze)}
 
 /* Reserve rows for every hub action so the full menu fits without page scrolling. */
-.hub-content{align-self:stretch;min-height:0;grid-template-rows:auto minmax(0,1fr) minmax(0,1fr) auto;gap:clamp(5px,1vh,12px)}
-.hub-content>.hub-card{height:auto;min-height:0}
+.hub-content{align-self:stretch;height:100%;min-height:0;grid-template-rows:auto minmax(0,1fr) minmax(0,1fr) minmax(100px,auto);gap:clamp(14px,1.5vh,18px)}
+.hub-content>.hub-card,.hub-small-grid>.hub-small-card{height:auto;min-height:0;transform:none}
+.hub-content>.hub-card:hover,.hub-small-grid>.hub-small-card:hover{transform:translateY(-2px)}
 .hub-goals{min-height:0;padding:6px 8px}
+.hub-goals-grid{min-height:0;align-content:stretch}
 .hub-goals h2{margin-bottom:4px}
+@media(min-width:951px){
+  .hub-content-heading{grid-row:1;grid-column:1/-1}
+  .hub-content>.hub-story-card{grid-row:2;grid-column:1}
+  .hub-small-grid>.hub-small-card:nth-child(1){grid-row:2;grid-column:2}
+  .hub-small-grid>.hub-small-card:nth-child(2){grid-row:3;grid-column:1}
+  .hub-small-grid>.hub-small-card:nth-child(3){grid-row:3;grid-column:2}
+  .hub-goals{grid-row:4;grid-column:1/-1;min-height:100px}
+}
 @media(max-width:950px) and (orientation:portrait){
   #menuHub{height:calc(100dvh - 152px);min-height:0}
   .hub-content{grid-template-rows:auto minmax(0,.85fr) minmax(0,1.15fr) auto;gap:6px}
   .hub-content>.hub-story-card{height:auto;min-height:0}
-  .hub-small-grid{min-height:0}
+  .hub-small-grid{min-height:0}.hub-small-grid>.hub-small-card{grid-row:auto;grid-column:auto}
   .hub-goals-grid{gap:4px}.hub-goal{min-height:38px;padding:4px 6px}
 }
 @media(max-width:600px) and (orientation:portrait){
@@ -330,11 +340,11 @@ html,body{height:100%;height:100dvh;overflow:hidden}
   .hub-content-heading{padding-bottom:0}.hub-content-heading h1{font-size:clamp(17px,4.5vw,21px);margin-top:4px}
   .hub-card{padding:7px;transform:none}.hub-card:hover{transform:none}.hub-story-card{gap:4px;padding:4px 7px}.hub-story-plate{min-height:0;padding:3px 7px;margin-bottom:0;font-size:7px;line-height:1}.hub-story-copy{left:9px;bottom:6px;gap:2px}.hub-story-copy strong{font-size:clamp(17px,5vw,23px)}.hub-story-copy span{font-size:9px}
   .hub-small-grid{gap:5px}.hub-small-head{left:5px;right:5px;top:5px}.hub-small-head>span{font-size:8px}.hub-small-head i{width:22px;height:22px;flex-basis:22px}
-  .hub-goals{padding:5px 6px}.hub-goals h2{font-size:10px;margin-bottom:3px}.hub-goal{min-height:34px;padding:3px 4px}.hub-goal span{font-size:7px}.hub-goal strong{font-size:8px}
+  .hub-goals{min-height:0;padding:5px 6px}.hub-goals h2{font-size:10px;margin-bottom:3px}.hub-goal{min-height:34px;padding:3px 4px}.hub-goal span{font-size:7px}.hub-goal strong{font-size:8px}
 }
 @media(max-width:559px) and (orientation:landscape){
   .hub-content{grid-template-rows:auto minmax(0,.9fr) minmax(0,1fr) auto}
-  .hub-goals{padding:3px 5px}.hub-goals h2{font-size:9px}.hub-goal{min-height:30px;padding:2px 4px}
+  .hub-goals{min-height:74px;padding:3px 5px}.hub-goals h2{font-size:9px}.hub-goal{min-height:30px;padding:2px 4px}
 }
 @media(max-width:600px){
   .welcome-cards-panel{padding:18px;gap:10px}.welcome-card{min-height:clamp(185px,38vh,230px);padding:18px}.welcome-card p{font-size:15px}
