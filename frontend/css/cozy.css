@@ -213,18 +213,13 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .story-map-heading .map-hub-back::before{content:"←";font:700 25px/1 var(--display)}
 
 
-/* Fit all seven chapter stops into one fixed viewport on desktop and mobile. */
-.story-map-screen{display:grid;height:100vh;height:100dvh;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:auto}
-.story-map-panel{display:flex;width:min(820px,100%);height:100%;min-height:0;max-height:none;overflow:hidden;overscroll-behavior:none;flex:1 1 auto;padding-bottom:env(safe-area-inset-bottom,0px)}
-.story-map-panel>.level-map-window{display:block;flex:1 1 0;width:100%;height:auto;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:auto;scrollbar-width:none}
-.story-map-panel>.level-map-window::-webkit-scrollbar{display:none}
-.story-map-panel>.level-map-window>.level-map-track{height:100%!important}
-.story-map-panel .level-node{width:min(46px,calc(var(--map-step, 64px)*.82));height:min(46px,calc(var(--map-step, 64px)*.82));font-size:clamp(13px,calc(var(--map-step, 64px)*.28),19px)}
-.story-map-panel .level-node.is-current{width:min(56px,calc(var(--map-step, 64px)*.92));height:min(56px,calc(var(--map-step, 64px)*.92));font-size:clamp(16px,calc(var(--map-step, 64px)*.34),22px)}
+/* Keep chapter selection on one full-screen scroll surface; the map itself never scrolls. */
+.story-map-screen{display:block;height:100vh;height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.story-map-panel{display:flex;width:min(820px,100%);height:auto;min-height:100vh;min-height:100dvh;max-height:none;overflow:visible;overscroll-behavior:auto;flex:none;padding-bottom:env(safe-area-inset-bottom,0px)}
+.story-map-panel>.level-map-window{display:block;flex:0 0 auto;width:100%;height:auto;min-height:0;overflow:visible;overscroll-behavior:auto;-webkit-overflow-scrolling:auto;touch-action:auto;scrollbar-width:auto}
+.story-map-panel::after{content:"";display:block;flex:0 0 50vh;pointer-events:none}
 .story-map-panel>.level-map-key{padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(max-width:600px){.story-map-panel{gap:6px;padding:60px 10px 8px}.story-map-heading{padding-left:40px}.story-map-panel>.level-map-hint{font-size:10px}.story-map-panel>.map-guide{padding:8px;gap:7px}.story-map-panel>.map-guide .map-guide-cat{width:38px;height:38px}.story-map-panel .level-caption{width:clamp(80px,29vw,112px)}.story-map-panel .level-caption strong{font-size:clamp(9px,2.5vw,11px)}.story-map-panel .level-caption span{font-size:8px}}
-@media(max-height:700px){.story-map-panel .level-caption span{display:none}.story-map-panel .level-caption strong{font-size:10px;line-height:1.05}}
-@media(orientation:landscape) and (max-height:500px){.story-map-panel{gap:3px;padding:58px 8px 4px}.story-map-heading{gap:1px 8px;padding-left:38px}.story-map-heading h2{font-size:clamp(17px,4.4vh,22px)}.story-map-heading .eyebrow{font-size:9px}.story-map-panel>.level-map-hint{font-size:9px}.story-map-panel>.map-guide{padding:4px 7px;gap:5px}.story-map-panel>.map-guide .map-guide-cat{width:30px;height:30px}.story-map-panel>.level-map-key{gap:5px;font-size:8px}}
+@media (orientation:landscape) and (max-height:500px){.story-map-panel{padding-bottom:6px}.story-map-panel::after{flex-basis:50vh}}
 
 #mapHubBackBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:1000;width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:2px solid var(--lilac);border-radius:50%;background:var(--glass);color:var(--cream);box-shadow:var(--shadow-glow);font-size:0!important;display:grid;place-items:center}
 #mapHubBackBtn::before{content:"←";font:700 25px/1 var(--display)}

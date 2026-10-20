@@ -3884,8 +3884,7 @@
     if (!startGuidedTutorial()) showNextJitTip();
     cv.focus?.();
   }
-  const LEVEL_MAP_LIMIT = 7;
-  let LEVEL_MAP_STEP = 92;
+  const LEVEL_MAP_LIMIT = 7, LEVEL_MAP_STEP = 92;
   const LEVEL_MAP_CHAPTERS = new Map(NIGHT_CHAPTERS.map(chapter => [chapter.night, chapter]));
   const levelMapX = level => 50 + Math.sin(level * .72) * 24;
   const mapRandom = seed => { const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
@@ -3971,10 +3970,6 @@
   function buildLevelMap() {
     const track = $('#levelMapTrack'), path = $('#levelMapPath'), route = $('#levelMapRoute'), svg = $('#levelMapSvg');
     track.querySelectorAll('.level-entry').forEach(entry => entry.remove());
-    const viewport = $('#levelMapViewport');
-    const mapHeight = Math.max(1, viewport.clientHeight);
-    LEVEL_MAP_STEP = mapHeight / LEVEL_MAP_LIMIT;
-    track.style.setProperty('--map-step', `${LEVEL_MAP_STEP}px`);
     const height = LEVEL_MAP_LIMIT * LEVEL_MAP_STEP;
     track.style.height = `${height}px`; svg.style.height = `${height}px`; svg.setAttribute('viewBox', `0 0 100 ${height}`);
     buildMapScenery(height);
@@ -4037,13 +4032,13 @@
     music('duck', 1); music('play', 'menu'); music('ambience', 'menu');
     $('#startScreen').hidden = false; $('#menuHub').hidden = true; $('#storyMapScreen').hidden = false;
     $('#hubSettingsScreen').hidden = true; $('#levelBriefingScreen').hidden = true;
-    buildLevelMap(); requestAnimationFrame(() => { buildLevelMap(); focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); });
+    buildLevelMap(); requestAnimationFrame(() => { focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); });
     let mapTipSeen = false;
     try { mapTipSeen = localStorage.getItem('mk-map-guide-seen') === '1'; } catch (e) {}
     if (mapGuidePending || !mapTipSeen) showMapGuide();
     else if (focus) $(`#levelMapTrack button[data-level="${unlockedLevel}"]`)?.focus({ preventScroll: true });
   }
-  addEventListener('resize', () => { if (!$('#storyMapScreen').hidden) requestAnimationFrame(() => { buildLevelMap(); focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); }); }, { passive: true });
+  addEventListener('resize', () => { if (!$('#storyMapScreen').hidden) requestAnimationFrame(() => { focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); }); }, { passive: true });
   function showMainMenu(focusCurrent = true) {
     music('duck', 1); music('play', 'menu'); music('ambience', 'menu');
     state = 'menu'; cv.hidden = true; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true;
