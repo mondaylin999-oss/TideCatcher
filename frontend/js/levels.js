@@ -16,6 +16,62 @@
     if (width - 120 - left > 180) out.push([left, width - 120]);
     return out.length ? out : [[120, width - 120]];
   };
+  // Stretch each authored pit against its one moving bridge, then move all
+  // downstream geometry and markers with the shoreline so the level stays intact.
+  const sizePitsByDifficulty = (level, ratio) => {
+    if (!level.pits?.length) return level;
+    const originalPits = level.pits.map(([a, b]) => [a, b]);
+    const bridges = originalPits.map(([a, b]) => level.platforms.find(p => p[3] === 'moving'
+      && p[4]?.path?.length > 1
+      && Math.min(...p[4].path.map(([x]) => x)) <= a
+      && Math.max(...p[4].path.map(([x]) => x)) + p[2] >= b));
+    const pitWidths = bridges.map(bridge => Math.ceil(bridge[2] * ratio));
+    const shiftX = x => {
+      let offset = 0;
+      for (let i = 0; i < originalPits.length; i++) {
+        const [a, b] = originalPits[i], oldWidth = b - a, newWidth = pitWidths[i];
+        if (x < a) return x + offset;
+        if (x <= b) return a + offset + (x - a) * newWidth / oldWidth;
+        offset += newWidth - oldWidth;
+      }
+      return x + offset;
+    };
+    const shiftedPits = originalPits.map(([a, b]) => [shiftX(a), shiftX(b)]);
+    level.ground.points = level.ground.points.map(([x, y]) => [shiftX(x), y]);
+    level.platforms = level.platforms.map(platform => {
+      const bridgePitIndex = bridges.indexOf(platform);
+      if (bridgePitIndex >= 0) {
+        const [a, b] = shiftedPits[bridgePitIndex], width = platform[2];
+        const path = platform[4].path;
+        const start = Math.min(...path.map(([x]) => x));
+        const end = Math.max(...path.map(([x]) => x));
+        platform[0] = a;
+        platform[4].path = path.map(([x, y]) => [
+          start === end ? a : a + (x - start) * (b - width - a) / (end - start), y
+        ]);
+        return platform;
+      }
+      platform[0] = shiftX(platform[0]);
+      if (platform[4]?.path) platform[4].path = platform[4].path.map(([x, y]) => [shiftX(x), y]);
+      if (platform[4]?.anchor) platform[4].anchor = [shiftX(platform[4].anchor[0]), platform[4].anchor[1]];
+      return platform;
+    });
+    level.pits = shiftedPits;
+    level.checkpoints = level.checkpoints.map(shiftX);
+    level.hideSpots = level.hideSpots.map(shiftX);
+    level.burySpots = level.burySpots.map(shiftX);
+    level.spawnZones = level.spawnZones.map(([a, b]) => [shiftX(a), shiftX(b)]);
+    level.catStart = shiftX(level.catStart);
+    level.homeLight[0] = shiftX(level.homeLight[0]);
+    level.props = level.props.map(prop => ({
+      ...prop,
+      x: shiftX(prop.x),
+      ...(prop.path ? { path: prop.path.map(([x, y]) => [shiftX(x), y]) } : {})
+    }));
+    level.width += pitWidths.reduce((total, width, i) => total + width - (originalPits[i][1] - originalPits[i][0]), 0);
+    level.pitToBridgeRatio = ratio;
+    return level;
+  };
   const levels = {
     1: {
       night: 1, map: 'school', width: 2500, ground: ground(2500, [[0,470],[520,470],[560,462],[780,462],[820,470],[1450,470],[1490,458],[1710,458],[1750,470],[2500,470]]),
@@ -69,6 +125,8 @@
       ]
     }
   };
+  for (const [night, ratio] of [[2,3.25],[3,3.5],[4,3.75],[5,4],[6,4.5],[7,5]]) sizePitsByDifficulty(levels[night], ratio);
+  for (const [variant, ratio] of levels.free.variants.map((level, i) => [level, [3.25,4,5][i]])) sizePitsByDifficulty(variant, ratio);
   root.TC_LEVELS = levels;
   if (typeof module !== 'undefined' && module.exports) module.exports = levels;
 })(typeof window !== 'undefined' ? window : globalThis);

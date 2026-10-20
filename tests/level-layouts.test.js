@@ -30,7 +30,7 @@ function check(level) {
       && Math.max(...p[4].path.map(([x]) => x)) + p[2] >= b);
     assert.equal(b - a > MAX_FLAT_JUMP, true, `${level.night}: pit is too wide for an unaided jump`);
     assert.equal(movingBridges.length, 1, `${level.night}: pit has exactly one moving bridge`);
-    assert.ok(b - a >= movingBridges[0][2] * 3, `${level.night}: pit is at least three times wider than its bridge`);
+    assert.ok(b - a >= movingBridges[0][2] * level.pitToBridgeRatio, `${level.night}: pit matches its difficulty-based bridge ratio`);
     const pitPlatforms = level.platforms.filter(p => p[0] < b && p[0] + p[2] > a);
     assert.equal(pitPlatforms.length, 1, `${level.night}: pit has no duplicate roosts`);
     assert.equal(pitPlatforms[0][3], 'moving', `${level.night}: pit can only be crossed by its moving bridge`);
@@ -94,7 +94,7 @@ assert.equal(LEVELS[3].pits.length, 2, 'Night 3 has two pits');
 assert.ok(LEVELS[3].platforms.some(p => p[3] === 'moving' && LEVELS[3].pits.some(([a,b]) => p[0] < b && p[0] + p[2] > a)), 'Night 3 has a moving pit crossing');
 const parkPit = LEVELS[3].pits[1];
 const parkPitCrossers = LEVELS[3].platforms.filter(p => p[0] < parkPit[1] && p[0] + p[2] > parkPit[0]);
-assert.equal(parkPit[1] - parkPit[0], 330, 'Night 3 second pit is three times wider than its moving bridge');
+assert.equal(parkPit[1] - parkPit[0], 385, 'Night 3 second pit is 3.5 times wider than its moving bridge');
 assert.equal(parkPitCrossers.length, 1, 'Night 3 second pit has no overlapping duplicate platforms');
 assert.equal(parkPitCrossers[0][3], 'moving', 'Night 3 second pit can only be crossed by its moving bridge');
 assert.ok(LEVELS[4].platforms.filter(p => p[4]?.skin === 'boat').length >= 3, 'Night 4 has moving boats');
@@ -102,4 +102,6 @@ assert.ok(LEVELS[5].platforms.some(p => p[3] === 'crumbling'), 'Night 5 has crum
 assert.ok(LEVELS[6].platforms.some(p => p[4]?.skin === 'log') && LEVELS[6].platforms.some(p => p[3] === 'swinging'), 'Night 6 has moving logs and a swing');
 assert.ok(LEVELS[7].checkpoints.length > LEVELS[6].checkpoints.length, 'Night 7 adds more checkpoints');
 assert.ok(LEVELS.free.variants.every(level => level.pits?.length), 'Every Free Play trail includes a fall-risk crossing');
+assert.deepEqual([2,3,4,5,6,7].map(night => LEVELS[night].pitToBridgeRatio), [3.25,3.5,3.75,4,4.5,5], 'Story pit ratios ramp up through Night 7');
+assert.deepEqual(LEVELS.free.variants.map(level => level.pitToBridgeRatio), [3.25,4,5], 'Free Play pit ratios follow trail difficulty');
 console.log(`Validated ${layouts().length} level layouts; ${MAX_JUMP_HEIGHT.toFixed(1)}px jump rise and ${MAX_FLAT_JUMP.toFixed(1)}px safe jump span.`);
