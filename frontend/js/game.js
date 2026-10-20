@@ -4042,6 +4042,15 @@
     $('#startScreen').hidden = false; $('#menuHub').hidden = true; $('#storyMapScreen').hidden = false;
     $('#hubSettingsScreen').hidden = true; $('#levelBriefingScreen').hidden = true;
     buildLevelMap(); requestAnimationFrame(() => { focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); });
+    // once the story is finished, the ending can be watched again from the map
+    let endBtn = $('#watchEndingBtn');
+    if (!endBtn) {
+      endBtn = document.createElement('button'); endBtn.type = 'button'; endBtn.id = 'watchEndingBtn'; endBtn.className = 'btn ghost';
+      endBtn.textContent = '🌅 Watch the ending'; endBtn.style.cssText = 'margin-left:10px;padding:8px 16px;font-size:14px';
+      endBtn.addEventListener('click', () => playEnding());
+      $('#levelMapCount').after(endBtn);
+    }
+    endBtn.hidden = !(finalAwakeningSeen || thiriSleepStage >= 7);
     let mapTipSeen = false;
     try { mapTipSeen = localStorage.getItem('mk-map-guide-seen') === '1'; } catch (e) {}
     if (mapGuidePending || !mapTipSeen) showMapGuide();
@@ -4121,30 +4130,59 @@
     { s: 7, text: 'So Shwe leapt into the Night Side, to bring every feeling home before sunrise.' }
   ];
   const INTRO_CPS = 46;
+  // Morning ending: plays after every feeling is home (5 AM cleared). Same player as the intro.
+  const ENDING_SCENES = [
+    { img: '01-sunrise-return', dir: 'ending', alt: 'At sunrise, Shwe leaps back in through the window with all the Moodlings glowing behind. Thiri is still asleep.', ox: '60%', oy: '30%', k0: 1.03, k1: 1.14, dx: '-1%', dy: '1%', note: 392 },
+    { img: '02-wake-up', dir: 'ending', alt: 'Morning sun fills the room. Thiri sits up and stretches, laughing, the Moodlings swirling around her and Shwe on the bed.', ox: '52%', oy: '40%', k0: 1.04, k1: 1.13, dx: '0%', dy: '0%', note: 440 },
+    { img: '03-taping-drawing', dir: 'ending', alt: 'Thiri sits on the floor, smiling softly as she tapes her torn cat drawing back together. Shwe and the Moodlings watch.', ox: '45%', oy: '62%', k0: 1.03, k1: 1.16, dx: '0%', dy: '-1%', note: 523 },
+    { img: '04-new-drawing', dir: 'ending', alt: 'At her desk, Thiri laughs as she draws a new picture of Shwe and the Moodlings, while they peek over her shoulder.', ox: '52%', oy: '55%', k0: 1.03, k1: 1.14, dx: '0%', dy: '0%', note: 587 }
+  ];
+  const ENDING_LINES = [
+    { s: 0, text: 'The sky turned gold. And through the window came a very tired, very proud cat.' },
+    { s: 0, who: 'cat', text: 'Mrrrow! (I brought everyone home!)' },
+    { s: 0, text: 'Behind Shwe, the Moodlings floated in, one by one, glowing brighter than ever.' },
+    { s: 1, text: 'Colour poured back into the room. And Thiri woke up.' },
+    { s: 1, who: 'girl', text: 'Mmh… good morning, Shwe. I had the strangest dream…' },
+    { s: 1, who: 'E', text: 'She’s awake! She’s awake!' },
+    { s: 1, who: 'F', text: 'Hmph. About time.' },
+    { s: 2, text: 'The torn drawing was still on the floor.' },
+    { s: 2, who: 'girl', text: 'I was so upset I didn’t win… but I still love this drawing.' },
+    { s: 2, who: 'C', text: 'It’s okay to feel sad. It means it mattered.' },
+    { s: 2, text: 'One piece of tape at a time, she put it back together.' },
+    { s: 3, text: 'Then she picked up her crayons again.' },
+    { s: 3, who: 'girl', text: 'This time I’ll draw all of you. Every single feeling.' },
+    { s: 3, who: 'S', text: '(giggle) Make me look cute…' },
+    { s: 3, who: 'J', text: 'Draw me bigger than Excited!' },
+    { s: 3, text: 'Frustrated, Nervous, Lonely, Excited, Calm, Shy, Jealous. All of them, home where they belong.' },
+    { s: 3, who: 'girl', text: 'Thank you, Shwe. I’m ready to try again.' }
+  ];
+  let CS_SCENES = INTRO_SCENES, CS_LINES = INTRO_LINES, csKind = 'intro';
   const introImgs = INTRO_SCENES.map(() => new Image());
+  const endingImgs = ENDING_SCENES.map(() => new Image());
+  let csImgs = introImgs;
   let introRaf = 0, introI = 0, introScene = -1, introTyped = 0, introLineStart = 0, introDoneAt = 0, introShot = 0;
   let mapGuidePending = false;
-  function introPreload(onProgress = null) {
+  function introPreload(onProgress = null, scenes = INTRO_SCENES, imgs = introImgs) {
     let finished = 0;
-    const report = () => { finished++; if (onProgress) onProgress(finished, INTRO_SCENES.length); };
-    return Promise.all(INTRO_SCENES.map((sc, i) => {
-      const img = introImgs[i];
+    const report = () => { finished++; if (onProgress) onProgress(finished, scenes.length); };
+    return Promise.all(scenes.map((sc, i) => {
+      const img = imgs[i];
       return new Promise(resolve => {
         let done = false;
         const finish = () => { if (done) return; done = true; img.onload = img.onerror = null; report(); resolve(img.naturalWidth > 0); };
         img.onload = finish; img.onerror = finish;
-        if (!img.src) img.src = `assets/intro/${sc.img}.webp`;
+        if (!img.src) img.src = `assets/${sc.dir || 'intro'}/${sc.img}.webp`;
         if (img.complete) finish();
       });
     }));
   }
   function introShowScene(i) {
-    const sc = INTRO_SCENES[i], shots = [$('#introShotA'), $('#introShotB')];
+    const sc = CS_SCENES[i], shots = [$('#introShotA'), $('#introShotB')];
     sfx('ui', 'page');
     introShot ^= 1;
     const inc = shots[introShot], out = shots[introShot ^ 1];
-    inc.src = introImgs[i].src; inc.alt = sc.alt;
-    const sceneLines = INTRO_LINES.filter(l => l.s === i);
+    inc.src = csImgs[i].src || `assets/${sc.dir || 'intro'}/${sc.img}.webp`; inc.alt = sc.alt;
+    const sceneLines = CS_LINES.filter(l => l.s === i);
     const dur = sceneLines.reduce((t, l) => t + l.text.length / INTRO_CPS + .9 + l.text.length * .018, 1.5);
     [['--ox', sc.ox], ['--oy', sc.oy], ['--k0', sc.k0], ['--k1', sc.k1], ['--dx', sc.dx], ['--dy', sc.dy], ['--dur', dur.toFixed(1) + 's']]
       .forEach(([k, v]) => inc.style.setProperty(k, v));
@@ -4163,7 +4201,7 @@
     if (!reduce) [523, 494, 440, 392].forEach((f, k) => setTimeout(() => state === 'intro' && tone(f, .9, 'sine', .016), 600 + k * 700));
   }
   function introShowLine(i) {
-    const line = INTRO_LINES[i]; introI = i;
+    const line = CS_LINES[i]; introI = i;
     if (line.s !== introScene) { introScene = line.s; introShowScene(line.s); }
     const who = line.who && INTRO_WHO[line.who], sp = $('#introSpeaker'), el = $('#introSubtitle');
     sp.hidden = !who;
@@ -4185,14 +4223,14 @@
   }
   function introTick(now) {
     if (state !== 'intro') return;
-    const line = INTRO_LINES[introI], el = $('#introSubtitle');
+    const line = CS_LINES[introI], el = $('#introSubtitle');
     if (introTyped < line.full.length) {
       const n = Math.min(line.full.length, Math.floor((now - introLineStart) / 1000 * INTRO_CPS));
       if (n !== introTyped) { introTyped = n; el.textContent = line.full.slice(0, n); }
       if (n >= line.full.length) introDoneAt = now;
     } else {
       if (!introDoneAt) introDoneAt = now;
-      if (introI === INTRO_LINES.length - 1) { introFinish(); return; }
+      if (introI === CS_LINES.length - 1) { introFinish(); return; }
       $('#introHint').classList.add('show');
       if (now - introDoneAt > 900 + line.full.length * 18) introShowLine(introI + 1);
     }
@@ -4200,23 +4238,25 @@
   }
   function introAdvance() {
     if (state !== 'intro') return;
-    const line = INTRO_LINES[introI];
+    const line = CS_LINES[introI];
     if (introTyped < line.full.length) {
       introTyped = line.full.length; $('#introSubtitle').textContent = line.full; introDoneAt = performance.now();
       return;
     }
-    if (introI < INTRO_LINES.length - 1) introShowLine(introI + 1); else leaveIntro();
+    if (introI < CS_LINES.length - 1) introShowLine(introI + 1); else leaveIntro();
   }
   let introReturnView = 'storyMap';
   function leaveIntro() {
     cancelAnimationFrame(introRaf); $('#prologueScreen').hidden = true;
     [$('#introShotA'), $('#introShotB')].forEach(im => im.classList.remove('on', 'move'));
     introFx(null, 0); state = 'menu'; cv.hidden = true;
+    if (csKind === 'ending') { csKind = 'intro'; CS_SCENES = INTRO_SCENES; CS_LINES = INTRO_LINES; csImgs = introImgs; showEndingDone(); return; }
     if (introReturnView === 'first-run') showWelcomeCards();
     else if (introReturnView === 'hub') showHub(true);
     else showStoryMap(true);
   }
   function playIntro(returnView = 'storyMap') {
+    csKind = 'intro'; CS_SCENES = INTRO_SCENES; CS_LINES = INTRO_LINES; csImgs = introImgs; $('#introSkipBtn').textContent = 'Skip intro →';
     music('play', 'intro'); music('ambience', 'intro');
     introReturnView = returnView;
     initAudio(); state = 'intro'; cv.hidden = true;
@@ -4224,13 +4264,47 @@
     $('#startScreen').hidden = true; $('#endScreen').hidden = true; $('#awakeningScreen').hidden = true;
     $('#prologueScreen').hidden = false; $('#introContinueBtn').hidden = true;
     introPreload();
-    $('#introDots').innerHTML = INTRO_SCENES.map(() => '<i></i>').join('');
+    $('#introDots').innerHTML = CS_SCENES.map(() => '<i></i>').join('');
     [$('#introShotA'), $('#introShotB')].forEach(im => im.classList.remove('on', 'move'));
     introScene = -1; introShowLine(0);
     $('#introArt').focus({ preventScroll: true });
     tone(196, 2.4, 'sine', .018, 12);
     cancelAnimationFrame(introRaf); introRaf = requestAnimationFrame(introTick);
   }
+  // ---- Morning ending cutscene ----
+  function playEnding() {
+    csKind = 'ending'; CS_SCENES = ENDING_SCENES; CS_LINES = ENDING_LINES; csImgs = endingImgs;
+    music('stop'); initAudio(); state = 'intro'; cv.hidden = true;
+    ['#welcomeScreen', '#welcomeCardsScreen', '#helpScreen', '#levelBriefingScreen', '#nightReadyScreen', '#startScreen', '#endScreen', '#awakeningScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
+    const sm = $('#storyMapScreen'); if (sm) sm.hidden = true;
+    $('#prologueScreen').hidden = false; $('#introContinueBtn').hidden = true; $('#introSkipBtn').textContent = 'Skip →';
+    introPreload(null, ENDING_SCENES, endingImgs);
+    $('#introDots').innerHTML = CS_SCENES.map(() => '<i></i>').join('');
+    [$('#introShotA'), $('#introShotB')].forEach(im => im.classList.remove('on', 'move'));
+    introScene = -1; introShowLine(0);
+    $('#introArt').focus({ preventScroll: true });
+    tone(392, 2, 'sine', .02); setTimeout(() => tone(523, 2, 'sine', .018), 400); setTimeout(() => tone(659, 2.4, 'sine', .016), 800);
+    cancelAnimationFrame(introRaf); introRaf = requestAnimationFrame(introTick);
+  }
+  function showEndingDone() {
+    state = 'awakening'; cv.hidden = true; $('#awakeningScreen').hidden = false;
+    revealAwakeningActions();
+    // the final card shows Thiri's new drawing instead of the old simple bedroom art
+    const art = $('#awakeningArt');
+    if (art && !art.querySelector('.ending-final')) {
+      const im = document.createElement('img'); im.className = 'ending-final'; im.src = 'assets/ending/04-new-drawing.webp';
+      im.alt = 'Thiri happily drawing Shwe and all the Moodlings in the morning sun.';
+      im.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;border-radius:inherit';
+      if (getComputedStyle(art).position === 'static') art.style.position = 'relative';
+      art.appendChild(im);
+    }
+    [...art.children].forEach(ch => { if (!ch.classList.contains('ending-final') && !/subtitle/i.test(ch.id || '')) ch.style.visibility = 'hidden'; });
+    const sub = $('#awakeningSubtitle'); if (sub) { sub.style.position = 'relative'; sub.style.zIndex = 2; sub.style.visibility = 'visible'; }
+    $('#awakeningSkipBtn').hidden = true;
+  }
+  window.TCPlayEnding = playEnding;
+  // test shortcut: open the game with ?ending in the address to jump straight to the morning ending
+  if (/[?&]ending\b/.test(location.search)) setTimeout(() => playEnding(), 900);
   $('#storyBtn').addEventListener('click', () => showStoryMap(true));
   $('#goalNightBtn').addEventListener('click', () => showStoryMap(true));
   $('#goalBookBtn').addEventListener('click', () => $('#bookBtn').click());
@@ -4272,6 +4346,7 @@
     finalAwakeningSeen = true;
     if (thiriSleepStage < 7) { thiriSleepStage = 7; saveStoryProgress(); }
     try { localStorage.setItem('mk-awakening-seen', '1'); } catch (e) {}
+    playEnding(); return;
     state = 'awakening'; cv.hidden = true; $('#endScreen').hidden = true; $('#startScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = false; $('#awakeningActions').hidden = true;
     $('#awakeningArt').dataset.anim = 'sunrise'; $('#awakeningSubtitle').textContent = 'Sunrise light spills across the room…';
