@@ -213,14 +213,18 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .story-map-heading .map-hub-back::before{content:"←";font:700 25px/1 var(--display)}
 
 
-/* Keep chapter selection on one full-screen scroll surface; the map itself never scrolls. */
-.story-map-screen{display:block;height:100vh;height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
-.story-map-panel{display:flex;width:min(820px,100%);height:auto;min-height:100vh;min-height:100dvh;max-height:none;overflow:visible;overscroll-behavior:auto;flex:none}
-.story-map-panel>.level-map-window{display:block;flex:0 0 auto;width:100%;height:auto;min-height:0;overflow:visible;overscroll-behavior:auto;-webkit-overflow-scrolling:auto;touch-action:auto;scrollbar-width:auto}
-
-.story-map-panel::after{content:"";display:block;flex:0 0 50vh;pointer-events:none}
+/* Fit all seven chapter stops into one fixed viewport on desktop and mobile. */
+.story-map-screen{display:grid;height:100vh;height:100dvh;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:auto}
+.story-map-panel{display:flex;width:min(820px,100%);height:100%;min-height:0;max-height:none;overflow:hidden;overscroll-behavior:none;flex:1 1 auto;padding-bottom:env(safe-area-inset-bottom,0px)}
+.story-map-panel>.level-map-window{display:block;flex:1 1 0;width:100%;height:auto;min-height:0;overflow:hidden;overscroll-behavior:none;touch-action:auto;scrollbar-width:none}
+.story-map-panel>.level-map-window::-webkit-scrollbar{display:none}
+.story-map-panel>.level-map-window>.level-map-track{height:100%!important}
+.story-map-panel .level-node{width:min(46px,calc(var(--map-step, 64px)*.82));height:min(46px,calc(var(--map-step, 64px)*.82));font-size:clamp(13px,calc(var(--map-step, 64px)*.28),19px)}
+.story-map-panel .level-node.is-current{width:min(56px,calc(var(--map-step, 64px)*.92));height:min(56px,calc(var(--map-step, 64px)*.92));font-size:clamp(16px,calc(var(--map-step, 64px)*.34),22px)}
 .story-map-panel>.level-map-key{padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (orientation:landscape) and (max-height:500px){.story-map-panel{padding-bottom:6px}.story-map-panel::after{flex-basis:50vh}}
+@media(max-width:600px){.story-map-panel{gap:6px;padding:60px 10px 8px}.story-map-heading{padding-left:40px}.story-map-panel>.level-map-hint{font-size:10px}.story-map-panel>.map-guide{padding:8px;gap:7px}.story-map-panel>.map-guide .map-guide-cat{width:38px;height:38px}.story-map-panel .level-caption{width:clamp(80px,29vw,112px)}.story-map-panel .level-caption strong{font-size:clamp(9px,2.5vw,11px)}.story-map-panel .level-caption span{font-size:8px}}
+@media(max-height:700px){.story-map-panel .level-caption span{display:none}.story-map-panel .level-caption strong{font-size:10px;line-height:1.05}}
+@media(orientation:landscape) and (max-height:500px){.story-map-panel{gap:3px;padding:58px 8px 4px}.story-map-heading{gap:1px 8px;padding-left:38px}.story-map-heading h2{font-size:clamp(17px,4.4vh,22px)}.story-map-heading .eyebrow{font-size:9px}.story-map-panel>.level-map-hint{font-size:9px}.story-map-panel>.map-guide{padding:4px 7px;gap:5px}.story-map-panel>.map-guide .map-guide-cat{width:30px;height:30px}.story-map-panel>.level-map-key{gap:5px;font-size:8px}}
 
 #mapHubBackBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:1000;width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:2px solid var(--lilac);border-radius:50%;background:var(--glass);color:var(--cream);box-shadow:var(--shadow-glow);font-size:0!important;display:grid;place-items:center}
 #mapHubBackBtn::before{content:"←";font:700 25px/1 var(--display)}
@@ -310,6 +314,33 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .tip-touch-icon{display:inline-grid;place-items:center;min-width:48px;min-height:28px;padding:3px 7px;border:2px solid var(--mint);border-radius:9px;background:var(--bg-deep);color:var(--mint);font-size:9px;line-height:1}
 .tip-coach-skip{flex:0 0 auto;min-height:40px;padding:6px 10px;font-size:11px;white-space:nowrap}
 .tip-coach-card.tip-success{border-color:var(--honey);box-shadow:var(--shadow-card),0 0 26px var(--honey-haze)}
+
+/* Reserve rows for every hub action so the full menu fits without page scrolling. */
+.hub-content{min-height:0;grid-template-rows:auto minmax(0,1fr) minmax(0,1fr) auto;gap:clamp(5px,1vh,12px)}
+.hub-content>.hub-card{height:auto;min-height:0}
+.hub-goals{min-height:0;padding:6px 8px}
+.hub-goals h2{margin-bottom:4px}
+@media(max-width:950px) and (orientation:portrait){
+  #menuHub{height:calc(100dvh - 152px);min-height:0}
+  .hub-content{grid-template-rows:auto minmax(0,.85fr) minmax(0,1.15fr) auto;gap:6px}
+  .hub-content>.hub-story-card{height:auto;min-height:0}
+  .hub-small-grid{min-height:0}
+  .hub-goals-grid{gap:4px}.hub-goal{min-height:38px;padding:4px 6px}
+}
+@media(max-width:600px) and (orientation:portrait){
+  #startScreen>.hub-topbar{height:164px;min-height:0;padding:8px 10px;row-gap:8px}
+  #menuHub{height:calc(100dvh - 164px);min-height:0}
+  .hub-layout{height:100%;min-height:0;gap:6px;padding:6px 10px 8px}
+  .hub-content{grid-template-rows:auto minmax(72px,.8fr) minmax(82px,1.05fr) auto;gap:5px}
+  .hub-content-heading{padding-bottom:0}.hub-content-heading h1{font-size:clamp(17px,4.5vw,21px);margin-top:4px}
+  .hub-card{padding:7px;transform:none}.hub-card:hover{transform:none}.hub-story-card{gap:4px;padding:4px 7px}.hub-story-plate{min-height:0;padding:3px 7px;margin-bottom:0;font-size:7px;line-height:1}.hub-story-copy{left:9px;bottom:6px;gap:2px}.hub-story-copy strong{font-size:clamp(17px,5vw,23px)}.hub-story-copy span{font-size:9px}
+  .hub-small-grid{gap:5px}.hub-small-head{left:5px;right:5px;top:5px}.hub-small-head>span{font-size:8px}.hub-small-head i{width:22px;height:22px;flex-basis:22px}
+  .hub-goals{padding:5px 6px}.hub-goals h2{font-size:10px;margin-bottom:3px}.hub-goal{min-height:34px;padding:3px 4px}.hub-goal span{font-size:7px}.hub-goal strong{font-size:8px}
+}
+@media(max-width:559px) and (orientation:landscape){
+  .hub-content{grid-template-rows:auto minmax(0,.9fr) minmax(0,1fr) auto}
+  .hub-goals{padding:3px 5px}.hub-goals h2{font-size:9px}.hub-goal{min-height:30px;padding:2px 4px}
+}
 @media(max-width:600px){
   .welcome-cards-panel{padding:18px;gap:10px}.welcome-card{min-height:clamp(185px,38vh,230px);padding:18px}.welcome-card p{font-size:15px}
   .hub-goals{padding:6px}.hub-goals-grid{gap:4px}.hub-goal{padding:5px}.hub-goals h2{font-size:12px}
