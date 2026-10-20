@@ -2,6 +2,8 @@
 
 ## Screen changes
 
+- **Flexible profile editor:** The name and cat setup panel now sizes to its content on large screens, with a balanced landscape preview and aligned fields instead of a stretched full-height column. Kept the compact layout on short screens and portrait phones.
+
 - **Map road scale:** Narrowed the river channel and banks so chapter nodes remain the trail’s focus and the road reads smaller than the surrounding trees across screen sizes.
 
 - **Map cursor scrolling:** Added mouse drag-to-scroll with click protection for chapter stops, and a visible horizontal scrollbar for cursor users. Touch swipe, wheel and arrow navigation still work.
