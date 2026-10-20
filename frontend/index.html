@@ -10,6 +10,8 @@
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/cozy.css">
+<link rel="stylesheet" href="css/single-screen.css">
+<link rel="stylesheet" href="css/back-navigation.css">
 </head>
 <body>
 <canvas id="game" aria-label="TideCatcher prototype game" hidden></canvas>
@@ -96,7 +98,7 @@
   <div class="welcome-backdrop" aria-hidden="true"><span class="welcome-moon"></span><span class="welcome-tide"></span><span class="welcome-tide welcome-tide-back"></span></div>
   <section class="welcome-panel" aria-describedby="welcomeDescription">
     <p class="eyebrow welcome-eyebrow">A story of a girl, her cat, and the feelings they chase</p>
-    <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/ginger.png" alt="Shwe, a cat ready to follow the night lights" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
+    <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/ginger-realistic-sprite.png" alt="Shwe, a cat ready to follow the night lights" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
     <h1 id="welcomeTitle" class="welcome-title">TideCatcher</h1>
     <p id="welcomeDescription" class="welcome-description">When Thiri falls asleep with a heavy heart, Shwe follows her little feelings into the Night Side.</p>
     <div class="welcome-loading" id="welcomeLoading" role="status" aria-live="polite">
@@ -217,7 +219,7 @@
     <div class="panel story-map-panel">
       <div class="story-map-heading"><div><p class="eyebrow">THE NIGHT SIDE</p><h2 id="storyMapTitle">Choose your chapter</h2></div><span class="level-map-count" id="levelMapCount">1 / 7 nights unlocked</span><span class="room-status" id="roomStatus" aria-live="polite">Thiri is sleeping</span></div>
       <p class="level-map-hint">Choose a lit night. Complete each chapter to open the next.</p>
-      <div class="map-guide" id="mapGuide" hidden role="region" aria-labelledby="mapGuideName"><img class="map-guide-cat" id="mapGuideCat" src="assets/cats/ginger.png" alt="" aria-hidden="true" decoding="async"><div class="map-guide-copy"><strong id="mapGuideName">Shwe</strong><p id="mapGuideText">Follow the glowing path to the next feeling.</p></div><button class="btn ghost map-guide-dismiss" id="mapGuideDismiss" type="button">Got it</button></div>
+      <div class="map-guide" id="mapGuide" hidden role="region" aria-labelledby="mapGuideName"><img class="map-guide-cat" id="mapGuideCat" src="assets/cats/ginger-realistic-sprite.png" alt="" aria-hidden="true" decoding="async"><div class="map-guide-copy"><strong id="mapGuideName">Shwe</strong><p id="mapGuideText">Follow the glowing path to the next feeling.</p></div><button class="btn ghost map-guide-dismiss" id="mapGuideDismiss" type="button">Got it</button></div>
       <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Chapter map" tabindex="-1"><div class="level-map-track" id="levelMapTrack"><svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg></div></div>
       <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Planned / locked</span></div>
     </div>

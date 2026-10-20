@@ -3,19 +3,22 @@
    (Thiri / Shwe); every piece of on-screen text is swapped to the chosen names here,
    both in the page and on the canvas. */
 var MK_COATS = {
-  ginger: { name: 'Ginger Tabby', body: '#f0a050', dark: '#c0702c', belly: '#fbd2a0', alt: '#f0a050', img: 'assets/cats/ginger.png', heroImg: 'assets/cats/ginger-realistic.png' },
-  burmese: { name: 'Burmese', body: '#efb44a', dark: '#c98a2c', belly: '#fbd98f', alt: '#efb44a', img: 'assets/cats/burmese.png' },
-  siamese: { name: 'Siamese', body: '#efdcc0', dark: '#4a2c22', belly: '#f8ecd8', alt: '#efdcc0', img: 'assets/cats/siamese.png' },
-  persian: { name: 'Persian', body: '#f1ebe4', dark: '#c9bcb0', belly: '#fffaf4', alt: '#f1ebe4', img: 'assets/cats/persian.png' },
-  mainecoon: { name: 'Maine Coon', body: '#8a6440', dark: '#4a3220', belly: '#d8c3a0', alt: '#8a6440', img: 'assets/cats/mainecoon.png' },
-  ragdoll: { name: 'Ragdoll', body: '#ecdfcc', dark: '#6e4a33', belly: '#fff8ee', alt: '#ecdfcc', img: 'assets/cats/ragdoll.png' },
-  british: { name: 'British Shorthair', body: '#8a8d99', dark: '#5c5f6b', belly: '#a9acb6', alt: '#8a8d99', img: 'assets/cats/british.png' },
-  bengal: { name: 'Bengal', body: '#d98a2c', dark: '#3a2414', belly: '#f2c98a', alt: '#d98a2c', img: 'assets/cats/bengal.png' },
-  sphynx: { name: 'Sphynx', body: '#f0a6a6', dark: '#c97a80', belly: '#f8c4c0', alt: '#f0a6a6', img: 'assets/cats/sphynx.png' }
+  ginger: { name: 'Ginger Tabby', body: '#f0a050', dark: '#c0702c', belly: '#fbd2a0', alt: '#f0a050', img: 'assets/cats/ginger-realistic-sprite.png', heroImg: 'assets/cats/ginger-realistic.png' },
+  burmese: { name: 'Burmese', body: '#efb44a', dark: '#c98a2c', belly: '#fbd98f', alt: '#efb44a', img: 'assets/cats/burmese-realistic.png' },
+  siamese: { name: 'Siamese', body: '#efdcc0', dark: '#4a2c22', belly: '#f8ecd8', alt: '#efdcc0', img: 'assets/cats/siamese-realistic.png' },
+  persian: { name: 'Persian', body: '#f1ebe4', dark: '#c9bcb0', belly: '#fffaf4', alt: '#f1ebe4', img: 'assets/cats/persian-realistic.png' },
+  mainecoon: { name: 'Maine Coon', body: '#8a6440', dark: '#4a3220', belly: '#d8c3a0', alt: '#8a6440', img: 'assets/cats/mainecoon-realistic.png' },
+  ragdoll: { name: 'Ragdoll', body: '#ecdfcc', dark: '#6e4a33', belly: '#fff8ee', alt: '#ecdfcc', img: 'assets/cats/ragdoll-realistic.png' },
+  british: { name: 'British Shorthair', body: '#8a8d99', dark: '#5c5f6b', belly: '#a9acb6', alt: '#8a8d99', img: 'assets/cats/british-realistic.png' },
+  bengal: { name: 'Bengal', body: '#d98a2c', dark: '#3a2414', belly: '#f2c98a', alt: '#d98a2c', img: 'assets/cats/bengal-realistic.png' },
+  sphynx: { name: 'Sphynx', body: '#f0a6a6', dark: '#c97a80', belly: '#f8c4c0', alt: '#f0a6a6', img: 'assets/cats/sphynx-realistic.png' }
 };
 var MK_OLD_COATS = { golden: 'ginger', silver: 'british', midnight: 'british', calico: 'ragdoll' };
-var MK_SPRITES = {};
-Object.keys(MK_COATS).forEach(function (k) { var im = new Image(); im.src = MK_COATS[k].img; MK_SPRITES[k] = im; });
+var MK_SPRITES = Object.create(null);
+function mkGetSprite(key) {
+  if (!MK_SPRITES[key] && MK_COATS[key]) { var im = new Image(); MK_SPRITES[key] = im; im.src = MK_COATS[key].img; }
+  return MK_SPRITES[key];
+}
 /* Cat animation rig: each sprite is cut into body, tail, back legs and front legs,
    which bend separately to make walk, jump, pounce, scratch and idle poses. */
 var MK_RIGS = {
@@ -30,7 +33,7 @@ var MK_RIGS = {
   sphynx: { hip: .713, split: .488, tailW: .285, tailH: .670, tailAmp: 1 }
 };
 function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
-  var spr = MK_SPRITES[key], r = MK_RIGS[key];
+  var spr = mkGetSprite(key), r = MK_RIGS[key];
   if (!spr || !spr.complete || !spr.naturalWidth || !r) return false;
   var sw = spr.naturalWidth, sh = spr.naturalHeight, kx = dw / sw, ky = dh / sh;
   var hipS = Math.round(sh * r.hip), splitS = Math.round(sw * r.split);
