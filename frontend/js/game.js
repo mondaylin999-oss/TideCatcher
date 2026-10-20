@@ -4044,104 +4044,28 @@
     if (!startGuidedTutorial()) showNextJitTip();
     cv.focus?.();
   }
-  const LEVEL_MAP_LIMIT = 50, LEVEL_MAP_STEP = 92;
+  const LEVEL_MAP_LIMIT = 50, LEVEL_MAP_STEP = 240;
   const LEVEL_MAP_CHAPTERS = new Map(NIGHT_CHAPTERS.map(chapter => [chapter.night, chapter]));
-  const levelMapX = level => 50 + Math.sin(level * .72) * 24;
-  const mapRandom = seed => { const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
-  function buildMapScenery(height) {
-    const parts = [`<rect x="0" y="0" width="100" height="${height}" fill="url(#mapNightFill)"/>`];
-    const y7 = (LEVEL_MAP_LIMIT - 7) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
-    for (let i = 0; i < 280; i++) {
-      const x = 2 + mapRandom(i + 11) * 96, y = mapRandom(i + 901) * height;
-      const rx = .12 + mapRandom(i + 1901) * .2, ry = .45 + mapRandom(i + 2901) * 1.15;
-      const alpha = .18 + mapRandom(i + 3901) * .48;
-      parts.push(`<ellipse class="map-stars" cx="${x.toFixed(2)}" cy="${y.toFixed(1)}" rx="${rx.toFixed(2)}" ry="${ry.toFixed(2)}" opacity="${alpha.toFixed(2)}"/>`);
-    }
-    const ridge = (side, base, spread, seed, className) => {
-      const pts = [], step = 720, count = Math.ceil(height / step);
-      for (let i = 0; i <= count; i++) {
-        const y = Math.min(height, i * step);
-        let x = base + mapRandom(seed + i * 7.31) * spread + Math.sin(i * .43 + seed) * 2.4 + Math.sin(i * .13 + seed * .7) * 3.2;
-        x = Math.max(2, Math.min(43, x)); if (side === 'right') x = 100 - x;
-        pts.push({ x, y });
-      }
-      const edge = pts.map(p => `${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join(' L ');
-      const boundary = side === 'left' ? `M 0 0 L 0 ${height} L ${pts[pts.length - 1].x.toFixed(2)} ${height} L ${pts.slice(0, -1).reverse().map(p => `${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join(' L ')}` : `M 100 0 L 100 ${height} L ${pts[pts.length - 1].x.toFixed(2)} ${height} L ${pts.slice(0, -1).reverse().map(p => `${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join(' L ')}`;
-      return `<path class="${className}" d="${boundary} Z"/><path class="map-ridge-edge" d="M ${edge}"/>`;
-    };
-    for (const side of ['left', 'right']) {
-      parts.push(ridge(side, 18, 13, side === 'left' ? 4 : 29, 'map-ridge-far'));
-      parts.push(ridge(side, 9, 12, side === 'left' ? 51 : 76, 'map-ridge-mid'));
-    }
-    const mountainBand = (y, seed, className, peakHeight, depth) => {
-      let peaks = '';
-      for (let i = 0; i <= 25; i++) {
-        const x = i * 4, peak = y + 10 + mapRandom(seed + i * 3.71) * peakHeight + Math.sin(i * .9 + seed) * 10;
-        peaks += `L${x.toFixed(1)} ${peak.toFixed(1)} `;
-      }
-      const baseline = y + depth, bottom = baseline + 120;
-      return `<path class="${className}" d="M0 ${bottom}L0 ${baseline}${peaks}L100 ${baseline}L100 ${bottom}Z"/>`;
-    };
-    for (let i = 0, y = 160; y < height; i++, y += 1120) {
-      parts.push(mountainBand(y, i + 401, 'map-range-far', 170, 250));
-      parts.push(mountainBand(y + 360, i + 709, 'map-range-mid', 110, 150));
-    }
-    parts.push(mountainBand(y7 + 35, 3217, 'map-range-far', 165, 230));
-    parts.push(mountainBand(y7 + 120, 4217, 'map-range-mid', 110, 145));
-    for (let i = 0; i < 20; i++) {
-      const y = 500 + i * 2780 + mapRandom(i + 8001) * 800;
-      parts.push(`<ellipse class="map-fog" cx="${(34 + mapRandom(i + 8101) * 32).toFixed(1)}" cy="${y.toFixed(1)}" rx="${(28 + mapRandom(i + 8201) * 14).toFixed(1)}" ry="${(42 + mapRandom(i + 8301) * 46).toFixed(1)}"/>`);
-    }
-    for (const side of ['left', 'right']) parts.push(ridge(side, 2, 8, side === 'left' ? 103 : 128, 'map-ridge-near'));
-    for (let i = 0, y = 170; y < height - 36; i++, y += 480 + mapRandom(i + 9001) * 390) {
-      const tree = (x, py, seed) => {
-        const h = 18 + mapRandom(seed) * 12, w = 1.55 + mapRandom(seed + 1) * .75;
-        const d = `M 0 0 L ${-w} ${h * .35} L ${-w * .35} ${h * .35} L ${-w * 1.25} ${h * .68} L ${-w * .55} ${h * .68} L ${-w * 1.75} ${h} L ${w * 1.75} ${h} L ${w * .55} ${h * .68} L ${w * 1.25} ${h * .68} L ${w * .35} ${h * .35} L ${w} ${h * .35} Z M -.45 ${h} L -.45 ${h + 4} L .45 ${h + 4} L .45 ${h} Z`;
-        return `<path class="map-tree" transform="translate(${x.toFixed(2)} ${py.toFixed(1)})" d="${d}"/>`;
-      };
-      parts.push(tree(3 + mapRandom(i + 9101) * 14, y, i + 9201));
-      parts.push(tree(83 + mapRandom(i + 9301) * 14, y + 35 + mapRandom(i + 9401) * 65, i + 9501));
-    }
-    for (let i = 0, level = 8; level < LEVEL_MAP_LIMIT; i++, level += 8) {
-      const x = i % 2 ? 21 + mapRandom(i + 9701) * 8 : 71 + mapRandom(i + 9801) * 8;
-      const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 24;
-      parts.push(`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><path class="map-shrine" d="M-9 0V-39H9V0 M-14 -39H14L12 -44H-12Z M-10 -25H10L9 -29H-9Z M-4 -39V-51H4V-39Z M-6 -51H6L5 -55H-5Z"/><path class="map-shrine-light" d="M-14 -39H14 M-10 -25H10 M-7 -5H7"/></g>`);
-    }
-    parts.push(`<ellipse class="map-fog" cx="82" cy="${(y7 + 62).toFixed(1)}" rx="10" ry="45" opacity=".5"/><ellipse class="map-moon" cx="82" cy="${(y7 + 25).toFixed(1)}" rx="4.8" ry="26"/><g transform="translate(80 ${(y7 + 115).toFixed(1)})"><path class="map-cave" d="M-8 26V-7Q-8 -27 0 -29Q8 -27 8 -7V26Z"/><path class="map-cave-inner" d="M-5 26V-6Q-5 -19 0 -21Q5 -19 5 -6V26Z"/><ellipse class="map-cave-light" cx="-6.7" cy="8" rx=".55" ry="2.2"/></g>`);
-    for (let level = 25; level <= LEVEL_MAP_LIMIT; level += 25) {
-      const x = levelMapX(level), y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 19;
-      parts.push(`<path class="map-ledge" d="M${(x - 7.5).toFixed(2)} ${y.toFixed(1)}l1.8-5h11.4l1.8 5-2 3h-11Z"/><path class="map-ledge-top" d="M${(x - 5.8).toFixed(2)} ${(y - 4.8).toFixed(1)}h11.6l1.4 3h-14.4Z"/>`);
-    }
-    for (const level of LEVEL_MAP_CHAPTERS.keys()) {
-      const x = levelMapX(level), y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 19;
-      parts.push(`<path class="map-ledge" d="M${(x - 8.5).toFixed(2)} ${y.toFixed(1)}l2-5h13l2 5-2 3h-15Z"/><path class="map-ledge-top" d="M${(x - 6.5).toFixed(2)} ${(y - 4.8).toFixed(1)}h13l1.5 3h-16Z"/>`);
-    }
-    $('#mapScenery').innerHTML = parts.join('');
+  function mapPoint(level) {
+    const height = Math.max(180, $('#levelMapViewport').clientHeight);
+    return { x: (level - .5) * LEVEL_MAP_STEP, y: height * (height < 260 ? .32 : .42) + Math.sin((level - 1) * Math.PI / 2) * Math.min(32, height * .09) };
   }
   function syncStoryMapBackdrop() {
-    const screen = $('#storyMapScreen'), track = $('#levelMapTrack');
-    const backdrop = $('#storyMapBackdrop'), fill = $('#storyMapBackdropFill'), scenery = $('#storyMapBackdropScenery');
-    const height = Math.max(1, Math.ceil(screen.clientHeight || innerHeight));
-    backdrop.setAttribute('viewBox', `0 0 100 ${height}`);
-    fill.setAttribute('height', String(height));
-    const visibleMapY = Math.max(0, -track.getBoundingClientRect().top);
-    scenery.setAttribute('transform', `translate(0 ${-visibleMapY})`);
+    const viewport = $('#levelMapViewport');
+    $('#mapPrevious').disabled = viewport.scrollLeft <= 1;
+    $('#mapNext').disabled = viewport.scrollLeft >= viewport.scrollWidth - viewport.clientWidth - 1;
   }
   function buildLevelMap() {
     const track = $('#levelMapTrack'), path = $('#levelMapPath'), route = $('#levelMapRoute'), svg = $('#levelMapSvg');
     track.querySelectorAll('.level-entry').forEach(entry => entry.remove());
-    const height = LEVEL_MAP_LIMIT * LEVEL_MAP_STEP;
-    track.style.height = `${height}px`; svg.style.height = `${height}px`; svg.setAttribute('viewBox', `0 0 100 ${height}`);
-    buildMapScenery(height);
-    const sourceScenery = $('#mapScenery'), backdropScenery = $('#storyMapBackdropScenery');
-    backdropScenery.replaceChildren(...Array.from(sourceScenery.children).filter(node => node.tagName.toLowerCase() !== 'rect').map(node => node.cloneNode(true)));
-    sourceScenery.replaceChildren();
-    syncStoryMapBackdrop();
+    const height = Math.max(180, $('#levelMapViewport').clientHeight), width = LEVEL_MAP_LIMIT * LEVEL_MAP_STEP;
+    track.style.height = `${height}px`; track.style.width = `${width}px`;
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     let d = '', prev = null;
-    for (let level = LEVEL_MAP_LIMIT; level >= 1; level--) {
-      const point = { x: levelMapX(level), y: (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2 };
-      if (!prev) d = `M ${point.x.toFixed(2)} ${point.y}`;
-      else d += ` Q ${((prev.x + point.x) / 2 + Math.sin(level * .29) * 3).toFixed(2)} ${((prev.y + point.y) / 2).toFixed(1)} ${point.x.toFixed(2)} ${point.y}`;
+    for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
+      const point = mapPoint(level);
+      if (!prev) d = `M ${point.x} ${point.y}`;
+      else d += ` C ${prev.x + LEVEL_MAP_STEP / 2} ${prev.y} ${point.x - LEVEL_MAP_STEP / 2} ${point.y} ${point.x} ${point.y}`;
       prev = point;
     }
     route.setAttribute('d', d); path.setAttribute('d', d);
@@ -4149,11 +4073,11 @@
     $('#levelMapCount').textContent = `${unlockedLevel} / 50 levels unlocked`;
     $('#roomStatus').textContent = thiriSleepStage >= 7 ? 'Thiri woke up' : thiriSleepStage >= 5 ? 'Thiri is almost awake' : thiriSleepStage >= 3 ? 'Thiri is stirring' : 'Thiri is sleeping';
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
-      const chapter = LEVEL_MAP_CHAPTERS.get(level), x = levelMapX(level);
+      const chapter = LEVEL_MAP_CHAPTERS.get(level), point = mapPoint(level);
       const entry = document.createElement('div');
-      entry.className = `level-entry ${x > 50 ? 'caption-left' : 'caption-right'}`;
-      entry.style.left = `${x}%`;
-      entry.style.top = `${(LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2}px`;
+      entry.className = 'level-entry';
+      entry.style.left = `${point.x}px`;
+      entry.style.top = `${point.y}px`;
       const button = document.createElement('button');
       const playable = level <= unlockedLevel;
       button.type = 'button'; button.dataset.level = String(level);
@@ -4173,14 +4097,34 @@
     }
   }
   function focusLevelMap(level = unlockedLevel) {
-    const screen = $('#storyMapScreen');
-    const target = $(`#levelMapTrack button[data-level="${level}"]`);
-    if (!target) return;
-    const targetCenter = target.getBoundingClientRect().top + target.offsetHeight / 2;
-    const desired = screen.scrollTop + targetCenter - screen.clientHeight / 2;
-    screen.scrollTop = Math.max(0, Math.min(screen.scrollHeight - screen.clientHeight, desired));
+    const viewport = $('#levelMapViewport');
+    viewport.scrollLeft = mapPoint(level).x - viewport.clientWidth / 2;
+    syncStoryMapBackdrop();
   }
-  $('#storyMapScreen').addEventListener('scroll', syncStoryMapBackdrop, { passive: true });
+  const mapViewport = $('#levelMapViewport');
+  mapViewport.addEventListener('scroll', syncStoryMapBackdrop, { passive: true });
+  mapViewport.addEventListener('wheel', event => {
+    if (event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+    event.preventDefault();
+    mapViewport.scrollLeft += event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? mapViewport.clientWidth : 1);
+  }, { passive: false });
+  function panLevelMap(direction) {
+    mapViewport.scrollBy({ left: direction * Math.max(LEVEL_MAP_STEP, mapViewport.clientWidth * .75), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  }
+  $('#mapPrevious').addEventListener('click', () => panLevelMap(-1));
+  $('#mapNext').addEventListener('click', () => panLevelMap(1));
+  $('#mapCurrent').addEventListener('click', () => focusLevelMap());
+  mapViewport.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    if (event.key === 'Home' || event.key === 'End') focusLevelMap(event.key === 'Home' ? 1 : LEVEL_MAP_LIMIT);
+    else panLevelMap(event.key === 'ArrowLeft' ? -1 : 1);
+  });
+  new ResizeObserver(() => {
+    if ($('#storyMapScreen').hidden) return;
+    const height = Math.max(180, mapViewport.clientHeight);
+    if ($('#levelMapTrack').style.height !== `${height}px`) { buildLevelMap(); focusLevelMap(); }
+  }).observe(mapViewport);
   function showHub(focus = true) {
     music('duck', 1); music('play', 'menu'); music('ambience', 'menu');
     $('#startScreen').hidden = false; $('#menuHub').hidden = false; $('#storyMapScreen').hidden = true;
@@ -4663,7 +4607,7 @@
     mapGuidePending = true;
     const coat = MK_COATS[MK_PROFILE.coat] || MK_COATS.ginger;
     $('#mapGuideCat').src = coat.img; $('#mapGuideName').textContent = MK_PROFILE.cat;
-    $('#mapGuideText').textContent = `${MK_PROFILE.cat} will follow the glowing path with you. Choose the lit hour at its base to see the first goal.`;
+    $('#mapGuideText').textContent = `${MK_PROFILE.cat} will follow the glowing path with you. Swipe along the trail and choose a glowing chapter to see its goal.`;
     $('#mapGuide').hidden = false; $('#mapGuideDismiss').focus({ preventScroll: true });
   }
   function dismissMapGuide() {

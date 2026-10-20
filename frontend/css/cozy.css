@@ -213,14 +213,6 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .story-map-heading .map-hub-back::before{content:"←";font:700 25px/1 var(--display)}
 
 
-/* Keep chapter selection on one full-screen scroll surface; the map itself never scrolls. */
-.story-map-screen{display:block;height:100vh;height:100dvh;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
-.story-map-panel{display:flex;width:min(820px,100%);height:auto;min-height:100vh;min-height:100dvh;max-height:none;overflow:visible;overscroll-behavior:auto;flex:none;padding-bottom:env(safe-area-inset-bottom,0px)}
-.story-map-panel>.level-map-window{display:block;flex:0 0 auto;width:100%;height:auto;min-height:0;overflow:visible;overscroll-behavior:auto;-webkit-overflow-scrolling:auto;touch-action:auto;scrollbar-width:auto}
-.story-map-panel::after{content:"";display:block;flex:0 0 50vh;pointer-events:none}
-.story-map-panel>.level-map-key{padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (orientation:landscape) and (max-height:500px){.story-map-panel{padding-bottom:6px}.story-map-panel::after{flex-basis:50vh}}
-
 #mapHubBackBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);z-index:1000;width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:2px solid var(--lilac);border-radius:50%;background:var(--glass);color:var(--cream);box-shadow:var(--shadow-glow);font-size:0!important;display:grid;place-items:center}
 #mapHubBackBtn::before{content:"←";font:700 25px/1 var(--display)}
 #storyMapScreen[hidden] + #mapHubBackBtn{display:none}
@@ -385,3 +377,47 @@ html,body{height:100%;height:100dvh;overflow:hidden}
   .hub-story-copy span,.hub-small-copy{font-size:8px;line-height:1.2}.hub-small-value{font-size:8px}
 }
 @media(max-width:600px){.help-control-row{grid-template-columns:minmax(70px,.48fr) minmax(0,1fr);gap:6px;padding:6px}.help-control-row strong,.help-control-row span{font-size:11px}}
+
+/* Landscape chapter trail: one horizontal viewport, with stable navigation. */
+.story-map-screen{display:flex;overflow:hidden;touch-action:auto;background:radial-gradient(ellipse at 55% 100%,#35485b 0,transparent 65%),linear-gradient(165deg,#292342,#101b2b);border-radius:0}
+.story-map-backdrop{display:none}
+.story-map-panel{width:100%;height:100%;min-height:0;max-height:100%;padding:20px max(24px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));gap:10px;overflow:hidden;position:relative}
+.story-map-panel::after{display:none}
+.story-map-heading{padding-left:68px;grid-template-columns:minmax(0,1fr) auto;align-items:center;min-height:54px}
+.story-map-heading h2{font-size:clamp(22px,3vw,34px)}
+.story-map-heading .level-map-count,.story-map-heading .room-status{grid-column:2}
+.story-map-panel>.level-map-hint{margin:0;padding-left:68px}
+.story-map-panel>.level-map-window{flex:1 1 0;height:auto;min-height:0;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--lilac) transparent;background:radial-gradient(circle at 22px 22px,#ffffff35 1px,transparent 2px) 0 0 / 113px 97px;border-radius:18px}
+.level-map-track{min-height:100%}
+.level-map-path{z-index:0}
+.level-entry .level-node{width:60px;height:60px;font-size:23px}
+.level-entry .level-node.is-current{width:72px;height:72px;font-size:27px}
+.level-entry .level-caption{left:0;right:auto;top:49px;transform:translateX(-50%);width:208px;max-width:none;text-align:center;gap:8px;padding:12px;background:#17182dcc;border:1px solid #b9a3ff30;border-radius:14px;text-shadow:none}
+.level-caption strong{font-size:16px;line-height:1.25}
+.level-caption span{font-size:12px;line-height:1.4}
+.map-navigation{display:flex;justify-content:center;gap:12px;flex:none}
+.map-navigation .btn{min-height:44px;min-width:48px;margin:0}
+.story-map-panel>.level-map-key{justify-content:center;padding:0;flex:none}
+.story-map-panel>.map-guide{position:absolute;bottom:76px;left:50%;transform:translateX(-50%);width:min(500px,calc(100% - 32px));z-index:5;padding:12px;box-shadow:0 12px 40px #0008}
+#watchEndingBtn{grid-column:1;grid-row:3;justify-self:start}
+@media(max-height:500px){
+ .story-map-panel{padding:8px max(12px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));gap:4px}
+ .story-map-heading{min-height:48px;padding-left:64px}
+ .story-map-heading h2{font-size:21px}
+ .story-map-heading .eyebrow{display:none}
+ .story-map-panel>.level-map-hint,.story-map-panel>.level-map-key{display:none}
+ .level-entry .level-node{width:46px;height:46px;font-size:19px}
+ .level-entry .level-node.is-current{width:54px;height:54px;font-size:22px}
+ .level-entry .level-caption{top:34px;padding:7px 10px;gap:3px}
+ .level-caption strong{font-size:14px}
+ .level-caption span{font-size:11px;line-height:1.2}
+ .map-navigation{gap:8px}
+ .map-navigation .btn{padding:6px 14px;font-size:12px}
+ #watchEndingBtn{grid-column:1;grid-row:2;padding:2px 8px!important;font-size:11px!important}
+}
+@media(max-width:550px) and (orientation:portrait){
+ .story-map-heading{grid-template-columns:1fr;gap:4px}
+ .story-map-heading .level-map-count,.story-map-heading .room-status{grid-column:1;grid-row:auto}
+ .story-map-heading>div{grid-row:auto}
+ .story-map-panel>.level-map-hint{padding-left:0}
+}
