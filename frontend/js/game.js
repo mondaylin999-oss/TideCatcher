@@ -4446,9 +4446,6 @@
   // test shortcut: open the game with ?ending in the address to jump straight to the morning ending
   if (/[?&]ending\b/.test(location.search)) setTimeout(() => playEnding(), 900);
   $('#storyBtn').addEventListener('click', () => showStoryMap(true));
-  $('#goalNightBtn').addEventListener('click', () => showStoryMap(true));
-  $('#goalBookBtn').addEventListener('click', () => $('#bookBtn').click());
-  $('#goalUpgradeBtn').addEventListener('click', () => $('#shopBtn').click());
   $('#mapHubBackBtn').addEventListener('click', () => showHub(true));
   $('#infoBtn').addEventListener('click', () => openHelp('hub'));
   $('#introSkipBtn').addEventListener('click', leaveIntro);
