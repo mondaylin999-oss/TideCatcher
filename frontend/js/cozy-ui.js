@@ -74,6 +74,17 @@
     const toChapters = $('pauseChaptersBtn').textContent.toLowerCase().includes('chapters');
     return { title: toChapters ? 'Back to chapters?' : 'Back to menu?', text: lostRunText, confirmLabel: toChapters ? 'Back to chapters' : 'Back to menu' };
   });
+  // Keep back navigation outside panel layout and scrolling containers.
+  ['mapHubBackBtn', 'settingsCloseBtn', 'levelBriefingBack', 'shopBack', 'bookBack',
+    'setupBackBtn', 'setupPrevious', 'helpDoneBtn', 'pauseChaptersBtn', 'menuBtn'].forEach(id => {
+    const button = $(id), screen = button?.closest('.overlay');
+    if (!screen) return;
+    button.classList.add('screen-back');
+    button.title = button.textContent.trim();
+    screen.prepend(button);
+  });
+  // Help has one return control; retain the legacy close handler on its hidden button.
+  $('helpCloseBtn').hidden = true;
   // Two presentation steps; the original submit handler still validates and saves.
   let setupStep = 1;
   function showSetupStep(step, focus = true) {

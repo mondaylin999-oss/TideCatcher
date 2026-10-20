@@ -1,0 +1,16 @@
+/* Back controls share a viewport anchor and retain their accessible text labels. */
+.overlay>.screen-back{
+  position:fixed;inset:auto;top:calc(env(safe-area-inset-top,0px) + 10px);left:calc(env(safe-area-inset-left,0px) + 10px);
+  z-index:1000;display:grid;place-items:center;grid-area:auto;flex:none;
+  width:44px;height:44px;min-width:44px;min-height:44px;max-width:none;margin:0;padding:0;
+  border:2px solid var(--lilac);border-radius:50%;background:var(--bg-card);color:var(--cream);
+  box-shadow:var(--shadow-glow);font-size:0!important;line-height:1;transform:none;
+}
+.overlay>.screen-back::before{content:'←';font:700 25px/1 var(--display)}
+.overlay>.screen-back[hidden]{display:none}
+#setupScreen:has(#setupPrevious:not([hidden]))>#setupBackBtn{display:none}
+/* On narrow screens the back arrow occupies the panel's left header margin. */
+@media(max-width:600px){
+  #setupForm>h1,#setupForm>.eyebrow,#setupForm>p.muted{padding-left:42px}
+  #helpScreen .help-heading{padding-left:42px}
+}
