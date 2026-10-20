@@ -15,7 +15,7 @@ function groundY(level, x) {
   }
   return pts.at(-1)[1];
 }
-function layouts() { return [...Array(7)].map((_, i) => LEVELS[i + 1]).concat(LEVELS.free.variants); }
+function layouts() { return [...Array(50)].map((_, i) => LEVELS[i + 1]).concat(LEVELS.free.variants); }
 function pitAt(level, x) { return (level.pits || []).find(([a, b]) => x > a + 10 && x < b - 10); }
 function platformPositions([x, y, , type, extra]) { return type === 'moving' ? extra.path : [[x, y]]; }
 function check(level) {
@@ -85,7 +85,7 @@ function check(level) {
   assert.ok(level.catStart > 0 && level.catStart < level.width, `${level.night}: valid cat start`);
 }
 
-assert.equal(layouts().length, 10, 'seven story nights plus three Free Play trails');
+assert.equal(layouts().length, 53, '50 story levels plus three Free Play trails');
 for (const level of layouts()) check(level);
 assert.equal((LEVELS[1].pits || []).length, 0, 'Night 1 is the no-pit learning night');
 assert.equal(LEVELS[2].pits.length, 1, 'Night 2 introduces one pit');
@@ -104,4 +104,7 @@ assert.ok(LEVELS[7].checkpoints.length > LEVELS[6].checkpoints.length, 'Night 7 
 assert.ok(LEVELS.free.variants.every(level => level.pits?.length), 'Every Free Play trail includes a fall-risk crossing');
 assert.deepEqual([2,3,4,5,6,7].map(night => LEVELS[night].pitToBridgeRatio), [3.25,3.5,3.75,4,4.5,5], 'Story pit ratios ramp up through Night 7');
 assert.deepEqual(LEVELS.free.variants.map(level => level.pitToBridgeRatio), [3.25,4,5], 'Free Play pit ratios follow trail difficulty');
+assert.ok([...Array(43)].every((_, i) => LEVELS[i + 8].pitToBridgeRatio === 5), 'Challenge levels keep the maximum five-to-one pit ratio');
+assert.ok([...Array(42)].every((_, i) => LEVELS[i + 9].pits.length >= LEVELS[i + 8].pits.length), 'Pit count never drops as challenge levels advance');
+assert.ok([...Array(42)].every((_, i) => LEVELS[i + 9].platforms.find(p => p[3] === 'moving')[4].speed > LEVELS[i + 8].platforms.find(p => p[3] === 'moving')[4].speed), 'Bridge speed rises every challenge level');
 console.log(`Validated ${layouts().length} level layouts; ${MAX_JUMP_HEIGHT.toFixed(1)}px jump rise and ${MAX_FLAT_JUMP.toFixed(1)}px safe jump span.`);

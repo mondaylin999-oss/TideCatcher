@@ -115,7 +115,6 @@
     sfx('cat', kind, volume);
   }
   // night music per place (js/tc-sfx.js): School 11 PM–Midnight, Park 1 AM, Festival 2 AM, Hilltop 3 AM, Lakeside 4–5 AM
-  const NIGHT_MUSIC = ['school', 'school', 'park', 'festival', 'hilltop', 'lakeside', 'lakeside'];
   const music = (fn, a) => { try { if (window.TCMusic) TCMusic[fn](a); } catch (e) {} };
   function tone(f, d = .12, type = 'sine', v = .1, slide = 0) {
     if (!ac) return;
@@ -291,13 +290,13 @@
   const SCHOOL_WALL = new Image();
   SCHOOL_WALL.src = 'assets/school/hallway-night.webp';
   const SCHOOL_WALL_W = 2445, SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
-  function inSchool() { return mode === 'story' && SCHOOL_NIGHTS.includes(storyNight); }
+  function inSchool() { return mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school'); }
   // ---------- Hilltop park map (Night 5) ----------
   // Layout from the team's level design: a stepped stone terrace (high gate terrace, bench step,
   // lamp step, low walkway along the railing, back up), tree-branch ledges and stone pillars to jump on,
   // and a tree hollow, bin and bushes to hide in. The far city view comes from the team's picture.
   const HILL_NIGHTS = [5];
-  function inHill() { return mode === 'story' && HILL_NIGHTS.includes(storyNight); }
+  function inHill() { return mode === 'story' && (HILL_NIGHTS.includes(storyNight) || currentLevel?.map === 'hill'); }
   const HILL_W = 1400;
   function hillY(x) { return terrainY(x); }
   const HILL_VISTA = new Image();
@@ -424,7 +423,7 @@
   // mountains, a lake with the sun's reflection, a rowboat, then the shore path, reed beds and
   // Calm's lily pads and wooden jetties (platforms).
   const LAKE_NIGHTS = [6, 7];
-  function inLake() { return mode === 'story' && LAKE_NIGHTS.includes(storyNight); }
+  function inLake() { return mode === 'story' && (LAKE_NIGHTS.includes(storyNight) || currentLevel?.map === 'lake'); }
   const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
   const lerpC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(',')})`; };
   function dawnP() {
@@ -537,7 +536,7 @@
   const PARK_NIGHTS = [3];
   const PARK_WALL = new Image();
   PARK_WALL.src = 'assets/park/park-night.webp';
-  function inPark() { return mode === 'story' && PARK_NIGHTS.includes(storyNight); }
+  function inPark() { return mode === 'story' && (PARK_NIGHTS.includes(storyNight) || currentLevel?.map === 'park'); }
   // ---------- Lighting festival map (Night 4) ----------
   // Far back: sky + pagoda hill picture (barely moves). Middle: palm and roof silhouettes in code.
   // Front: boardwalk over dark water, stalls (hiding spots), a few lantern strings, raised decks.
@@ -547,7 +546,7 @@
   const FEST_COLORS = ['255,156,207', '185,162,255', '143,227,224', '255,227,163', '255,143,163', '160,200,255'];
   const FEST_CLOTH = ['#7b2d8e', '#b8336a', '#1f7f86', '#3a5fc0', '#8e3fb0', '#2f8f5e'];
   const festCol = i => FEST_COLORS[((Math.floor(i) % FEST_COLORS.length) + FEST_COLORS.length) % FEST_COLORS.length];
-  function inFestival() { return mode === 'story' && FESTIVAL_NIGHTS.includes(storyNight); }
+  function inFestival() { return mode === 'story' && (FESTIVAL_NIGHTS.includes(storyNight) || currentLevel?.map === 'festival'); }
   function currentMapKey() {
     if (inSchool()) return 'school';
     if (inPark()) return 'park';
@@ -567,13 +566,33 @@
     { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 135, rareChance: .22, feelingsNeeded: { L: 2, C: 2, S: 1, E: 1 }, newMoodling: 'Calm is too dim to come home. Walk slowly to gather 3 fireflies, then bring them to Calm', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { L: 1, C: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: false, tutorialHint: 'Calm sits dim by the lake. Walk slowly into 3 fireflies, then bring their light to Calm.' , sky: { A: 2, B: 1, C: 0, types: { A: ['L'], B: ['E'], C: [] }, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
     { night: 7, name: 'Sunrise', sub: 'Bring every feeling home before the sun rises', theme: '#d6a866', musicRoot: 293.66, timeLimit: 150, rareChance: .30, feelingsNeeded: { F: 3, N: 2, J: 2, L: 2, S: 2, E: 2, B: 2, C: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 1, N: 1, J: 1, L: 1, S: 1, E: 1, B: 1, C: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
   ];
+  const CHALLENGE_THEMES = ['#7893bb', '#8e78ae', '#628aa0', '#c17679', '#7181aa', '#729579', '#d6a866'];
+  const CHALLENGE_NAMES = ['Lantern Walk', 'Mossy Switchback', 'Moonlit Boardwalk', 'Quiet Rooftops', 'Reedbed Passage'];
+  const finalChapter = NIGHT_CHAPTERS[6];
+  for (let night = 8; night <= 50; night++) {
+    const chapter = {
+      ...finalChapter,
+      night,
+      name: `${CHALLENGE_NAMES[(night - 8) % CHALLENGE_NAMES.length]} ${String(night).padStart(2, '0')}`,
+      sub: `Challenge route ${night - 7} · more gaps and quicker bridges`,
+      theme: CHALLENGE_THEMES[(night - 8) % CHALLENGE_THEMES.length],
+      musicRoot: finalChapter.musicRoot * Math.pow(2, ((night - 8) % 9 - 4) / 12),
+      feelingsNeeded: { ...finalChapter.feelingsNeeded },
+      initialSpawns: { ...finalChapter.initialSpawns },
+      chaosSize: { ...finalChapter.chaosSize },
+      sky: { ...finalChapter.sky, hintShown: false }
+    };
+    NIGHT_CHAPTERS.push(chapter);
+  }
   // These match the original movement curve; keeping them authored with the chapters lets the
   // layout regression verify that every pit and roost remains reachable at its night's gravity.
   NIGHT_CHAPTERS.forEach(chapter => { chapter.jumpSpeed = 830; chapter.jumpGravity = 2300; });
   const chapterFor = night => NIGHT_CHAPTERS[clamp(night - 1, 0, NIGHT_CHAPTERS.length - 1)];
   // The whole story is one night: each level is one hour, from 11 PM to sunrise.
   const NIGHT_HOURS = ['11 PM', 'Midnight', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM'];
-  const hourOf = night => NIGHT_HOURS[clamp(Math.floor(night) - 1, 0, NIGHT_HOURS.length - 1)];
+  const hourOf = night => Math.floor(night) <= NIGHT_HOURS.length
+    ? NIGHT_HOURS[clamp(Math.floor(night) - 1, 0, NIGHT_HOURS.length - 1)]
+    : `Night ${String(Math.floor(night)).padStart(2, '0')}`;
   const SLEEP_STAGES = [
     { faceVisible: 0, blanketLift: 0, handOut: 0, eyesOpen: 0, smile: 0, plant: 0, curtain: 0, room: .15 },
     { faceVisible: 1, blanketLift: 2, handOut: 0, eyesOpen: 0, smile: 0, plant: .15, curtain: .05, room: .22 },
@@ -586,7 +605,7 @@
   ];
   const STAGE_LINES = ['', 'She stopped crying in her sleep. I stayed close.', 'She turned toward the window. The moon touched her cheek.', 'Her hand found me in the dark. I did not move.', 'Her face is softer tonight. Something is mending.', 'Her eyelids fluttered. Almost, almost.', 'She stretched. The room smells like morning.', 'Morning. She opened her eyes.'];
   let unlockedLevel = 1, thiriSleepStage = 0, finalAwakeningSeen = false;
-  try { unlockedLevel = clamp(Math.floor(+localStorage.getItem('mk-progress') || 1), 1, 7); } catch (e) {}
+  try { unlockedLevel = clamp(Math.floor(+localStorage.getItem('mk-progress') || 1), 1, 50); } catch (e) {}
   try { thiriSleepStage = clamp(Math.floor(+localStorage.getItem('mk-thiri') || 0), 0, 7); } catch (e) {}
   try { finalAwakeningSeen = localStorage.getItem('mk-awakening-seen') === '1'; } catch (e) {}
   function saveStoryProgress() {
@@ -1009,7 +1028,7 @@
   }
   function hideFeeling(m, x) {
     if (m.spot) { m.spot.used = true; m.spot.usedAt = t; m.spot.scratching = false; }
-    const inCave = mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight === 7));
+    const inCave = mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight >= 7));
     m.x = x ?? (inCave ? pickCaveX() : pickX()); m.caveX = inCave ? m.x : null;
     m.y = terrainY(m.x) - (m.type === 'C' ? 46 : 30); m.st = 0; m.sit = 0; m.rev = 0; m.fleeAlarm = 0;
     const tutorialLonely = m.type === 'L' && mode === 'story' && storyNight <= 3;
@@ -3248,7 +3267,7 @@
     let unlockedNow = false;
     if (mode === 'story' && won) {
       const before = unlockedLevel;
-      unlockedLevel = clamp(Math.max(unlockedLevel, storyNight + 1), 1, 7);
+      unlockedLevel = clamp(Math.max(unlockedLevel, storyNight + 1), 1, 50);
       thiriSleepStage = clamp(Math.max(thiriSleepStage, storyNight), 0, 7);
       unlockedNow = unlockedLevel > before; saveStoryProgress();
     }
@@ -3262,7 +3281,7 @@
       tone(330, .35, 'triangle', .08, -80); showEnd(); return;
     }
     let final = score;
-    const left = Math.max(0, timeLeft), bestKey = storyNight === 7 ? 'mk-best-night-7' : 'mk-best';
+    const left = Math.max(0, timeLeft), bestKey = storyNight >= 7 ? `mk-best-night-${storyNight}` : 'mk-best';
     if (won) final += Math.round(left) * 20;
     const best = Math.max(getBest(bestKey), final); setBest(bestKey, best);
     R = {
@@ -3525,7 +3544,7 @@
   refreshShopBtns();
 
   function playNightComplete(night) {
-    const chapter = chapterFor(night), next = Math.min(7, night + 1);
+    const chapter = chapterFor(night), next = Math.min(50, night + 1);
     $('#nightStoryline').hidden = true;
     $('#endThiriArt').dataset.stage = String(Math.min(7, thiriSleepStage));
     $('#endDiaryLine').textContent = `“${chapter.diary}”`;
@@ -3533,9 +3552,9 @@
     $('#endUnlockBadge').hidden = !R.unlocked;
     $('#endUnlockBadge').textContent = R.unlocked ? `${hourOf(next).toUpperCase()} UNLOCKED` : '';
     $('#endEyebrow').textContent = `${hourOf(night)} · ${chapter.name} · done`;
-    $('#endTitle').textContent = R.unlocked ? `${hourOf(night)} done. ${hourOf(next)} is open!` : night === 7 ? 'The lake is quiet' : 'A little more of Thiri returns';
+    $('#endTitle').textContent = night === 50 ? 'All 50 routes are home' : R.unlocked ? `${hourOf(night)} done. ${hourOf(next)} is open!` : night === 7 ? 'The lake is quiet' : 'A little more of Thiri returns';
     $('#endMsg').textContent = `You brought all ${R.total} feelings home. ${R.unlocked ? `${hourOf(next)} is now playable from the map.` : 'Your story progress is saved.'}`;
-    $('#againBtn').textContent = night < 7 ? `Continue → ${hourOf(night + 1)}` : `Replay ${hourOf(7)}`;
+    $('#againBtn').textContent = night < 50 ? `Continue → ${hourOf(night + 1)}` : `Replay ${hourOf(50)}`;
   }
 
   function showEnd() {
@@ -3576,7 +3595,7 @@
     $('#sBest').textContent = R.best.toLocaleString();
     $('#sCombo').textContent = '×' + R.combo;
     $('#sHome').textContent = `${R.home}/${R.total}`;
-    $('#againBtn').textContent = R.won ? (R.night < 7 ? `Continue → ${hourOf(R.night + 1)}` : `Replay ${hourOf(7)}`) : `Retry ${hourOf(R.night)}`;
+    $('#againBtn').textContent = R.won ? (R.night < 50 ? `Continue → ${hourOf(R.night + 1)}` : `Replay ${hourOf(50)}`) : `Retry ${hourOf(R.night)}`;
     $('#menuBtn').textContent = R.failReason === 'fall' ? 'Back to map' : 'Main menu';
     $('#endTip').textContent = R.tip;
     if (R.won) playNightComplete(R.night);
@@ -3785,9 +3804,9 @@
   function showNightWake(night) {
     wakeStage = clamp(thiriSleepStage, 1, 7); const ch = chapterFor(night);
     $('#nightWakeEyebrow').textContent = `AFTER ${hourOf(night).toUpperCase()}`;
-    $('#nightWakeTitle').textContent = wakeStage === 7 ? 'Morning is almost here.' : 'She stirs in her sleep.';
+    $('#nightWakeTitle').textContent = night > 7 ? 'One more route brought home.' : wakeStage === 7 ? 'Morning is almost here.' : 'She stirs in her sleep.';
     $('#nightWakeDiary').textContent = `“${ch.diary}”`; $('#nightWakeLine').textContent = `Shwe: “${STAGE_LINES[wakeStage]}”`;
-    $('#nightWakeContinue').textContent = wakeStage === 7 ? 'See the morning →' : 'Continue →';
+    $('#nightWakeContinue').textContent = night <= 7 && wakeStage === 7 ? 'See the morning →' : 'Continue →';
     $('#nightWakeScreen').hidden = false; $('#nightWakeContinue').focus({ preventScroll: true });
     const from = SLEEP_STAGES[Math.max(0, wakeStage - 1)], to = SLEEP_STAGES[wakeStage], started = performance.now(), tween = reduce ? .1 : 1.5;
     const animateWake = now => { const q = clamp((now - started) / 1000 / tween, 0, 1); drawWakeCard(wakeStage, ease(q)); if (q < 1) wakeRaf = requestAnimationFrame(animateWake); };
@@ -3999,11 +4018,13 @@
   }
   function startGame(m, night = storyNight) {
     if (typeof m === 'string') mode = m;
-    storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 7) : 1;
+    storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 50) : 1;
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
-    music('duck', 1); music('play', mode === 'story' ? NIGHT_MUSIC[storyNight - 1] : 'park');
-    music('ambience', mode === 'story' ? NIGHT_MUSIC[storyNight - 1] : 'park');
+    const mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : 'free';
+    const sceneTrack = ({ school: 'school', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
+    music('duck', 1); music('play', sceneTrack);
+    music('ambience', sceneTrack);
     cv.hidden = false;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true; $('#welcomeCardsScreen').hidden = true; $('#helpScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
@@ -4023,7 +4044,7 @@
     if (!startGuidedTutorial()) showNextJitTip();
     cv.focus?.();
   }
-  const LEVEL_MAP_LIMIT = 7, LEVEL_MAP_STEP = 92;
+  const LEVEL_MAP_LIMIT = 50, LEVEL_MAP_STEP = 92;
   const LEVEL_MAP_CHAPTERS = new Map(NIGHT_CHAPTERS.map(chapter => [chapter.night, chapter]));
   const levelMapX = level => 50 + Math.sin(level * .72) * 24;
   const mapRandom = seed => { const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
@@ -4081,7 +4102,7 @@
       parts.push(tree(3 + mapRandom(i + 9101) * 14, y, i + 9201));
       parts.push(tree(83 + mapRandom(i + 9301) * 14, y + 35 + mapRandom(i + 9401) * 65, i + 9501));
     }
-    for (let i = 0, level = 120; level < LEVEL_MAP_LIMIT; i++, level += 145) {
+    for (let i = 0, level = 8; level < LEVEL_MAP_LIMIT; i++, level += 8) {
       const x = i % 2 ? 21 + mapRandom(i + 9701) * 8 : 71 + mapRandom(i + 9801) * 8;
       const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 24;
       parts.push(`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><path class="map-shrine" d="M-9 0V-39H9V0 M-14 -39H14L12 -44H-12Z M-10 -25H10L9 -29H-9Z M-4 -39V-51H4V-39Z M-6 -51H6L5 -55H-5Z"/><path class="map-shrine-light" d="M-14 -39H14 M-10 -25H10 M-7 -5H7"/></g>`);
@@ -4125,7 +4146,7 @@
     }
     route.setAttribute('d', d); path.setAttribute('d', d);
     svg.querySelector('.path-halo').setAttribute('d', d);
-    $('#levelMapCount').textContent = `${unlockedLevel} / 7 hours unlocked`;
+    $('#levelMapCount').textContent = `${unlockedLevel} / 50 levels unlocked`;
     $('#roomStatus').textContent = thiriSleepStage >= 7 ? 'Thiri woke up' : thiriSleepStage >= 5 ? 'Thiri is almost awake' : thiriSleepStage >= 3 ? 'Thiri is stirring' : 'Thiri is sleeping';
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const chapter = LEVEL_MAP_CHAPTERS.get(level), x = levelMapX(level);
@@ -4830,7 +4851,7 @@
   });
   $('#freeBtn').addEventListener('click', () => startGame('free'));
   $('#againBtn').addEventListener('click', () => {
-    if (R && R.won && !R.free && R.night < 7) startGame('story', R.night + 1);
+    if (R && R.won && !R.free && R.night < 50) startGame('story', R.night + 1);
     else startGame(mode, storyNight);
   });
   $('#endReplayBtn').addEventListener('click', () => startGame(mode, storyNight));

@@ -72,6 +72,38 @@
     level.pitToBridgeRatio = ratio;
     return level;
   };
+  const makeChallengeLevel = night => {
+    const map = ['school', 'park', 'festival', 'hill', 'lake'][(night - 8) % 5];
+    const pitCount = Math.min(18, 4 + Math.floor((night - 8) / 3));
+    const bridgeWidth = 90, pitWidth = bridgeWidth * 5, safeRun = 440, firstPit = 680;
+    const width = firstPit + pitCount * (pitWidth + safeRun) - safeRun + 700;
+    const pits = [], checkpoints = [], platforms = [platform(280, 402, 130)];
+    const groundPoints = [], hideSpots = [], burySpots = [], spawnZones = [];
+    const bridgeSpeed = .36 + (night - 8) / 42 * .25;
+    const skin = map === 'festival' ? 'boat' : map === 'lake' ? 'log' : '';
+    for (let i = 0; i < pitCount; i++) {
+      const a = firstPit + i * (pitWidth + safeRun), b = a + pitWidth;
+      pits.push([a, b]); groundPoints.push([a, 470], [b, 470]);
+      if (i % Math.max(1, 3 - Math.floor((night - 8) / 15)) === 0) checkpoints.push(a - 110);
+      const lift = Math.min(22, Math.floor((night - 8) / 7) * 3) + (i % 3) * 3;
+      platforms.push(platform(a, 438 - lift, bridgeWidth, 'moving', {
+        path: [[a, 438 - lift], [b - bridgeWidth, 438 - lift + (i % 2 ? -8 : 0)]],
+        speed: bridgeSpeed, ...(skin ? { skin } : {})
+      }));
+      const landX = b + 105;
+      const roostType = night >= 14 && i % 3 === 1 ? 'crumbling' : night >= 20 && i % 4 === 2 ? 'bouncy' : 'static';
+      platforms.push(platform(landX, 398 - Math.min(14, Math.floor((night - 8) / 10) * 2), 120, roostType));
+      if (night >= 18 && i % 4 === 3) platforms.push(platform(b + 285, 430, 42, 'swinging', { anchor: [b + 315, 355], speed: .8 + (night - 18) / 160 }));
+      hideSpots.push(b + 275); burySpots.push(b + 375);
+      const nextA = i + 1 < pitCount ? firstPit + (i + 1) * (pitWidth + safeRun) : width;
+      if (i === 0) spawnZones.push([120, a - 70]);
+      spawnZones.push([b + 70, nextA - (i + 1 < pitCount ? 70 : 100)]);
+    }
+    return {
+      night, map, width, pits, checkpoints, ground: ground(width, groundPoints), platforms,
+      hideSpots, burySpots, spawnZones, catStart: 150, homeLight: [width - 150, 390], props: [], pitToBridgeRatio: 5
+    };
+  };
   const levels = {
     1: {
       night: 1, map: 'school', width: 2500, ground: ground(2500, [[0,470],[520,470],[560,462],[780,462],[820,470],[1450,470],[1490,458],[1710,458],[1750,470],[2500,470]]),
@@ -127,6 +159,7 @@
   };
   for (const [night, ratio] of [[2,3.25],[3,3.5],[4,3.75],[5,4],[6,4.5],[7,5]]) sizePitsByDifficulty(levels[night], ratio);
   for (const [variant, ratio] of levels.free.variants.map((level, i) => [level, [3.25,4,5][i]])) sizePitsByDifficulty(variant, ratio);
+  for (let night = 8; night <= 50; night++) levels[night] = makeChallengeLevel(night);
   root.TC_LEVELS = levels;
   if (typeof module !== 'undefined' && module.exports) module.exports = levels;
 })(typeof window !== 'undefined' ? window : globalThis);

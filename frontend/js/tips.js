@@ -6,7 +6,7 @@
       welcome: [
         { title: 'A heavy heart', text: 'Thiri fell asleep with a heavy heart. Her feelings ran into the Night Side.' },
         { title: 'Bring them home', text: 'Help Shwe bring them home. Catch Moodlings before sunrise; each feeling has its own way to be caught.' },
-        { title: 'Every night grows something', text: 'Earn Glow, upgrade Shwe, fill the Mood Book (17 feelings), unlock 7 nights and the sunrise ending.' }
+        { title: 'Every night grows something', text: 'Earn Glow, upgrade Shwe, fill the Mood Book (17 feelings), complete 7 story nights, then take on 43 tougher moonlit routes.' }
       ],
       tutorial: [
         { title: 'Move', text: 'Walk a little to guide Shwe.', action: 'move' },

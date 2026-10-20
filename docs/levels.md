@@ -79,6 +79,10 @@ Final world widths: 4,223, 4,518 and 4,380 units, respectively.
 
 A new Free Play run chooses one of the three records; continuing a paused run does not re-roll its layout.
 
+## Challenge routes — Levels 8–50
+
+After the seven story nights, 43 challenge routes continue the same cozy campaign and rotate through the five map settings. Their Moodling requirements and behavior stay at the established finale rules; the added challenge comes from platforming. Every pit is five times as wide as its moving bridge. Pit counts rise from four on Level 8 to eighteen on Level 50, bridge speed rises each level, and the route adds crumbling roosts, bouncy ledges and occasional swinging lanterns. Checkpoints become more frequent in the later routes to keep long runs fair. Difficulty data is generated deterministically, so each level keeps its layout when replayed.
+
 ## Reachability and safety
 
-The dependency-free regression test is `node tests/level-layouts.test.js`. It checks all seven story layouts and all three Free Play variants: pit bounds and jump spans, spawn-zone exclusion, hide/burial/start/checkpoint clearance, burial-marker clearance from props/platforms (including moving paths), supported platform types, platform path bounds and reach against each chapter's jump settings (`jumpSpeed=830`, `gravity=2300`, approximately 150 px maximum rise). All authored pits fit inside a running jump envelope; ledges and moving platforms provide additional crossings.
+The dependency-free regression test is `node tests/level-layouts.test.js`. It checks all 50 story layouts and all three Free Play variants: pit bounds and jump spans, spawn-zone exclusion, hide/burial/start/checkpoint clearance, burial-marker clearance from props/platforms (including moving paths), supported platform types, platform path bounds and reach against each chapter's jump settings (`jumpSpeed=830`, `gravity=2300`, approximately 150 px maximum rise). Pits are too wide for a running jump; moving bridges provide the crossings.
