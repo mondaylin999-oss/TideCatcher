@@ -16,11 +16,11 @@ Short, gentle route with low static shelves and roomy spawn lanes. Books, school
 ## Night 2 — School hallway, width 3,300
 
 ```text
-start -> P   P  H/B   P~moving~P   B/H   [static ledge over pit]  P -> *
+start -> P   P  H/B   P   B/H   [static ledge over pit]  P -> *
 ====================|  dark school stairwell  |======================
 ```
 
-A longer hallway adds the first short fall pit, a static ledge crossing and a moving shelf. A lantern checkpoint sits before the gap, and the first approach explains that Shwe can fall.
+A longer hallway adds the first short fall pit and a single static ledge crossing. The ledge is kept clear of neighboring roosts. A lantern checkpoint sits before the gap, and the first approach explains that Shwe can fall.
 
 ## Night 3 — Park, width 3,600
 
@@ -29,7 +29,7 @@ start -> P   slide   P(bouncy)   H/B   P   swing   P   H/B   P -> *
 terrain: gentle rolling hills and changing ground height
 ```
 
-The park adds two short ravine pits, a moving platform, bouncy ledges, a slide and bushes. Lantern checkpoints precede the harder crossings. Hiding and burial markers stay on walkable ground.
+The park adds two ravine pits, a moving bridge across the wide second gap, bouncy ledges, a slide and bushes. Neighboring roosts stay separate from the bridge path. Lantern checkpoints precede the harder crossings. Hiding and burial markers stay on walkable ground.
 
 ## Night 4 — Festival boardwalk, width 4,000
 
