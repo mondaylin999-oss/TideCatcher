@@ -16,11 +16,11 @@ Short, gentle route with low static shelves and roomy spawn lanes. Books, school
 ## Night 2 — School hallway, width 3,300
 
 ```text
-start -> P   P  H/B   P   B/H   [static ledge over pit]  P -> *
+start -> P   P  H/B   P   B/H   [moving bridge over pit]  P -> *
 ====================|  dark school stairwell  |======================
 ```
 
-A longer hallway adds the first short fall pit and a single static ledge crossing. The ledge is kept clear of neighboring roosts. A lantern checkpoint sits before the gap, and the first approach explains that Shwe can fall.
+A longer hallway adds the first fall pit, three times wider than its moving bridge. The gap is too wide to jump across without the bridge. A lantern checkpoint sits before the gap, and the first approach explains that Shwe can fall.
 
 ## Night 3 — Park, width 3,600
 
@@ -29,7 +29,7 @@ start -> P   slide   P(bouncy)   H/B   P   swing   P   H/B   P -> *
 terrain: gentle rolling hills and changing ground height
 ```
 
-The park adds two ravine pits, a moving bridge across the wide second gap, bouncy ledges, a slide and bushes. Neighboring roosts stay separate from the bridge path. Lantern checkpoints precede the harder crossings. Hiding and burial markers stay on walkable ground.
+The park adds two ravine pits, each three times wider than its moving bridge, bouncy ledges, a slide and bushes. Neighboring roosts stay separate from the bridge paths. Lantern checkpoints precede the harder crossings. Hiding and burial markers stay on walkable ground.
 
 ## Night 4 — Festival boardwalk, width 4,000
 
@@ -38,7 +38,7 @@ start -> P  stall/H  P   lantern span   P   boat~moving~P   stall/H -> *
 ================== v water v ================ v water v =================
 ```
 
-The boardwalk introduces three water gaps crossed by moving boats and raised platforms. Lantern checkpoints sit before each gap. Bamboo baskets, clay pots and folded mats are on dry boardwalk only.
+The boardwalk introduces three water gaps, each three times wider than its moving boat bridge. Lantern checkpoints sit before each gap. Bamboo baskets, clay pots and folded mats are on dry boardwalk only.
 
 ## Night 5 — Hilltop terraces, width 4,200
 
@@ -47,7 +47,7 @@ start -> gate/H -> P -> bench step -> P(crumble) -> low rail/H -> branch P -> *
           _|￣￣|__|￣￣|__|￣￣|__|￣￣|__|￣￣|__|￣￣|__|￣￣|_
 ```
 
-The familiar 1,400-unit terrace profile repeats three times to fit the longer level. Cliff gaps use static ledges; crumbling steps shake for 0.6 seconds, fall, then return after three seconds.
+The familiar 1,400-unit terrace profile repeats three times to fit the longer level. Cliff gaps are three times wider than their moving stone bridges; crumbling steps shake for 0.6 seconds, fall, then return after three seconds.
 
 ## Night 6 — Lakeside, width 3,900
 
@@ -56,7 +56,7 @@ start -> jetty -> P -> log~moving~P -> stepping stones -> P -> log~moving~P -> *
 ================== v lake v ================= v lake v ====================
 ```
 
-A calm shore route introduces three lake gaps, jetties, moving floating logs and a swinging lantern that Shwe can hold and release to launch. Burial objects stay on shore.
+A calm shore route introduces three lake gaps, each three times wider than its moving log bridge, plus jetties and a swinging lantern that Shwe can hold and release to launch. Burial objects stay on shore.
 
 ## Night 7 — Sunrise, width 5,400
 
@@ -66,14 +66,14 @@ start -> P -> raised/moving high route -> P(bouncy) -> P(crumble) -> moving P ->
            safe lower walking route under the higher platform chain
 ```
 
-The longest route combines slopes, four water gaps, moving logs, a swinging lantern, a bouncy platform, a crumbling step and place-fitting props. Extra checkpoints make the finale more forgiving.
+The longest route combines slopes, four water gaps, each three times wider than its moving log bridge, a swinging lantern, a bouncy platform, a crumbling step and place-fitting props. Extra checkpoints make the finale more forgiving.
 
 ## Free Play — three randomized trails, width 4,200 each
 
 ```text
-Gentle:     rolling low hills, one small pit with a static shelf and checkpoint
-Stepping:   three pits, alternating ledges and moving logs, checkpointed crossings
-High route: one small pit with a static ledge, higher platforms and branch/slide scenery
+Gentle:     rolling low hills, one pit three times wider than its moving log bridge
+Stepping:   three pits, each three times wider than its moving log bridge
+High route: one pit three times wider than its moving log bridge, higher platforms and branch/jetty scenery
 ```
 
 A new Free Play run chooses one of the three records; continuing a paused run does not re-roll its layout.
