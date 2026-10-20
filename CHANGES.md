@@ -10,11 +10,13 @@
 - **Shop:** soft item cards, Glow prices, locked unaffordable buttons, purchase pop and reliable keyboard focus after purchases.
 - **Mood Book:** silhouettes, feeling-colored tags, rare sparkle borders and striped collection progress.
 - **Briefing/Ready:** night chip, sunrise time pill, padded objectives and contained decorative wave.
-- **Gameplay:** translucent timer/score and combo pills, combo color/size progression, speech-bubble announcements and softer joystick. Movement, hitboxes, scoring, timers, keyboard/touch bindings and saves unchanged.
-- **Per-night level layouts:** Nights 1–7 now load independent ground profiles, world widths, platform sets, safe lower-floor gaps, spawn zones and hide/burial markers from `frontend/js/levels.js`. School, park, festival, hilltop and lake props follow their authored places; moving shelves/logs/boat, bouncy and crumbling platforms are supported. Free Play randomly selects one of three trails per run. Moodling rules, controls, scoring, saves and existing place art remain unchanged.
+- **Gameplay:** translucent timer/score and combo pills, combo color/size progression, speech-bubble announcements and softer joystick. Scoring, timers, saves and Moodling rules unchanged.
+- **Per-night level layouts:** Nights 1–7 load independent ground profiles, world widths, pits, roosts, checkpoints, spawn zones and hide/burial markers from `frontend/js/levels.js`. Night 1 teaches safely; later nights add static, moving, crumbling, swinging and bouncy crossings. Free Play randomly selects one of three trails per run. Moodling rules and scoring remain unchanged.
+- **Fall hazards:** Gaps expose dark, place-themed drops with edge marks and a first-pit warning. Story nights start with three lives; falling animates a soft light poof and sad meow, dims the screen, then respawns at the last lantern checkpoint with brief invulnerability. Losing all lives opens the existing results flow as **Night failed**, with Retry and Back to map; unbanked run lights are discarded. Free Play falls cost five seconds. Gentle mode makes story falls life-free.
+- **Roosts and fairness:** Static ledges, moving shelves/boats/logs, crumbling steps, swinging lanterns and bouncy awnings/mushrooms provide crossings. Moving platforms carry Shwe, crumbling ones reset after three seconds, and jumps use coyote time and buffering. The camera biases toward the landing area. Settings adds Gentle mode; existing sound hooks include fall, poof, edge, crumble, platform, checkpoint, respawn and life-lost cues.
 - **Buried-feeling props:** school books/bag/box, park leaf/sand/flower mounds, festival baskets/pots/mats, hill stones/branches/leaves and lakeshore sand/driftwood/pebbles. Map-specific labels, debris and Night Eyes glow; burial interaction and scoring unchanged.
 - **Results:** bold stat cards, home progress, best-score sticker, Continue and separate replay action after a story win.
-- **Settings:** styled missions and controls; disabled, explicitly unconnected Music/Sound effects/Ambience/Mute placeholders with `data-audio` hooks. No audio added.
+- **Settings:** styled missions and controls; disabled, explicitly unconnected Music/Sound effects/Ambience/Mute controls with `data-audio` hooks. Fall and platform cues use the existing sound system.
 - **Other existing screens:** pause, reset confirmation, wake-up, final awakening and orientation prompt share the theme. Quitting a paused run now asks for confirmation; Reset retains its existing confirmation dialog.
 
 ## Shared implementation
@@ -27,9 +29,9 @@
 - Additional **360px** hub check; touch portrait orientation prompt and **812×375** landscape transition checked. The existing touch-device landscape requirement remains intact; narrow menu layout checks use a non-touch browser viewport.
 - Verified movement, pause/resume timer behavior, purchase spending/feedback, profile validation and persistence, keyboard setup, reset cancellation, quit confirmation and reduced-motion styles. Late-game presentation states used isolated browser fixtures without adding test hooks to shipped code.
 - Burial visual changes: static placement checks passed for all six map configs; the headless regression renders Nights 1–7 and Free Play, checks per-map labels/counts, and confirms Free Play retains its original stone scene.
-- **Layout validation:** `node tests/level-layouts.test.js` checks all seven nights plus three Free Play variants for safe pits, spawn zones, spot/prop/platform clearance, platform path bounds and jump-rise reachability. Development overlay: `?debug=1` on localhost, then `F2`. Layout sketches: `docs/levels.md`.
+- **Layout validation:** `node tests/level-layouts.test.js` checks all seven nights plus three Free Play variants for pit clearance, roost reachability under night jump settings, spawn/checkpoint/spot safety and platform path bounds. Development overlay: `?debug=1` on localhost, then `F2`. Layout sketches: `docs/levels.md`.
 - Contrast: cream/card **14.21:1**; muted/raised card **8.0:1**; dark text on honey/lilac/coral buttons exceeds **6:1**.
-- JavaScript syntax, `git diff --check` and the 10-layout reachability regression pass. A local browser smoke test reached the Free Play canvas with no console errors; a full seven-night playthrough was not performed.
+- JavaScript syntax, `git diff --check` and the 10-layout reachability regression pass. Local browser smoke checks reached Night 3, Night 7 and Free Play; forced falls consumed three lives, showed **Night failed**, preserved banked Mood Book progress, and exposed Retry and Back to map. Full traversal of every route was not performed.
 
 ## New-player guidance
 

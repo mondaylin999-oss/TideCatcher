@@ -137,7 +137,7 @@
   const keys = {};
   const DEBUG_ALLOWED = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).get('debug') === '1';
   let debugLayout = false;
-  let jumpQ = false, pounceQ = false, scratchQ = false, scratchHeld = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
+  let jumpQ = false, jumpHeld = false, pounceQ = false, scratchQ = false, scratchHeld = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
   addEventListener('keydown', e => {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
@@ -147,14 +147,14 @@
     if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'paused') { e.preventDefault(); sfx('ui', 'resume'); resumeGame(); return; }
     if ($('#nightWakeScreen') && !$('#nightWakeScreen').hidden) { if (['Space','Enter','Escape'].includes(e.code)) { e.preventDefault(); closeNightWake(); } return; }
     if (state === 'home' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); homeKey(); return; }
-    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') jumpQ = true;
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { jumpQ = true; jumpHeld = true; }
     if (e.code === 'KeyJ' || e.code === 'KeyX') pounceQ = true;
     if (e.code === 'KeyK') purrQ = true;
     if (e.code === 'KeyE' || e.code === 'KeyL') eyesQ = true;
     if (e.code === 'KeyS') scratchQ = true;
   });
-  addEventListener('keyup', e => { keys[e.code] = false; });
-  addEventListener('blur', () => { for (const k in keys) keys[k] = false; scratchHeld = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
+  addEventListener('keyup', e => { keys[e.code] = false; if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) jumpHeld = false; });
+  addEventListener('blur', () => { for (const k in keys) keys[k] = false; scratchHeld = false; jumpHeld = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
   function axisNow() {
     const kb = ((keys.ArrowRight || keys.KeyD) ? 1 : 0) - ((keys.ArrowLeft || keys.KeyA) ? 1 : 0);
     const scale = (keys.ShiftLeft || keys.ShiftRight || mouseSneakHeld) ? .4 : 1;
@@ -195,7 +195,8 @@
   zone.addEventListener('pointermove', e => { if (e.pointerId === sid) stickMove(e); });
   const stickEnd = e => { if (e.pointerId !== sid) return; sid = null; touchAxis = 0; stick.hidden = true; knob.style.transform = 'translate(-50%,-50%)'; };
   zone.addEventListener('pointerup', stickEnd); zone.addEventListener('pointercancel', stickEnd);
-  $('#bJump').addEventListener('pointerdown', e => { e.preventDefault(); jumpQ = true; });
+  $('#bJump').addEventListener('pointerdown', e => { e.preventDefault(); jumpHeld = true; jumpQ = true; });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('#bJump').addEventListener(ev, () => { jumpHeld = false; }));
   $('#bPounce').addEventListener('pointerdown', e => { e.preventDefault(); pounceQ = true; });
   $('#bPurr').addEventListener('pointerdown', e => { e.preventDefault(); purrQ = true; });
   $('#bEyes').addEventListener('pointerdown', e => { e.preventDefault(); eyesQ = true; });
@@ -205,7 +206,7 @@
   addEventListener('touchstart', () => { if (state === 'play') touchUI.hidden = false; }, { passive: true });
 
   // ---------- world ----------
-  let currentLevel = window.TC_LEVELS?.[1] || { width: 4200, ground: { points: [[0, GROUND], [4200, GROUND]], gaps: [] }, platforms: [], hideSpots: [], burySpots: [], spawnZones: [[120, 4080]], catStart: 200, props: [] };
+  let currentLevel = window.TC_LEVELS?.[1] || { width: 4200, ground: { points: [[0, GROUND], [4200, GROUND]] }, pits: [], platforms: [], hideSpots: [], burySpots: [], spawnZones: [[120, 4080]], catStart: 200, props: [] };
   let activePlats = [];
   let currentProps = [];
   const levelGroundY = x => {
@@ -217,19 +218,15 @@
     return pts[pts.length - 1][1];
   };
   function terrainY(x) {
-    const gap = (currentLevel.gaps || []).find(([a, b]) => x >= a && x <= b);
-    if (!gap) return levelGroundY(x);
-    const [a, b, lower] = gap, ramp = Math.min(30, (b - a) * .24), left = levelGroundY(a), right = levelGroundY(b);
-    if (x < a + ramp) return left + (lower - left) * ((x - a) / ramp);
-    if (x > b - ramp) return lower + (right - lower) * ((x - (b - ramp)) / ramp);
-    return lower;
+    return levelGroundY(x);
   }
+  const pitAt = x => (currentLevel.pits || []).find(([a, b]) => x > a + 10 && x < b - 10) || null;
   function loadLevelGeometry() {
     WORLD = currentLevel.width;
     currentProps = (currentLevel.props || []).map(prop => ({ ...prop, baseX: prop.x, baseY: prop.y || 0 }));
     activePlats = (currentLevel.platforms || []).map(spec => {
       const info = spec[4] || {}, p = [spec[0], spec[1], spec[2]];
-      Object.assign(p, { type: spec[3] || 'static', path: info.path || null, speed: info.speed || 0, baseX: spec[0], baseY: spec[1], active: true, crumbleRemaining: 0, restRemaining: 0, movingPhase: 0 });
+      Object.assign(p, { type: spec[3] || 'static', path: info.path || null, speed: info.speed || 0, skin: info.skin || '', anchor: info.anchor || null, baseX: spec[0], baseY: spec[1], active: true, crumbleRemaining: 0, restRemaining: 0, movingPhase: 0 });
       return p;
     });
   }
@@ -242,7 +239,7 @@
         p[1] = p.path[0][1] + (p.path[1][1] - p.path[0][1]) * u;
       }
       if (p.type === 'crumbling') {
-        if (p.crumbleRemaining > 0) { p.crumbleRemaining -= dt; if (p.crumbleRemaining <= 0) { p.active = false; p.restRemaining = 2.5; } }
+        if (p.crumbleRemaining > 0) { p.crumbleRemaining -= dt; if (p.crumbleRemaining <= 0) { p.active = false; p.restRemaining = 3; } }
         else if (!p.active) { p.restRemaining -= dt; if (p.restRemaining <= 0) p.active = true; }
       }
       if (cat?.platform === p && cat.on && p.active) { cat.x += p[0] - p.prevX; cat.y += p[1] - p.prevY; }
@@ -253,10 +250,11 @@
       prop.y = prop.path[0][1] + (prop.path[1][1] - prop.path[0][1]) * u;
     }
   }
+  function platformDrawY(p) { return p.type === 'crumbling' && p.crumbleRemaining > 0 ? p[1] + Math.sin((.6 - p.crumbleRemaining) * 54) * 3 : p[1]; }
   function safeLevelX(x) {
     x = clamp(x, 80, WORLD - 80);
-    const gap = (currentLevel.gaps || []).find(([a, b]) => x > a && x < b);
-    return gap ? (x - gap[0] < gap[1] - x ? gap[0] - 48 : gap[1] + 48) : x;
+    const pit = pitAt(x);
+    return pit ? (x - pit[0] < pit[1] - x ? pit[0] - 48 : pit[1] + 48) : x;
   }
   function levelSpawnX() {
     const zones = currentLevel.spawnZones?.length ? currentLevel.spawnZones : [[100, WORLD - 100]];
@@ -277,6 +275,9 @@
     return variants[Math.floor(Math.random() * variants.length)];
   }
   let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
+  let lives = 3, checkpointX = 0, fallDimT = 0, respawnT = 0, pitTipShown = false, edgeSoundAt = 0, pendingFallFail = false;
+  let gentleMode = false;
+  try { gentleMode = localStorage.getItem('mk-gentle-mode') === '1'; } catch (e) {}
   const nightGuide = { active: false, step: 0, success: 0, pendingWin: false, buffered: [] };
   let jitTipQueue = [], activeJitTip = null, struggleTimer = 0, guidanceCaught = 0, guidanceHits = {}, helpReturn = 'hub', helpReturnFocus = null, welcomeCardIndex = 0, welcomeCardScrollTimer = 0;
   const FRUST_SLEEP = 5; // Frustrated sleeps for the first 5 seconds of the night clock
@@ -403,7 +404,7 @@
     // platforms: mossy branch ledges and stone pillars
     for (const p of activePlats) {
       if (p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = p[1], w = p[2];
+      const x = p[0], y = platformDrawY(p), w = p[2];
       if (w <= 95) {
         const base = hillY(x + w / 2);
         ctx.fillStyle = '#4c4478'; ctx.fillRect(x, y + 6, w, base - y - 6);
@@ -566,6 +567,9 @@
     { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 135, rareChance: .22, feelingsNeeded: { L: 2, C: 2, S: 1, E: 1 }, newMoodling: 'Calm is too dim to come home. Walk slowly to gather 3 fireflies, then bring them to Calm', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { L: 1, C: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: false, tutorialHint: 'Calm sits dim by the lake. Walk slowly into 3 fireflies, then bring their light to Calm.' , sky: { A: 2, B: 1, C: 0, types: { A: ['L'], B: ['E'], C: [] }, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
     { night: 7, name: 'Sunrise', sub: 'Bring every feeling home before the sun rises', theme: '#d6a866', musicRoot: 293.66, timeLimit: 150, rareChance: .30, feelingsNeeded: { F: 3, N: 2, J: 2, L: 2, S: 2, E: 2, B: 2, C: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 1, N: 1, J: 1, L: 1, S: 1, E: 1, B: 1, C: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
   ];
+  // These match the original movement curve; keeping them authored with the chapters lets the
+  // layout regression verify that every pit and roost remains reachable at its night's gravity.
+  NIGHT_CHAPTERS.forEach(chapter => { chapter.jumpSpeed = 830; chapter.jumpGravity = 2300; });
   const chapterFor = night => NIGHT_CHAPTERS[clamp(night - 1, 0, NIGHT_CHAPTERS.length - 1)];
   // The whole story is one night: each level is one hour, from 11 PM to sunrise.
   const NIGHT_HOURS = ['11 PM', 'Midnight', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM'];
@@ -986,7 +990,7 @@
     free: { kind: 'classic stones', label: 'rock', labelMarked: 'marked rock', xs: [], draw: drawClassicRockBase, debris: [{ shape: 'chip', color: '#77736f' }, { shape: 'chip', color: '#a29b8d' }, { shape: 'chip', color: '#5f6260' }], glow: '#c8baff' }
   };
 
-  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null }; }
+  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, alpha: 1 }; }
   function pickX() { let x, n = 0; do { x = levelSpawnX(); n++; } while ((Math.abs(x - cat.x) < 380 || (mode === 'story' && rocks.some(spot => Math.abs(x - spot.x) < 100))) && n < 40); return x; }
   function pickCaveX() {
     const occupied = new Set(mood.filter(m => !m.dead && m.caveX != null).map(m => m.caveX));
@@ -1202,6 +1206,7 @@
     nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
     combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
     freeCapShown = false; activeItems = {}; perkShield = catPerk() === 'mainecoon' ? 1 : 0;
+    lives = 3; checkpointX = currentLevel.catStart ?? 200; fallDimT = 0; respawnT = 0; pitTipShown = false; edgeSoundAt = 0; pendingFallFail = false; jumpHeld = false;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
@@ -1246,6 +1251,13 @@
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     m.state = 'panic'; m.st = chapter?.nervousPanicTime ?? 1.1; m.dir = -(Math.sign(dx) || 1); m.alarm = 0; startles++;
     float(m.x, m.y - 34, 'Startled!', VIOLET); sfx('moodling', 'N');
+  }
+  function beginFall() {
+    if (cat.falling || cat.respawning || state !== 'play') return;
+    cat.y = Math.min(cat.y, VH + OY - 10);
+    cat.falling = true; cat.fallTime = 0; cat.fallFromX = cat.x; cat.vx = 0; cat.platform = null; cat.swinging = null;
+    jumpHeld = false; jumpQ = false; burst(cat.x, cat.y - 18, GOLD, 24); burst(cat.x, cat.y - 24, CALM, 14);
+    sfx('cat', 'sad'); sfx('ui', 'fall'); sfx('ui', 'poof');
   }
   function detachTrail(count) {
     let dropped = 0;
@@ -1432,7 +1444,33 @@
   }
 
   function updCat(dt) {
-    const c = cat; c.justLanded = false;
+    const c = cat;
+    if (c.falling) {
+      c.fallTime += dt;
+      if (c.fallTime >= .38) {
+        c.falling = false; c.respawning = true; c.swinging = null; c.platform = null;
+        if (mode === 'story' && !gentleMode) { lives = Math.max(0, lives - 1); sfx('ui', 'lifeLost'); }
+        if (mode === 'story' && !gentleMode && lives <= 0) {
+          // Catches already recorded in the Mood Book remain banked; this run's carried lights do not.
+          trail = []; got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); glowRun = 0; pendingFallFail = true;
+        } else if (mode === 'free') { timeLeft = Math.max(0, timeLeft - 5); float(c.x, c.y - 72, '−5 seconds', RED); }
+        else announce(gentleMode ? 'Gentle landing · try again' : `A life left · ${lives} remaining`, gentleMode ? CALM : GOLD, 1.7);
+        c.respawning = true; respawnT = .5; fallDimT = .5;
+      }
+      return;
+    }
+    if (c.respawning) {
+      respawnT -= dt; fallDimT = Math.max(0, fallDimT - dt);
+      if (respawnT <= 0) {
+        if (pendingFallFail) { pendingFallFail = false; finish(false, 'fall'); return; }
+        c.x = checkpointX; c.y = terrainY(checkpointX); c.vx = 0; c.vy = 0; c.on = true;
+        c.inv = 1.5; c.respawning = false; c.coyote = 0; c.jumpBuffer = 0;
+        hist = []; sfx('ui', 'respawn'); burst(c.x, c.y - 20, CALM, 16); announce('Back at the lantern!', CALM, 1.2);
+      }
+      return;
+    }
+    c.justLanded = false;
+    if (jumpQ) c.jumpBuffer = .12; else c.jumpBuffer = Math.max(0, c.jumpBuffer - dt);
     const a = axisNow(), sneaking = a !== 0 && Math.abs(a) < .55;
     if (a !== 0) onTutorialAction('move', c);
     if (sneaking) onTutorialAction('sneak', c);
@@ -1440,20 +1478,59 @@
     c.sneak = sneaking;
     if (c.pounce > 0) c.pounce -= dt;
     else { const acc = c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
-    if (jumpQ && c.on && c.pounce <= 0) { c.vy = -830; c.on = false; onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240); }
+    const chapter = mode === 'story' ? chapterFor(storyNight) : null;
+    const jumpSpeed = chapter?.jumpSpeed || 830, gravity = chapter?.jumpGravity || 2300;
+    if (c.swinging) {
+      if (jumpHeld) {
+        const p = c.swinging, anchor = p.anchor || [p[0] + p[2] / 2, p[1] - 60];
+        c.x = anchor[0] + Math.sin(t * 2.5) * 28; c.y = anchor[1] + 34 + Math.sin(t * 2.5 + .4) * 14;
+        c.vx = Math.cos(t * 2.5) * 70; c.vy = 0; c.on = false; c.platform = null; jumpQ = false; return;
+      }
+      c.swinging = null; c.vx = c.face * 360; c.vy = -720; c.on = false; c.jumpBuffer = 0; sfx('ui', 'jump');
+    }
+    const wasOn = c.on, py = c.y;
+    if (c.jumpBuffer > 0 && (c.on || c.coyote > 0) && c.pounce <= 0) {
+      c.vy = -jumpSpeed; c.on = false; c.coyote = 0; c.jumpBuffer = 0;
+      onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240);
+    }
     jumpQ = false;
     if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) { sfx('ui', 'pounce'); catVoice('trill', .25); } else tone(240, .1, 'square', .035, 320); }
     pounceQ = false;
     c.pcd -= dt; c.inv -= dt; c.squash = Math.max(0, c.squash - dt);
-    const wasOn = c.on, py = c.y, wasOnTrail = wasOn && Math.abs(c.y - terrainY(c.x)) < 2;
     if (c.platform && !c.platform.active) c.platform = null;
-    c.vy += 2300 * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.x = clamp(c.x, 30, WORLD - 30);
+    c.vy += gravity * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.x = clamp(c.x, 30, WORLD - 30);
     let landed = false, landedOn = null;
     const floorY = terrainY(c.x);
-    if (c.y >= floorY || (wasOnTrail && c.vy >= 0)) { c.y = floorY; landed = true; }
-    else if (c.vy >= 0) { for (const p of activePlats) { if (!p.active) continue; if (c.x > p[0] - 6 && c.x < p[0] + p[2] + 6 && py <= p[1] + .5 && c.y >= p[1]) { c.y = p[1]; landed = true; landedOn = p; break; } } }
-    if (landed) { if (!wasOn) { c.justLanded = true; if (c.vy > 500) { c.squash = .16; sfx('ui', 'land'); } } c.vy = 0; c.platform = landedOn; if (landedOn?.type === 'crumbling' && landedOn.crumbleRemaining <= 0) landedOn.crumbleRemaining = 1; if (landedOn?.type === 'bouncy' && !wasOn) { c.vy = -960; c.on = false; c.bounced = true; sfx('ui', 'jump'); } } else c.platform = null;
+    const pit = pitAt(c.x);
+    if (!pit && c.vy >= 0 && py <= floorY + 4 && c.y >= floorY) { c.y = floorY; landed = true; }
+    else if (c.vy >= 0) {
+      for (const p of activePlats) {
+        if (!p.active || p.type === 'swinging') continue;
+        const pad = p.type === 'moving' ? 16 : 6;
+        if (c.x > p[0] - pad && c.x < p[0] + p[2] + pad && py <= p[1] + .5 && c.y >= p[1]) { c.y = p[1]; landed = true; landedOn = p; break; }
+      }
+    }
+    if (jumpHeld && !landed) {
+      const rope = activePlats.find(p => p.type === 'swinging' && p.anchor && Math.abs(c.x - p.anchor[0]) < p[2] / 2 + 24 && Math.abs(c.y - p.anchor[1]) < 34);
+      if (rope) { c.swinging = rope; c.on = false; c.vy = 0; jumpQ = false; return; }
+    }
+    if (landed) {
+      if (!wasOn) { c.justLanded = true; if (c.vy > 500) { c.squash = .16; sfx('ui', 'land'); } }
+      c.vy = 0; c.platform = landedOn;
+      if (landedOn?.type === 'crumbling' && landedOn.crumbleRemaining <= 0) { landedOn.crumbleRemaining = .6; sfx('ui', 'crumble'); }
+      if (landedOn?.type === 'moving' && !wasOn) sfx('ui', 'platformHum');
+      if (landedOn?.type === 'bouncy' && !wasOn) { c.vy = -960; c.on = false; c.bounced = true; sfx('ui', 'jump'); }
+    } else c.platform = null;
     c.on = landed && !(landedOn?.type === 'bouncy' && !wasOn);
+    c.coyote = c.on ? .1 : Math.max(0, c.coyote - dt);
+    if (c.on && !pitAt(c.x)) {
+      for (const mark of currentLevel.checkpoints || []) if (Math.abs(c.x - mark) < 30 && Math.abs(checkpointX - mark) > 20) { checkpointX = mark; sfx('ui', 'checkpoint'); burst(mark, terrainY(mark) - 8, GOLD, 12); announce('Lantern checkpoint saved', GOLD, 1.5); }
+    }
+    if (!pitTipShown && (currentLevel.pits || []).some(([a, b]) => c.x >= a - 190 && c.x <= b + 190)) {
+      pitTipShown = true; announce(mode === 'story' && storyNight === 2 ? 'Careful! Shwe can fall here' : 'Careful near the edge!', GOLD, 2); sfx('ui', 'edge');
+    }
+    if (Math.abs(c.vx) > 0 && (currentLevel.pits || []).some(([a, b]) => c.x >= a - 52 && c.x <= b + 52) && t >= edgeSoundAt) { edgeSoundAt = t + 1.2; sfx('ui', 'edge'); }
+    if (c.y > VH + OY - 10) beginFall();
     if (c.on && Math.abs(c.vx) > 90) {
       c.walk += dt * Math.abs(c.vx) / 30;
       const stepBeat = Math.floor(c.walk / 1.7);
@@ -1734,6 +1811,16 @@
     shake = Math.max(0, shake - dt * 24);
     updateLevelPlatforms(dt);
     updCat(dt);
+    if (cat.falling || cat.respawning) {
+      for (const p of parts) { p.life -= dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .98; }
+      parts = parts.filter(p => p.life > 0);
+      for (const f of floats) { f.life -= dt; f.y -= 40 * dt; }
+      floats = floats.filter(f => f.life > 0);
+      if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
+      const target = clamp(cat.x - VW * .36, 0, Math.max(0, WORLD - VW));
+      camX += (target - camX) * Math.min(1, dt * 6);
+      return;
+    }
     const last = hist[hist.length - 1];
     if (!last || Math.hypot(last.x - cat.x, last.y - cat.y) > 3) { hist.push({ x: cat.x, y: cat.y }); if (hist.length > 500) hist.shift(); }
     if (purrQ && upg.purr > 0 && purrCd <= 0) {
@@ -1774,7 +1861,7 @@
       }
       const sec = Math.ceil(timeLeft);
       if (sec <= 10 && sec < lastTick) { lastTick = sec; if (window.TCSfx) sfx('ui', sec <= 3 ? 'urgent' : 'countdown'); else tone(sec <= 3 ? 1200 : 880, .06, 'square', .03); }
-      if (timeLeft <= 0) { timeLeft = 0; sfx('ui', 'timeup'); finish(false); }
+      if (timeLeft <= 0 && !pendingFallFail) { timeLeft = 0; sfx('ui', 'timeup'); finish(false); }
     } else if (state === 'ending') {
       endT -= dt; if (endT <= 0) finish(true);
     }
@@ -1789,7 +1876,7 @@
     for (const f of floats) { f.life -= dt; f.y -= 40 * dt; }
     floats = floats.filter(f => f.life > 0);
     if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
-    const target = clamp(cat.x - VW * .42, 0, Math.max(0, WORLD - VW));
+    const target = clamp(cat.x - VW * .36, 0, Math.max(0, WORLD - VW));
     camX += (target - camX) * Math.min(1, dt * 6);
     scratchSpots = scratchSpots.filter(spot => !spot.used || t - spot.usedAt < 1.3);
   }
@@ -2256,7 +2343,7 @@
     // raised wooden decks = platforms
     for (const p of activePlats) {
       if (p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = p[1], w = p[2];
+      const x = p[0], y = platformDrawY(p), w = p[2];
       ctx.fillStyle = '#2a1a20'; ctx.fillRect(x + 10, y + 8, 7, GROUND - y - 8); ctx.fillRect(x + w - 17, y + 8, 7, GROUND - y - 8);
       ctx.strokeStyle = 'rgba(42,26,32,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 14, y + 12); ctx.lineTo(x + w - 14, GROUND - 20); ctx.stroke();
       const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11);
@@ -2315,7 +2402,7 @@
     const PARK_DECKS = ['#2fa69a', '#8b6fe0', '#3fb98a'];
     for (const p of activePlats) {
       if (p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = p[1], w = p[2], c = PARK_DECKS[Math.abs(Math.round(x / 97)) % PARK_DECKS.length];
+      const x = p[0], y = platformDrawY(p), w = p[2], c = PARK_DECKS[Math.abs(Math.round(x / 97)) % PARK_DECKS.length];
       ctx.fillStyle = '#6f6aa0'; ctx.fillRect(x + 10, y + 8, 6, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 6, GROUND - y - 8);
       ctx.fillStyle = 'rgba(200,196,240,.35)'; ctx.fillRect(x + 10, y + 8, 2, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 2, GROUND - y - 8);
       ctx.fillStyle = c; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 13, 5); ctx.fill();
@@ -2401,7 +2488,7 @@
     // wooden wall shelves = the platforms
     for (const p of activePlats) {
       if (p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = p[1], w = p[2];
+      const x = p[0], y = platformDrawY(p), w = p[2];
       ctx.fillStyle = 'rgba(8,6,18,.35)'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + 30, w * .45, 7, 0, 0, 7); ctx.fill();
       ctx.fillStyle = '#3a2a35';
       for (const bx of [x + 16, x + w - 26]) { ctx.beginPath(); ctx.moveTo(bx, y + 9); ctx.lineTo(bx + 10, y + 9); ctx.lineTo(bx + 10, y + 26); ctx.closePath(); ctx.fill(); }
@@ -2435,21 +2522,54 @@
     const start = Math.max(0, Math.floor(x0 / 18) * 18), end = Math.min(WORLD, x1);
     for (let x = start; x <= end; x += 18) { const y = terrainY(x); x === start ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
     ctx.stroke();
-    // Pits are short drops to a visible lower path, never lethal voids.
-    for (const [a,b,lower] of currentLevel.gaps || []) {
+    // Dark, open gaps cut through each map's floor; edge lights make every landing decision readable.
+    for (const [a,b] of currentLevel.pits || []) {
       if (b < x0 || a > x1) continue;
-      const g = ctx.createLinearGradient(0, levelGroundY(a), 0, lower + 26);
-      g.addColorStop(0, map === 'festival' || map === 'lake' ? 'rgba(30,48,78,.9)' : 'rgba(16,14,30,.86)'); g.addColorStop(1, 'rgba(8,10,22,.98)');
-      ctx.fillStyle = g; ctx.fillRect(a, levelGroundY(a) - 2, b - a, lower - levelGroundY(a) + 30);
-      ctx.fillStyle = map === 'festival' ? 'rgba(255,193,124,.75)' : map === 'lake' ? 'rgba(143,222,241,.72)' : 'rgba(150,150,180,.45)';
-      ctx.fillRect(a, lower, b - a, 4);
-      if (map === 'lake' || map === 'festival') { ctx.strokeStyle = 'rgba(195,235,255,.34)'; ctx.lineWidth = 1; for (let y = lower + 10; y < lower + 24; y += 8) { ctx.beginPath(); ctx.moveTo(a + 4, y + Math.sin(t * 2 + y) * 2); ctx.lineTo(b - 4, y + Math.sin(t * 2 + y) * 2); ctx.stroke(); } }
+      const top = Math.min(levelGroundY(a), levelGroundY(b)), bottom = VH + OY + 70;
+      const glow = map === 'festival' || map === 'lake' ? 'rgba(32,75,105,.82)' : map === 'park' ? 'rgba(12,30,42,.9)' : map === 'hill' ? 'rgba(14,11,32,.96)' : 'rgba(12,9,24,.94)';
+      const g = ctx.createLinearGradient(0, top, 0, bottom); g.addColorStop(0, glow); g.addColorStop(.35, 'rgba(8,9,21,.98)'); g.addColorStop(1, '#080814');
+      ctx.fillStyle = g; ctx.fillRect(a, top - 4, b - a, bottom - top + 8);
+      ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(a - 2, top - 3); ctx.lineTo(a + 8, top + 10); ctx.lineTo(a + 8, bottom); ctx.lineTo(a - 2, bottom); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(b + 2, top - 3); ctx.lineTo(b - 8, top + 10); ctx.lineTo(b - 8, bottom); ctx.lineTo(b + 2, bottom); ctx.closePath(); ctx.fill();
+      if (map === 'school') {
+        ctx.strokeStyle = 'rgba(201,181,221,.38)'; ctx.lineWidth = 2;
+        for (const ex of [a + 9, b - 9]) for (let n = 0; n < 5; n++) { const yy = top + 24 + n * 23; ctx.beginPath(); ctx.moveTo(ex, yy); ctx.lineTo(ex + (ex < (a+b)/2 ? 1 : -1) * (10 + n * 3), yy + 6); ctx.stroke(); }
+      } else if (map === 'festival' || map === 'lake') {
+        ctx.strokeStyle = 'rgba(143,222,241,.42)'; ctx.lineWidth = 1.5;
+        for (let y = top + 32; y < bottom; y += 18) { ctx.beginPath(); ctx.moveTo(a + 7, y + Math.sin(t * 2 + y) * 2); ctx.quadraticCurveTo((a+b)/2, y - 3, b - 7, y + Math.sin(t * 2.3 + y) * 2); ctx.stroke(); }
+      }
+      const edgeColor = map === 'festival' ? 'rgba(255,193,124,.9)' : map === 'lake' ? 'rgba(143,222,241,.9)' : map === 'park' ? 'rgba(166,237,192,.84)' : 'rgba(255,220,164,.82)';
+      ctx.strokeStyle = edgeColor; ctx.lineWidth = 3;
+      for (const edge of [a, b]) { ctx.beginPath(); ctx.moveTo(edge - 14, levelGroundY(edge) - 3); ctx.lineTo(edge + (edge === a ? 10 : -10), levelGroundY(edge) + 5); ctx.stroke(); }
+      for (const edge of [a + 15, b - 15]) for (let n = 0; n < 3; n++) { const sx = edge + n * (edge === a + 15 ? 12 : -12), sy = top - 9 - Math.sin(t * 3 + n) * 2; ctx.fillStyle = edgeColor; ctx.beginPath(); ctx.arc(sx, sy, 1.8, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = 'rgba(24,17,42,.92)'; ctx.strokeStyle = edgeColor; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc((a+b)/2, top - 22, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.font = `800 13px ${DISP}`; ctx.textAlign = 'center'; ctx.fillStyle = INK; ctx.fillText('!', (a+b)/2, top - 17);
+    }
+    for (const mark of currentLevel.checkpoints || []) {
+      if (mark < x0 - 30 || mark > x1 + 30) continue;
+      const gy = terrainY(mark), pulse = .7 + .3 * Math.sin(t * 3 + mark);
+      ctx.fillStyle = `rgba(255,210,110,${.12 * pulse})`; ctx.beginPath(); ctx.arc(mark, gy - 26, 27, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(145,103,77,.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(mark - 8, gy); ctx.lineTo(mark - 8, gy - 30); ctx.lineTo(mark + 8, gy - 30); ctx.lineTo(mark + 8, gy); ctx.stroke();
+      ctx.fillStyle = `rgba(255,219,135,${pulse})`; ctx.beginPath(); ctx.roundRect(mark - 5, gy - 27, 10, 15, 4); ctx.fill();
+      ctx.fillStyle = 'rgba(246,236,190,.85)'; ctx.fillRect(mark - 2, gy - 24, 4, 7);
+      ctx.fillStyle = 'rgba(243,236,255,.8)'; ctx.beginPath(); ctx.arc(mark, gy + 3, 3, 0, Math.PI*2); ctx.fill();
     }
     // Existing map-specific platform rendering remains; this adds distinct type cues and state.
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x=p[0], y=p[1], w=p[2];
+      const x=p[0], y=platformDrawY(p), w=p[2];
       if (p.type === 'moving') { ctx.strokeStyle='rgba(255,233,165,.42)'; ctx.lineWidth=1; ctx.setLineDash([5,5]); ctx.strokeRect(x-3,y-5,w+6,17); ctx.setLineDash([]); }
+      if (p.skin === 'boat' || p.skin === 'log') {
+        ctx.fillStyle = p.skin === 'boat' ? '#704b4b' : '#72523c'; ctx.beginPath(); ctx.moveTo(x - 2, y + 2); ctx.lineTo(x + w + 2, y + 2); ctx.quadraticCurveTo(x + w * .84, y + 16, x + w * .5, y + 15); ctx.quadraticCurveTo(x + w * .14, y + 16, x - 2, y + 2); ctx.fill();
+        ctx.fillStyle = p.skin === 'boat' ? '#d6aa5a' : '#ad8055'; ctx.fillRect(x + 5, y - 2, w - 10, 4);
+      }
+      if (p.type === 'swinging' && p.anchor) {
+        const [ax, ay] = p.anchor, sway = Math.sin(t * (p.speed || .8)) * 15;
+        ctx.strokeStyle = 'rgba(255,220,164,.82)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax - 18, ay - 28); ctx.quadraticCurveTo(ax + sway, ay - 14, ax + sway, ay + 4); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,205,111,.18)'; ctx.beginPath(); ctx.arc(ax + sway, ay + 10, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffd98a'; ctx.beginPath(); ctx.roundRect(ax + sway - 8, ay + 3, 16, 19, 5); ctx.fill();
+        ctx.strokeStyle = 'rgba(113,74,96,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax + sway - 4, ay + 10); ctx.lineTo(ax + sway + 4, ay + 10); ctx.stroke();
+      }
       if (p.type === 'crumbling') { const fade = p.crumbleRemaining > 0 ? .45 + .4 * p.crumbleRemaining : 1; ctx.globalAlpha=fade; ctx.strokeStyle=dark; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x+w*.34,y+1); ctx.lineTo(x+w*.42,y+7); ctx.lineTo(x+w*.48,y+3); ctx.moveTo(x+w*.68,y+1); ctx.lineTo(x+w*.61,y+6); ctx.stroke(); ctx.globalAlpha=1; }
       if (p.type === 'bouncy') { ctx.fillStyle=mid; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.fill(); ctx.strokeStyle=light; ctx.lineWidth=1.5; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.stroke(); }
     }
@@ -2510,7 +2630,7 @@
     for(const spot of scratchSpots){if(spot.x<x0-60||spot.x>x1+60)continue;drawScratchSpot(spot.x,spot.y,spot.moodType,spot);}
     for(const rock of rocks){if(rock.x<x0-80||rock.x>x1+80)continue;drawRockFormation(rock.x,rock.y,rock,rockHoldsFeeling(rock));}
     for(const p of activePlats){if(p[0]+p[2]<x0||p[0]>x1)continue;
-      const x=p[0],y=p[1],w=p[2];ctx.fillStyle='#27333a';ctx.beginPath();ctx.moveTo(x-4,y+13);ctx.lineTo(x+4,y+4);ctx.quadraticCurveTo(x+w*.21,y+12,x+w*.34,y+6);ctx.quadraticCurveTo(x+w*.58,y-1,x+w*.76,y+8);ctx.lineTo(x+w+5,y+11);ctx.lineTo(x+w-8,y+28);ctx.lineTo(x+10,y+28);ctx.closePath();ctx.fill();
+      const x=p[0],y=platformDrawY(p),w=p[2];ctx.fillStyle='#27333a';ctx.beginPath();ctx.moveTo(x-4,y+13);ctx.lineTo(x+4,y+4);ctx.quadraticCurveTo(x+w*.21,y+12,x+w*.34,y+6);ctx.quadraticCurveTo(x+w*.58,y-1,x+w*.76,y+8);ctx.lineTo(x+w+5,y+11);ctx.lineTo(x+w-8,y+28);ctx.lineTo(x+10,y+28);ctx.closePath();ctx.fill();
       const rock=ctx.createLinearGradient(0,y,0,y+18);rock.addColorStop(0,'#596458');rock.addColorStop(.36,'#49514b');rock.addColorStop(1,'#303a3b');ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(x-2,y+7);ctx.quadraticCurveTo(x+w*.2,y+3,x+w*.4,y+8);ctx.quadraticCurveTo(x+w*.72,y+2,x+w+3,y+6);ctx.lineTo(x+w-4,y+15);ctx.quadraticCurveTo(x+w*.6,y+12,x+w*.35,y+16);ctx.quadraticCurveTo(x+w*.1,y+12,x-2,y+17);ctx.closePath();ctx.fill();
       ctx.strokeStyle='rgba(168,183,150,.68)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y+7);ctx.quadraticCurveTo(x+w*.3,y+2,x+w*.55,y+7);ctx.quadraticCurveTo(x+w*.8,y+3,x+w,y+6);ctx.stroke();
       ctx.strokeStyle='rgba(12,22,27,.62)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+w*.28,y+9);ctx.lineTo(x+w*.32,y+15);ctx.lineTo(x+w*.36,y+17);ctx.moveTo(x+w*.78,y+7);ctx.lineTo(x+w*.74,y+12);ctx.stroke();
@@ -2916,7 +3036,8 @@
     return true;
   }
   function drawCat() {
-    const c = cat; ctx.save();
+    const c = cat; if (c.respawning) return; ctx.save();
+    if (c.falling) ctx.globalAlpha = clamp(1 - c.fallTime / .38, 0, 1);
     if (c.inv > 0 && Math.floor(c.inv * 12) % 2) ctx.globalAlpha = .45;
     ctx.translate(c.x, c.y); ctx.scale(c.face, 1);
     let sxs = 1, sys = 1;
@@ -3002,12 +3123,22 @@
     ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, HUD_X + 10, top + 34);
     ctx.font = `600 ${hudCompact ? 13 : 15}px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText('SCORE', HUD_X + 12, top + 60);
     ctx.font = `800 ${hudCompact ? 20 : 22}px ${DISP}`; ctx.fillStyle = INK; ctx.fillText(score.toLocaleString(), HUD_X + 72, top + 61);
+    if (mode === 'story') {
+      const lx = HUD_X + HUD_CARD_W + 10, ly = top + 8;
+      ctx.fillStyle = 'rgba(22,15,44,.82)'; rrect(lx, ly, 68, 32, 16); ctx.fill();
+      for (let i = 0; i < 3; i++) {
+        const x = lx + 14 + i * 20, y = ly + 16;
+        ctx.fillStyle = i < lives ? (i === 0 ? '#ffc978' : '#f4e8c7') : 'rgba(243,236,255,.28)';
+        ctx.beginPath(); ctx.arc(x, y + 3, 4, 0, Math.PI * 2); ctx.fill();
+        for (const [dx, dy] of [[-4,-4],[0,-6],[4,-4]]) { ctx.beginPath(); ctx.arc(x + dx, y + dy, 2.2, 0, Math.PI * 2); ctx.fill(); }
+      }
+    }
     const hudChapter = mode === 'story' ? chapterFor(storyNight) : null;
     const skyEnabled = !!hudChapter && skyTotalFor(hudChapter) > 0;
     const skyLive = skyEnabled && mood.some(m => m.sky && !m.dead && ['wait', 'falling', 'struck', 'scratchReq', 'scratched'].includes(m.skyPhase));
     const compactSky = VW < 900;
     if (skyEnabled) {
-      const sx = compactSky ? HUD_X : HUD_X + HUD_CARD_W + 10, sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
+      const sx = compactSky ? HUD_X : HUD_X + HUD_CARD_W + 86, sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
       ctx.save(); ctx.globalAlpha = skyLive ? .84 + .16 * Math.sin(t * 5) : 1;
       ctx.fillStyle = 'rgba(22,15,44,.78)'; ctx.strokeStyle = skyLive ? 'rgba(205,224,255,.62)' : 'rgba(243,236,255,.22)'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.roundRect ? ctx.roundRect(sx, sy, sw, sh, 14) : ctx.rect(sx, sy, sw, sh); ctx.fill(); ctx.stroke();
@@ -3095,13 +3226,14 @@
       ctx.strokeStyle = `rgba(200,255,138,${.35 * fade})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.stroke();
     }
     drawHUD();
+    if (fallDimT > 0) { ctx.save(); ctx.globalAlpha = clamp(fallDimT / .5, 0, 1) * .46; ctx.fillStyle = '#080817'; ctx.fillRect(0, -OY, VW, VH + OY * 2); ctx.restore(); }
   }
 
   // ---------- flow ----------
   function getBest(k = 'mk-best') { try { return +localStorage.getItem(k) || 0; } catch (e) { return 0; } }
   function setBest(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
   let R = null;
-  function finish(won) {
+  function finish(won, failReason = null) {
     if (state === 'over' || state === 'home') return;
     state = 'over'; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
@@ -3127,7 +3259,7 @@
     if (won) final += Math.round(left) * 20;
     const best = Math.max(getBest(bestKey), final); setBest(bestKey, best);
     R = {
-      won, night: storyNight, total: requiredTotal(), left, final, best, combo: bestCombo, home: caughtTotal(), unlocked: unlockedNow, stage: thiriSleepStage,
+      won, night: storyNight, total: requiredTotal(), left, final, best, combo: bestCombo, home: caughtTotal(), unlocked: unlockedNow, stage: thiriSleepStage, failReason,
       starsN: won ? (left >= 30 ? 3 : left >= 10 ? 2 : 1) : 0,
       tip: chapterFor(storyNight).tutorialHints
         ? `Tip: ${chapterFor(storyNight).tutorialHint}`
@@ -3436,18 +3568,19 @@
       return;
     }
     $('#nightStoryline').hidden = true;
-    $('#endEyebrow').textContent = R.won ? `${hourOf(R.night)} · done` : `${hourOf(R.night)} · time's up`;
-    $('#endTitle').textContent = R.won ? 'A little more of Thiri returns' : 'Some feelings need more time';
+    $('#endEyebrow').textContent = R.won ? `${hourOf(R.night)} · done` : R.failReason === 'fall' ? `${hourOf(R.night)} · night failed` : `${hourOf(R.night)} · time's up`;
+    $('#endTitle').textContent = R.won ? 'A little more of Thiri returns' : R.failReason === 'fall' ? 'Night failed' : 'Some feelings need more time';
     $('#endStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < R.starsN ? '' : 'off'}">★</span>`).join('');
     $('#endStars').hidden = !R.won;
     $('#endMsg').textContent = R.won
       ? `You brought all ${R.total} feelings home with ${Math.round(R.left)} seconds to spare. Time bonus: +${Math.round(R.left) * 20}.`
-      : "That's okay. Let's try again.";
+      : R.failReason === 'fall' ? 'Shwe ran out of lives. The lights from this run were lost, but anything already in the Mood Book is safe.' : "That's okay. Let's try again.";
     $('#sScore').textContent = R.final.toLocaleString();
     $('#sBest').textContent = R.best.toLocaleString();
     $('#sCombo').textContent = '×' + R.combo;
     $('#sHome').textContent = `${R.home}/${R.total}`;
     $('#againBtn').textContent = R.won ? (R.night < 7 ? `Continue → ${hourOf(R.night + 1)}` : `Replay ${hourOf(7)}`) : `Retry ${hourOf(R.night)}`;
+    $('#menuBtn').textContent = R.failReason === 'fall' ? 'Back to map' : 'Main menu';
     $('#endTip').textContent = R.tip;
     if (R.won) playNightComplete(R.night);
     setTimeout(() => { $('#endScreen').hidden = false; $('#againBtn').focus(); }, 280);
@@ -4628,6 +4761,7 @@
   $('#profileBtn').addEventListener('click', () => showSetup(false));
   $('#settingsBtn').addEventListener('click', () => {
     $('#showTipsToggle').checked = MK_PROFILE.showTips !== false; $('#tipLanguageSelect').value = MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en';
+    $('#gentleModeToggle').checked = gentleMode;
     $('#settingsReplayTutorial').disabled = MK_PROFILE.showTips === false;
     $('#settingsGuidanceStatus').textContent = ''; $('#hubSettingsScreen').hidden = false; $('#settingsCloseBtn').focus({ preventScroll: true });
   });
@@ -4639,6 +4773,7 @@
     $('#settingsReplayTutorial').disabled = !MK_PROFILE.showTips; persistGuidanceProgress();
   });
   $('#tipLanguageSelect').addEventListener('change', e => { MK_PROFILE.tipLanguage = e.target.value === 'my' ? 'my' : 'en'; persistGuidanceProgress(); });
+  $('#gentleModeToggle').addEventListener('change', e => { gentleMode = !!e.target.checked; try { localStorage.setItem('mk-gentle-mode', gentleMode ? '1' : '0'); } catch (err) {} });
   $('#settingsReplayTutorial').addEventListener('click', () => {
     if (!MK_PROFILE.showTips) return;
     MK_PROFILE.tutorialDone = false; persistGuidanceProgress(); $('#hubSettingsScreen').hidden = true; showStoryMap(false);
@@ -4705,7 +4840,11 @@
     else startGame(mode, storyNight);
   });
   $('#endReplayBtn').addEventListener('click', () => startGame(mode, storyNight));
-  $('#menuBtn').addEventListener('click', () => { mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns(); showMainMenu(true); });
+  $('#menuBtn').addEventListener('click', () => {
+    mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns();
+    if (R?.failReason === 'fall' && mode === 'story') { $('#endScreen').hidden = true; showStoryMap(true); }
+    else showMainMenu(true);
+  });
 
   let last = performance.now();
   function frame(now) {

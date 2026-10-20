@@ -22,6 +22,12 @@
     countdown: { f: 780, d: .085, w: 'sine', v: .07 }, urgent: { f: 980, d: .09, w: 'triangle', v: .085 }, timeup: { f: 330, to: 165, d: .55, w: 'triangle', v: .08 },
     pause: { f: 523.25, d: .2, w: 'sine', v: .055, notes: [523.25, 392] }, resume: { f: 392, d: .26, w: 'sine', v: .06, notes: [392, 523.25, 659.25] },
     jump: { f: 340, to: 620, d: .14, w: 'triangle', v: .045 }, land: { f: 180, to: 105, d: .12, w: 'sine', v: .045 },
+    edge: { f: 880, to: 660, d: .12, w: 'sine', v: .035 }, crumble: { f: 210, to: 145, d: .22, w: 'triangle', v: .045, noise: .12 },
+    platformHum: { f: 174, to: 196, d: .3, w: 'sine', v: .025 }, fall: { f: 560, to: 220, d: .42, w: 'sine', v: .05 },
+    respawn: { f: 440, d: .24, w: 'sine', v: .05, notes: [440, 587, 784] },
+    checkpoint: { f: 659, d: .3, w: 'sine', v: .055, notes: [659, 784, 988] },
+    lifeLost: { f: 392, to: 196, d: .3, w: 'triangle', v: .05 },
+    poof: { f: 740, to: 370, d: .28, w: 'sine', v: .04 },
     step: { f: 165, d: .045, w: 'sine', v: .018, noise: .12 }, pounce: { f: 270, to: 740, d: .17, w: 'triangle', v: .06, noise: .15 },
     scratch: { f: 430, to: 240, d: .17, w: 'triangle', v: .04, noise: .2 }, eyes: { f: 740, d: .34, w: 'sine', v: .045, notes: [740, 988] },
     combo: { f: 620, to: 1240, d: .22, w: 'sine', v: .065 }, comboLost: { f: 330, to: 220, d: .16, w: 'triangle', v: .04 },
@@ -31,6 +37,7 @@
   };
   const UI_ALIAS = { click: 'click', hover: 'hover', back: 'back', cancel: 'back', toggle: 'toggle', tab: 'tab', page: 'page',
     buy: 'buy', select: 'select', error: 'error', pause: 'pause', resume: 'resume', jump: 'jump', pounce: 'pounce', purr: 'click', eyes: 'eyes', scratch: 'scratch',
+    edge: 'edge', crumble: 'crumble', platformHum: 'platformHum', fall: 'fall', respawn: 'respawn', checkpoint: 'checkpoint', lifeLost: 'lifeLost', poof: 'poof',
     close: 'back', chapter: 'select', start: 'start', continue: 'select', confirm: 'select', reset: 'error' };
   let ctx = null, master = null, volume = .8, muted = false, musicVol = .75, ambienceVol = .65, unlocked = false;
   try { const s = JSON.parse(localStorage.getItem('tc-audio') || 'null'); if (s) { if (typeof s.effects === 'number') volume = s.effects; if (typeof s.music === 'number') musicVol = s.music; if (typeof s.ambience === 'number') ambienceVol = s.ambience; muted = !!s.mute; } } catch (e) {}
