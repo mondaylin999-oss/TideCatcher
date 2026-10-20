@@ -311,7 +311,7 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .tip-coach-card.tip-success{border-color:var(--honey);box-shadow:var(--shadow-card),0 0 26px var(--honey-haze)}
 
 /* Reserve rows for every hub action so the full menu fits without page scrolling. */
-.hub-content{min-height:0;grid-template-rows:auto minmax(0,1fr) minmax(0,1fr) auto;gap:clamp(5px,1vh,12px)}
+.hub-content{align-self:stretch;min-height:0;grid-template-rows:auto minmax(0,1fr) minmax(0,1fr) auto;gap:clamp(5px,1vh,12px)}
 .hub-content>.hub-card{height:auto;min-height:0}
 .hub-goals{min-height:0;padding:6px 8px}
 .hub-goals h2{margin-bottom:4px}
