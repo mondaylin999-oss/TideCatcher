@@ -2,6 +2,8 @@
 
 ## Screen changes
 
+- **Profile badge spacing:** Sized the preview card and cat canvas together so the cat-name badge remains inside the card and clear of the footer note at different landscape heights.
+
 - **One screen profile setup:** Removed the desktop height breakpoint from the compact profile editor so it also stays balanced at browser zoom and shorter landscape heights. The cat preview is capped to a short landscape card; both setup steps fit without page scrolling at desktop and mobile landscape sizes.
 
 - **Flexible profile editor:** The name and cat setup panel now sizes to its content on large screens, with a balanced landscape preview and aligned fields instead of a stretched full-height column. Kept the compact layout on short screens and portrait phones.

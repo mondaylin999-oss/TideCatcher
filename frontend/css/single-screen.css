@@ -135,8 +135,8 @@
 @media (min-width:700px){
   #setupForm{width:min(980px,calc(100% - 48px));max-width:none;height:auto;max-height:calc(100dvh - 24px);overflow-y:auto;padding:clamp(20px,3vh,32px);gap:14px}
   #setupForm .setup-grid{flex:none;grid-template-columns:minmax(180px,.55fr) minmax(0,1.45fr);gap:clamp(18px,3vw,36px);align-items:center}
-  #setupForm .setup-preview{width:min(100%,340px);height:clamp(130px,22vh,210px);min-height:0;justify-self:center;align-content:center;gap:8px;padding:12px}
-  #setupForm .setup-preview canvas{width:min(100%,260px);max-height:72%;aspect-ratio:auto}
+  #setupForm .setup-preview{width:min(100%,340px);height:clamp(180px,25vh,230px);min-height:0;justify-self:center;align-content:center;gap:8px;padding:12px}
+  #setupForm .setup-preview canvas{width:auto;height:clamp(68px,18vh,150px);max-width:100%;max-height:none;aspect-ratio:auto}
   #setupForm .setup-fields{width:100%;max-width:620px;justify-self:center;gap:10px}
   #setupForm .setup-fields label.field{gap:6px;font-size:14px}
   #setupForm .setup-step{font-size:clamp(18px,2vw,23px)}
