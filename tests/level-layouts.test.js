@@ -25,7 +25,10 @@ function check(level) {
   for (let i = 1; i < level.ground.points.length; i++) assert.ok(level.ground.points[i][0] > level.ground.points[i - 1][0], `${level.night}: ground points sorted`);
   for (const [a, b] of level.pits || []) {
     assert.ok(a >= 0 && b <= level.width && b > a, `${level.night}: pit within level`);
-    assert.ok(b - a <= MAX_FLAT_JUMP, `${level.night}: pit is crossable with the chapter jump settings`);
+    const movingBridge = level.platforms.some(p => p[3] === 'moving' && p[4]?.path?.length > 1
+      && Math.min(...p[4].path.map(([x]) => x)) <= a
+      && Math.max(...p[4].path.map(([x]) => x)) + p[2] >= b);
+    assert.ok(b - a <= MAX_FLAT_JUMP || movingBridge, `${level.night}: pit is crossable by jump or moving bridge`);
     assert.ok(!pitAt(level, level.catStart) || level.catStart !== a, `${level.night}: start outside pit`);
   }
   for (const [a, b] of level.spawnZones) {
@@ -69,8 +72,10 @@ function check(level) {
     }
   }
   for (const [a, b] of level.pits || []) {
-    // A clear run jump is always sufficient; roosts are safety options, not mandatory blind leaps.
-    assert.ok(b - a <= MAX_FLAT_JUMP, `${level.night}: no impossible pit`);
+    const movingBridge = level.platforms.some(p => p[3] === 'moving' && p[4]?.path?.length > 1
+      && Math.min(...p[4].path.map(([x]) => x)) <= a
+      && Math.max(...p[4].path.map(([x]) => x)) + p[2] >= b);
+    assert.ok(b - a <= MAX_FLAT_JUMP || movingBridge, `${level.night}: no impossible pit`);
   }
   assert.ok(level.catStart > 0 && level.catStart < level.width, `${level.night}: valid cat start`);
 }
@@ -82,6 +87,11 @@ assert.equal(LEVELS[2].pits.length, 1, 'Night 2 introduces one pit');
 assert.ok(LEVELS[2].platforms.some(p => p[3] === 'static' && LEVELS[2].pits.some(([a,b]) => p[0] < b && p[0] + p[2] > a)), 'Night 2 has a static ledge crossing');
 assert.equal(LEVELS[3].pits.length, 2, 'Night 3 has two pits');
 assert.ok(LEVELS[3].platforms.some(p => p[3] === 'moving' && LEVELS[3].pits.some(([a,b]) => p[0] < b && p[0] + p[2] > a)), 'Night 3 has a moving pit crossing');
+const parkPit = LEVELS[3].pits[1];
+const parkPitCrossers = LEVELS[3].platforms.filter(p => p[0] < parkPit[1] && p[0] + p[2] > parkPit[0]);
+assert.equal(parkPit[1] - parkPit[0], 315, 'Night 3 second pit is three times wider');
+assert.equal(parkPitCrossers.length, 1, 'Night 3 second pit has no overlapping duplicate platforms');
+assert.equal(parkPitCrossers[0][3], 'moving', 'Night 3 second pit can only be crossed by its moving bridge');
 assert.ok(LEVELS[4].platforms.filter(p => p[4]?.skin === 'boat').length >= 3, 'Night 4 has moving boats');
 assert.ok(LEVELS[5].platforms.some(p => p[3] === 'crumbling'), 'Night 5 has crumbling steps');
 assert.ok(LEVELS[6].platforms.some(p => p[4]?.skin === 'log') && LEVELS[6].platforms.some(p => p[3] === 'swinging'), 'Night 6 has moving logs and a swing');
