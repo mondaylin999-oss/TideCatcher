@@ -459,3 +459,13 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .story-map-panel>.level-map-window::-webkit-scrollbar{height:9px}
 .story-map-panel>.level-map-window::-webkit-scrollbar-track{background:#101f3155;border-radius:8px}
 .story-map-panel>.level-map-window::-webkit-scrollbar-thumb{background:#b9a3ff;border:2px solid #203642;border-radius:8px}
+
+/* Keep touch-device home artwork off filtered/animated compositor layers.
+   This reduces compositor pressure when investigating mobile display artifacts. */
+@media (pointer:coarse){
+  #startScreen .hub-hero-art,#startScreen .hub-side-btn svg{filter:none}
+  #startScreen .hub-hero-mist{display:none}
+  #startScreen .hub-spray,#startScreen .cozy-progress>i{animation:none}
+  #startScreen .hub-card,#startScreen .hub-card:hover,
+  #startScreen .hub-side-btn:hover{transform:none;filter:none}
+}

@@ -1,5 +1,11 @@
 # Cozy night sticker book
 
+## Mobile home rendering follow-up
+
+- Added content-versioned stylesheet and script URLs so refreshed pages do not reuse older asset versions.
+- Simplified decorative home-screen filters and animations on touch devices to reduce compositor artifacts; retained the artwork and all controls.
+- The reported photo includes the removed goals panel, so its deployment/browser cache still needs confirmation.
+
 ## Mobile rendering fixes
 
 - Removed the browser tap highlight flashing blue over the mobile intro; keyboard focus outlines remain intact.
