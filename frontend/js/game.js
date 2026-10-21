@@ -3920,6 +3920,8 @@
   const THIRI_IMG = {};
   THIRI_POSES.forEach(k => { const c = new Image(), g = new Image(); c.src = `assets/home/thiri-${k}.webp`; g.src = `assets/home/thiri-${k}-grey.webp`; THIRI_IMG[k] = { c, g }; });
   const imgOk = im => im && im.complete && im.naturalWidth > 0;
+  // where the Thiri pictures sit in the room (room units): head on the pillow, arm over the blanket
+  const TB = [110, 390, 250, 140];
   function drawThiriInBed(pose, warm, dawn, breath) {
     // pick the two nearest poses and blend between them
     const p = clamp(pose, 0, 7); let i = 0; while (i < THIRI_AT.length - 1 && THIRI_AT[i + 1] <= p) i++;
@@ -3931,8 +3933,8 @@
     const lift = breath * .35;
     for (const [k, a] of layers) {
       if (a <= .01) continue; const im = THIRI_IMG[k];
-      if (imgOk(im.g) && warm < 1) { ctx.globalAlpha = a; ctx.drawImage(im.g, 150, 400 + lift, 300, 150); }
-      if (imgOk(im.c) && warm > 0) { ctx.globalAlpha = a * warm; ctx.drawImage(im.c, 150, 400 + lift, 300, 150); }
+      if (imgOk(im.g) && warm < 1) { ctx.globalAlpha = a; ctx.drawImage(im.g, TB[0], TB[1] + lift, TB[2], TB[3]); }
+      if (imgOk(im.c) && warm > 0) { ctx.globalAlpha = a * warm; ctx.drawImage(im.c, TB[0], TB[1] + lift, TB[2], TB[3]); }
     }
     ctx.globalAlpha = 1;
   }
@@ -4581,7 +4583,7 @@
     { s: 6, who: 'S', text: '(sniff) We were only trying to help…' },
     { s: 6, who: 'F', text: 'Fine. If she doesn’t want us… we’ll go.' },
     { s: 6, who: 'C', text: 'Goodbye, Thiri.' },
-    { s: 6, text: 'One by one, they drifted to the window. Their lights grew dimmer… and dimmer.' },
+    { s: 6, text: 'One by one, they walked to the window. Their lights grew dimmer… and dimmer.' },
     { s: 6, text: 'Frustrated. Nervous. Lonely. Excited. Calm. Shy. Jealous. All of them, gone.' },
     { s: 6, text: 'Without them, she would wake up empty.' },
     { s: 7, who: 'cat', text: 'Mrrp! (Wait for me!)' },
@@ -4614,6 +4616,46 @@
     { s: 3, text: 'Frustrated, Nervous, Lonely, Excited, Calm, Shy, Jealous. All of them, home where they belong.' },
     { s: 3, who: 'girl', text: 'Thank you, Shwe. I’m ready to try again.' }
   ];
+  // ---- Voice acting for the intro and ending (clips in assets/audio/voice/intro and /ending, one per line) ----
+  // Per line: [clip length in seconds (0 = no clip: sound effects and the plain meow), pause after it in ms, reaction played first]
+  const CS_VOICE = {
+    intro: [[4.91,700],[3.23,1100],[2.41,1000],[3.96,700],[3.24,1300],[3.94,900],[0,1200],[2.8,1800],[3.17,900],[2.31,1300],[3.45,900],[0,900],[4.4,800],[2.14,600],[2.13,600],[2.47,600],[1.36,1400],[4.35,800],[5.23,1000],[2.38,1400],[1.03,700],[5.02,2500]],
+    ending: [[4.54,700],[1.4,800],[4.48,900],[3.15,800],[4,900],[1.66,500],[1.32,1000],[2.11,900],[3.85,800],[3.16,1300],[2.88,800],[1.91,700],[2.96,600,'laugh'],[1.61,400,'giggle'],[1.98,900],[5.55,1200],[2.76,3000]]
+  };
+  const csVo = { clips: {}, playing: [], timers: [], restore: 0 };
+  const reduceVoice = false;
+  const csVoLevel = () => { try { return window.TCSfx ? Math.min(1, TCSfx.level() / .8) : 1; } catch (e) { return 1; } };
+  function csVoClip(path) {
+    if (!csVo.clips[path]) { const a = new Audio(path); a.preload = 'auto'; csVo.clips[path] = a; }
+    return csVo.clips[path];
+  }
+  const csVoPath = (kind, i) => `assets/audio/voice/${kind}/vo_${String(i).padStart(2, '0')}.mp3`;
+  function csVoPreload(kind) { CS_VOICE[kind].forEach((v, i) => { if (v[0]) csVoClip(csVoPath(kind, i)); }); }
+  function csVoStop() {
+    csVo.timers.forEach(clearTimeout); csVo.timers = [];
+    csVo.playing.forEach(a => { try { a.pause(); a.currentTime = 0; } catch (e) {} }); csVo.playing = [];
+  }
+  function csVoUnduck() { clearTimeout(csVo.restore); music('duck', 1); }
+  // Starts the voice for one line. Returns a tracker the typing and auto-advance read, or null when there is no voice.
+  function csVoLine(kind, i, line) {
+    csVoStop();
+    const v = CS_VOICE[kind]?.[i], lv = csVoLevel();
+    if (!v || !v[0] || lv <= 0 || reduceVoice) return null;
+    const lead = (i === 0 ? 1.4 : .3) + (line.who === 'cat' ? .8 : 0);   // let the meow finish before Shwe speaks
+    const vo = { start: performance.now(), lead, dur: v[0] + (v[2] ? .7 : 0), gap: v[1], state: 'wait', endAt: 0 };
+    const play = (path, then) => {
+      const a = csVoClip(path); a.volume = lv; a.currentTime = 0; csVo.playing.push(a);
+      a.onended = () => { csVo.playing = csVo.playing.filter(x => x !== a); then && then(); };
+      a.onerror = () => { if (vo.state !== 'done') { vo.state = 'fail'; csVoUnduck(); } };
+      const pr = a.play(); if (pr && pr.catch) pr.catch(() => { if (vo.state !== 'done') { vo.state = 'fail'; csVoUnduck(); } });
+    };
+    const speak = () => { if (vo.state === 'fail') return; vo.state = 'play'; play(csVoPath(kind, i), () => { vo.state = 'done'; vo.endAt = performance.now(); clearTimeout(csVo.restore); csVo.restore = setTimeout(() => music('duck', 1), 350); }); };
+    csVo.timers.push(setTimeout(() => {
+      clearTimeout(csVo.restore); music('duck', .5);
+      if (v[2]) play(`assets/audio/voice/reactions/${v[2]}.mp3`, () => csVo.timers.push(setTimeout(speak, 140))); else speak();
+    }, lead * 1000));
+    return vo;
+  }
   let CS_SCENES = INTRO_SCENES, CS_LINES = INTRO_LINES, csKind = 'intro';
   const introImgs = INTRO_SCENES.map(() => new Image());
   const endingImgs = ENDING_SCENES.map(() => new Image());
@@ -4640,8 +4682,8 @@
     introShot ^= 1;
     const inc = shots[introShot], out = shots[introShot ^ 1];
     inc.src = csImgs[i].src || `assets/${sc.dir || 'intro'}/${sc.img}.webp`; inc.alt = sc.alt;
-    const sceneLines = CS_LINES.filter(l => l.s === i);
-    const dur = sceneLines.reduce((t, l) => t + l.text.length / INTRO_CPS + .9 + l.text.length * .018, 1.5);
+    const vv = csVoLevel() > 0 ? CS_VOICE[csKind] || [] : [];   // voiced scenes last as long as their lines take to say
+    const dur = CS_LINES.reduce((t, l, k) => l.s !== i ? t : t + (vv[k]?.[0] ? .3 + vv[k][0] + (vv[k][2] ? .7 : 0) + vv[k][1] / 1000 : l.text.length / INTRO_CPS + .9 + l.text.length * .018), 1.5);
     [['--ox', sc.ox], ['--oy', sc.oy], ['--k0', sc.k0], ['--k1', sc.k1], ['--dx', sc.dx], ['--dy', sc.dy], ['--dur', dur.toFixed(1) + 's']]
       .forEach(([k, v]) => inc.style.setProperty(k, v));
     inc.classList.remove('move'); void inc.offsetWidth; inc.classList.add('move', 'on');
@@ -4670,8 +4712,11 @@
     introTyped = reduce ? line.full.length : 0; el.textContent = reduce ? line.full : '';
     introLineStart = performance.now(); introDoneAt = reduce ? introLineStart : 0;
     $('#introHint').classList.remove('show');
+    line.vo = csVoLine(csKind, i, line);
+    // with a voice, the words appear at the speed they are spoken
+    line.cps = line.vo ? Math.max(8, line.full.length / (line.vo.lead + line.vo.dur * .86)) : INTRO_CPS;
     if (line.who === 'cat') sfx('cat', 'meow', .42);
-    else if (['F', 'N', 'L', 'C', 'S', 'J', 'E'].includes(line.who)) sfx('moodling', line.who, .34);
+    else if (!line.vo && ['F', 'N', 'L', 'C', 'S', 'J', 'E'].includes(line.who)) sfx('moodling', line.who, .34);
     if (line.sfx) { sfx('ui', 'swish'); tone(820, .2, 'sawtooth', .03, -600); setTimeout(() => tone(620, .16, 'sawtooth', .024, -450), 90); }
   }
   function introFinish() {
@@ -4683,14 +4728,18 @@
     if (state !== 'intro') return;
     const line = CS_LINES[introI], el = $('#introSubtitle');
     if (introTyped < line.full.length) {
-      const n = Math.min(line.full.length, Math.floor((now - introLineStart) / 1000 * INTRO_CPS));
+      const n = Math.min(line.full.length, Math.floor((now - introLineStart) / 1000 * (line.cps || INTRO_CPS)));
       if (n !== introTyped) { introTyped = n; el.textContent = line.full.slice(0, n); }
       if (n >= line.full.length) introDoneAt = now;
     } else {
       if (!introDoneAt) introDoneAt = now;
       if (introI === CS_LINES.length - 1) { introFinish(); return; }
       $('#introHint').classList.add('show');
-      if (now - introDoneAt > 900 + line.full.length * 18) introShowLine(introI + 1);
+      const vo = line.vo;
+      // voiced lines move on after the voice ends (plus a short pause); a clip that never starts or ends gives up after a few seconds
+      const late = vo && now - vo.start > (vo.lead + vo.dur) * 1000 + 4000;
+      const next = vo && vo.state !== 'fail' && !late ? vo.state === 'done' && now - vo.endAt > vo.gap : now - introDoneAt > 900 + line.full.length * 18;
+      if (next) introShowLine(introI + 1);
     }
     introRaf = requestAnimationFrame(introTick);
   }
@@ -4706,6 +4755,7 @@
   let introReturnView = 'storyMap';
   function leaveIntro() {
     cancelAnimationFrame(introRaf); $('#prologueScreen').hidden = true;
+    csVoStop(); csVoUnduck();
     [$('#introShotA'), $('#introShotB')].forEach(im => im.classList.remove('on', 'move'));
     introFx(null, 0); state = 'menu'; cv.hidden = true;
     if (csKind === 'ending') { csKind = 'intro'; CS_SCENES = INTRO_SCENES; CS_LINES = INTRO_LINES; csImgs = introImgs; showEndingDone(); return; }
@@ -4715,6 +4765,7 @@
   }
   function playIntro(returnView = 'storyMap') {
     csKind = 'intro'; CS_SCENES = INTRO_SCENES; CS_LINES = INTRO_LINES; csImgs = introImgs; $('#introSkipBtn').textContent = 'Skip intro →';
+    csVoPreload('intro');
     music('play', 'intro'); music('ambience', 'intro');
     introReturnView = returnView;
     initAudio(); state = 'intro'; cv.hidden = true;
@@ -4732,6 +4783,7 @@
   // ---- Morning ending cutscene ----
   function playEnding() {
     csKind = 'ending'; CS_SCENES = ENDING_SCENES; CS_LINES = ENDING_LINES; csImgs = endingImgs;
+    csVoPreload('ending');
     music('duck', 1); music('play', 'ending'); music('ambience', null); initAudio(); state = 'intro'; cv.hidden = true;
     ['#welcomeScreen', '#welcomeCardsScreen', '#helpScreen', '#levelBriefingScreen', '#nightReadyScreen', '#startScreen', '#endScreen', '#awakeningScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
     const sm = $('#storyMapScreen'); if (sm) sm.hidden = true;

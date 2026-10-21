@@ -1,3 +1,21 @@
+# Voices, bedroom Thiri and Persian tail
+
+## Voice acting in the intro and ending
+
+- Every spoken line of the intro and the morning ending now has its voice clip (`frontend/assets/audio/voice`). The words type out at the speed they are spoken, the next line starts after the voice ends, and the music dips while someone speaks.
+- Clicking or pressing Space still skips ahead and stops the current clip. With sound muted (or effects at 0) the cutscenes play silently at the old pace.
+- Shwe meows first, then says the words in brackets. Thiri laughs before "This time I'll draw all of you", and Shy giggles before her line.
+- Intro text now says the Moodlings "walked" to the window, to match the voice and the walking Moodlings.
+
+## Thiri in the bedroom (coming-home scene)
+
+- Replaced the six flat sleeping poses with Thiri cut from the team's painted reference of the same room (brown hair, blue scrunchie, blue star hoodie), placed exactly where she lies in that picture.
+- The poses follow her mood: tears on the first nights, tears fading, peaceful, a small smile, then eyes open on the last night. Grey versions match the grey room.
+
+## Persian tail
+
+- Fixed thin see-through lines down fluffy tails while they sway (most visible on the white Persian). The tail strips now overlap enough to cover the gaps between them.
+
 # Cozy night sticker book
 
 ## Home cat rendering

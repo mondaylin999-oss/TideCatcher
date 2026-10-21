@@ -51,10 +51,14 @@ function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   g.save(); g.translate(0, dy + dHip); g.scale(1, 1 + (pose.breath || 0)); g.translate(0, -(dy + dHip));
   piece(tW, 0, sw - tW, hipS + 1);
   piece(0, tH, tW, hipS + 1 - tH);
-  // tail box in vertical strips: full sway at the tip side, none where it meets the body
-  var TS = 8, tk = (pose.tail || 0) * r.tailAmp;
+  // tail box in vertical strips: full sway at the tip side, none where it meets the body.
+  // Neighbouring strips sway by slightly different amounts, so each one is widened by
+  // more than that difference; otherwise thin see-through lines appear in fluffy tails.
+  var TS = 16, tk = (pose.tail || 0) * r.tailAmp;
+  var pad = Math.ceil(Math.abs(tk) * tH * ky / kx / TS) + 2;
   for (var i = 0; i < TS; i++) {
-    var x0 = Math.floor(tW * i / TS), x1 = Math.min(tW, Math.ceil(tW * (i + 1) / TS) + 1), f = 1 - (i + .5) / TS;
+    var a = Math.floor(tW * i / TS), b = Math.ceil(tW * (i + 1) / TS), f = 1 - (i + 1) / TS;
+    var x0 = Math.max(0, a - 1), x1 = i === TS - 1 ? Math.min(sw, tW + 1) : Math.min(tW, b + pad);
     g.save(); g.translate(dx + x0 * kx, dy + tH * ky); g.transform(1, 0, tk * f, 1, 0, 0);
     g.drawImage(spr, x0, 0, x1 - x0, tH + 1, 0, -tH * ky, (x1 - x0) * kx, (tH + 1) * ky); g.restore();
   }
