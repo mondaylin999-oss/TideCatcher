@@ -1,5 +1,11 @@
 # Cozy night sticker book
 
+## Mobile rendering fixes
+
+- Removed the browser tap highlight flashing blue over the mobile intro; keyboard focus outlines remain intact.
+- Added a rounded-canvas fallback for browsers without roundRect, preventing repeated rendering exceptions.
+- Avoided clearing the canvas on resize events when its pixel dimensions have not changed.
+
 ## Audio packs
 
 - Added supplied intro, menu, bedroom and ending music to their matching scenes.
