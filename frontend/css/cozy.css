@@ -475,3 +475,8 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 #stick #knob{width:24px;height:24px;border-width:2px;z-index:1}
 #stick[data-speed="slow"]::before{background:var(--mint-haze);border-color:var(--cream);box-shadow:0 0 8px var(--mint)}
 #stick[data-speed="fast"]{border-color:var(--honey);background:var(--honey-haze)}
+
+/* Keep the raster cat out of the SVG image/compositing pipeline on mobile. */
+#startScreen .hub-hero-art{filter:none;overflow:hidden}
+.hub-hero-art>svg{display:block;width:100%;height:100%}
+#hubHeroCat{position:absolute;max-width:none;object-fit:contain;object-position:center bottom;pointer-events:none;filter:none}

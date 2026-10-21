@@ -1,5 +1,10 @@
 # Cozy night sticker book
 
+## Home cat rendering
+
+- Replaced the SVG-embedded raster cat with a normal HTML image, aligned to the same pier coordinates at every viewport size. This bypasses the SVG image rendering path implicated by the mobile artifact photos.
+- Removed the remaining artwork filter and an obsolete duplicate shop-refresh function. The affected device still needs confirmation.
+
 ## Two-speed mobile joystick
 
 - Added a visible inner slow-movement ring and outer normal-speed ring, with a smaller thumb knob and active-zone feedback.

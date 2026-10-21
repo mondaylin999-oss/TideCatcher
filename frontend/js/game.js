@@ -3334,22 +3334,28 @@
     };
     requestAnimationFrame(tick);
   }
+  const heroArt = document.querySelector('.hub-hero-art');
+  function sizeHubCat() {
+    const w = heroArt.clientWidth, h = heroArt.clientHeight;
+    if (!w || !h) return;
+    const scale = Math.max(w / 520, h / 620), catImage = $('#hubHeroCat');
+    catImage.style.left = ((w - 520 * scale) / 2 + 175 * scale) + 'px';
+    catImage.style.top = ((h - 620 * scale) / 2 + 255 * scale) + 'px';
+    catImage.style.width = (210 * scale) + 'px';
+    catImage.style.height = (190 * scale) + 'px';
+  }
+  if (typeof ResizeObserver === 'function') new ResizeObserver(sizeHubCat).observe(heroArt);
+  addEventListener('resize', sizeHubCat);
   function refreshHubStats(found = BOOK_GOAL_KEYS.filter(key => book[key]).length) {
     animateHubNumber($('#hubGlowValue'), glow);
     animateHubNumber($('#hubBookValue'), found, n => `${n} / 17`);
     $('#shopBtnValue').textContent = `${glow} Glow`;
     $('#bookBtnValue').textContent = `${found} / 17 found`;
+    sizeHubCat();
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
     $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
     const heroCat = $('#hubHeroCat');
-    if (heroCat && COAT) heroCat.setAttribute('href', COAT.heroImg || COAT.img);
-    const heroSvg = $('#hubHeroSvg');
-    if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
-    $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
-  }
-  function refreshShopBtns() {
-    const label = `Upgrade Shwe · ${glow} Glow`;
-    if (heroCat && COAT) heroCat.setAttribute('href', COAT.img);
+    if (heroCat && COAT) heroCat.setAttribute('src', COAT.heroImg || COAT.img);
     const heroSvg = $('#hubHeroSvg');
     if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
     $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');

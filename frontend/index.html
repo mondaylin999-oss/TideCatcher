@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Padauk:wght@400;700&display=swap">
 <link rel="stylesheet" href="css/theme.css?v=ae0a5a6e0e1a">
 <link rel="stylesheet" href="css/styles.css?v=d56824e6fa9c">
-<link rel="stylesheet" href="css/cozy.css?v=76ffe8628141">
+<link rel="stylesheet" href="css/cozy.css?v=6f341d54f62e">
 <link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 </head>
@@ -174,13 +174,14 @@
 
     <section class="hub-hero" aria-label="Shwe watching the moonlit tide from a pier">
       <div class="hub-hero-mist mist-one" aria-hidden="true"></div><div class="hub-hero-mist mist-two" aria-hidden="true"></div>
-      <svg id="hubHeroSvg" class="hub-hero-art" viewBox="0 0 520 620" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Shwe, the selected cat, watching the moonlit tide from a pier">
+      <div class="hub-hero-art"><svg id="hubHeroSvg" viewBox="0 0 520 620" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Shwe, the selected cat, watching the moonlit tide from a pier">
         <defs><linearGradient id="hubHeroSky" x2="0" y2="1"><stop stop-color="#23384a"/><stop offset=".56" stop-color="#122738"/><stop offset="1" stop-color="#0b1620"/></linearGradient><radialGradient id="hubHeroMoon"><stop stop-color="#f9f2d6" stop-opacity=".9"/><stop offset="1" stop-color="#a9c4d4" stop-opacity="0"/></radialGradient><linearGradient id="hubHeroWater" x2="0" y2="1"><stop stop-color="#315266" stop-opacity=".55"/><stop offset="1" stop-color="#09151e"/></linearGradient></defs>
         <ellipse cx="264" cy="154" rx="156" ry="156" fill="url(#hubHeroMoon)"/><circle cx="264" cy="154" r="57" fill="#d9e6df" opacity=".78"/><path d="M0 308q76-44 143 0t134 0 132 0 111 0v312H0Z" fill="url(#hubHeroSky)"/><path d="M0 404q72-28 142 0t138 0 135 0 105 0v216H0Z" fill="url(#hubHeroWater)"/><path d="M0 445q65-18 129 0t129 0 129 0 133 0M0 490q74-15 143 0t130 0 128 0 119 0M0 538q60-12 123 0t130 0 136 0 131 0" fill="none" stroke="#a9c4d4" stroke-opacity=".22" stroke-width="2"/>
         <path d="M35 397 143 330l91 67M143 330v-43m0 17 37 25M405 398l65-45v48" fill="none" stroke="#607987" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".66"/><path d="M52 395h415v27H52zM77 423v105m351-105v105M112 423v86m277-86v86" fill="#172832" stroke="#8098a0" stroke-opacity=".58" stroke-width="3"/>
-        <image id="hubHeroCat" href="assets/cats/ginger-realistic.png" x="175" y="255" width="210" height="190" preserveAspectRatio="xMidYMax meet" aria-hidden="true"/><path d="M372 325 408 270m-20 2q22-13 39 2l-17 26q-18 4-27-8Z" fill="none" stroke="#a9c4d4" stroke-width="3" stroke-linejoin="round"/><path d="M393 273 410 292m-12-24 19 22m-24-10 23 8" stroke="#a9c4d4" stroke-width="1.5" opacity=".75"/><path d="M407 377v-36q0-10 10-10t10 10v36m-24 0h28" fill="none" stroke="#e0b04a" stroke-width="4" stroke-linecap="round"/><circle cx="417" cy="350" r="11" fill="#e0b04a" opacity=".28"/><circle cx="417" cy="350" r="5" fill="#f5df9b"/><ellipse cx="280" cy="430" rx="95" ry="8" fill="#a9c4d4" opacity=".14"/>
+        <path d="M372 325 408 270m-20 2q22-13 39 2l-17 26q-18 4-27-8Z" fill="none" stroke="#a9c4d4" stroke-width="3" stroke-linejoin="round"/><path d="M393 273 410 292m-12-24 19 22m-24-10 23 8" stroke="#a9c4d4" stroke-width="1.5" opacity=".75"/><path d="M407 377v-36q0-10 10-10t10 10v36m-24 0h28" fill="none" stroke="#e0b04a" stroke-width="4" stroke-linecap="round"/><circle cx="417" cy="350" r="11" fill="#e0b04a" opacity=".28"/><circle cx="417" cy="350" r="5" fill="#f5df9b"/><ellipse cx="280" cy="430" rx="95" ry="8" fill="#a9c4d4" opacity=".14"/>
         <g fill="#e8f1f5" opacity=".62"><circle cx="116" cy="293" r="2"/><circle cx="170" cy="257" r="1.5"/><circle cx="365" cy="224" r="2"/><circle cx="436" cy="302" r="1.4"/><circle cx="93" cy="366" r="1.5"/></g>
       </svg>
+      <img id="hubHeroCat" src="assets/cats/ginger-realistic.png" alt="" decoding="async" draggable="false"></div>
       <div class="hub-hero-label"><span>YOUR COMPANION</span><strong id="hubCatName">SHWE</strong><i>Keep the little lights close.</i></div>
       <span class="hub-spray spray-a" aria-hidden="true"></span><span class="hub-spray spray-b" aria-hidden="true"></span><span class="hub-spray spray-c" aria-hidden="true"></span>
     </section>
@@ -363,7 +364,7 @@
 <script src="js/levels.js?v=4a720166acd1"></script>
 <script src="js/tc-sfx.js?v=2e3b239c26f8"></script>
 <script src="js/tc-game-audio.js?v=5a66f4ed7efc"></script>
-<script src="js/game.js?v=549001abaa4d"></script>
+<script src="js/game.js?v=08c08bded98d"></script>
 <script src="js/cozy-ui.js?v=f6823dfb3d93"></script>
 </body>
 </html>
