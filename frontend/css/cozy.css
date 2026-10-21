@@ -452,9 +452,10 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 
 .story-map-panel{animation:none}
 
-/* Mouse users can grab and drag the trail; retain an obvious scrollbar too. */
+/* Pointer users can grab and drag the trail; retain an obvious scrollbar too. */
 .story-map-panel>.level-map-window{cursor:grab;scrollbar-width:auto}
 .story-map-panel>.level-map-window:active{cursor:grabbing}
+.story-map-panel>.level-map-window{touch-action:none}
 .story-map-panel>.level-map-window button{cursor:pointer}
 .story-map-panel>.level-map-window::-webkit-scrollbar{height:9px}
 .story-map-panel>.level-map-window::-webkit-scrollbar-track{background:#101f3155;border-radius:8px}

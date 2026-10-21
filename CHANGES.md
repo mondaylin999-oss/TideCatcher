@@ -1,5 +1,9 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Mobile level-map dragging
+
+- Enabled finger and stylus dragging on the horizontal level map. Dragging starts on the map surface; level buttons remain tappable.
+
 ## Shwe's feet alignment
 
 - Aligned Shwe's animated sprite and worn items to the gameplay paw baseline, fixing the feet clipping below the ground in the attached gameplay recording.

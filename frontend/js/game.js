@@ -4447,7 +4447,7 @@
   mapViewport.addEventListener('scroll', syncStoryMapBackdrop, { passive: true });
   let mapPointerDrag = null, mapSuppressClickUntil = 0;
   mapViewport.addEventListener('pointerdown', event => {
-    if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('button,a,input')) return;
+    if ((event.pointerType === 'mouse' && event.button !== 0) || event.target.closest('button,a,input')) return;
     mapPointerDrag = { id: event.pointerId, x: event.clientX, scrollLeft: mapViewport.scrollLeft, moved: false };
     mapViewport.setPointerCapture(event.pointerId);
   });
