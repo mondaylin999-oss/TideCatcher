@@ -256,8 +256,19 @@
         p[1] = p.path[0][1] + (p.path[1][1] - p.path[0][1]) * u;
       }
       if (p.type === 'crumbling') {
-        if (p.crumbleRemaining > 0) { p.crumbleRemaining -= dt; if (p.crumbleRemaining <= 0) { p.active = false; p.restRemaining = 3; } }
-        else if (!p.active) { p.restRemaining -= dt; if (p.restRemaining <= 0) p.active = true; }
+        if (p.crumbleRemaining > 0) { p.crumbleRemaining -= dt; if (p.crumbleRemaining <= 0) { p.active = false; p.restRemaining = 3; burst(p[0] + p[2] / 2, p[1] + 8, 'rgba(196,186,170,.85)', 14); tone(110, .25, 'triangle', .05, -40); } }
+        else if (!p.active) { p.restRemaining -= dt; if (p.restRemaining <= 0) { p.active = true; puff({ x: p[0] + p[2] / 2, y: p[1] + 18 }); } }
+      }
+      if (p.type === 'sinking') {
+        // lily pad: sinks while Shwe stands on it, dunks under after SINK_TIME, then floats back up
+        if (!p.active) { p.restRemaining -= dt; if (p.restRemaining <= 0) { p.active = true; p.sinkT = 0; p[1] = p.baseY; } }
+        else {
+          const on = cat?.platform === p && cat.on;
+          p.sinkT = Math.max(0, (p.sinkT || 0) + (on ? dt : -dt * 1.4));
+          p[1] = p.baseY + 34 * Math.min(1, p.sinkT / SINK_TIME);
+          if (on && !p.warned) { p.warned = true; float(p[0] + p[2] / 2, p[1] - 50, 'The lily pad is sinking!', '#9fe8ff'); }
+          if (p.sinkT >= SINK_TIME + .35) { p.active = false; p.restRemaining = 2.2; burst(p[0] + p[2] / 2, p[1], '#9cdaee', 16); sfx('ui', 'land'); }
+        }
       }
       if (cat?.platform === p && cat.on && p.active) { cat.x += p[0] - p.prevX; cat.y += p[1] - p.prevY; }
     }
@@ -420,7 +431,7 @@
     for (let x = Math.floor(x0 / 22) * 22; x < x1; x += 22) { if (Math.sin(x * 3.1) < .2) continue; const y = hillY(x); ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x, y - 6); ctx.lineTo(x + 4, y); ctx.fill(); }
     // platforms: mossy branch ledges and stone pillars
     for (const p of activePlats) {
-      if (p[0] + p[2] < x0 || p[0] > x1) continue;
+      if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
       const x = p[0], y = platformDrawY(p), w = p[2];
       if (w <= 95) {
         const base = hillY(x + w / 2);
@@ -536,7 +547,7 @@
     }
     // wooden jetties = platforms
     for (const pl of activePlats) {
-      if (pl[0] + pl[2] < x0 || pl[0] > x1) continue;
+      if (!pl.active || pl.type === 'sinking' || pl[0] + pl[2] < x0 || pl[0] > x1) continue;
       const x = pl[0], y = pl[1], w = pl[2];
       ctx.fillStyle = '#3a2830';
       for (const px of [x + 8, x + w / 2 - 3, x + w - 14]) ctx.fillRect(px, y + 8, 6, GROUND - y - 8);
@@ -687,8 +698,26 @@
     rose: { name: 'Rose', c: '255,122,184', cost: 150 },
     sky: { name: 'Sky', c: '111,182,255', cost: 150 },
     lilac: { name: 'Lilac', c: '185,162,255', cost: 150 },
-    rainbow: { name: 'Rainbow', c: '255,255,255', cost: 180, rainbow: true }
+    rainbow: { name: 'Rainbow', c: '255,255,255', cost: 180, rainbow: true },
+    moon: { name: 'Moonlight', c: '214,226,255', cost: 0, stars: 12 },
+    starlight: { name: 'Starlight', c: '255,226,140', cost: 0, stars: 21 }
   };
+  const SCORE_PTS = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170 };
+  const STAR_GLOW = [0, 0, 25, 50];   // Glow for reaching 2 and 3 stars on an hour (first time only)
+  let nightStars = (() => { try { return JSON.parse(localStorage.getItem('mk-stars') || '{}') || {}; } catch (e) { return {}; } })();
+  function saveStars() { try { localStorage.setItem('mk-stars', JSON.stringify(nightStars)); } catch (e) {} }
+  function totalStars() { let s = 0; for (let n = 1; n <= 7; n++) s += nightStars[n] || 0; return s; }
+  function starGoals(night) {
+    const need = chapterFor(night)?.feelingsNeeded || {}, base = Object.entries(need).reduce((s, [k, v]) => s + v * (SCORE_PTS[k] || 0), 0);
+    const r = v => Math.round(v / 50) * 50;
+    return [0, r(base * 1.8 + 500), r(base * 2.6 + 1000)];
+  }
+  function starsFor(night, final, won) { if (!won) return 0; const g = starGoals(night); return final >= g[2] ? 3 : final >= g[1] ? 2 : 1; }
+  function grantStarTrails() {
+    const got = [];
+    for (const [k, tr] of Object.entries(TRAILS)) if (tr.stars && totalStars() >= tr.stars && !ownedTrails.includes(k)) { ownedTrails.push(k); got.push(tr.name); }
+    return got;
+  }
   let ownedCats = ['ginger'], itemStock = {}, ownedTrails = ['honey'], trailPick = 'honey', activeItems = {}, perkShield = 0;
   try {
     const oc = JSON.parse(localStorage.getItem('mk-cats') || 'null');
@@ -1018,6 +1047,200 @@
   const FLY_NEED = 3, FLY_SLOW = 140;
   let fireflies = [], flyMsgAt = -9, flyHintShown = false;
   let skyUsed = { A: 0, B: 0, C: 0 }, skyPerfect = 0, skySpawned = 0, skyNextAt = 15;
+  // Themed traps and hidden keepsakes (data in levels.js: hazards, keepsakes, 'sinking' platforms)
+  const SINK_TIME = 1.6;
+  const KEEPSAKE_GLOW = 25;
+  const KEEPSAKE_ART = { school: ['paper star', '#ffe39a'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], free: ['star', '#ffe39a'] };
+  let hazards = [], keepsakes = [], hazSeen = {}, buriedHintShown = false;
+  let foundKeeps = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-keepsakes') || '[]')); } catch (e) { return new Set(); } })();
+  function saveKeeps() { try { localStorage.setItem('mk-keepsakes', JSON.stringify([...foundKeeps])); } catch (e) {} }
+  function keepsakeTotal(night) { const L = window.TC_LEVELS?.[night]; return L ? (L.keepsakes || []).length + ((chapterFor(night)?.feelingsNeeded?.B || 0) ? 0 : 1) : 0; }
+  function keepsakesFound(night) { let n = 0; for (const id of foundKeeps) if (id.startsWith(`n${night}-`)) n++; return n; }
+  function initHazards() {
+    hazards = []; keepsakes = []; hazSeen = {}; buriedHintShown = false;
+    if (mode !== 'story') return;
+    hazards = (currentLevel.hazards || []).map((h, i) => ({ ...h, i, cd: 0, tt: 0, phase: 'idle', off: (i * 2.3) % 5, drops: [], squeakT: 0, sneakShown: false, splashShown: false }));
+    keepsakes = (currentLevel.keepsakes || []).map(([x, y], i) => ({ x, y, id: `n${storyNight}-${i}`, found: foundKeeps.has(`n${storyNight}-${i}`), bob: Math.random() * 6, got: 0 }));
+    // nights without Buried hide one keepsake under a dig spot instead (other spots still rumble)
+    if (!need.B && rocks.length && !foundKeeps.has(`n${storyNight}-dig`)) rocks[Math.floor(Math.random() * rocks.length)].keepsake = true;
+  }
+  function collectKeepsake(id, x, y) {
+    if (foundKeeps.has(id)) return;
+    foundKeeps.add(id); saveKeeps();
+    const [name, c] = KEEPSAKE_ART[currentMapKey()] || KEEPSAKE_ART.free;
+    glowRun += KEEPSAKE_GLOW; bump('glow', KEEPSAKE_GLOW);
+    burst(x, y, c, 26); sfx('ui', 'sparkle');
+    tone(988, .14, 'sine', .05); setTimeout(() => tone(1319, .22, 'sine', .045), 90);
+    float(x, y - 40, `+${KEEPSAKE_GLOW} Glow`, GOLD);
+    announce(`Found Thiri’s ${name}! Keepsakes ${keepsakesFound(storyNight)}/${keepsakeTotal(storyNight)}`, c, 2.4);
+  }
+  function knockCat(dir, msg) {
+    if (cat.inv > 0) return;
+    cat.inv = 1; cat.vx = dir * 380; cat.vy = -380; cat.on = false; cat.pounce = 0; combo = 0; comboT = 0;
+    timeLeft = Math.max(0, timeLeft - 1); shake = Math.max(shake, 8);
+    sfx('ui', 'hit'); sfx('cat', 'sad'); float(cat.x, cat.y - 80, msg + '  −1s', RED);
+  }
+  function onSlick(x) { return hazards.some(h => h.kind === 'slick' && x >= h.a && x <= h.b); }
+  function hazNotice(kind, text, c) { if (hazSeen[kind]) return; hazSeen[kind] = true; announce(text, c, 2.4); }
+  function hazPhase(h, period, idle, warn) { const q = ((t + h.off) % period + period) % period; return q < idle ? 'idle' : q < idle + warn ? 'warn' : 'on'; }
+  function updHazards(dt) {
+    if (state !== 'play' && state !== 'ending') return;
+    for (const h of hazards) {
+      h.cd = Math.max(0, h.cd - dt); h.squeakT = Math.max(0, h.squeakT - dt);
+      if (h.kind === 'squeak') {
+        const onBoard = cat.on && cat.x >= h.x && cat.x <= h.x + h.w;
+        if (!onBoard) continue;
+        if (cat.sneak || Math.abs(cat.vx) < 90) { if (!cat.sneak || h.sneakShown) continue; h.sneakShown = true; float(cat.x, cat.y - 74, 'Tiptoe… no squeak', '#c8ff8a'); continue; }
+        if (h.cd > 0 && !cat.justLanded) continue;
+        if (h.cd > 0) continue;
+        h.cd = 1.1; h.squeakT = .5;
+        tone(620, .09, 'square', .045, 340); setTimeout(() => tone(470, .12, 'square', .035, -120), 80);
+        float(h.x + h.w / 2, terrainY(h.x) - 30, 'SQUEAK!', '#ffd28a');
+        hazNotice('squeak', 'Creaky floorboard! Sneak across to keep it quiet.', '#ffd28a');
+        if (t < 3) continue;
+        for (const m of mood) {
+          if (m.dead || m.sky || Math.abs(m.x - cat.x) > 8 * T) continue;
+          if (m.type === 'N' && m.state === 'wander') panic(m, cat.x - m.x);
+          else if (m.type === 'S' && (m.state === 'walk' || m.state === 'look' || m.state === 'turn')) { m.state = 'hide'; m.st = 2.2; float(m.x, m.y - 40, 'Shy jumped at the squeak!', '#ff9ccb'); startles++; }
+        }
+      } else if (h.kind === 'sprinkler') {
+        const ph = hazPhase(h, 6.5, 3.8, 1);
+        if (ph === 'warn' && h.phase !== 'warn' && Math.abs(cat.x - h.x) < VW * .6) tone(300, .06, 'square', .02);
+        h.phase = ph;
+        if (ph !== 'on') { h.splashShown = false; continue; }
+        if (Math.random() < dt * 40) for (const s of [-1, 1]) parts.push({ x: h.x, y: terrainY(h.x) - 18, vx: s * (120 + Math.random() * 160), vy: -260 - Math.random() * 120, life: .8, max: .8, c: 'rgba(160,220,255,.75)', r: 2 + Math.random() * 2, g: 600 });
+        const dx = cat.x - h.x;
+        if (Math.abs(dx) < 120 && cat.y > terrainY(h.x) - 150) {
+          const dir = Math.sign(dx) || -cat.face;
+          if (cat.pounce <= 0) cat.vx = dir * Math.max(Math.abs(cat.vx) * .3, 300);
+          if (!h.splashShown) { h.splashShown = true; float(cat.x, cat.y - 76, 'Splash!', '#9fd7ff'); sfx('ui', 'land'); }
+          hazNotice('sprinkler', 'Sprinkler! Wait for it to stop, then run past.', '#9fd7ff');
+        }
+      } else if (h.kind === 'lantern') {
+        // one lantern at a time: wobble + growing shadow (warn), drop, then it glows on the ground
+        if (h.phase === 'idle') {
+          h.tt -= dt;
+          if (h.tt <= 0 && cat.x > h.x - 160 && cat.x < h.x + h.w + 160) {
+            h.phase = 'warn'; h.tt = 1.1; h.lx = clamp(cat.x + cat.vx * .55, h.x + 12, h.x + h.w - 12);
+            tone(880, .05, 'sine', .02); hazNotice('lantern', 'A lantern is wobbling! Watch for its shadow.', '#ffc887');
+          }
+        } else if (h.phase === 'warn') { h.tt -= dt; if (h.tt <= 0) { h.phase = 'fall'; h.ly = terrainY(h.lx) - 102; h.lvy = 0; } }
+        else if (h.phase === 'fall') {
+          h.lvy += 2000 * dt; h.ly += h.lvy * dt;
+          const gy = terrainY(h.lx) - 8;
+          if (h.ly >= gy) {
+            h.ly = gy; h.phase = 'lit'; h.tt = 2.2; burst(h.lx, gy, '#ffc887', 14); tone(150, .2, 'triangle', .05, -50);
+            if (Math.abs(cat.x - h.lx) < 34 && cat.y > gy - 70) knockCat(Math.sign(cat.x - h.lx) || -cat.face, 'Bonk!');
+          }
+        } else if (h.phase === 'lit') { h.tt -= dt; if (h.tt <= 0) { h.phase = 'idle'; h.tt = 2.6 + Math.random() * 2.2; } }
+      } else if (h.kind === 'slick') {
+        if (cat.on && cat.x >= h.a && cat.x <= h.b && Math.abs(cat.vx) > 120) {
+          hazNotice('slick', 'Wet mossy stones! Shwe slides, so slow down early.', '#9fe8ff');
+          if (Math.random() < dt * 14) parts.push({ x: cat.x - Math.sign(cat.vx) * 14, y: cat.y - 2, vx: -cat.vx * .2, vy: -60 - Math.random() * 50, life: .45, max: .45, c: 'rgba(160,225,240,.8)', r: 1.6 + Math.random() * 1.6, g: 500 });
+        }
+      } else if (h.kind === 'wind') {
+        const ph = hazPhase(h, 8, 4.4, 1.1); h.phase = ph;
+        const near = cat.x > h.a - 300 && cat.x < h.b + 300;
+        if (ph !== 'idle' && near && Math.random() < dt * (ph === 'on' ? 26 : 8)) {
+          const sx = h.dir > 0 ? camX - 10 : camX + VW + 10;
+          parts.push({ x: sx, y: 220 + Math.random() * 240, vx: h.dir * (ph === 'on' ? 520 : 200) + Math.random() * 60, vy: (Math.random() - .5) * 40, life: 2.4, max: 2.4, c: Math.random() < .5 ? 'rgba(131,173,112,.8)' : 'rgba(210,168,95,.8)', r: 2.5 + Math.random() * 2, g: 10 });
+        }
+        if (ph === 'on' && cat.x > h.a && cat.x < h.b) {
+          cat.x = clamp(cat.x + h.dir * (cat.on ? 75 : 150) * dt, 30, WORLD - 30);
+          hazNotice('wind', h.dir < 0 ? 'A gust of wind! Hold on, it pushes you back.' : 'A tail wind! It blows you forward.', '#cfe6c4');
+        }
+      }
+    }
+    for (const k of keepsakes) {
+      k.got = Math.max(0, k.got - dt);
+      if (k.found) continue;
+      if (Math.abs(cat.x - k.x) < 34 && Math.abs(cat.y - 28 - k.y) < 48) { k.found = true; k.got = 1; collectKeepsake(k.id, k.x, k.y); }
+    }
+    // Buried: one nudge if it has not been dug up after a while
+    if (!buriedHintShown && need.B && !got.B && t > 40 && mood.some(m => m.type === 'B' && m.state === 'buried')) {
+      buriedHintShown = true; announce('Listen: the chime gets faster near the buried feeling. Night Eyes show the spot.', '#c0b1ff', 3.4);
+    }
+  }
+  function drawHazards() {
+    const x0 = camX - 60, x1 = camX + VW + 60;
+    ctx.save();
+    for (const p of activePlats) {
+      if (p.type !== 'sinking' || !p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
+      const cx = p[0] + p[2] / 2, y = p[1] + 4, rx = p[2] / 2 + 6, sunk = Math.min(1, (p.sinkT || 0) / SINK_TIME);
+      ctx.strokeStyle = `rgba(170,232,244,${.25 + .35 * sunk})`; ctx.lineWidth = 1.4;
+      for (let k = 0; k < 2; k++) { const r = ((t * .8 + k * .5) % 1); ctx.globalAlpha = 1 - r; ctx.beginPath(); ctx.ellipse(cx, y + 6, rx + r * 20, 5 + r * 4, 0, 0, 7); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+      const g = ctx.createLinearGradient(0, y - 6, 0, y + 8); g.addColorStop(0, sunk > .6 ? '#5f9d7a' : '#73c08b'); g.addColorStop(1, '#2f6b55');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(cx, y, rx, 9, 0, .25, Math.PI * 2 - .05); ctx.lineTo(cx, y); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(30,70,55,.8)'; ctx.lineWidth = 1; for (const a of [-.9, -.3, .4, 1, 2.2, 2.9]) { ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx + Math.cos(a) * rx * .8, y + Math.sin(a) * 7); ctx.stroke(); }
+      if (sunk > .05) { ctx.fillStyle = 'rgba(200,240,255,.7)'; for (let k = 0; k < 3; k++) { const bt = (t * 1.6 + k / 3) % 1; ctx.beginPath(); ctx.arc(cx - rx * .6 + k * rx * .6, y + 4 - bt * 16, 1.5 + bt, 0, 7); ctx.fill(); } }
+    }
+    for (const h of hazards) {
+      if (h.kind === 'squeak') {
+        if (h.x + h.w < x0 || h.x > x1) continue;
+        const y = terrainY(h.x), wob = h.squeakT > 0 ? Math.sin(t * 60) * 2 * (h.squeakT / .5) : 0;
+        ctx.fillStyle = '#6b4a35'; ctx.fillRect(h.x, y - 3 + wob, h.w, 5);
+        ctx.fillStyle = '#8a6448'; ctx.fillRect(h.x + 2, y - 4 + wob, h.w - 4, 2);
+        ctx.strokeStyle = 'rgba(30,18,12,.7)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(h.x + h.w * .3, y - 3 + wob); ctx.lineTo(h.x + h.w * .38, y + 2 + wob); ctx.lineTo(h.x + h.w * .45, y - 1 + wob); ctx.stroke();
+        ctx.fillStyle = '#cfb79a'; for (const nx of [6, h.w - 6]) { ctx.beginPath(); ctx.arc(h.x + nx, y - 2 + wob, 1.4, 0, 7); ctx.fill(); }
+        if (h.squeakT > 0) { ctx.strokeStyle = `rgba(255,210,138,${h.squeakT * 1.6})`; ctx.lineWidth = 2; for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(h.x + h.w / 2 + s * 30, y - 16, 8, s > 0 ? -1 : 2.1, s > 0 ? 1 : 4.2); ctx.stroke(); } }
+      } else if (h.kind === 'sprinkler') {
+        if (h.x < x0 - 140 || h.x > x1 + 140) continue;
+        const y = terrainY(h.x);
+        ctx.fillStyle = '#5c6670'; ctx.fillRect(h.x - 4, y - 18, 8, 18); ctx.fillStyle = '#9aa7b2'; ctx.beginPath(); ctx.ellipse(h.x, y - 19, 8, 4, 0, 0, 7); ctx.fill();
+        ctx.fillStyle = '#3d474f'; ctx.beginPath(); ctx.ellipse(h.x, y, 12, 3, 0, 0, 7); ctx.fill();
+        if (h.phase === 'warn') { ctx.fillStyle = 'rgba(160,220,255,.8)'; for (let k = 0; k < 3; k++) { const q = (t * 3 + k / 3) % 1; ctx.beginPath(); ctx.arc(h.x + (k - 1) * 6, y - 22 - q * 10, 1.8, 0, 7); ctx.fill(); } }
+        if (h.phase === 'on') { const g = ctx.createRadialGradient(h.x, y - 20, 4, h.x, y - 40, 130); g.addColorStop(0, 'rgba(160,220,255,.28)'); g.addColorStop(1, 'rgba(160,220,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(h.x, y - 50, 125, 95, 0, Math.PI, Math.PI * 2); ctx.fill(); }
+      } else if (h.kind === 'lantern') {
+        if (h.phase === 'idle' || h.lx == null || h.lx < x0 || h.lx > x1) continue;
+        const gy = terrainY(h.lx);
+        if (h.phase === 'warn' || h.phase === 'fall') {
+          const k = h.phase === 'warn' ? 1 - h.tt / 1.1 : 1;
+          ctx.fillStyle = `rgba(255,120,90,${.18 + .3 * k})`; ctx.beginPath(); ctx.ellipse(h.lx, gy - 2, 10 + 22 * k, 4 + 3 * k, 0, 0, 7); ctx.fill();
+        }
+        const ly = h.phase === 'warn' ? gy - 102 + Math.sin(t * 22) * 2 : h.ly, rot = h.phase === 'warn' ? Math.sin(t * 18) * .25 : h.phase === 'fall' ? .15 : .9;
+        ctx.save(); ctx.translate(h.lx, ly); ctx.rotate(rot);
+        const glowA = h.phase === 'lit' ? Math.min(1, h.tt) : 1, gg = ctx.createRadialGradient(0, 6, 2, 0, 6, 34); gg.addColorStop(0, `rgba(255,200,120,${.45 * glowA})`); gg.addColorStop(1, 'rgba(255,200,120,0)');
+        ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, 6, 34, 0, 7); ctx.fill();
+        ctx.fillStyle = '#ff8f6b'; ctx.beginPath(); ctx.roundRect(-8, -2, 16, 18, 5); ctx.fill(); ctx.fillStyle = '#ffd38a'; ctx.fillRect(-8, 5, 16, 3); ctx.fillStyle = '#7a3d33'; ctx.fillRect(-5, -5, 10, 4); ctx.fillRect(-5, 15, 10, 3);
+        ctx.restore();
+      } else if (h.kind === 'slick') {
+        if (h.b < x0 || h.a > x1) continue;
+        for (let x = Math.max(h.a, Math.floor(x0 / 22) * 22); x < Math.min(h.b, x1); x += 22) {
+          const r = Math.abs(Math.sin(x * 12.9898) * 43758.5453) % 1, y = terrainY(x + 11);
+          ctx.fillStyle = 'rgba(120,200,230,.28)'; ctx.beginPath(); ctx.ellipse(x + 11, y + 1, 15, 3, 0, 0, 7); ctx.fill(); ctx.fillStyle = r > .5 ? '#5b8f86' : '#6f9e8a'; ctx.beginPath(); ctx.ellipse(x + 11, y, 10 + r * 3, 6 + r * 2, 0, Math.PI, Math.PI * 2); ctx.fill(); ctx.fillStyle = 'rgba(70,140,80,.9)'; ctx.beginPath(); ctx.ellipse(x + 13, y - 5 - r * 2, 6, 2, .1, Math.PI, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = `rgba(210,245,255,${.55 + .35 * Math.sin(t * 2 + x)})`; ctx.beginPath(); ctx.ellipse(x + 7, y - 4 - r * 1.5, 3.5, 1.4, -.2, 0, 7); ctx.fill();
+        }
+      } else if (h.kind === 'wind') {
+        if (h.phase !== 'on' || h.b < x0 || h.a > x1) continue;
+        ctx.strokeStyle = 'rgba(220,235,255,.22)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        for (let k = 0; k < 7; k++) { const yy = 250 + k * 34, sx = h.a + (((t * 520 * h.dir + k * 211) % (h.b - h.a)) + (h.b - h.a)) % (h.b - h.a); ctx.beginPath(); ctx.moveTo(sx, yy); ctx.quadraticCurveTo(sx + h.dir * 40, yy - 8, sx + h.dir * 80, yy); ctx.stroke(); }
+      }
+    }
+    // keepsakes: hidden until Shwe is close (or Night Eyes are open)
+    const [kname, kc] = KEEPSAKE_ART[currentMapKey()] || KEEPSAKE_ART.free;
+    for (const k of keepsakes) {
+      if (k.x < x0 || k.x > x1) continue;
+      if (k.found && k.got <= 0) continue;
+      const d = Math.hypot(cat.x - k.x, cat.y - 28 - k.y), eyes = eyesT > 0 && Math.abs(cat.x - k.x) <= uv('eyes') * T;
+      const a = k.found ? k.got : eyes ? 1 : clamp(1 - (d - 2.5 * T) / (2 * T), 0, 1) * .9;
+      if (a <= .02) { if (Math.sin(t * 2.3 + k.bob) > .985) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.arc(k.x, k.y, 1.6, 0, 7); ctx.fill(); } continue; }
+      const y = k.y + Math.sin(t * 2.4 + k.bob) * 3 - (k.found ? (1 - k.got) * 30 : 0);
+      ctx.globalAlpha = a; ctx.drawImage(glowImg(kc), k.x - 30, y - 30, 60, 60);
+      drawKeepsake(currentMapKey(), k.x, y, kc);
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+  function drawKeepsake(map, x, y, c) {
+    ctx.save(); ctx.translate(x, y); ctx.lineJoin = 'round';
+    if (map === 'park') { const g = ctx.createRadialGradient(-3, -3, 1, 0, 0, 9); g.addColorStop(0, '#fff'); g.addColorStop(.35, c); g.addColorStop(1, '#3d6fb0'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 8, 0, 7); ctx.fill(); ctx.strokeStyle = '#ffb4d3'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 4.5, .5, 2.6); ctx.stroke(); }
+    else if (map === 'festival') { ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, 9); ctx.bezierCurveTo(-12, 0, -8, -10, 0, -4); ctx.bezierCurveTo(8, -10, 12, 0, 0, 9); ctx.fill(); ctx.strokeStyle = '#c23d5a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, -12); ctx.stroke(); ctx.fillStyle = '#ffd38a'; ctx.beginPath(); ctx.arc(0, -13, 2.2, 0, 7); ctx.fill(); }
+    else if (map === 'hill') { ctx.fillStyle = '#b97a45'; ctx.beginPath(); ctx.ellipse(0, 3, 6.5, 8, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#6e4a2c'; ctx.beginPath(); ctx.ellipse(0, -4, 8, 4.5, 0, Math.PI, Math.PI * 2); ctx.fill(); ctx.fillRect(-1, -11, 2, 4); ctx.fillStyle = 'rgba(255,240,210,.6)'; ctx.beginPath(); ctx.ellipse(-2.5, 2, 1.6, 3, 0, 0, 7); ctx.fill(); }
+    else if (map === 'lake') { ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(-10, -3); ctx.quadraticCurveTo(0, -12, 10, -3); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#d39b7a'; ctx.lineWidth = 1.2; for (const a of [-.9, -.45, 0, .45, .9]) { ctx.beginPath(); ctx.moveTo(0, 7); ctx.lineTo(Math.sin(a) * 9, -6 + Math.abs(a) * 3); ctx.stroke(); } }
+    else { ctx.fillStyle = c; ctx.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 4.2 : 10, a = -Math.PI / 2 + i * Math.PI / 5; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(160,120,60,.7)'; ctx.lineWidth = 1; ctx.stroke(); }
+    ctx.restore();
+  }
   const BURY_SPOTS = {
     school: { kind: 'school supplies', label: 'book pile', labelMarked: 'marked book pile', labels: ['book pile', 'school bag', 'lost-and-found box'], xs: [100, 550, 850, 1200, 1770, 2630, 3000, 3440, 3720], draw: drawSchoolBurySpot, debris: [{ shape: 'paper', color: '#f4dce8' }, { shape: 'paper', color: '#fff0bd' }, { shape: 'paper', color: '#b8c9eb' }], glow: '#a8dfff' },
     park: { kind: 'park groundcover', label: 'leaf pile', labelMarked: 'marked leaf pile', labels: ['leaf pile', 'sand mound', 'flower-bed mound'], xs: [100, 550, 850, 1140, 1800, 2630, 3000, 3440, 3740], draw: drawParkBurySpot, debris: [{ shape: 'leaf', color: '#86bd77' }, { shape: 'petal', color: '#ffb4d3' }, { shape: 'leaf', color: '#d2a85f' }], glow: '#9bf0c5' },
@@ -1255,6 +1478,7 @@
     });
     buriedHome = null;
     if (need.B > 0) { buriedHome = rocks[Math.floor(Math.random() * rocks.length)]; buriedHome.marked = true; }
+    initHazards();
     if (mode === 'free') {
       goldDone = { a: true, b: true }; chaos = true;
       const zones = currentLevel.spawnZones || [[120, WORLD - 120]];
@@ -1515,7 +1739,7 @@
     c.sneak = sneaking;
     window.TCGameAudio?.setSneaking(sneaking);
     if (c.pounce > 0) c.pounce -= dt;
-    else { const acc = c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
+    else { const slick = c.on && onSlick(c.x), acc = slick ? (Math.abs(target) > Math.abs(c.vx) && Math.sign(target) === Math.sign(c.vx || target) ? 700 : 220) : c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     const jumpSpeed = chapter?.jumpSpeed || 830, gravity = chapter?.jumpGravity || 2300;
     if (c.swinging) {
@@ -1644,7 +1868,7 @@
       }
     } else if (m.type === 'B') {
       const rock = m.rock || buriedHome; m.x = rock.x; m.y = rock.y - 12;
-      if (m.state === 'buried') { m.alpha = 0; if (Math.abs(cat.x - m.x) < 4 * T) { m.chime -= dt; if (m.chime <= 0) { m.chime = 1.6; tone(440, .12, 'sine', .025); } } }
+      if (m.state === 'buried') { m.alpha = 0; const bd = Math.abs(cat.x - m.x), br = 7 * T; if (bd < br) { m.chime -= dt; if (m.chime <= 0) { const q = bd / br; m.chime = .35 + 1.3 * q; tone(440 + (1 - q) * 220, .12, 'sine', .02 + .03 * (1 - q)); } } }
       else if (m.state === 'scratching') { m.alpha = 0; m.st -= dt; if (m.st <= 0) { m.state = 'emerging'; m.st = .5; rock.holeDepth = 0; } }
       else if (m.state === 'emerging') { m.alpha = Math.min(1, m.alpha + dt * 2.4); m.st -= dt; rock.holeDepth = Math.min(1, rock.holeDepth + dt * 2); if (m.st <= 0) { m.state = 'revealed'; m.alpha = 1; } }
       else if (m.state === 'revealed') { rock.holeDepth = 1; }
@@ -1875,6 +2099,7 @@
     if (activeItems.sand && state === 'play' && t > 2.6) { activeItems.sand = false; burst(cat.x - cat.face * 8, cat.y - 50, GOLD, 14); float(cat.x, cat.y - 78, '⏳ The sand poured into your clock', GOLD); }
     for (const m of mood) updMood(m, purrT > 0 && Math.abs(m.x - cat.x) < 6 * T ? dt * .4 : dt);
     updFireflies(dt);
+    updHazards(dt);
     checkCatches();
     mood = mood.filter(m => !m.dead);
     for (const r of respawnQ) r.at -= dt;
@@ -1938,7 +2163,7 @@
       const d = Math.hypot(cat.x - m.spot.x, Math.max(0, Math.abs(cat.y - m.spot.y) - 12));
       if (d < best) { best = d; scratchTarget = m; }
     }
-    if (need.B > 0) for (const rock of rocks) { if (rock.scratched || Math.abs(cat.y - rock.y) > 115) continue; const d = Math.hypot(cat.x - rock.x, Math.max(0, Math.abs(cat.y - rock.y) - 12)); if (d < best) { best = d; scratchTarget = { kind: 'rock', rock }; } }
+    if (need.B > 0 || rocks.some(r => r.keepsake)) for (const rock of rocks) { if (rock.scratched || Math.abs(cat.y - rock.y) > 115) continue; const d = Math.hypot(cat.x - rock.x, Math.max(0, Math.abs(cat.y - rock.y) - 12)); if (d < best) { best = d; scratchTarget = { kind: 'rock', rock }; } }
     if (nightGuide.active && (guideCopy().tutorial || [])[nightGuide.step]?.action === 'scratch' && reachableHeight) {
       const x = tutorialSpotX(); if (Math.abs(cat.x - x) <= 74) scratchTarget = { kind: 'tutorial', x, y: terrainY(x) };
     }
@@ -1966,6 +2191,7 @@
       const rock = scratchTarget.rock; if (!rock || rock.scratched || !cat.on || Math.abs(cat.y - rock.y) > 115) return false;
       rock.scratched = true; rock.holeDepth = 0; scratchAnim = .8; shake = Math.max(shake, rock.marked ? 0 : 10); sfx('ui', 'scratch');
       if (rock.marked) { const m = mood.find(x => x.type === 'B' && !x.dead); if (m) { m.state = 'scratching'; m.st = .8; m.rock = rock; } burst(rock.x, rock.y - 22, rock.debris?.[0]?.color || '#8a6a45', 12); float(rock.x, rock.y - 68, 'Something was buried here.', '#a67646'); tone(190 + Math.random() * 40, .12, 'triangle', .03, 100); }
+      else if (rock.keepsake) { rock.keepsake = false; rock.holeDepth = 1; burst(rock.x, rock.y - 22, rock.debris?.[0]?.color || '#8a6a45', 12); collectKeepsake(`n${storyNight}-dig`, rock.x, rock.y - 30); }
       else { rock.wrongUsed = true; tone(80, .5, 'sawtooth', .09, -40); announce('The ground rumbles…', RED, 2); triggerBuriedAmbush(); }
       scratchTarget = null; return true;
     }
@@ -2238,14 +2464,14 @@
   }
   function drawRockFormation(x, y, rock, moodHolding) {
     ctx.save();
-    const pulse = .5 + .5 * Math.sin(t * 4 + rock.phase), markedGlow = eyesT > 0 && rock.marked && !rock.scratched && Math.abs(cat.x - x) <= uv('eyes') * T;
+    const pulse = .5 + .5 * Math.sin(t * 4 + rock.phase), markedGlow = eyesT > 0 && (rock.marked || rock.keepsake) && !rock.scratched && Math.abs(cat.x - x) <= uv('eyes') * T;
     const glow = rock.glow || '#a67646';
     if (markedGlow) { const g = ctx.createRadialGradient(x, y - 24, 3, x, y - 24, 66); g.addColorStop(0, hexRgba(glow,.35)); g.addColorStop(1, hexRgba(glow,0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 24, 66, 0, 7); ctx.fill(); }
     (rock.draw || drawClassicRockBase)(x, y, rock, moodHolding);
     drawBuryDebris(x, y, rock);
     if (moodHolding && rock.marked && !rock.scratched) {
       ctx.strokeStyle = 'rgba(194,205,199,.9)'; ctx.lineWidth = 1.35; ctx.lineCap = 'round';
-      for (let k = 0; k < 2; k++) { const age = (t * .32 + rock.phase * .1 + k * .5) % 1, rise = age * 18, drift = Math.sin(t * 1.2 + rock.phase + k * 2.2) * (2 + age * 2.5), sx = x + drift, sy = y - 39 - rise; ctx.globalAlpha = .17 * (1 - age); ctx.beginPath(); ctx.moveTo(sx, sy + 8); ctx.bezierCurveTo(sx - 3, sy + 5, sx + 4, sy + 3, sx + 1, sy); ctx.stroke(); }
+      for (let k = 0; k < 2; k++) { const age = (t * .32 + rock.phase * .1 + k * .5) % 1, rise = age * 18, drift = Math.sin(t * 1.2 + rock.phase + k * 2.2) * (2 + age * 2.5), sx = x + drift, sy = y - 39 - rise; ctx.globalAlpha = (Math.abs(cat.x - x) < 3 * T ? .42 : .17) * (1 - age); ctx.beginPath(); ctx.moveTo(sx, sy + 8); ctx.bezierCurveTo(sx - 3, sy + 5, sx + 4, sy + 3, sx + 1, sy); ctx.stroke(); }
       ctx.globalAlpha = 1;
     }
     if (rock.holeDepth > 0) { ctx.fillStyle=`rgba(12,13,16,${.55 + .3 * rock.holeDepth})`; ctx.beginPath(); ctx.ellipse(x, y - 4, 18, 9, 0, 0, 7); ctx.fill(); ctx.fillStyle=`rgba(166,118,70,${.45 * rock.holeDepth})`; ctx.beginPath(); ctx.arc(x, y - 7, 6, 0, 7); ctx.fill(); }
@@ -2380,7 +2606,7 @@
     }
     // raised wooden decks = platforms
     for (const p of activePlats) {
-      if (p[0] + p[2] < x0 || p[0] > x1) continue;
+      if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
       const x = p[0], y = platformDrawY(p), w = p[2];
       ctx.fillStyle = '#2a1a20'; ctx.fillRect(x + 10, y + 8, 7, GROUND - y - 8); ctx.fillRect(x + w - 17, y + 8, 7, GROUND - y - 8);
       ctx.strokeStyle = 'rgba(42,26,32,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 14, y + 12); ctx.lineTo(x + w - 14, GROUND - 20); ctx.stroke();
@@ -2439,7 +2665,7 @@
     // playground decks = platforms
     const PARK_DECKS = ['#2fa69a', '#8b6fe0', '#3fb98a'];
     for (const p of activePlats) {
-      if (p[0] + p[2] < x0 || p[0] > x1) continue;
+      if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
       const x = p[0], y = platformDrawY(p), w = p[2], c = PARK_DECKS[Math.abs(Math.round(x / 97)) % PARK_DECKS.length];
       ctx.fillStyle = '#6f6aa0'; ctx.fillRect(x + 10, y + 8, 6, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 6, GROUND - y - 8);
       ctx.fillStyle = 'rgba(200,196,240,.35)'; ctx.fillRect(x + 10, y + 8, 2, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 2, GROUND - y - 8);
@@ -2525,7 +2751,7 @@
     ctx.fillStyle = 'rgba(16,12,30,.55)'; ctx.fillRect(x0, GROUND + 2, x1 - x0, 3);
     // wooden wall shelves = the platforms
     for (const p of activePlats) {
-      if (p[0] + p[2] < x0 || p[0] > x1) continue;
+      if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
       const x = p[0], y = platformDrawY(p), w = p[2];
       ctx.fillStyle = 'rgba(8,6,18,.35)'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + 30, w * .45, 7, 0, 0, 7); ctx.fill();
       ctx.fillStyle = '#3a2a35';
@@ -2637,6 +2863,7 @@
     if (!debugLayout) return;
     ctx.save(); ctx.strokeStyle='#ff5c88'; ctx.fillStyle='#ffe78a'; ctx.lineWidth=2;
     for (const p of activePlats) { if (!p.active) continue; ctx.strokeRect(p[0],p[1],p[2],12); }
+    for (const [kx,ky] of currentLevel.keepsakes || []) { ctx.fillStyle='#ff9fd0';ctx.fillRect(kx-5,ky-5,10,10); }
     for (const x of currentLevel.hideSpots || []) { ctx.fillStyle='#80f0ce';ctx.beginPath();ctx.arc(x,terrainY(x)-8,6,0,Math.PI*2);ctx.fill(); }
     for (const x of currentLevel.burySpots || []) { ctx.fillStyle='#ffcf72';ctx.beginPath();ctx.moveTo(x,terrainY(x)-12);ctx.lineTo(x-6,terrainY(x));ctx.lineTo(x+6,terrainY(x));ctx.closePath();ctx.fill(); }
     // approximate jump arc at the current player jump impulse for quick reach inspection
@@ -2667,7 +2894,7 @@
     drawMoonHollowWorld(x0,x1);
     for(const spot of scratchSpots){if(spot.x<x0-60||spot.x>x1+60)continue;drawScratchSpot(spot.x,spot.y,spot.moodType,spot);}
     for(const rock of rocks){if(rock.x<x0-80||rock.x>x1+80)continue;drawRockFormation(rock.x,rock.y,rock,rockHoldsFeeling(rock));}
-    for(const p of activePlats){if(p[0]+p[2]<x0||p[0]>x1)continue;
+    for(const p of activePlats){if(!p.active||p[0]+p[2]<x0||p[0]>x1)continue;
       const x=p[0],y=platformDrawY(p),w=p[2];ctx.fillStyle='#27333a';ctx.beginPath();ctx.moveTo(x-4,y+13);ctx.lineTo(x+4,y+4);ctx.quadraticCurveTo(x+w*.21,y+12,x+w*.34,y+6);ctx.quadraticCurveTo(x+w*.58,y-1,x+w*.76,y+8);ctx.lineTo(x+w+5,y+11);ctx.lineTo(x+w-8,y+28);ctx.lineTo(x+10,y+28);ctx.closePath();ctx.fill();
       const rock=ctx.createLinearGradient(0,y,0,y+18);rock.addColorStop(0,'#596458');rock.addColorStop(.36,'#49514b');rock.addColorStop(1,'#303a3b');ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(x-2,y+7);ctx.quadraticCurveTo(x+w*.2,y+3,x+w*.4,y+8);ctx.quadraticCurveTo(x+w*.72,y+2,x+w+3,y+6);ctx.lineTo(x+w-4,y+15);ctx.quadraticCurveTo(x+w*.6,y+12,x+w*.35,y+16);ctx.quadraticCurveTo(x+w*.1,y+12,x-2,y+17);ctx.closePath();ctx.fill();
       ctx.strokeStyle='rgba(168,183,150,.68)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y+7);ctx.quadraticCurveTo(x+w*.3,y+2,x+w*.55,y+7);ctx.quadraticCurveTo(x+w*.8,y+3,x+w,y+6);ctx.stroke();
@@ -3260,7 +3487,7 @@
     if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
     ctx.save(); ctx.translate(-camX, 0);
-    drawWorld(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
+    drawWorld(); drawHazards(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); drawLevelDebug();
     ctx.restore();
     if (eyesT > 0) {
@@ -3302,10 +3529,16 @@
     let final = score;
     const left = Math.max(0, timeLeft), bestKey = storyNight >= 7 ? `mk-best-night-${storyNight}` : 'mk-best';
     if (won) final += Math.round(left) * 20;
-    const best = Math.max(getBest(bestKey), final); setBest(bestKey, best);
+    setBest(bestKey, Math.max(getBest(bestKey), final));
+    const best = Math.max(getBest(`mk-best-n${storyNight}`), final); setBest(`mk-best-n${storyNight}`, best);
+    const starsN = starsFor(storyNight, final, won), prevStars = nightStars[storyNight] || 0;
+    let starGlow = 0;
+    if (starsN > prevStars) { for (let s = prevStars + 1; s <= starsN; s++) starGlow += STAR_GLOW[s]; nightStars[storyNight] = starsN; saveStars(); }
+    const newTrails = grantStarTrails();
+    if (starGlow || newTrails.length) { glow += starGlow; lastGlow += starGlow; saveUpg(); refreshShopBtns(); }
     R = {
       won, night: storyNight, total: requiredTotal(), left, final, best, combo: bestCombo, home: caughtTotal(), unlocked: unlockedNow, stage: thiriSleepStage, failReason,
-      starsN: won ? (left >= 30 ? 3 : left >= 10 ? 2 : 1) : 0,
+      starsN, prevStars, starGlow, goals: starGoals(storyNight), newTrails,
       tip: chapterFor(storyNight).tutorialHints
         ? `Tip: ${chapterFor(storyNight).tutorialHint}`
         : hits > 0
@@ -3510,7 +3743,7 @@
     if (shopTab === 'style') {
       $('#shopList').innerHTML = Object.entries(TRAILS).map(([k, tr]) => {
         const owned = ownedTrails.includes(k), using = trailPick === k;
-        const btn = using ? '<button class="buy" disabled>In use</button>' : owned ? `<button class="buy" data-trail="${k}" data-act="use">Use</button>` : price(tr.cost, `data-trail="${k}" data-act="buy"`);
+        const btn = using ? '<button class="buy" disabled>In use</button>' : owned ? `<button class="buy" data-trail="${k}" data-act="use">Use</button>` : tr.stars ? `<button class="buy" disabled>★ ${totalStars()}/${tr.stars}</button>` : price(tr.cost, `data-trail="${k}" data-act="buy"`);
         return `<div class="item${using ? ' in-use' : ''}"><h3><span class="swatch" style="background:${tr.rainbow ? 'conic-gradient(#ff6b6b,#ffd23f,#7ddc8b,#6fb6ff,#b9a2ff,#ff6b6b)' : `rgb(${tr.c})`}"></span>${tr.name} trail</h3><div class="side">${btn}</div><p>The colour of the light trail that follows your cat.</p></div>`;
       }).join('');
       return;
@@ -3547,7 +3780,7 @@
         glow -= it.cost; itemStock[it.id] = (itemStock[it.id] || 0) + 1; saveUpg(); ding();
       } else if (x.dataset.trail) {
         const k = x.dataset.trail;
-        if (x.dataset.act === 'buy') { const c = TRAILS[k].cost; if (glow < c) return; glow -= c; ownedTrails.push(k); saveUpg(); ding(); }
+        if (x.dataset.act === 'buy') { const c = TRAILS[k].cost; if (TRAILS[k].stars || glow < c) return; glow -= c; ownedTrails.push(k); saveUpg(); ding(); }
         trailPick = k;
       }
       saveShop(); renderShop(); refreshShopBtns(); $('#shopBack').focus({ preventScroll: true });
@@ -3593,6 +3826,12 @@
     const extra = [];
     if (runDone.length) extra.push(`Mission complete: ${runDone.join('; ')}. Claim the reward on the main menu.`);
     if (runNew.length) extra.push(`New in the Mood Book: ${runNew.join(', ')}.`);
+    if (!R.free && R.won) {
+      if (R.starGlow) extra.push(`New ${'★'.repeat(R.starsN)} on this hour! +${R.starGlow} Glow.`);
+      extra.push(R.starsN < 3 ? `Score ${R.goals[R.starsN].toLocaleString()} for ${'★'.repeat(R.starsN + 1)}.` : 'Top rank on this hour: ★★★');
+    }
+    if (!R.free && R.newTrails?.length) extra.push(`★ ${totalStars()} stars! You unlocked the ${R.newTrails.join(' and ')} trail in the shop.`);
+    if (!R.free && R.night && keepsakeTotal(R.night)) extra.push(`Thiri’s keepsakes on this night: ${keepsakesFound(R.night)}/${keepsakeTotal(R.night)}.`);
     $('#endMissions').textContent = extra.join(' '); $('#endMissions').hidden = !extra.length;
     $('#nightStoryline').hidden = true;
     if (R.free) {
@@ -3615,7 +3854,7 @@
     $('#endStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < R.starsN ? '' : 'off'}">★</span>`).join('');
     $('#endStars').hidden = !R.won;
     $('#endMsg').textContent = R.won
-      ? `You brought all ${R.total} feelings home with ${Math.round(R.left)} seconds to spare. Time bonus: +${Math.round(R.left) * 20}.`
+      ? `You brought all ${R.total} feelings home with ${Math.round(R.left)} seconds to spare. Time bonus: +${Math.round(R.left) * 20}. Score ${R.goals[1].toLocaleString()} for ★★ and ${R.goals[2].toLocaleString()} for ★★★.`
       : R.failReason === 'fall' ? 'Shwe ran out of lives. The lights from this run were lost, but anything already in the Mood Book is safe.' : "That's okay. Let's try again.";
     $('#sScore').textContent = R.final.toLocaleString();
     $('#sBest').textContent = R.best.toLocaleString();
@@ -4161,7 +4400,7 @@
     drawNightMap(width, height, d);
     route.setAttribute('d', d); path.setAttribute('d', d);
     svg.querySelector('.path-halo').setAttribute('d', d);
-    $('#levelMapCount').textContent = `${unlockedLevel} / 50 levels unlocked`;
+    $('#levelMapCount').textContent = `${unlockedLevel} / 50 levels unlocked · ★ ${totalStars()}/21`;
     $('#roomStatus').textContent = thiriSleepStage >= 7 ? 'Thiri woke up' : thiriSleepStage >= 5 ? 'Thiri is almost awake' : thiriSleepStage >= 3 ? 'Thiri is stirring' : 'Thiri is sleeping';
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const chapter = LEVEL_MAP_CHAPTERS.get(level), point = mapPoint(level);
@@ -4182,7 +4421,15 @@
         const caption = document.createElement('span'); caption.className = 'level-caption';
         const name = document.createElement('strong'); name.textContent = `${hourOf(level)} · ${chapter.name}`;
         const sub = document.createElement('span'); sub.textContent = level < unlockedLevel ? 'Completed · Play again' : level === unlockedLevel ? 'Your next adventure' : 'Complete the previous chapter';
-        caption.appendChild(name); caption.appendChild(sub); entry.appendChild(caption);
+        caption.appendChild(name); caption.appendChild(sub);
+        const bestScore = getBest(`mk-best-n${level}`), st = nightStars[level] || 0;
+        if (playable && (bestScore || st)) {
+          const rec = document.createElement('span'); rec.className = 'level-best';
+          rec.innerHTML = [1, 2, 3].map(i => `<b style="color:${i <= st ? '#f6c453' : 'rgba(255,255,255,.28)'}">★</b>`).join('') + (bestScore ? ` Best ${bestScore.toLocaleString()}` : '');
+          rec.setAttribute('aria-label', `${st} of 3 stars${bestScore ? `, best score ${bestScore}` : ''}`);
+          caption.appendChild(rec);
+        }
+        entry.appendChild(caption);
       }
       track.appendChild(entry);
     }
@@ -4743,7 +4990,7 @@
     $('#levelBriefingGoal').textContent = goal ? `Bring home: ${goal}` : 'Find the little lights that are ready to come home.';
     $('#levelBriefingTip').textContent = chapter.tutorialHint || chapter.newMoodling || chapter.sub;
     const seconds = Math.max(0, Math.floor(chapter.timeLimit || 0));
-    $('#levelBriefingTime').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} before sunrise`;
+    { const g = starGoals(briefingNight); $('#levelBriefingTime').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} before sunrise · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}`; }
     $('#levelBriefingScreen').hidden = false; $('#levelBriefingStart').focus({ preventScroll: true });
   }
   function closeLevelBriefing() {

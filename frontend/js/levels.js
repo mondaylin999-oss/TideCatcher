@@ -159,6 +159,23 @@
   };
   for (const [night, ratio] of [[2,3.25],[3,3.5],[4,3.75],[5,4],[6,4.5],[7,5]]) sizePitsByDifficulty(levels[night], ratio);
   for (const [variant, ratio] of levels.free.variants.map((level, i) => [level, [3.25,4,5][i]])) sizePitsByDifficulty(variant, ratio);
+  // Themed traps and Thiri's hidden keepsakes, in final coordinates (after the pits are sized).
+  //   squeak {x,w}: creaky floorboard (sneak across) · sprinkler {x} · lantern {x,w}: drops on its shadow
+  //   wind {a,b,dir}: gusts push Shwe toward a (dir -1) or b (dir 1); zones end well before any pit
+  //   slick {a,b}: wet mossy stones, Shwe slides; zones end well before any pit
+  //   keepsakes [x,y]: hidden until Shwe is close or uses Night Eyes; some sit above a moving bridge (grab it mid-ride)
+  const EXTRAS = {
+    1: { hazards: [], keepsakes: [[60,440],[1925,300]] },
+    2: { hazards: [{kind:'squeak',x:400,w:90},{kind:'squeak',x:1600,w:90},{kind:'squeak',x:2750,w:90}], keepsakes: [[1306,398],[2933,292]] },
+    3: { hazards: [{kind:'sprinkler',x:1500},{kind:'sprinkler',x:3150}], keepsakes: [[580,195],[3680,425]] },
+    4: { hazards: [{kind:'lantern',x:1412,w:250},{kind:'lantern',x:3626,w:260}], keepsakes: [[2080,400],[3866,285]] },
+    5: { hazards: [{kind:'wind',a:380,b:800,dir:-1},{kind:'wind',a:1420,b:2350,dir:1},{kind:'wind',a:3400,b:4150,dir:-1}], keepsakes: [[700,385],[2195,385],[3280,252]] },
+    6: { hazards: [{kind:'slick',a:1350,b:1600},{kind:'slick',a:2450,b:2760},{kind:'slick',a:3600,b:4000}], keepsakes: [[920,400],[3906,282]] },
+    7: { hazards: [{kind:'slick',a:1500,b:2150},{kind:'wind',a:2900,b:3700,dir:-1},{kind:'lantern',x:5690,w:240}], keepsakes: [[3096,180],[4000,400],[6130,415]] }
+  };
+  for (const [night, extra] of Object.entries(EXTRAS)) Object.assign(levels[night], extra);
+  // Hilltop: every hill's middle stone pillar crumbles, not just the first one
+  for (const p of levels[5].platforms) if (p[2] === 90 && p[1] === 420) p[3] = 'crumbling';
   for (let night = 8; night <= 50; night++) levels[night] = makeChallengeLevel(night);
   root.TC_LEVELS = levels;
   if (typeof module !== 'undefined' && module.exports) module.exports = levels;
