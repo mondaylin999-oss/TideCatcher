@@ -195,10 +195,14 @@
   let sid = null, sx = 0, sy = 0;
   function stickMove(e) {
     let dx = clamp(e.clientX - sx, -58, 58);
-    touchAxis = dx / 58; if (Math.abs(touchAxis) < .12) touchAxis = 0;
+    const distance = Math.abs(dx);
+    // Match the visible 64px inner ring; retain a small neutral centre.
+    touchAxis = distance < 7 ? 0 : Math.sign(dx) * (distance <= 32 ? .4 : 1);
+    stick.dataset.speed = distance < 7 ? 'idle' : distance <= 32 ? 'slow' : 'fast';
     knob.style.transform = `translate(calc(-50% + ${dx}px),-50%)`;
   }
   zone.addEventListener('pointerdown', e => {
+    if (sid !== null) return;
     e.preventDefault(); sid = e.pointerId; sx = e.clientX; sy = e.clientY;
     const r = zone.getBoundingClientRect();
     stick.style.left = (sx - r.left) + 'px'; stick.style.top = (sy - r.top) + 'px'; stick.hidden = false;

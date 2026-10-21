@@ -1,5 +1,14 @@
 # Cozy night sticker book
 
+## Two-speed mobile joystick
+
+- Added a visible inner slow-movement ring and outer normal-speed ring, with a smaller thumb knob and active-zone feedback.
+- Inner movement uses the existing sneak speed; outer movement uses the normal upgraded speed. A neutral centre stops movement.
+
+## Mobile joystick area
+
+- Reduced the joystick activation zone from the left 50% to the left 25% of the screen width. The visible circle cannot expand the touch target outside that zone; an active drag continues to use pointer capture.
+
 ## Compact post-night screens
 
 - Fit the bedroom moment and results into landscape viewports with visible action buttons.
