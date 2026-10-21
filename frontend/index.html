@@ -7,11 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Padauk:wght@400;700&display=swap">
-<link rel="stylesheet" href="css/theme.css">
-<link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/cozy.css">
-<link rel="stylesheet" href="css/single-screen.css">
-<link rel="stylesheet" href="css/back-navigation.css">
+<link rel="stylesheet" href="css/theme.css?v=ae0a5a6e0e1a">
+<link rel="stylesheet" href="css/styles.css?v=d56824e6fa9c">
+<link rel="stylesheet" href="css/cozy.css?v=6f341d54f62e">
+<link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
+<link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 </head>
 <body>
 <canvas id="game" aria-label="TideCatcher prototype game" hidden></canvas>
@@ -174,13 +174,14 @@
 
     <section class="hub-hero" aria-label="Shwe watching the moonlit tide from a pier">
       <div class="hub-hero-mist mist-one" aria-hidden="true"></div><div class="hub-hero-mist mist-two" aria-hidden="true"></div>
-      <svg id="hubHeroSvg" class="hub-hero-art" viewBox="0 0 520 620" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Shwe, the selected cat, watching the moonlit tide from a pier">
+      <div class="hub-hero-art"><svg id="hubHeroSvg" viewBox="0 0 520 620" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Shwe, the selected cat, watching the moonlit tide from a pier">
         <defs><linearGradient id="hubHeroSky" x2="0" y2="1"><stop stop-color="#23384a"/><stop offset=".56" stop-color="#122738"/><stop offset="1" stop-color="#0b1620"/></linearGradient><radialGradient id="hubHeroMoon"><stop stop-color="#f9f2d6" stop-opacity=".9"/><stop offset="1" stop-color="#a9c4d4" stop-opacity="0"/></radialGradient><linearGradient id="hubHeroWater" x2="0" y2="1"><stop stop-color="#315266" stop-opacity=".55"/><stop offset="1" stop-color="#09151e"/></linearGradient></defs>
         <ellipse cx="264" cy="154" rx="156" ry="156" fill="url(#hubHeroMoon)"/><circle cx="264" cy="154" r="57" fill="#d9e6df" opacity=".78"/><path d="M0 308q76-44 143 0t134 0 132 0 111 0v312H0Z" fill="url(#hubHeroSky)"/><path d="M0 404q72-28 142 0t138 0 135 0 105 0v216H0Z" fill="url(#hubHeroWater)"/><path d="M0 445q65-18 129 0t129 0 129 0 133 0M0 490q74-15 143 0t130 0 128 0 119 0M0 538q60-12 123 0t130 0 136 0 131 0" fill="none" stroke="#a9c4d4" stroke-opacity=".22" stroke-width="2"/>
         <path d="M35 397 143 330l91 67M143 330v-43m0 17 37 25M405 398l65-45v48" fill="none" stroke="#607987" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".66"/><path d="M52 395h415v27H52zM77 423v105m351-105v105M112 423v86m277-86v86" fill="#172832" stroke="#8098a0" stroke-opacity=".58" stroke-width="3"/>
-        <image id="hubHeroCat" href="assets/cats/ginger-realistic.png" x="175" y="255" width="210" height="190" preserveAspectRatio="xMidYMax meet" aria-hidden="true"/><path d="M372 325 408 270m-20 2q22-13 39 2l-17 26q-18 4-27-8Z" fill="none" stroke="#a9c4d4" stroke-width="3" stroke-linejoin="round"/><path d="M393 273 410 292m-12-24 19 22m-24-10 23 8" stroke="#a9c4d4" stroke-width="1.5" opacity=".75"/><path d="M407 377v-36q0-10 10-10t10 10v36m-24 0h28" fill="none" stroke="#e0b04a" stroke-width="4" stroke-linecap="round"/><circle cx="417" cy="350" r="11" fill="#e0b04a" opacity=".28"/><circle cx="417" cy="350" r="5" fill="#f5df9b"/><ellipse cx="280" cy="430" rx="95" ry="8" fill="#a9c4d4" opacity=".14"/>
+        <path d="M372 325 408 270m-20 2q22-13 39 2l-17 26q-18 4-27-8Z" fill="none" stroke="#a9c4d4" stroke-width="3" stroke-linejoin="round"/><path d="M393 273 410 292m-12-24 19 22m-24-10 23 8" stroke="#a9c4d4" stroke-width="1.5" opacity=".75"/><path d="M407 377v-36q0-10 10-10t10 10v36m-24 0h28" fill="none" stroke="#e0b04a" stroke-width="4" stroke-linecap="round"/><circle cx="417" cy="350" r="11" fill="#e0b04a" opacity=".28"/><circle cx="417" cy="350" r="5" fill="#f5df9b"/><ellipse cx="280" cy="430" rx="95" ry="8" fill="#a9c4d4" opacity=".14"/>
         <g fill="#e8f1f5" opacity=".62"><circle cx="116" cy="293" r="2"/><circle cx="170" cy="257" r="1.5"/><circle cx="365" cy="224" r="2"/><circle cx="436" cy="302" r="1.4"/><circle cx="93" cy="366" r="1.5"/></g>
       </svg>
+      <img id="hubHeroCat" src="assets/cats/ginger-realistic.png" alt="" decoding="async" draggable="false"></div>
       <div class="hub-hero-label"><span>YOUR COMPANION</span><strong id="hubCatName">SHWE</strong><i>Keep the little lights close.</i></div>
       <span class="hub-spray spray-a" aria-hidden="true"></span><span class="hub-spray spray-b" aria-hidden="true"></span><span class="hub-spray spray-c" aria-hidden="true"></span>
     </section>
@@ -205,23 +206,16 @@
         </button>
 
       </div>
-      <section class="hub-goals" id="hubGoals" aria-labelledby="hubGoalsTitle">
-        <h2 id="hubGoalsTitle">Your goals</h2>
-        <div class="hub-goals-grid">
-          <button class="hub-goal" id="goalNightBtn" type="button" data-sfx="toggle"><span>Next night</span><strong id="goalNightText">Night 1 · First Night</strong></button>
-          <button class="hub-goal" id="goalBookBtn" type="button" data-sfx="toggle"><span>Mood Book</span><strong id="goalBookText">0 / 17 feelings</strong></button>
-          <button class="hub-goal" id="goalUpgradeBtn" type="button" data-sfx="toggle"><span>Next upgrade</span><strong id="goalUpgradeText">Pounce · 40 Glow</strong></button>
-        </div>
-      </section>
     </section>
   </main>
   <section class="story-map-screen" id="storyMapScreen" hidden aria-labelledby="storyMapTitle">
     <div class="panel story-map-panel">
-      <div class="story-map-heading"><div><p class="eyebrow">THE NIGHT SIDE</p><h2 id="storyMapTitle">Choose your chapter</h2></div><span class="level-map-count" id="levelMapCount">1 / 7 nights unlocked</span><span class="room-status" id="roomStatus" aria-live="polite">Thiri is sleeping</span></div>
-      <p class="level-map-hint">Choose a lit night. Complete each chapter to open the next.</p>
+      <div class="story-map-heading"><div><p class="eyebrow">THE NIGHT SIDE</p><h2 id="storyMapTitle">Choose your chapter</h2></div><span class="level-map-count" id="levelMapCount">1 / 50 levels unlocked</span><span class="room-status" id="roomStatus" aria-live="polite">Thiri is sleeping</span></div>
+      <p class="level-map-hint">Your journey unfolds left to right. Swipe or use the arrows to explore.</p>
       <div class="map-guide" id="mapGuide" hidden role="region" aria-labelledby="mapGuideName"><img class="map-guide-cat" id="mapGuideCat" src="assets/cats/ginger-realistic-sprite.png" alt="" aria-hidden="true" decoding="async"><div class="map-guide-copy"><strong id="mapGuideName">Shwe</strong><p id="mapGuideText">Follow the glowing path to the next feeling.</p></div><button class="btn ghost map-guide-dismiss" id="mapGuideDismiss" type="button">Got it</button></div>
-      <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Chapter map" tabindex="-1"><div class="level-map-track" id="levelMapTrack"><svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 56000" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg></div></div>
-      <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Planned / locked</span></div>
+      <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Chapter map. Use left and right arrow keys to explore." tabindex="0"><div class="level-map-track" id="levelMapTrack"><svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 4600" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg></div></div>
+      <nav class="map-navigation" aria-label="Explore chapters"><button class="btn ghost" id="mapPrevious" type="button" aria-label="Previous chapters">←</button><button class="btn ghost" id="mapCurrent" type="button">Current chapter</button><button class="btn ghost" id="mapNext" type="button" aria-label="Next chapters">→</button></nav>
+      <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Locked</span></div>
     </div>
   </section>
   <svg class="story-map-backdrop level-map-path" id="storyMapBackdrop" viewBox="0 0 100 360" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="storyMapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="storyMapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><rect id="storyMapBackdropFill" x="0" y="0" width="100" height="360" fill="url(#storyMapNightFill)"/><g id="storyMapBackdropScenery"></g></svg>
@@ -235,6 +229,7 @@
     <p class="muted">Use your device’s reduced-motion preference for gentler movement. Open the guide anytime for controls and feelings.</p>
     <div class="guidance-settings">
       <label class="guidance-toggle"><span>Show tips</span><input class="cozy-toggle" id="showTipsToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
+      <label class="guidance-toggle"><span>Gentle mode · no life lost on falls</span><input class="cozy-toggle" id="gentleModeToggle" type="checkbox" role="switch" data-sfx="toggle"></label>
       <label class="guidance-language">Tip language<select id="tipLanguageSelect"><option value="en">English</option><option value="my">မြန်မာ</option></select></label>
       <p class="muted guidance-status" id="settingsGuidanceStatus" aria-live="polite"></p>
       <div class="guidance-actions"><button class="btn ghost" id="settingsHelpBtn" type="button" data-sfx="toggle">How to play</button><button class="btn ghost" id="settingsReplayTutorial" type="button" data-sfx="toggle">Replay tutorial</button></div>
@@ -282,8 +277,8 @@
     <span id="newBestSticker" class="new-best" hidden>✦ NEW BEST!</span>
     <div class="stats">
       <div class="stat"><span>Score</span><strong id="sScore">0</strong></div>
-      <div class="stat"><span>Best</span><strong id="sBest">0</strong></div>
-      <div class="stat"><span>Biggest combo</span><strong id="sCombo">×1</strong></div>
+      <div class="stat secondary-result"><span>Best</span><strong id="sBest">0</strong></div>
+      <div class="stat secondary-result"><span>Biggest combo</span><strong id="sCombo">×1</strong></div>
       <div class="stat"><span>Brought home</span><strong id="sHome">0/10</strong></div>
       <div class="stat"><span>Glow earned</span><strong id="sGlow" class="gold">+0</strong></div>
     </div>
@@ -364,11 +359,12 @@
   </section>
 </div>
 
-<script src="js/customization.js"></script>
-<script src="js/tips.js"></script>
-<script src="js/levels.js"></script>
-<script src="js/tc-sfx.js"></script>
-<script src="js/game.js"></script>
-<script src="js/cozy-ui.js"></script>
+<script src="js/customization.js?v=0a9a30af114b"></script>
+<script src="js/tips.js?v=130b26bdf0ee"></script>
+<script src="js/levels.js?v=4a720166acd1"></script>
+<script src="js/tc-sfx.js?v=2e3b239c26f8"></script>
+<script src="js/tc-game-audio.js?v=5a66f4ed7efc"></script>
+<script src="js/game.js?v=08c08bded98d"></script>
+<script src="js/cozy-ui.js?v=f6823dfb3d93"></script>
 </body>
 </html>

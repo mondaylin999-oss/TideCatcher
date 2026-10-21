@@ -75,7 +75,7 @@
     return { title: toChapters ? 'Back to chapters?' : 'Back to menu?', text: lostRunText, confirmLabel: toChapters ? 'Back to chapters' : 'Back to menu' };
   });
   // Keep back navigation outside panel layout and scrolling containers.
-  ['mapHubBackBtn', 'settingsCloseBtn', 'levelBriefingBack', 'shopBack', 'bookBack',
+  ['settingsCloseBtn', 'levelBriefingBack', 'shopBack', 'bookBack',
     'setupBackBtn', 'setupPrevious', 'helpDoneBtn', 'pauseChaptersBtn', 'menuBtn'].forEach(id => {
     const button = $(id), screen = button?.closest('.overlay');
     if (!screen) return;

@@ -93,8 +93,8 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .stars{font-size:32px;color:var(--gold);letter-spacing:6px;line-height:1}
 .stars .off{color:var(--art-color-94)}
 #touch{position:fixed;inset:0;pointer-events:none;touch-action:none}
-#stickZone{position:absolute;left:0;top:20%;bottom:0;width:50%;pointer-events:auto;touch-action:none;overscroll-behavior:contain}
-#stick{position:absolute;width:116px;height:116px;border-radius:var(--legacy-border-radius-307);border:2px solid var(--line);background:var(--art-color-22);transform:translate(-50%,-50%)}
+#stickZone{position:absolute;left:0;top:20%;bottom:0;width:25%;pointer-events:auto;touch-action:none;overscroll-behavior:contain}
+#stick{position:absolute;pointer-events:none;width:116px;height:116px;border-radius:var(--legacy-border-radius-307);border:2px solid var(--line);background:var(--art-color-22);transform:translate(-50%,-50%)}
 #knob{position:absolute;left:50%;top:50%;width:48px;height:48px;border-radius:var(--legacy-border-radius-308);background:var(--art-color-88);transform:translate(-50%,-50%)}
 .tbtn{position:absolute;pointer-events:auto;border-radius:var(--legacy-border-radius-309);border:2px solid var(--line);background:var(--art-color-95);color:var(--ink);font-family:var(--display);font-weight:800;display:grid;place-items:center;touch-action:none}
 #bPounce{right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));width:96px;height:96px;font-size:17px;background:var(--art-color-96);border-color:var(--gold)}
@@ -394,3 +394,7 @@ kbd{font-family:var(--body);font-size:12px;border:1px solid var(--line);border-b
 .pause-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:4px}
 .pause-actions .btn{justify-self:stretch;text-align:center;font-size:16px;padding:11px 14px}
 @media(max-width:560px),(orientation:portrait){.game-pause-btn{left:14px;top:calc(96px + env(safe-area-inset-top,0px))}.pause-actions{grid-template-columns:1fr}}
+
+/* Prevent the browser tap overlay from flashing across the full-screen intro.
+   Keyboard focus outlines remain enabled. */
+body{-webkit-tap-highlight-color:transparent}

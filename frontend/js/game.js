@@ -81,6 +81,17 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const col = ty => ty === 'F' ? RED : ty === 'N' ? VIOLET : ty === 'L' ? BLUE : ty === 'C' ? CALM : ty === 'B' ? '#a67646' : ty === 'E' ? EXC : ty === 'S' ? SHY : ty === 'J' ? JEAL : GOLD;
 
+  // Scalar-radius fallback for older mobile WebViews.
+  function canvasRoundRect(c, x, y, w, h, radius) {
+    if (typeof c.roundRect === 'function') { c.roundRect(x, y, w, h, radius); return; }
+    const r = Math.max(0, Math.min(radius, Math.abs(w) / 2, Math.abs(h) / 2));
+    c.moveTo(x + r, y); c.lineTo(x + w - r, y);
+    c.quadraticCurveTo(x + w, y, x + w, y + r);
+    c.lineTo(x + w, y + h - r); c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    c.lineTo(x + r, y + h); c.quadraticCurveTo(x, y + h, x, y + h - r);
+    c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y); c.closePath();
+  }
+
   // ---------- sizing ----------
   let VW = 960, S = 1, OY = 0, dpr = 1, HUD_X = 68, HUD_CARD_W = 158;
   (function capGlow(c) {
@@ -91,7 +102,10 @@
     const w = innerWidth, h = innerHeight;
     dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     if (w * h * dpr * dpr > 1600000) dpr = Math.max(.75, Math.sqrt(1600000 / (w * h)));
-    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const pixelWidth = Math.round(w * dpr), pixelHeight = Math.round(h * dpr);
+    // Assigning an unchanged size also clears the canvas.
+    if (cv.width !== pixelWidth) cv.width = pixelWidth;
+    if (cv.height !== pixelHeight) cv.height = pixelHeight;
     S = h / VH; VW = w / S; OY = 0;
     if (VW < 760) { S = w / 760; VW = 760; OY = (h / S - VH) / 2; }
     const pauseStyle = getComputedStyle(pauseBtn);
@@ -115,7 +129,6 @@
     sfx('cat', kind, volume);
   }
   // night music per place (js/tc-sfx.js): School 11 PM–Midnight, Park 1 AM, Festival 2 AM, Hilltop 3 AM, Lakeside 4–5 AM
-  const NIGHT_MUSIC = ['school', 'school', 'park', 'festival', 'hilltop', 'lakeside', 'lakeside'];
   const music = (fn, a) => { try { if (window.TCMusic) TCMusic[fn](a); } catch (e) {} };
   function tone(f, d = .12, type = 'sine', v = .1, slide = 0) {
     if (!ac) return;
@@ -137,7 +150,7 @@
   const keys = {};
   const DEBUG_ALLOWED = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).get('debug') === '1';
   let debugLayout = false;
-  let jumpQ = false, pounceQ = false, scratchQ = false, scratchHeld = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
+  let jumpQ = false, jumpHeld = false, pounceQ = false, scratchQ = false, scratchHeld = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
   addEventListener('keydown', e => {
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
@@ -147,14 +160,14 @@
     if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'paused') { e.preventDefault(); sfx('ui', 'resume'); resumeGame(); return; }
     if ($('#nightWakeScreen') && !$('#nightWakeScreen').hidden) { if (['Space','Enter','Escape'].includes(e.code)) { e.preventDefault(); closeNightWake(); } return; }
     if (state === 'home' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); homeKey(); return; }
-    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') jumpQ = true;
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { jumpQ = true; jumpHeld = true; }
     if (e.code === 'KeyJ' || e.code === 'KeyX') pounceQ = true;
     if (e.code === 'KeyK') purrQ = true;
     if (e.code === 'KeyE' || e.code === 'KeyL') eyesQ = true;
     if (e.code === 'KeyS') scratchQ = true;
   });
-  addEventListener('keyup', e => { keys[e.code] = false; });
-  addEventListener('blur', () => { for (const k in keys) keys[k] = false; scratchHeld = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
+  addEventListener('keyup', e => { keys[e.code] = false; if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) jumpHeld = false; });
+  addEventListener('blur', () => { for (const k in keys) keys[k] = false; scratchHeld = false; jumpHeld = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
   function axisNow() {
     const kb = ((keys.ArrowRight || keys.KeyD) ? 1 : 0) - ((keys.ArrowLeft || keys.KeyA) ? 1 : 0);
     const scale = (keys.ShiftLeft || keys.ShiftRight || mouseSneakHeld) ? .4 : 1;
@@ -182,10 +195,14 @@
   let sid = null, sx = 0, sy = 0;
   function stickMove(e) {
     let dx = clamp(e.clientX - sx, -58, 58);
-    touchAxis = dx / 58; if (Math.abs(touchAxis) < .12) touchAxis = 0;
+    const distance = Math.abs(dx);
+    // Match the visible 64px inner ring; retain a small neutral centre.
+    touchAxis = distance < 7 ? 0 : Math.sign(dx) * (distance <= 32 ? .4 : 1);
+    stick.dataset.speed = distance < 7 ? 'idle' : distance <= 32 ? 'slow' : 'fast';
     knob.style.transform = `translate(calc(-50% + ${dx}px),-50%)`;
   }
   zone.addEventListener('pointerdown', e => {
+    if (sid !== null) return;
     e.preventDefault(); sid = e.pointerId; sx = e.clientX; sy = e.clientY;
     const r = zone.getBoundingClientRect();
     stick.style.left = (sx - r.left) + 'px'; stick.style.top = (sy - r.top) + 'px'; stick.hidden = false;
@@ -195,7 +212,8 @@
   zone.addEventListener('pointermove', e => { if (e.pointerId === sid) stickMove(e); });
   const stickEnd = e => { if (e.pointerId !== sid) return; sid = null; touchAxis = 0; stick.hidden = true; knob.style.transform = 'translate(-50%,-50%)'; };
   zone.addEventListener('pointerup', stickEnd); zone.addEventListener('pointercancel', stickEnd);
-  $('#bJump').addEventListener('pointerdown', e => { e.preventDefault(); jumpQ = true; });
+  $('#bJump').addEventListener('pointerdown', e => { e.preventDefault(); jumpHeld = true; jumpQ = true; });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('#bJump').addEventListener(ev, () => { jumpHeld = false; }));
   $('#bPounce').addEventListener('pointerdown', e => { e.preventDefault(); pounceQ = true; });
   $('#bPurr').addEventListener('pointerdown', e => { e.preventDefault(); purrQ = true; });
   $('#bEyes').addEventListener('pointerdown', e => { e.preventDefault(); eyesQ = true; });
@@ -205,7 +223,7 @@
   addEventListener('touchstart', () => { if (state === 'play') touchUI.hidden = false; }, { passive: true });
 
   // ---------- world ----------
-  let currentLevel = window.TC_LEVELS?.[1] || { width: 4200, ground: { points: [[0, GROUND], [4200, GROUND]], gaps: [] }, platforms: [], hideSpots: [], burySpots: [], spawnZones: [[120, 4080]], catStart: 200, props: [] };
+  let currentLevel = window.TC_LEVELS?.[1] || { width: 4200, ground: { points: [[0, GROUND], [4200, GROUND]] }, pits: [], platforms: [], hideSpots: [], burySpots: [], spawnZones: [[120, 4080]], catStart: 200, props: [] };
   let activePlats = [];
   let currentProps = [];
   const levelGroundY = x => {
@@ -217,19 +235,15 @@
     return pts[pts.length - 1][1];
   };
   function terrainY(x) {
-    const gap = (currentLevel.gaps || []).find(([a, b]) => x >= a && x <= b);
-    if (!gap) return levelGroundY(x);
-    const [a, b, lower] = gap, ramp = Math.min(30, (b - a) * .24), left = levelGroundY(a), right = levelGroundY(b);
-    if (x < a + ramp) return left + (lower - left) * ((x - a) / ramp);
-    if (x > b - ramp) return lower + (right - lower) * ((x - (b - ramp)) / ramp);
-    return lower;
+    return levelGroundY(x);
   }
+  const pitAt = x => (currentLevel.pits || []).find(([a, b]) => x > a + 10 && x < b - 10) || null;
   function loadLevelGeometry() {
     WORLD = currentLevel.width;
     currentProps = (currentLevel.props || []).map(prop => ({ ...prop, baseX: prop.x, baseY: prop.y || 0 }));
     activePlats = (currentLevel.platforms || []).map(spec => {
       const info = spec[4] || {}, p = [spec[0], spec[1], spec[2]];
-      Object.assign(p, { type: spec[3] || 'static', path: info.path || null, speed: info.speed || 0, baseX: spec[0], baseY: spec[1], active: true, crumbleRemaining: 0, restRemaining: 0, movingPhase: 0 });
+      Object.assign(p, { type: spec[3] || 'static', path: info.path || null, speed: info.speed || 0, skin: info.skin || '', anchor: info.anchor || null, baseX: spec[0], baseY: spec[1], active: true, crumbleRemaining: 0, restRemaining: 0, movingPhase: 0 });
       return p;
     });
   }
@@ -242,7 +256,7 @@
         p[1] = p.path[0][1] + (p.path[1][1] - p.path[0][1]) * u;
       }
       if (p.type === 'crumbling') {
-        if (p.crumbleRemaining > 0) { p.crumbleRemaining -= dt; if (p.crumbleRemaining <= 0) { p.active = false; p.restRemaining = 2.5; burst(p[0] + p[2] / 2, p[1] + 8, 'rgba(196,186,170,.85)', 14); tone(110, .25, 'triangle', .05, -40); } }
+        if (p.crumbleRemaining > 0) { p.crumbleRemaining -= dt; if (p.crumbleRemaining <= 0) { p.active = false; p.restRemaining = 3; burst(p[0] + p[2] / 2, p[1] + 8, 'rgba(196,186,170,.85)', 14); tone(110, .25, 'triangle', .05, -40); } }
         else if (!p.active) { p.restRemaining -= dt; if (p.restRemaining <= 0) { p.active = true; puff({ x: p[0] + p[2] / 2, y: p[1] + 18 }); } }
       }
       if (p.type === 'sinking') {
@@ -264,10 +278,11 @@
       prop.y = prop.path[0][1] + (prop.path[1][1] - prop.path[0][1]) * u;
     }
   }
+  function platformDrawY(p) { return p.type === 'crumbling' && p.crumbleRemaining > 0 ? p[1] + Math.sin((.6 - p.crumbleRemaining) * 54) * 3 : p[1]; }
   function safeLevelX(x) {
     x = clamp(x, 80, WORLD - 80);
-    const gap = (currentLevel.gaps || []).find(([a, b]) => x > a && x < b);
-    return gap ? (x - gap[0] < gap[1] - x ? gap[0] - 48 : gap[1] + 48) : x;
+    const pit = pitAt(x);
+    return pit ? (x - pit[0] < pit[1] - x ? pit[0] - 48 : pit[1] + 48) : x;
   }
   function levelSpawnX() {
     const zones = currentLevel.spawnZones?.length ? currentLevel.spawnZones : [[100, WORLD - 100]];
@@ -288,6 +303,9 @@
     return variants[Math.floor(Math.random() * variants.length)];
   }
   let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
+  let lives = 3, checkpointX = 0, fallDimT = 0, respawnT = 0, pitTipShown = false, edgeSoundAt = 0, pendingFallFail = false;
+  let gentleMode = false;
+  try { gentleMode = localStorage.getItem('mk-gentle-mode') === '1'; } catch (e) {}
   const nightGuide = { active: false, step: 0, success: 0, pendingWin: false, buffered: [] };
   let jitTipQueue = [], activeJitTip = null, struggleTimer = 0, guidanceCaught = 0, guidanceHits = {}, helpReturn = 'hub', helpReturnFocus = null, welcomeCardIndex = 0, welcomeCardScrollTimer = 0;
   const FRUST_SLEEP = 5; // Frustrated sleeps for the first 5 seconds of the night clock
@@ -301,13 +319,13 @@
   const SCHOOL_WALL = new Image();
   SCHOOL_WALL.src = 'assets/school/hallway-night.webp';
   const SCHOOL_WALL_W = 2445, SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
-  function inSchool() { return mode === 'story' && SCHOOL_NIGHTS.includes(storyNight); }
+  function inSchool() { return mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school'); }
   // ---------- Hilltop park map (Night 5) ----------
   // Layout from the team's level design: a stepped stone terrace (high gate terrace, bench step,
   // lamp step, low walkway along the railing, back up), tree-branch ledges and stone pillars to jump on,
   // and a tree hollow, bin and bushes to hide in. The far city view comes from the team's picture.
   const HILL_NIGHTS = [5];
-  function inHill() { return mode === 'story' && HILL_NIGHTS.includes(storyNight); }
+  function inHill() { return mode === 'story' && (HILL_NIGHTS.includes(storyNight) || currentLevel?.map === 'hill'); }
   const HILL_W = 1400;
   function hillY(x) { return terrainY(x); }
   const HILL_VISTA = new Image();
@@ -414,15 +432,15 @@
     // platforms: mossy branch ledges and stone pillars
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = p[1], w = p[2];
+      const x = p[0], y = platformDrawY(p), w = p[2];
       if (w <= 95) {
         const base = hillY(x + w / 2);
         ctx.fillStyle = '#4c4478'; ctx.fillRect(x, y + 6, w, base - y - 6);
         ctx.strokeStyle = 'rgba(16,10,32,.45)'; ctx.lineWidth = 1; for (let yy = y + 18; yy < base; yy += 14) for (let xx = x + ((yy / 14) % 2 ? 0 : 15); xx < x + w; xx += 30) ctx.strokeRect(xx, yy, 30, 14);
         ctx.fillStyle = '#6a62a0'; ctx.fillRect(x - 4, y - 2, w + 8, 10);
       } else {
-        ctx.fillStyle = '#5a3a58'; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 12, 5); ctx.fill();
-        ctx.fillStyle = '#4fae8e'; ctx.beginPath(); ctx.roundRect(x - 1, y - 4, w + 2, 5, 3); ctx.fill();
+        ctx.fillStyle = '#5a3a58'; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 12, 5); ctx.fill();
+        ctx.fillStyle = '#4fae8e'; ctx.beginPath(); canvasRoundRect(ctx, x - 1, y - 4, w + 2, 5, 3); ctx.fill();
       }
       ctx.strokeStyle = 'rgba(230,220,255,.55)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, y - 2); ctx.lineTo(x + w, y - 2); ctx.stroke();
     }
@@ -434,7 +452,7 @@
   // mountains, a lake with the sun's reflection, a rowboat, then the shore path, reed beds and
   // Calm's lily pads and wooden jetties (platforms).
   const LAKE_NIGHTS = [6, 7];
-  function inLake() { return mode === 'story' && LAKE_NIGHTS.includes(storyNight); }
+  function inLake() { return mode === 'story' && (LAKE_NIGHTS.includes(storyNight) || currentLevel?.map === 'lake'); }
   const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
   const lerpC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(',')})`; };
   function dawnP() {
@@ -534,7 +552,7 @@
       ctx.fillStyle = '#3a2830';
       for (const px of [x + 8, x + w / 2 - 3, x + w - 14]) ctx.fillRect(px, y + 8, 6, GROUND - y - 8);
       const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11); wood.addColorStop(0, '#b4876a'); wood.addColorStop(.4, '#7d5444'); wood.addColorStop(1, '#45293a');
-      ctx.fillStyle = wood; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 12, 3); ctx.fill();
+      ctx.fillStyle = wood; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 12, 3); ctx.fill();
       ctx.strokeStyle = 'rgba(30,16,26,.5)'; ctx.lineWidth = 1; for (let k = x + 16; k < x + w; k += 18) { ctx.beginPath(); ctx.moveTo(k, y - 1); ctx.lineTo(k, y + 9); ctx.stroke(); }
       ctx.strokeStyle = 'rgba(255,226,190,.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x + 1, y - 1); ctx.lineTo(x + w - 1, y - 1); ctx.stroke();
     }
@@ -547,7 +565,7 @@
   const PARK_NIGHTS = [3];
   const PARK_WALL = new Image();
   PARK_WALL.src = 'assets/park/park-night.webp';
-  function inPark() { return mode === 'story' && PARK_NIGHTS.includes(storyNight); }
+  function inPark() { return mode === 'story' && (PARK_NIGHTS.includes(storyNight) || currentLevel?.map === 'park'); }
   // ---------- Lighting festival map (Night 4) ----------
   // Far back: sky + pagoda hill picture (barely moves). Middle: palm and roof silhouettes in code.
   // Front: boardwalk over dark water, stalls (hiding spots), a few lantern strings, raised decks.
@@ -557,7 +575,7 @@
   const FEST_COLORS = ['255,156,207', '185,162,255', '143,227,224', '255,227,163', '255,143,163', '160,200,255'];
   const FEST_CLOTH = ['#7b2d8e', '#b8336a', '#1f7f86', '#3a5fc0', '#8e3fb0', '#2f8f5e'];
   const festCol = i => FEST_COLORS[((Math.floor(i) % FEST_COLORS.length) + FEST_COLORS.length) % FEST_COLORS.length];
-  function inFestival() { return mode === 'story' && FESTIVAL_NIGHTS.includes(storyNight); }
+  function inFestival() { return mode === 'story' && (FESTIVAL_NIGHTS.includes(storyNight) || currentLevel?.map === 'festival'); }
   function currentMapKey() {
     if (inSchool()) return 'school';
     if (inPark()) return 'park';
@@ -577,10 +595,33 @@
     { night: 6, name: 'Lakeside', sub: 'Meet Calm for the first time', theme: '#729579', musicRoot: 261.63, timeLimit: 135, rareChance: .22, feelingsNeeded: { L: 2, C: 2, S: 1, E: 1 }, newMoodling: 'Calm is too dim to come home. Walk slowly to gather 3 fireflies, then bring them to Calm', diary: 'She murmured something kind.', moodlingSpeed: 1.15, frustratedChargeSpeed: 1.10, frustratedWindup: .60, nervousHearingMul: 1.05, nervousPanicTime: 1.15, initialSpawns: { L: 1, C: 1, S: 1, E: 1 }, respawnDelay: 2.3, goldensAllowed: 1, chaosWave: false, chaosSize: {}, tutorialHints: false, tutorialHint: 'Calm sits dim by the lake. Walk slowly into 3 fireflies, then bring their light to Calm.' , sky: { A: 2, B: 1, C: 0, types: { A: ['L'], B: ['E'], C: [] }, wait: 1.4, fallSpeed: 130, gravity: 1100, scratchWindow: 1.4, ambushBase: 2, pounceWindowMul: 0.92, hintShown: false }},
     { night: 7, name: 'Sunrise', sub: 'Bring every feeling home before the sun rises', theme: '#d6a866', musicRoot: 293.66, timeLimit: 150, rareChance: .30, feelingsNeeded: { F: 3, N: 2, J: 2, L: 2, S: 2, E: 2, B: 2, C: 2 }, newMoodling: 'Every mechanic returns for the finale', diary: 'Morning.', moodlingSpeed: 1.25, frustratedChargeSpeed: 1.20, frustratedWindup: .55, nervousHearingMul: 1.10, nervousPanicTime: 1.20, initialSpawns: { F: 1, N: 1, J: 1, L: 1, S: 1, E: 1, B: 1, C: 1 }, respawnDelay: 2.0, goldensAllowed: 2, chaosWave: true, chaosSize: { F: 2, N: 2 }, tutorialHints: false, tutorialHint: 'Everything returns tonight. Keep calm and bring every feeling home.' , sky: { A: 4, B: 3, C: 3, wait: 1.1, fallSpeed: 145, gravity: 1200, scratchWindow: 1.1, ambushBase: 2, pounceWindowMul: 0.85, hintShown: false }}
   ];
+  const CHALLENGE_THEMES = ['#7893bb', '#8e78ae', '#628aa0', '#c17679', '#7181aa', '#729579', '#d6a866'];
+  const CHALLENGE_NAMES = ['Lantern Walk', 'Mossy Switchback', 'Moonlit Boardwalk', 'Quiet Rooftops', 'Reedbed Passage'];
+  const finalChapter = NIGHT_CHAPTERS[6];
+  for (let night = 8; night <= 50; night++) {
+    const chapter = {
+      ...finalChapter,
+      night,
+      name: `${CHALLENGE_NAMES[(night - 8) % CHALLENGE_NAMES.length]} ${String(night).padStart(2, '0')}`,
+      sub: `Challenge route ${night - 7} · more gaps and quicker bridges`,
+      theme: CHALLENGE_THEMES[(night - 8) % CHALLENGE_THEMES.length],
+      musicRoot: finalChapter.musicRoot * Math.pow(2, ((night - 8) % 9 - 4) / 12),
+      feelingsNeeded: { ...finalChapter.feelingsNeeded },
+      initialSpawns: { ...finalChapter.initialSpawns },
+      chaosSize: { ...finalChapter.chaosSize },
+      sky: { ...finalChapter.sky, hintShown: false }
+    };
+    NIGHT_CHAPTERS.push(chapter);
+  }
+  // These match the original movement curve; keeping them authored with the chapters lets the
+  // layout regression verify that every pit and roost remains reachable at its night's gravity.
+  NIGHT_CHAPTERS.forEach(chapter => { chapter.jumpSpeed = 830; chapter.jumpGravity = 2300; });
   const chapterFor = night => NIGHT_CHAPTERS[clamp(night - 1, 0, NIGHT_CHAPTERS.length - 1)];
   // The whole story is one night: each level is one hour, from 11 PM to sunrise.
   const NIGHT_HOURS = ['11 PM', 'Midnight', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM'];
-  const hourOf = night => NIGHT_HOURS[clamp(Math.floor(night) - 1, 0, NIGHT_HOURS.length - 1)];
+  const hourOf = night => Math.floor(night) <= NIGHT_HOURS.length
+    ? NIGHT_HOURS[clamp(Math.floor(night) - 1, 0, NIGHT_HOURS.length - 1)]
+    : `Night ${String(Math.floor(night)).padStart(2, '0')}`;
   const SLEEP_STAGES = [
     { faceVisible: 0, blanketLift: 0, handOut: 0, eyesOpen: 0, smile: 0, plant: 0, curtain: 0, room: .15 },
     { faceVisible: 1, blanketLift: 2, handOut: 0, eyesOpen: 0, smile: 0, plant: .15, curtain: .05, room: .22 },
@@ -593,7 +634,7 @@
   ];
   const STAGE_LINES = ['', 'She stopped crying in her sleep. I stayed close.', 'She turned toward the window. The moon touched her cheek.', 'Her hand found me in the dark. I did not move.', 'Her face is softer tonight. Something is mending.', 'Her eyelids fluttered. Almost, almost.', 'She stretched. The room smells like morning.', 'Morning. She opened her eyes.'];
   let unlockedLevel = 1, thiriSleepStage = 0, finalAwakeningSeen = false;
-  try { unlockedLevel = clamp(Math.floor(+localStorage.getItem('mk-progress') || 1), 1, 7); } catch (e) {}
+  try { unlockedLevel = clamp(Math.floor(+localStorage.getItem('mk-progress') || 1), 1, 50); } catch (e) {}
   try { thiriSleepStage = clamp(Math.floor(+localStorage.getItem('mk-thiri') || 0), 0, 7); } catch (e) {}
   try { finalAwakeningSeen = localStorage.getItem('mk-awakening-seen') === '1'; } catch (e) {}
   function saveStoryProgress() {
@@ -657,8 +698,26 @@
     rose: { name: 'Rose', c: '255,122,184', cost: 150 },
     sky: { name: 'Sky', c: '111,182,255', cost: 150 },
     lilac: { name: 'Lilac', c: '185,162,255', cost: 150 },
-    rainbow: { name: 'Rainbow', c: '255,255,255', cost: 180, rainbow: true }
+    rainbow: { name: 'Rainbow', c: '255,255,255', cost: 180, rainbow: true },
+    moon: { name: 'Moonlight', c: '214,226,255', cost: 0, stars: 12 },
+    starlight: { name: 'Starlight', c: '255,226,140', cost: 0, stars: 21 }
   };
+  const SCORE_PTS = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170 };
+  const STAR_GLOW = [0, 0, 25, 50];   // Glow for reaching 2 and 3 stars on an hour (first time only)
+  let nightStars = (() => { try { return JSON.parse(localStorage.getItem('mk-stars') || '{}') || {}; } catch (e) { return {}; } })();
+  function saveStars() { try { localStorage.setItem('mk-stars', JSON.stringify(nightStars)); } catch (e) {} }
+  function totalStars() { let s = 0; for (let n = 1; n <= 7; n++) s += nightStars[n] || 0; return s; }
+  function starGoals(night) {
+    const need = chapterFor(night)?.feelingsNeeded || {}, base = Object.entries(need).reduce((s, [k, v]) => s + v * (SCORE_PTS[k] || 0), 0);
+    const r = v => Math.round(v / 50) * 50;
+    return [0, r(base * 1.8 + 500), r(base * 2.6 + 1000)];
+  }
+  function starsFor(night, final, won) { if (!won) return 0; const g = starGoals(night); return final >= g[2] ? 3 : final >= g[1] ? 2 : 1; }
+  function grantStarTrails() {
+    const got = [];
+    for (const [k, tr] of Object.entries(TRAILS)) if (tr.stars && totalStars() >= tr.stars && !ownedTrails.includes(k)) { ownedTrails.push(k); got.push(tr.name); }
+    return got;
+  }
   let ownedCats = ['ginger'], itemStock = {}, ownedTrails = ['honey'], trailPick = 'honey', activeItems = {}, perkShield = 0;
   try {
     const oc = JSON.parse(localStorage.getItem('mk-cats') || 'null');
@@ -1021,6 +1080,7 @@
     timeLeft = Math.max(0, timeLeft - 1); shake = Math.max(shake, 8);
     sfx('ui', 'hit'); sfx('cat', 'sad'); float(cat.x, cat.y - 80, msg + '  −1s', RED);
   }
+  function onSlick(x) { return hazards.some(h => h.kind === 'slick' && x >= h.a && x <= h.b); }
   function hazNotice(kind, text, c) { if (hazSeen[kind]) return; hazSeen[kind] = true; announce(text, c, 2.4); }
   function hazPhase(h, period, idle, warn) { const q = ((t + h.off) % period + period) % period; return q < idle ? 'idle' : q < idle + warn ? 'warn' : 'on'; }
   function updHazards(dt) {
@@ -1073,6 +1133,11 @@
             if (Math.abs(cat.x - h.lx) < 34 && cat.y > gy - 70) knockCat(Math.sign(cat.x - h.lx) || -cat.face, 'Bonk!');
           }
         } else if (h.phase === 'lit') { h.tt -= dt; if (h.tt <= 0) { h.phase = 'idle'; h.tt = 2.6 + Math.random() * 2.2; } }
+      } else if (h.kind === 'slick') {
+        if (cat.on && cat.x >= h.a && cat.x <= h.b && Math.abs(cat.vx) > 120) {
+          hazNotice('slick', 'Wet mossy stones! Shwe slides, so slow down early.', '#9fe8ff');
+          if (Math.random() < dt * 14) parts.push({ x: cat.x - Math.sign(cat.vx) * 14, y: cat.y - 2, vx: -cat.vx * .2, vy: -60 - Math.random() * 50, life: .45, max: .45, c: 'rgba(160,225,240,.8)', r: 1.6 + Math.random() * 1.6, g: 500 });
+        }
       } else if (h.kind === 'wind') {
         const ph = hazPhase(h, 8, 4.4, 1.1); h.phase = ph;
         const near = cat.x > h.a - 300 && cat.x < h.b + 300;
@@ -1139,6 +1204,13 @@
         ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(0, 6, 34, 0, 7); ctx.fill();
         ctx.fillStyle = '#ff8f6b'; ctx.beginPath(); ctx.roundRect(-8, -2, 16, 18, 5); ctx.fill(); ctx.fillStyle = '#ffd38a'; ctx.fillRect(-8, 5, 16, 3); ctx.fillStyle = '#7a3d33'; ctx.fillRect(-5, -5, 10, 4); ctx.fillRect(-5, 15, 10, 3);
         ctx.restore();
+      } else if (h.kind === 'slick') {
+        if (h.b < x0 || h.a > x1) continue;
+        for (let x = Math.max(h.a, Math.floor(x0 / 22) * 22); x < Math.min(h.b, x1); x += 22) {
+          const r = Math.abs(Math.sin(x * 12.9898) * 43758.5453) % 1, y = terrainY(x + 11);
+          ctx.fillStyle = 'rgba(120,200,230,.28)'; ctx.beginPath(); ctx.ellipse(x + 11, y + 1, 15, 3, 0, 0, 7); ctx.fill(); ctx.fillStyle = r > .5 ? '#5b8f86' : '#6f9e8a'; ctx.beginPath(); ctx.ellipse(x + 11, y, 10 + r * 3, 6 + r * 2, 0, Math.PI, Math.PI * 2); ctx.fill(); ctx.fillStyle = 'rgba(70,140,80,.9)'; ctx.beginPath(); ctx.ellipse(x + 13, y - 5 - r * 2, 6, 2, .1, Math.PI, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = `rgba(210,245,255,${.55 + .35 * Math.sin(t * 2 + x)})`; ctx.beginPath(); ctx.ellipse(x + 7, y - 4 - r * 1.5, 3.5, 1.4, -.2, 0, 7); ctx.fill();
+        }
       } else if (h.kind === 'wind') {
         if (h.phase !== 'on' || h.b < x0 || h.a > x1) continue;
         ctx.strokeStyle = 'rgba(220,235,255,.22)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
@@ -1178,7 +1250,7 @@
     free: { kind: 'classic stones', label: 'rock', labelMarked: 'marked rock', xs: [], draw: drawClassicRockBase, debris: [{ shape: 'chip', color: '#77736f' }, { shape: 'chip', color: '#a29b8d' }, { shape: 'chip', color: '#5f6260' }], glow: '#c8baff' }
   };
 
-  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null }; }
+  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, alpha: 1 }; }
   function pickX() { let x, n = 0; do { x = levelSpawnX(); n++; } while ((Math.abs(x - cat.x) < 380 || (mode === 'story' && rocks.some(spot => Math.abs(x - spot.x) < 100))) && n < 40); return x; }
   function pickCaveX() {
     const occupied = new Set(mood.filter(m => !m.dead && m.caveX != null).map(m => m.caveX));
@@ -1197,7 +1269,7 @@
   }
   function hideFeeling(m, x) {
     if (m.spot) { m.spot.used = true; m.spot.usedAt = t; m.spot.scratching = false; }
-    const inCave = mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight === 7));
+    const inCave = mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight >= 7));
     m.x = x ?? (inCave ? pickCaveX() : pickX()); m.caveX = inCave ? m.x : null;
     m.y = terrainY(m.x) - (m.type === 'C' ? 46 : 30); m.st = 0; m.sit = 0; m.rev = 0; m.fleeAlarm = 0;
     const tutorialLonely = m.type === 'L' && mode === 'story' && storyNight <= 3;
@@ -1394,6 +1466,7 @@
     nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
     combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
     freeCapShown = false; activeItems = {}; perkShield = catPerk() === 'mainecoon' ? 1 : 0;
+    lives = 3; checkpointX = currentLevel.catStart ?? 200; fallDimT = 0; respawnT = 0; pitTipShown = false; edgeSoundAt = 0; pendingFallFail = false; jumpHeld = false;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
@@ -1439,6 +1512,13 @@
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     m.state = 'panic'; m.st = chapter?.nervousPanicTime ?? 1.1; m.dir = -(Math.sign(dx) || 1); m.alarm = 0; startles++;
     float(m.x, m.y - 34, 'Startled!', VIOLET); sfx('moodling', 'N');
+  }
+  function beginFall() {
+    if (cat.falling || cat.respawning || state !== 'play') return;
+    cat.y = Math.min(cat.y, VH + OY - 10);
+    cat.falling = true; cat.fallTime = 0; cat.fallFromX = cat.x; cat.vx = 0; cat.platform = null; cat.swinging = null;
+    jumpHeld = false; jumpQ = false; burst(cat.x, cat.y - 18, GOLD, 24); burst(cat.x, cat.y - 24, CALM, 14);
+    sfx('cat', 'sad'); sfx('ui', 'fall'); sfx('ui', 'poof');
   }
   function detachTrail(count) {
     let dropped = 0;
@@ -1625,28 +1705,94 @@
   }
 
   function updCat(dt) {
-    const c = cat; c.justLanded = false;
+    const c = cat;
+    if (c.falling) {
+      c.fallTime += dt;
+      if (c.fallTime >= .38) {
+        c.falling = false; c.respawning = true; c.swinging = null; c.platform = null;
+        if (mode === 'story' && !gentleMode) { lives = Math.max(0, lives - 1); sfx('ui', 'lifeLost'); }
+        if (mode === 'story' && !gentleMode && lives <= 0) {
+          // Catches already recorded in the Mood Book remain banked; this run's carried lights do not.
+          trail = []; got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); glowRun = 0; pendingFallFail = true;
+        } else if (mode === 'free') { timeLeft = Math.max(0, timeLeft - 5); float(c.x, c.y - 72, '−5 seconds', RED); }
+        else announce(gentleMode ? 'Gentle landing · try again' : `A life left · ${lives} remaining`, gentleMode ? CALM : GOLD, 1.7);
+        c.respawning = true; respawnT = .5; fallDimT = .5;
+      }
+      return;
+    }
+    if (c.respawning) {
+      respawnT -= dt; fallDimT = Math.max(0, fallDimT - dt);
+      if (respawnT <= 0) {
+        if (pendingFallFail) { pendingFallFail = false; finish(false, 'fall'); return; }
+        c.x = checkpointX; c.y = terrainY(checkpointX); c.vx = 0; c.vy = 0; c.on = true;
+        c.inv = 1.5; c.respawning = false; c.coyote = 0; c.jumpBuffer = 0;
+        hist = []; sfx('ui', 'respawn'); burst(c.x, c.y - 20, CALM, 16); announce('Back at the lantern!', CALM, 1.2);
+      }
+      return;
+    }
+    c.justLanded = false;
+    if (jumpQ) c.jumpBuffer = .12; else c.jumpBuffer = Math.max(0, c.jumpBuffer - dt);
     const a = axisNow(), sneaking = a !== 0 && Math.abs(a) < .55;
     if (a !== 0) onTutorialAction('move', c);
     if (sneaking) onTutorialAction('sneak', c);
     const target = a === 0 ? 0 : Math.sign(a) * (sneaking ? 2 * T : uv('swift') * T);
     c.sneak = sneaking;
+    window.TCGameAudio?.setSneaking(sneaking);
     if (c.pounce > 0) c.pounce -= dt;
-    else { const acc = c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
-    if (jumpQ && c.on && c.pounce <= 0) { c.vy = -830; c.on = false; onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240); }
+    else { const slick = c.on && onSlick(c.x), acc = slick ? (Math.abs(target) > Math.abs(c.vx) && Math.sign(target) === Math.sign(c.vx || target) ? 700 : 220) : c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
+    const chapter = mode === 'story' ? chapterFor(storyNight) : null;
+    const jumpSpeed = chapter?.jumpSpeed || 830, gravity = chapter?.jumpGravity || 2300;
+    if (c.swinging) {
+      if (jumpHeld) {
+        const p = c.swinging, anchor = p.anchor || [p[0] + p[2] / 2, p[1] - 60];
+        c.x = anchor[0] + Math.sin(t * 2.5) * 28; c.y = anchor[1] + 34 + Math.sin(t * 2.5 + .4) * 14;
+        c.vx = Math.cos(t * 2.5) * 70; c.vy = 0; c.on = false; c.platform = null; jumpQ = false; return;
+      }
+      c.swinging = null; c.vx = c.face * 360; c.vy = -720; c.on = false; c.jumpBuffer = 0; sfx('ui', 'jump');
+    }
+    const wasOn = c.on, py = c.y;
+    if (c.jumpBuffer > 0 && (c.on || c.coyote > 0) && c.pounce <= 0) {
+      c.vy = -jumpSpeed; c.on = false; c.coyote = 0; c.jumpBuffer = 0;
+      onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240);
+    }
     jumpQ = false;
     if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) { sfx('ui', 'pounce'); catVoice('trill', .25); } else tone(240, .1, 'square', .035, 320); }
     pounceQ = false;
     c.pcd -= dt; c.inv -= dt; c.squash = Math.max(0, c.squash - dt);
-    const wasOn = c.on, py = c.y, wasOnTrail = wasOn && Math.abs(c.y - terrainY(c.x)) < 2;
     if (c.platform && !c.platform.active) c.platform = null;
-    c.vy += 2300 * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.x = clamp(c.x, 30, WORLD - 30);
+    c.vy += gravity * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.x = clamp(c.x, 30, WORLD - 30);
     let landed = false, landedOn = null;
     const floorY = terrainY(c.x);
-    if (c.y >= floorY || (wasOnTrail && c.vy >= 0)) { c.y = floorY; landed = true; }
-    else if (c.vy >= 0) { for (const p of activePlats) { if (!p.active) continue; if (c.x > p[0] - 6 && c.x < p[0] + p[2] + 6 && py <= p[1] + .5 && c.y >= p[1]) { c.y = p[1]; landed = true; landedOn = p; break; } } }
-    if (landed) { if (!wasOn) { c.justLanded = true; if (c.vy > 500) { c.squash = .16; sfx('ui', 'land'); } } c.vy = 0; c.platform = landedOn; if (landedOn?.type === 'crumbling' && landedOn.crumbleRemaining <= 0) landedOn.crumbleRemaining = 1; if (landedOn?.type === 'bouncy' && !wasOn) { c.vy = -960; c.on = false; c.bounced = true; sfx('ui', 'jump'); } } else c.platform = null;
+    const pit = pitAt(c.x);
+    if (!pit && c.vy >= 0 && py <= floorY + 4 && c.y >= floorY) { c.y = floorY; landed = true; }
+    else if (c.vy >= 0) {
+      for (const p of activePlats) {
+        if (!p.active || p.type === 'swinging') continue;
+        const pad = p.type === 'moving' ? 16 : 6;
+        if (c.x > p[0] - pad && c.x < p[0] + p[2] + pad && py <= p[1] + .5 && c.y >= p[1]) { c.y = p[1]; landed = true; landedOn = p; break; }
+      }
+    }
+    if (jumpHeld && !landed) {
+      const rope = activePlats.find(p => p.type === 'swinging' && p.anchor && Math.abs(c.x - p.anchor[0]) < p[2] / 2 + 24 && Math.abs(c.y - p.anchor[1]) < 34);
+      if (rope) { c.swinging = rope; c.on = false; c.vy = 0; jumpQ = false; return; }
+    }
+    if (landed) {
+      if (!wasOn) { c.justLanded = true; if (c.vy > 500) { c.squash = .16; sfx('ui', 'land'); } }
+      c.vy = 0; c.platform = landedOn;
+      if (landedOn?.type === 'crumbling' && landedOn.crumbleRemaining <= 0) { landedOn.crumbleRemaining = .6; sfx('ui', 'crumble'); }
+      if (landedOn?.type === 'moving' && !wasOn) sfx('ui', 'platformHum');
+      if (landedOn?.type === 'bouncy' && !wasOn) { c.vy = -960; c.on = false; c.bounced = true; sfx('ui', 'jump'); }
+    } else c.platform = null;
     c.on = landed && !(landedOn?.type === 'bouncy' && !wasOn);
+    c.coyote = c.on ? .1 : Math.max(0, c.coyote - dt);
+    if (c.on && !pitAt(c.x)) {
+      for (const mark of currentLevel.checkpoints || []) if (Math.abs(c.x - mark) < 30 && Math.abs(checkpointX - mark) > 20) { checkpointX = mark; sfx('ui', 'checkpoint'); burst(mark, terrainY(mark) - 8, GOLD, 12); announce('Lantern checkpoint saved', GOLD, 1.5); }
+    }
+    if (!pitTipShown && (currentLevel.pits || []).some(([a, b]) => c.x >= a - 190 && c.x <= b + 190)) {
+      pitTipShown = true; announce(mode === 'story' && storyNight === 2 ? 'Careful! Shwe can fall here' : 'Careful near the edge!', GOLD, 2); sfx('ui', 'edge');
+    }
+    if (Math.abs(c.vx) > 0 && (currentLevel.pits || []).some(([a, b]) => c.x >= a - 52 && c.x <= b + 52) && t >= edgeSoundAt) { edgeSoundAt = t + 1.2; sfx('ui', 'edge'); }
+    if (c.y > VH + OY - 10) beginFall();
     if (c.on && Math.abs(c.vx) > 90) {
       c.walk += dt * Math.abs(c.vx) / 30;
       const stepBeat = Math.floor(c.walk / 1.7);
@@ -1927,6 +2073,16 @@
     shake = Math.max(0, shake - dt * 24);
     updateLevelPlatforms(dt);
     updCat(dt);
+    if (cat.falling || cat.respawning) {
+      for (const p of parts) { p.life -= dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .98; }
+      parts = parts.filter(p => p.life > 0);
+      for (const f of floats) { f.life -= dt; f.y -= 40 * dt; }
+      floats = floats.filter(f => f.life > 0);
+      if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
+      const target = clamp(cat.x - VW * .36, 0, Math.max(0, WORLD - VW));
+      camX += (target - camX) * Math.min(1, dt * 6);
+      return;
+    }
     const last = hist[hist.length - 1];
     if (!last || Math.hypot(last.x - cat.x, last.y - cat.y) > 3) { hist.push({ x: cat.x, y: cat.y }); if (hist.length > 500) hist.shift(); }
     if (purrQ && upg.purr > 0 && purrCd <= 0) {
@@ -1968,7 +2124,7 @@
       }
       const sec = Math.ceil(timeLeft);
       if (sec <= 10 && sec < lastTick) { lastTick = sec; if (window.TCSfx) sfx('ui', sec <= 3 ? 'urgent' : 'countdown'); else tone(sec <= 3 ? 1200 : 880, .06, 'square', .03); }
-      if (timeLeft <= 0) { timeLeft = 0; sfx('ui', 'timeup'); finish(false); }
+      if (timeLeft <= 0 && !pendingFallFail) { timeLeft = 0; sfx('ui', 'timeup'); finish(false); }
     } else if (state === 'ending') {
       endT -= dt; if (endT <= 0) finish(true);
     }
@@ -1983,7 +2139,7 @@
     for (const f of floats) { f.life -= dt; f.y -= 40 * dt; }
     floats = floats.filter(f => f.life > 0);
     if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
-    const target = clamp(cat.x - VW * .42, 0, Math.max(0, WORLD - VW));
+    const target = clamp(cat.x - VW * .36, 0, Math.max(0, WORLD - VW));
     camX += (target - camX) * Math.min(1, dt * 6);
     scratchSpots = scratchSpots.filter(spot => !spot.used || t - spot.usedAt < 1.3);
   }
@@ -2230,10 +2386,10 @@
       ctx.fillStyle='#ffd98a'; ctx.beginPath(); ctx.moveTo(20,-17); ctx.lineTo(27,-14); ctx.lineTo(22,-7); ctx.lineTo(16,-11); ctx.closePath(); ctx.fill();
     } else if (spot.variant === 1) {
       ctx.strokeStyle='#49385b'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(-14,-31); ctx.quadraticCurveTo(0,-47,14,-31); ctx.stroke();
-      ctx.fillStyle='#7860a0'; ctx.beginPath(); ctx.roundRect(-29,-34,58,34,10); ctx.fill(); ctx.fillStyle='#a48bc4'; ctx.beginPath(); ctx.roundRect(-20,-19,40,15,5); ctx.fill(); ctx.fillStyle='#d5c7e8'; ctx.fillRect(-3,-18,6,9);
+      ctx.fillStyle='#7860a0'; ctx.beginPath(); canvasRoundRect(ctx, -29,-34,58,34,10); ctx.fill(); ctx.fillStyle='#a48bc4'; ctx.beginPath(); canvasRoundRect(ctx, -20,-19,40,15,5); ctx.fill(); ctx.fillStyle='#d5c7e8'; ctx.fillRect(-3,-18,6,9);
       ctx.strokeStyle='#cdbb7d'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(30,-22); ctx.lineTo(37,-16); ctx.stroke(); ctx.fillStyle='#f3ca69'; ctx.beginPath(); ctx.arc(39,-13,4,0,7); ctx.fill();
     } else {
-      ctx.fillStyle='#76543e'; ctx.fillRect(-34,-29,68,29); ctx.fillStyle='#a47a55'; ctx.fillRect(-38,-34,76,8); ctx.strokeStyle='#49352f'; ctx.lineWidth=2; ctx.strokeRect(-34,-29,68,29); ctx.fillStyle='#f2dfb6'; ctx.beginPath(); ctx.roundRect(-20,-24,40,14,3); ctx.fill(); ctx.fillStyle='#684c42'; ctx.fillRect(-14,-19,28,2); ctx.fillRect(-10,-15,20,2); ctx.fillStyle='#efb4ce'; ctx.fillRect(19,-34,10,7);
+      ctx.fillStyle='#76543e'; ctx.fillRect(-34,-29,68,29); ctx.fillStyle='#a47a55'; ctx.fillRect(-38,-34,76,8); ctx.strokeStyle='#49352f'; ctx.lineWidth=2; ctx.strokeRect(-34,-29,68,29); ctx.fillStyle='#f2dfb6'; ctx.beginPath(); canvasRoundRect(ctx, -20,-24,40,14,3); ctx.fill(); ctx.fillStyle='#684c42'; ctx.fillRect(-14,-19,28,2); ctx.fillRect(-10,-15,20,2); ctx.fillStyle='#efb4ce'; ctx.fillRect(19,-34,10,7);
     }
     ctx.restore();
   }
@@ -2258,7 +2414,7 @@
     } else if (spot.variant === 1) {
       for(const [px,py,r,c] of [[-19,-13,15,'#a85d52'],[9,-11,18,'#8e514d'],[22,-7,12,'#bb755d']]) {ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(px-r,py-2);ctx.quadraticCurveTo(px-r,py-r,px,py-r);ctx.quadraticCurveTo(px+r,py-r,px+r,py-2);ctx.quadraticCurveTo(px+r,py+r,px,py+r);ctx.quadraticCurveTo(px-r,py+r,px-r,py-2);ctx.closePath();ctx.fill();ctx.fillStyle='#d89577';ctx.beginPath();ctx.ellipse(px,py-r+2,r*.55,3,0,0,7);ctx.fill();ctx.fillStyle='rgba(56,29,34,.5)';ctx.beginPath();ctx.ellipse(px,py+1,r*.45,2,0,0,7);ctx.fill();}
     } else {
-      ctx.fillStyle='#9d704c'; ctx.beginPath(); ctx.roundRect(-37,-20,74,18,3); ctx.fill(); ctx.strokeStyle='#d0aa73';ctx.lineWidth=1.4;for(let xx=-28;xx<38;xx+=8){ctx.beginPath();ctx.moveTo(xx,-19);ctx.lineTo(xx,-3);ctx.stroke();}for(let yy=-15;yy<-2;yy+=6){ctx.beginPath();ctx.moveTo(-35,yy);ctx.lineTo(35,yy);ctx.stroke();}
+      ctx.fillStyle='#9d704c'; ctx.beginPath(); canvasRoundRect(ctx, -37,-20,74,18,3); ctx.fill(); ctx.strokeStyle='#d0aa73';ctx.lineWidth=1.4;for(let xx=-28;xx<38;xx+=8){ctx.beginPath();ctx.moveTo(xx,-19);ctx.lineTo(xx,-3);ctx.stroke();}for(let yy=-15;yy<-2;yy+=6){ctx.beginPath();ctx.moveTo(-35,yy);ctx.lineTo(35,yy);ctx.stroke();}
       for(const [lx,ly,c] of [[-20,-41,'#ffb569'],[20,-45,'#ffc7a2']]) {ctx.strokeStyle='#765249';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(lx,ly-7);ctx.lineTo(lx,ly-1);ctx.stroke();ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(lx-7,ly);ctx.lineTo(lx+7,ly);ctx.lineTo(lx+5,ly+17);ctx.lineTo(lx-5,ly+17);ctx.closePath();ctx.fill();ctx.strokeStyle='#8f554e';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(lx-6,ly+5);ctx.lineTo(lx+6,ly+5);ctx.moveTo(lx-5,ly+12);ctx.lineTo(lx+5,ly+12);ctx.stroke();ctx.fillStyle='#8f554e';ctx.fillRect(lx-2,ly+17,4,3);}
     }
     ctx.restore();
@@ -2425,7 +2581,7 @@
         const lc = festCol(k + i);
         const g = ctx.createRadialGradient(lx, ly + 8, 1, lx, ly + 8, 22); g.addColorStop(0, `rgba(${lc},.32)`); g.addColorStop(1, `rgba(${lc},0)`);
         ctx.fillStyle = g; ctx.fillRect(lx - 22, ly - 14, 44, 44);
-        ctx.fillStyle = `rgb(${lc})`; ctx.beginPath(); ctx.roundRect(lx - 6, ly, 12, 16, 4); ctx.fill();
+        ctx.fillStyle = `rgb(${lc})`; ctx.beginPath(); canvasRoundRect(ctx, lx - 6, ly, 12, 16, 4); ctx.fill();
         ctx.strokeStyle = 'rgba(150,40,40,.8)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(lx - 6, ly + 4); ctx.lineTo(lx + 6, ly + 4); ctx.moveTo(lx - 6, ly + 12); ctx.lineTo(lx + 6, ly + 12); ctx.stroke();
         ctx.fillStyle = '#b8323a'; ctx.fillRect(lx - 1, ly + 16, 2, 8);
       }
@@ -2451,12 +2607,12 @@
     // raised wooden decks = platforms
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = p[1], w = p[2];
+      const x = p[0], y = platformDrawY(p), w = p[2];
       ctx.fillStyle = '#2a1a20'; ctx.fillRect(x + 10, y + 8, 7, GROUND - y - 8); ctx.fillRect(x + w - 17, y + 8, 7, GROUND - y - 8);
       ctx.strokeStyle = 'rgba(42,26,32,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 14, y + 12); ctx.lineTo(x + w - 14, GROUND - 20); ctx.stroke();
       const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11);
       wood.addColorStop(0, '#a77a5a'); wood.addColorStop(.4, '#74503e'); wood.addColorStop(1, '#3e2832');
-      ctx.fillStyle = wood; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 12, 3); ctx.fill();
+      ctx.fillStyle = wood; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 12, 3); ctx.fill();
       ctx.strokeStyle = 'rgba(255,214,160,.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x + 2, y); ctx.lineTo(x + w - 2, y); ctx.stroke();
     }
     for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
@@ -2510,10 +2666,10 @@
     const PARK_DECKS = ['#2fa69a', '#8b6fe0', '#3fb98a'];
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = p[1], w = p[2], c = PARK_DECKS[Math.abs(Math.round(x / 97)) % PARK_DECKS.length];
+      const x = p[0], y = platformDrawY(p), w = p[2], c = PARK_DECKS[Math.abs(Math.round(x / 97)) % PARK_DECKS.length];
       ctx.fillStyle = '#6f6aa0'; ctx.fillRect(x + 10, y + 8, 6, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 6, GROUND - y - 8);
       ctx.fillStyle = 'rgba(200,196,240,.35)'; ctx.fillRect(x + 10, y + 8, 2, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 2, GROUND - y - 8);
-      ctx.fillStyle = c; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 13, 5); ctx.fill();
+      ctx.fillStyle = c; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 13, 5); ctx.fill();
       ctx.strokeStyle = 'rgba(10,8,30,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 3, y + 1); ctx.lineTo(x + w - 3, y + 1); ctx.stroke();
     }
@@ -2596,13 +2752,13 @@
     // wooden wall shelves = the platforms
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = p[1], w = p[2];
+      const x = p[0], y = platformDrawY(p), w = p[2];
       ctx.fillStyle = 'rgba(8,6,18,.35)'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + 30, w * .45, 7, 0, 0, 7); ctx.fill();
       ctx.fillStyle = '#3a2a35';
       for (const bx of [x + 16, x + w - 26]) { ctx.beginPath(); ctx.moveTo(bx, y + 9); ctx.lineTo(bx + 10, y + 9); ctx.lineTo(bx + 10, y + 26); ctx.closePath(); ctx.fill(); }
       const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11);
       wood.addColorStop(0, '#8a5e4c'); wood.addColorStop(.4, '#6a4438'); wood.addColorStop(1, '#3a2430');
-      ctx.fillStyle = wood; ctx.beginPath(); ctx.roundRect(x - 3, y - 2, w + 6, 12, 4); ctx.fill();
+      ctx.fillStyle = wood; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 12, 4); ctx.fill();
       ctx.strokeStyle = 'rgba(16,10,22,.8)'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.strokeStyle = 'rgba(255,214,160,.75)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 2, y); ctx.lineTo(x + w - 2, y); ctx.stroke();
     }
@@ -2630,21 +2786,54 @@
     const start = Math.max(0, Math.floor(x0 / 18) * 18), end = Math.min(WORLD, x1);
     for (let x = start; x <= end; x += 18) { const y = terrainY(x); x === start ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
     ctx.stroke();
-    // Pits are short drops to a visible lower path, never lethal voids.
-    for (const [a,b,lower] of currentLevel.gaps || []) {
+    // Dark, open gaps cut through each map's floor; edge lights make every landing decision readable.
+    for (const [a,b] of currentLevel.pits || []) {
       if (b < x0 || a > x1) continue;
-      const g = ctx.createLinearGradient(0, levelGroundY(a), 0, lower + 26);
-      g.addColorStop(0, map === 'festival' || map === 'lake' ? 'rgba(30,48,78,.9)' : 'rgba(16,14,30,.86)'); g.addColorStop(1, 'rgba(8,10,22,.98)');
-      ctx.fillStyle = g; ctx.fillRect(a, levelGroundY(a) - 2, b - a, lower - levelGroundY(a) + 30);
-      ctx.fillStyle = map === 'festival' ? 'rgba(255,193,124,.75)' : map === 'lake' ? 'rgba(143,222,241,.72)' : 'rgba(150,150,180,.45)';
-      ctx.fillRect(a, lower, b - a, 4);
-      if (map === 'lake' || map === 'festival') { ctx.strokeStyle = 'rgba(195,235,255,.34)'; ctx.lineWidth = 1; for (let y = lower + 10; y < lower + 24; y += 8) { ctx.beginPath(); ctx.moveTo(a + 4, y + Math.sin(t * 2 + y) * 2); ctx.lineTo(b - 4, y + Math.sin(t * 2 + y) * 2); ctx.stroke(); } }
+      const top = Math.min(levelGroundY(a), levelGroundY(b)), bottom = VH + OY + 70;
+      const glow = map === 'festival' || map === 'lake' ? 'rgba(32,75,105,.82)' : map === 'park' ? 'rgba(12,30,42,.9)' : map === 'hill' ? 'rgba(14,11,32,.96)' : 'rgba(12,9,24,.94)';
+      const g = ctx.createLinearGradient(0, top, 0, bottom); g.addColorStop(0, glow); g.addColorStop(.35, 'rgba(8,9,21,.98)'); g.addColorStop(1, '#080814');
+      ctx.fillStyle = g; ctx.fillRect(a, top - 4, b - a, bottom - top + 8);
+      ctx.fillStyle = dark; ctx.beginPath(); ctx.moveTo(a - 2, top - 3); ctx.lineTo(a + 8, top + 10); ctx.lineTo(a + 8, bottom); ctx.lineTo(a - 2, bottom); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(b + 2, top - 3); ctx.lineTo(b - 8, top + 10); ctx.lineTo(b - 8, bottom); ctx.lineTo(b + 2, bottom); ctx.closePath(); ctx.fill();
+      if (map === 'school') {
+        ctx.strokeStyle = 'rgba(201,181,221,.38)'; ctx.lineWidth = 2;
+        for (const ex of [a + 9, b - 9]) for (let n = 0; n < 5; n++) { const yy = top + 24 + n * 23; ctx.beginPath(); ctx.moveTo(ex, yy); ctx.lineTo(ex + (ex < (a+b)/2 ? 1 : -1) * (10 + n * 3), yy + 6); ctx.stroke(); }
+      } else if (map === 'festival' || map === 'lake') {
+        ctx.strokeStyle = 'rgba(143,222,241,.42)'; ctx.lineWidth = 1.5;
+        for (let y = top + 32; y < bottom; y += 18) { ctx.beginPath(); ctx.moveTo(a + 7, y + Math.sin(t * 2 + y) * 2); ctx.quadraticCurveTo((a+b)/2, y - 3, b - 7, y + Math.sin(t * 2.3 + y) * 2); ctx.stroke(); }
+      }
+      const edgeColor = map === 'festival' ? 'rgba(255,193,124,.9)' : map === 'lake' ? 'rgba(143,222,241,.9)' : map === 'park' ? 'rgba(166,237,192,.84)' : 'rgba(255,220,164,.82)';
+      ctx.strokeStyle = edgeColor; ctx.lineWidth = 3;
+      for (const edge of [a, b]) { ctx.beginPath(); ctx.moveTo(edge - 14, levelGroundY(edge) - 3); ctx.lineTo(edge + (edge === a ? 10 : -10), levelGroundY(edge) + 5); ctx.stroke(); }
+      for (const edge of [a + 15, b - 15]) for (let n = 0; n < 3; n++) { const sx = edge + n * (edge === a + 15 ? 12 : -12), sy = top - 9 - Math.sin(t * 3 + n) * 2; ctx.fillStyle = edgeColor; ctx.beginPath(); ctx.arc(sx, sy, 1.8, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = 'rgba(24,17,42,.92)'; ctx.strokeStyle = edgeColor; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc((a+b)/2, top - 22, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.font = `800 13px ${DISP}`; ctx.textAlign = 'center'; ctx.fillStyle = INK; ctx.fillText('!', (a+b)/2, top - 17);
+    }
+    for (const mark of currentLevel.checkpoints || []) {
+      if (mark < x0 - 30 || mark > x1 + 30) continue;
+      const gy = terrainY(mark), pulse = .7 + .3 * Math.sin(t * 3 + mark);
+      ctx.fillStyle = `rgba(255,210,110,${.12 * pulse})`; ctx.beginPath(); ctx.arc(mark, gy - 26, 27, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(145,103,77,.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(mark - 8, gy); ctx.lineTo(mark - 8, gy - 30); ctx.lineTo(mark + 8, gy - 30); ctx.lineTo(mark + 8, gy); ctx.stroke();
+      ctx.fillStyle = `rgba(255,219,135,${pulse})`; ctx.beginPath(); canvasRoundRect(ctx, mark - 5, gy - 27, 10, 15, 4); ctx.fill();
+      ctx.fillStyle = 'rgba(246,236,190,.85)'; ctx.fillRect(mark - 2, gy - 24, 4, 7);
+      ctx.fillStyle = 'rgba(243,236,255,.8)'; ctx.beginPath(); ctx.arc(mark, gy + 3, 3, 0, Math.PI*2); ctx.fill();
     }
     // Existing map-specific platform rendering remains; this adds distinct type cues and state.
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x=p[0], y=p[1], w=p[2];
+      const x=p[0], y=platformDrawY(p), w=p[2];
       if (p.type === 'moving') { ctx.strokeStyle='rgba(255,233,165,.42)'; ctx.lineWidth=1; ctx.setLineDash([5,5]); ctx.strokeRect(x-3,y-5,w+6,17); ctx.setLineDash([]); }
+      if (p.skin === 'boat' || p.skin === 'log') {
+        ctx.fillStyle = p.skin === 'boat' ? '#704b4b' : '#72523c'; ctx.beginPath(); ctx.moveTo(x - 2, y + 2); ctx.lineTo(x + w + 2, y + 2); ctx.quadraticCurveTo(x + w * .84, y + 16, x + w * .5, y + 15); ctx.quadraticCurveTo(x + w * .14, y + 16, x - 2, y + 2); ctx.fill();
+        ctx.fillStyle = p.skin === 'boat' ? '#d6aa5a' : '#ad8055'; ctx.fillRect(x + 5, y - 2, w - 10, 4);
+      }
+      if (p.type === 'swinging' && p.anchor) {
+        const [ax, ay] = p.anchor, sway = Math.sin(t * (p.speed || .8)) * 15;
+        ctx.strokeStyle = 'rgba(255,220,164,.82)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax - 18, ay - 28); ctx.quadraticCurveTo(ax + sway, ay - 14, ax + sway, ay + 4); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,205,111,.18)'; ctx.beginPath(); ctx.arc(ax + sway, ay + 10, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffd98a'; ctx.beginPath(); canvasRoundRect(ctx, ax + sway - 8, ay + 3, 16, 19, 5); ctx.fill();
+        ctx.strokeStyle = 'rgba(113,74,96,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax + sway - 4, ay + 10); ctx.lineTo(ax + sway + 4, ay + 10); ctx.stroke();
+      }
       if (p.type === 'crumbling') { const fade = p.crumbleRemaining > 0 ? .45 + .4 * p.crumbleRemaining : 1; ctx.globalAlpha=fade; ctx.strokeStyle=dark; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x+w*.34,y+1); ctx.lineTo(x+w*.42,y+7); ctx.lineTo(x+w*.48,y+3); ctx.moveTo(x+w*.68,y+1); ctx.lineTo(x+w*.61,y+6); ctx.stroke(); ctx.globalAlpha=1; }
       if (p.type === 'bouncy') { ctx.fillStyle=mid; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.fill(); ctx.strokeStyle=light; ctx.lineWidth=1.5; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.stroke(); }
     }
@@ -2657,7 +2846,7 @@
       else if (prop.kind === 'bench') { ctx.fillStyle=dark;ctx.fillRect(x,gy-28,w,6);ctx.fillRect(x,gy-42,w,6);ctx.fillRect(x+8,gy-22,6,22);ctx.fillRect(x+w-14,gy-22,6,22);ctx.strokeStyle=light;ctx.lineWidth=1;ctx.strokeRect(x+2,gy-40,w-4,3); }
       else if (prop.kind === 'swing') { ctx.strokeStyle=dark;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x,gy);ctx.lineTo(x+12,gy-88);ctx.lineTo(x+w-12,gy-88);ctx.lineTo(x+w,gy);ctx.stroke();ctx.strokeStyle=light;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+35,gy-86);ctx.lineTo(x+35,gy-24);ctx.moveTo(x+w-35,gy-86);ctx.lineTo(x+w-35,gy-24);ctx.stroke();ctx.fillStyle=mid;ctx.fillRect(x+27,gy-25,w-54,6); }
       else if (prop.kind === 'stall') { ctx.fillStyle=dark;ctx.fillRect(x+10,gy-54,7,54);ctx.fillRect(x+w-17,gy-54,7,54);ctx.fillStyle=mid;ctx.beginPath();ctx.moveTo(x,gy-50);ctx.lineTo(x+w/2,gy-82);ctx.lineTo(x+w,gy-50);ctx.closePath();ctx.fill();ctx.fillStyle=light;for(let k=0;k<4;k++)ctx.fillRect(x+8+k*(w-16)/4,gy-52,(w-16)/8,7); }
-      else if (prop.kind === 'lanterns') { ctx.strokeStyle=dark;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,gy-102);ctx.quadraticCurveTo(x+w/2,gy-62,x+w,gy-102);ctx.stroke();for(let k=1;k<6;k++){const lx=x+k*w/6,ly=gy-102+40*(4*k/6)*(1-k/6);ctx.fillStyle=light;ctx.beginPath();ctx.roundRect(lx-5,ly,10,15,3);ctx.fill();ctx.fillRect(lx-1,ly+15,2,7);} }
+      else if (prop.kind === 'lanterns') { ctx.strokeStyle=dark;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,gy-102);ctx.quadraticCurveTo(x+w/2,gy-62,x+w,gy-102);ctx.stroke();for(let k=1;k<6;k++){const lx=x+k*w/6,ly=gy-102+40*(4*k/6)*(1-k/6);ctx.fillStyle=light;ctx.beginPath();canvasRoundRect(ctx, lx-5,ly,10,15,3);ctx.fill();ctx.fillRect(lx-1,ly+15,2,7);} }
       else if (prop.kind === 'boat' || prop.kind === 'log') { const yy=prop.kind==='boat'?gy-9:gy-12;ctx.fillStyle=dark;ctx.beginPath();ctx.moveTo(x,yy);ctx.lineTo(x+w,yy);ctx.quadraticCurveTo(x+w*.8,yy+19,x+w*.5,yy+18);ctx.quadraticCurveTo(x+w*.15,yy+18,x,yy);ctx.fill();ctx.fillStyle=mid;ctx.fillRect(x+8,yy-4,w-16,5);if(prop.kind==='boat'){ctx.strokeStyle=light;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+w*.5,yy-6);ctx.lineTo(x+w*.5,yy-42);ctx.lineTo(x+w*.75,yy-10);ctx.stroke();} }
       else if (prop.kind === 'branch') { ctx.strokeStyle=dark;ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(x,gy-12);ctx.quadraticCurveTo(x+w*.45,gy-50,x+w,gy-30);ctx.stroke();ctx.strokeStyle=mid;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+w*.4,gy-28);ctx.lineTo(x+w*.3,gy-56);ctx.moveTo(x+w*.72,gy-32);ctx.lineTo(x+w*.82,gy-58);ctx.stroke(); }
       else if (prop.kind === 'stone' || prop.kind === 'stones') { for(let k=0;k<3;k++){const xx=x+k*(w/3),ww=Math.min(40,w/3-4),yy=gy-7-(k%2)*7;ctx.fillStyle=k%2?mid:dark;ctx.beginPath();ctx.ellipse(xx+ww/2,yy,ww/2,7,0,Math.PI,Math.PI*2);ctx.fill();ctx.strokeStyle=light;ctx.lineWidth=1;ctx.stroke();} }
@@ -2706,7 +2895,7 @@
     for(const spot of scratchSpots){if(spot.x<x0-60||spot.x>x1+60)continue;drawScratchSpot(spot.x,spot.y,spot.moodType,spot);}
     for(const rock of rocks){if(rock.x<x0-80||rock.x>x1+80)continue;drawRockFormation(rock.x,rock.y,rock,rockHoldsFeeling(rock));}
     for(const p of activePlats){if(!p.active||p[0]+p[2]<x0||p[0]>x1)continue;
-      const x=p[0],y=p[1],w=p[2];ctx.fillStyle='#27333a';ctx.beginPath();ctx.moveTo(x-4,y+13);ctx.lineTo(x+4,y+4);ctx.quadraticCurveTo(x+w*.21,y+12,x+w*.34,y+6);ctx.quadraticCurveTo(x+w*.58,y-1,x+w*.76,y+8);ctx.lineTo(x+w+5,y+11);ctx.lineTo(x+w-8,y+28);ctx.lineTo(x+10,y+28);ctx.closePath();ctx.fill();
+      const x=p[0],y=platformDrawY(p),w=p[2];ctx.fillStyle='#27333a';ctx.beginPath();ctx.moveTo(x-4,y+13);ctx.lineTo(x+4,y+4);ctx.quadraticCurveTo(x+w*.21,y+12,x+w*.34,y+6);ctx.quadraticCurveTo(x+w*.58,y-1,x+w*.76,y+8);ctx.lineTo(x+w+5,y+11);ctx.lineTo(x+w-8,y+28);ctx.lineTo(x+10,y+28);ctx.closePath();ctx.fill();
       const rock=ctx.createLinearGradient(0,y,0,y+18);rock.addColorStop(0,'#596458');rock.addColorStop(.36,'#49514b');rock.addColorStop(1,'#303a3b');ctx.fillStyle=rock;ctx.beginPath();ctx.moveTo(x-2,y+7);ctx.quadraticCurveTo(x+w*.2,y+3,x+w*.4,y+8);ctx.quadraticCurveTo(x+w*.72,y+2,x+w+3,y+6);ctx.lineTo(x+w-4,y+15);ctx.quadraticCurveTo(x+w*.6,y+12,x+w*.35,y+16);ctx.quadraticCurveTo(x+w*.1,y+12,x-2,y+17);ctx.closePath();ctx.fill();
       ctx.strokeStyle='rgba(168,183,150,.68)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y+7);ctx.quadraticCurveTo(x+w*.3,y+2,x+w*.55,y+7);ctx.quadraticCurveTo(x+w*.8,y+3,x+w,y+6);ctx.stroke();
       ctx.strokeStyle='rgba(12,22,27,.62)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+w*.28,y+9);ctx.lineTo(x+w*.32,y+15);ctx.lineTo(x+w*.36,y+17);ctx.moveTo(x+w*.78,y+7);ctx.lineTo(x+w*.74,y+12);ctx.stroke();
@@ -3014,7 +3203,7 @@
         ctx.beginPath(); ctx.moveTo(-1.8, -8.6); ctx.lineTo(1.8, -8.6); ctx.lineTo(0, -6.2); ctx.closePath(); ctx.fill();
         ctx.fillRect(-.25, -5.4, .5, 2.8);
         ctx.fillStyle = '#a0683c'; ctx.strokeStyle = OL; ctx.lineWidth = .8;
-        for (const yy of [-11.6, 0]) { ctx.beginPath(); ctx.roundRect(-4.4, yy, 8.8, 1.8, .6); ctx.fill(); ctx.stroke(); }
+        for (const yy of [-11.6, 0]) { ctx.beginPath(); canvasRoundRect(ctx, -4.4, yy, 8.8, 1.8, .6); ctx.fill(); ctx.stroke(); }
         ctx.fillStyle = '#7a4a2a'; ctx.fillRect(-4, -10, .9, 10); ctx.fillRect(3.1, -10, .9, 10);
         ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fillRect(-2.2, -9, .6, 2.4);
         ctx.restore();
@@ -3028,7 +3217,7 @@
         ctx.fillStyle = 'rgba(200,236,255,.45)'; ctx.fill(); ctx.strokeStyle = '#2f4f66'; ctx.lineWidth = .9; ctx.stroke();
         ctx.fillStyle = `rgba(255,252,200,${.9 * pulse})`; ctx.beginPath(); ctx.arc(Math.sin(tt * 3) * 1.4, -4 + Math.cos(tt * 4) * 1.2, 1.4, 0, 7); ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(-3, -6.5); ctx.lineTo(-3, -2); ctx.stroke();
-        ctx.fillStyle = '#b07a48'; ctx.strokeStyle = OL; ctx.lineWidth = .8; ctx.beginPath(); ctx.roundRect(-2.8, -11.6, 5.6, 2.8, .8); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#b07a48'; ctx.strokeStyle = OL; ctx.lineWidth = .8; ctx.beginPath(); canvasRoundRect(ctx, -2.8, -11.6, 5.6, 2.8, .8); ctx.fill(); ctx.stroke();
         ctx.strokeStyle = '#e8d2a0'; ctx.lineWidth = .7; ctx.beginPath(); ctx.moveTo(-3.6, -8.4); ctx.lineTo(3.6, -8.4); ctx.stroke();
         ctx.restore();
       }
@@ -3112,7 +3301,8 @@
     return true;
   }
   function drawCat() {
-    const c = cat; ctx.save();
+    const c = cat; if (c.respawning) return; ctx.save();
+    if (c.falling) ctx.globalAlpha = clamp(1 - c.fallTime / .38, 0, 1);
     if (c.inv > 0 && Math.floor(c.inv * 12) % 2) ctx.globalAlpha = .45;
     ctx.translate(c.x, c.y); ctx.scale(c.face, 1);
     let sxs = 1, sys = 1;
@@ -3178,13 +3368,14 @@
     ctx.globalAlpha = 1;
   }
 
-  function chip(x, y, type, have, needN, width = 104) {
+  function chip(x, y, type, have, needN, width = 104, compact = false) {
     const done = have >= needN;
-    ctx.fillStyle = 'rgba(22,15,44,.75)'; ctx.strokeStyle = done ? col(type) : 'rgba(243,236,255,.16)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, width, 40, 20) : ctx.rect(x, y, width, 40); ctx.fill(); ctx.stroke();
-    lightShape(type, x + 22, y + 20, .95);
-    ctx.fillStyle = INK; ctx.font = `800 20px ${DISP}`; ctx.textAlign = 'left';
-    ctx.fillText(done ? '✓' : `${have}/${needN}`, x + 44, y + 27);
+    const h = compact ? 30 : 40, iconX = compact ? 17 : 22, iconY = compact ? 15 : 20;
+    ctx.fillStyle = 'rgba(22,15,44,.82)'; ctx.strokeStyle = done ? col(type) : 'rgba(243,236,255,.2)'; ctx.lineWidth = compact ? 1.5 : 2;
+    ctx.beginPath(); ctx.roundRect ? canvasRoundRect(ctx, x, y, width, h, h / 2) : ctx.rect(x, y, width, h); ctx.fill(); ctx.stroke();
+    lightShape(type, x + iconX, y + iconY, compact ? .74 : .95);
+    ctx.fillStyle = INK; ctx.font = `800 ${compact ? 13 : 20}px ${DISP}`; ctx.textAlign = 'left';
+    ctx.fillText(done ? '✓' : `${have}/${needN}`, x + (compact ? 31 : 44), y + (compact ? 20 : 27));
   }
   function drawHUD() {
     if (state === 'menu') return;
@@ -3198,15 +3389,25 @@
     ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, HUD_X + 10, top + 34);
     ctx.font = `600 ${hudCompact ? 13 : 15}px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText('SCORE', HUD_X + 12, top + 60);
     ctx.font = `800 ${hudCompact ? 20 : 22}px ${DISP}`; ctx.fillStyle = INK; ctx.fillText(score.toLocaleString(), HUD_X + 72, top + 61);
+    if (mode === 'story') {
+      const lx = HUD_X + HUD_CARD_W + 10, ly = top + 8;
+      ctx.fillStyle = 'rgba(22,15,44,.82)'; rrect(lx, ly, 68, 32, 16); ctx.fill();
+      for (let i = 0; i < 3; i++) {
+        const x = lx + 14 + i * 20, y = ly + 16;
+        ctx.fillStyle = i < lives ? (i === 0 ? '#ffc978' : '#f4e8c7') : 'rgba(243,236,255,.28)';
+        ctx.beginPath(); ctx.arc(x, y + 3, 4, 0, Math.PI * 2); ctx.fill();
+        for (const [dx, dy] of [[-4,-4],[0,-6],[4,-4]]) { ctx.beginPath(); ctx.arc(x + dx, y + dy, 2.2, 0, Math.PI * 2); ctx.fill(); }
+      }
+    }
     const hudChapter = mode === 'story' ? chapterFor(storyNight) : null;
     const skyEnabled = !!hudChapter && skyTotalFor(hudChapter) > 0;
     const skyLive = skyEnabled && mood.some(m => m.sky && !m.dead && ['wait', 'falling', 'struck', 'scratchReq', 'scratched'].includes(m.skyPhase));
     const compactSky = VW < 900;
     if (skyEnabled) {
-      const sx = compactSky ? HUD_X : HUD_X + HUD_CARD_W + 10, sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
+      const sx = compactSky ? HUD_X : HUD_X + HUD_CARD_W + 86, sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
       ctx.save(); ctx.globalAlpha = skyLive ? .84 + .16 * Math.sin(t * 5) : 1;
       ctx.fillStyle = 'rgba(22,15,44,.78)'; ctx.strokeStyle = skyLive ? 'rgba(205,224,255,.62)' : 'rgba(243,236,255,.22)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(sx, sy, sw, sh, 14) : ctx.rect(sx, sy, sw, sh); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.roundRect ? canvasRoundRect(ctx, sx, sy, sw, sh, 14) : ctx.rect(sx, sy, sw, sh); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#e7edff'; ctx.beginPath(); ctx.arc(sx + 15, sy + 14, 7, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = 'rgba(22,15,44,.95)'; ctx.beginPath(); ctx.arc(sx + 19, sy + 11, 6, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#e7edff'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(sx + 25, sy + 10); ctx.lineTo(sx + 25, sy + 20); ctx.lineTo(sx + 22, sy + 17); ctx.moveTo(sx + 25, sy + 20); ctx.lineTo(sx + 28, sy + 17); ctx.stroke();
@@ -3237,11 +3438,17 @@
       if (packed) { ay += 20; ctx.fillStyle = INK; ctx.fillText(packed, 22, ay); }
     }
     if (mode === 'story') {
-      const types = Object.keys(need).filter(type => need[type] > 0), width = types.length >= 7 ? 64 : types.length >= 5 ? 78 : types.length === 4 ? 88 : 96, gap = 8;
-      let x = VW - 22 - types.length * (width + gap) + gap;
-      for (const type of types) { chip(x, top + 6, type, got[type] || 0, need[type], width); x += width + gap; }
+      const types = Object.keys(need).filter(type => need[type] > 0), compactNeeds = types.length >= 7 && VW < 1050;
+      if (compactNeeds) {
+        const columns = 4, width = 72, gap = 6, rowStep = 34, startX = VW - 22 - columns * (width + gap) + gap;
+        types.forEach((type, i) => chip(startX + (i % columns) * (width + gap), top + 6 + Math.floor(i / columns) * rowStep, type, got[type] || 0, need[type], width, true));
+      } else {
+        const width = types.length >= 7 ? 64 : types.length >= 5 ? 78 : types.length === 4 ? 88 : 96, gap = 8;
+        let x = VW - 22 - types.length * (width + gap) + gap;
+        for (const type of types) { chip(x, top + 6, type, got[type] || 0, need[type], width); x += width + gap; }
+      }
       ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.textAlign = 'right';
-      ctx.fillText(`${hourOf(storyNight).toUpperCase()} · ${chapterFor(storyNight).name.toUpperCase()}`, VW - 22, top + 64);
+      ctx.fillText(`${hourOf(storyNight).toUpperCase()} · ${chapterFor(storyNight).name.toUpperCase()}`, VW - 22, top + (compactNeeds ? 87 : 64));
     } else {
       ctx.textAlign = 'right'; ctx.font = `800 28px ${DISP}`; ctx.fillStyle = INK;
       ctx.fillText(`${caughtN} caught`, VW - 22, top + 34);
@@ -3291,13 +3498,14 @@
       ctx.strokeStyle = `rgba(200,255,138,${.35 * fade})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.stroke();
     }
     drawHUD();
+    if (fallDimT > 0) { ctx.save(); ctx.globalAlpha = clamp(fallDimT / .5, 0, 1) * .46; ctx.fillStyle = '#080817'; ctx.fillRect(0, -OY, VW, VH + OY * 2); ctx.restore(); }
   }
 
   // ---------- flow ----------
   function getBest(k = 'mk-best') { try { return +localStorage.getItem(k) || 0; } catch (e) { return 0; } }
   function setBest(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
   let R = null;
-  function finish(won) {
+  function finish(won, failReason = null) {
     if (state === 'over' || state === 'home') return;
     state = 'over'; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
@@ -3305,7 +3513,7 @@
     let unlockedNow = false;
     if (mode === 'story' && won) {
       const before = unlockedLevel;
-      unlockedLevel = clamp(Math.max(unlockedLevel, storyNight + 1), 1, 7);
+      unlockedLevel = clamp(Math.max(unlockedLevel, storyNight + 1), 1, 50);
       thiriSleepStage = clamp(Math.max(thiriSleepStage, storyNight), 0, 7);
       unlockedNow = unlockedLevel > before; saveStoryProgress();
     }
@@ -3319,12 +3527,18 @@
       tone(330, .35, 'triangle', .08, -80); showEnd(); return;
     }
     let final = score;
-    const left = Math.max(0, timeLeft), bestKey = storyNight === 7 ? 'mk-best-night-7' : 'mk-best';
+    const left = Math.max(0, timeLeft), bestKey = storyNight >= 7 ? `mk-best-night-${storyNight}` : 'mk-best';
     if (won) final += Math.round(left) * 20;
-    const best = Math.max(getBest(bestKey), final); setBest(bestKey, best);
+    setBest(bestKey, Math.max(getBest(bestKey), final));
+    const best = Math.max(getBest(`mk-best-n${storyNight}`), final); setBest(`mk-best-n${storyNight}`, best);
+    const starsN = starsFor(storyNight, final, won), prevStars = nightStars[storyNight] || 0;
+    let starGlow = 0;
+    if (starsN > prevStars) { for (let s = prevStars + 1; s <= starsN; s++) starGlow += STAR_GLOW[s]; nightStars[storyNight] = starsN; saveStars(); }
+    const newTrails = grantStarTrails();
+    if (starGlow || newTrails.length) { glow += starGlow; lastGlow += starGlow; saveUpg(); refreshShopBtns(); }
     R = {
-      won, night: storyNight, total: requiredTotal(), left, final, best, combo: bestCombo, home: caughtTotal(), unlocked: unlockedNow, stage: thiriSleepStage,
-      starsN: won ? (left >= 30 ? 3 : left >= 10 ? 2 : 1) : 0,
+      won, night: storyNight, total: requiredTotal(), left, final, best, combo: bestCombo, home: caughtTotal(), unlocked: unlockedNow, stage: thiriSleepStage, failReason,
+      starsN, prevStars, starGlow, goals: starGoals(storyNight), newTrails,
       tip: chapterFor(storyNight).tutorialHints
         ? `Tip: ${chapterFor(storyNight).tutorialHint}`
         : hits > 0
@@ -3353,32 +3567,28 @@
     };
     requestAnimationFrame(tick);
   }
-  function updateHubGoals(found = BOOK_GOAL_KEYS.filter(key => book[key]).length) {
-    const copy = guideCopy().help || {}, night = clamp(unlockedLevel, 1, 7), chapter = chapterFor(night);
-    $('#goalNightText').textContent = `Night ${night} · ${chapter.name}`;
-    $('#goalBookText').textContent = `${found} / 17 feelings`;
-    const remaining = UPG.filter(item => upg[item.id] < UPG_MAX).map(item => ({ item, cost: item.costs[upg[item.id]] })).filter(entry => Number.isFinite(entry.cost));
-    const available = remaining.filter(entry => glow >= entry.cost).sort((a, b) => a.cost - b.cost)[0];
-    const next = available || remaining.sort((a, b) => a.cost - b.cost)[0];
-    $('#goalUpgradeText').textContent = next ? (available ? `${next.item.name} · ${next.cost} Glow` : `${copy.noAffordable || 'Save Glow for'} ${next.item.name} · ${next.cost} Glow`) : (copy.allUpgrades || 'All upgrades ready');
+  const heroArt = document.querySelector('.hub-hero-art');
+  function sizeHubCat() {
+    const w = heroArt.clientWidth, h = heroArt.clientHeight;
+    if (!w || !h) return;
+    const scale = Math.max(w / 520, h / 620), catImage = $('#hubHeroCat');
+    catImage.style.left = ((w - 520 * scale) / 2 + 175 * scale) + 'px';
+    catImage.style.top = ((h - 620 * scale) / 2 + 255 * scale) + 'px';
+    catImage.style.width = (210 * scale) + 'px';
+    catImage.style.height = (190 * scale) + 'px';
   }
+  if (typeof ResizeObserver === 'function') new ResizeObserver(sizeHubCat).observe(heroArt);
+  addEventListener('resize', sizeHubCat);
   function refreshHubStats(found = BOOK_GOAL_KEYS.filter(key => book[key]).length) {
     animateHubNumber($('#hubGlowValue'), glow);
     animateHubNumber($('#hubBookValue'), found, n => `${n} / 17`);
     $('#shopBtnValue').textContent = `${glow} Glow`;
     $('#bookBtnValue').textContent = `${found} / 17 found`;
-    updateHubGoals(found);
+    sizeHubCat();
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
     $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
     const heroCat = $('#hubHeroCat');
-    if (heroCat && COAT) heroCat.setAttribute('href', COAT.heroImg || COAT.img);
-    const heroSvg = $('#hubHeroSvg');
-    if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
-    $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
-  }
-  function refreshShopBtns() {
-    const label = `Upgrade Shwe · ${glow} Glow`;
-    if (heroCat && COAT) heroCat.setAttribute('href', COAT.img);
+    if (heroCat && COAT) heroCat.setAttribute('src', COAT.heroImg || COAT.img);
     const heroSvg = $('#hubHeroSvg');
     if (heroSvg && COAT) heroSvg.setAttribute('aria-label', `${MK_PROFILE.cat}, the ${COAT.name} cat on a moonlit pier beside a lantern and fishing net`);
     $('#profileBtn').style.setProperty?.('--hub-cat-color', (COAT && COAT.body) || '#e0b04a');
@@ -3533,7 +3743,7 @@
     if (shopTab === 'style') {
       $('#shopList').innerHTML = Object.entries(TRAILS).map(([k, tr]) => {
         const owned = ownedTrails.includes(k), using = trailPick === k;
-        const btn = using ? '<button class="buy" disabled>In use</button>' : owned ? `<button class="buy" data-trail="${k}" data-act="use">Use</button>` : price(tr.cost, `data-trail="${k}" data-act="buy"`);
+        const btn = using ? '<button class="buy" disabled>In use</button>' : owned ? `<button class="buy" data-trail="${k}" data-act="use">Use</button>` : tr.stars ? `<button class="buy" disabled>★ ${totalStars()}/${tr.stars}</button>` : price(tr.cost, `data-trail="${k}" data-act="buy"`);
         return `<div class="item${using ? ' in-use' : ''}"><h3><span class="swatch" style="background:${tr.rainbow ? 'conic-gradient(#ff6b6b,#ffd23f,#7ddc8b,#6fb6ff,#b9a2ff,#ff6b6b)' : `rgb(${tr.c})`}"></span>${tr.name} trail</h3><div class="side">${btn}</div><p>The colour of the light trail that follows your cat.</p></div>`;
       }).join('');
       return;
@@ -3570,7 +3780,7 @@
         glow -= it.cost; itemStock[it.id] = (itemStock[it.id] || 0) + 1; saveUpg(); ding();
       } else if (x.dataset.trail) {
         const k = x.dataset.trail;
-        if (x.dataset.act === 'buy') { const c = TRAILS[k].cost; if (glow < c) return; glow -= c; ownedTrails.push(k); saveUpg(); ding(); }
+        if (x.dataset.act === 'buy') { const c = TRAILS[k].cost; if (TRAILS[k].stars || glow < c) return; glow -= c; ownedTrails.push(k); saveUpg(); ding(); }
         trailPick = k;
       }
       saveShop(); renderShop(); refreshShopBtns(); $('#shopBack').focus({ preventScroll: true });
@@ -3592,17 +3802,18 @@
   refreshShopBtns();
 
   function playNightComplete(night) {
-    const chapter = chapterFor(night), next = Math.min(7, night + 1);
+    const chapter = chapterFor(night), next = Math.min(50, night + 1);
     $('#nightStoryline').hidden = true;
     $('#endThiriArt').dataset.stage = String(Math.min(7, thiriSleepStage));
     $('#endDiaryLine').textContent = `“${chapter.diary}”`;
     $('#endStageLine').textContent = `Thiri’s room is changing · sleep stage ${thiriSleepStage} of 7`;
     $('#endUnlockBadge').hidden = !R.unlocked;
+    if (R.unlocked) setTimeout(() => { if (!$('#endScreen').hidden) sfx('ui', 'unlock'); }, 900);
     $('#endUnlockBadge').textContent = R.unlocked ? `${hourOf(next).toUpperCase()} UNLOCKED` : '';
     $('#endEyebrow').textContent = `${hourOf(night)} · ${chapter.name} · done`;
-    $('#endTitle').textContent = R.unlocked ? `${hourOf(night)} done. ${hourOf(next)} is open!` : night === 7 ? 'The lake is quiet' : 'A little more of Thiri returns';
+    $('#endTitle').textContent = night === 50 ? 'All 50 routes are home' : R.unlocked ? `${hourOf(night)} done. ${hourOf(next)} is open!` : night === 7 ? 'The lake is quiet' : 'A little more of Thiri returns';
     $('#endMsg').textContent = `You brought all ${R.total} feelings home. ${R.unlocked ? `${hourOf(next)} is now playable from the map.` : 'Your story progress is saved.'}`;
-    $('#againBtn').textContent = night < 7 ? `Continue → ${hourOf(night + 1)}` : `Replay ${hourOf(7)}`;
+    $('#againBtn').textContent = night < 50 ? `Continue → ${hourOf(night + 1)}` : `Replay ${hourOf(50)}`;
   }
 
   function showEnd() {
@@ -3615,6 +3826,11 @@
     const extra = [];
     if (runDone.length) extra.push(`Mission complete: ${runDone.join('; ')}. Claim the reward on the main menu.`);
     if (runNew.length) extra.push(`New in the Mood Book: ${runNew.join(', ')}.`);
+    if (!R.free && R.won) {
+      if (R.starGlow) extra.push(`New ${'★'.repeat(R.starsN)} on this hour! +${R.starGlow} Glow.`);
+      extra.push(R.starsN < 3 ? `Score ${R.goals[R.starsN].toLocaleString()} for ${'★'.repeat(R.starsN + 1)}.` : 'Top rank on this hour: ★★★');
+    }
+    if (!R.free && R.newTrails?.length) extra.push(`★ ${totalStars()} stars! You unlocked the ${R.newTrails.join(' and ')} trail in the shop.`);
     if (!R.free && R.night && keepsakeTotal(R.night)) extra.push(`Thiri’s keepsakes on this night: ${keepsakesFound(R.night)}/${keepsakeTotal(R.night)}.`);
     $('#endMissions').textContent = extra.join(' '); $('#endMissions').hidden = !extra.length;
     $('#nightStoryline').hidden = true;
@@ -3633,18 +3849,19 @@
       return;
     }
     $('#nightStoryline').hidden = true;
-    $('#endEyebrow').textContent = R.won ? `${hourOf(R.night)} · done` : `${hourOf(R.night)} · time's up`;
-    $('#endTitle').textContent = R.won ? 'A little more of Thiri returns' : 'Some feelings need more time';
+    $('#endEyebrow').textContent = R.won ? `${hourOf(R.night)} · done` : R.failReason === 'fall' ? `${hourOf(R.night)} · night failed` : `${hourOf(R.night)} · time's up`;
+    $('#endTitle').textContent = R.won ? 'A little more of Thiri returns' : R.failReason === 'fall' ? 'Night failed' : 'Some feelings need more time';
     $('#endStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < R.starsN ? '' : 'off'}">★</span>`).join('');
     $('#endStars').hidden = !R.won;
     $('#endMsg').textContent = R.won
-      ? `You brought all ${R.total} feelings home with ${Math.round(R.left)} seconds to spare. Time bonus: +${Math.round(R.left) * 20}.`
-      : "That's okay. Let's try again.";
+      ? `You brought all ${R.total} feelings home with ${Math.round(R.left)} seconds to spare. Time bonus: +${Math.round(R.left) * 20}. Score ${R.goals[1].toLocaleString()} for ★★ and ${R.goals[2].toLocaleString()} for ★★★.`
+      : R.failReason === 'fall' ? 'Shwe ran out of lives. The lights from this run were lost, but anything already in the Mood Book is safe.' : "That's okay. Let's try again.";
     $('#sScore').textContent = R.final.toLocaleString();
     $('#sBest').textContent = R.best.toLocaleString();
     $('#sCombo').textContent = '×' + R.combo;
     $('#sHome').textContent = `${R.home}/${R.total}`;
-    $('#againBtn').textContent = R.won ? (R.night < 7 ? `Continue → ${hourOf(R.night + 1)}` : `Replay ${hourOf(7)}`) : `Retry ${hourOf(R.night)}`;
+    $('#againBtn').textContent = R.won ? (R.night < 50 ? `Continue → ${hourOf(R.night + 1)}` : `Replay ${hourOf(50)}`) : `Retry ${hourOf(R.night)}`;
+    $('#menuBtn').textContent = R.failReason === 'fall' ? 'Back to map' : 'Main menu';
     $('#endTip').textContent = R.tip;
     if (R.won) playNightComplete(R.night);
     setTimeout(() => { $('#endScreen').hidden = false; $('#againBtn').focus(); }, 280);
@@ -3798,7 +4015,7 @@
   let H = null;
 
   function startHome(won, types, preview, night = storyNight) {
-    music('duck', .45);
+    music('duck', .65); music('play', 'bedroom'); music('ambience', null);
     const n = types.length, stage = Math.min(7, thiriSleepStage);
     const poseTo = stage, poseFrom = won && night >= stage ? Math.max(0, night - 1) : stage;
     const base = roomColoursFor(poseFrom);
@@ -3850,11 +4067,12 @@
     if (wakeStage === 7 && !finalAwakeningSeen) playFinalAwakening(); else showEnd();
   }
   function showNightWake(night) {
+    music('play', 'bedroom'); music('ambience', null);
     wakeStage = clamp(thiriSleepStage, 1, 7); const ch = chapterFor(night);
     $('#nightWakeEyebrow').textContent = `AFTER ${hourOf(night).toUpperCase()}`;
-    $('#nightWakeTitle').textContent = wakeStage === 7 ? 'Morning is almost here.' : 'She stirs in her sleep.';
+    $('#nightWakeTitle').textContent = night > 7 ? 'One more route brought home.' : wakeStage === 7 ? 'Morning is almost here.' : 'She stirs in her sleep.';
     $('#nightWakeDiary').textContent = `“${ch.diary}”`; $('#nightWakeLine').textContent = `Shwe: “${STAGE_LINES[wakeStage]}”`;
-    $('#nightWakeContinue').textContent = wakeStage === 7 ? 'See the morning →' : 'Continue →';
+    $('#nightWakeContinue').textContent = night <= 7 && wakeStage === 7 ? 'See the morning →' : 'Continue →';
     $('#nightWakeScreen').hidden = false; $('#nightWakeContinue').focus({ preventScroll: true });
     const from = SLEEP_STAGES[Math.max(0, wakeStage - 1)], to = SLEEP_STAGES[wakeStage], started = performance.now(), tween = reduce ? .1 : 1.5;
     const animateWake = now => { const q = clamp((now - started) / 1000 / tween, 0, 1); drawWakeCard(wakeStage, ease(q)); if (q < 1) wakeRaf = requestAnimationFrame(animateWake); };
@@ -3962,7 +4180,7 @@
     }
     ctx.restore();
   }
-  function rrect(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+  function rrect(x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) canvasRoundRect(ctx, x, y, w, h, r); else ctx.rect(x, y, w, h); }
 
   // camera for the coming-home scene: the whole bed-to-dresser side of the room, zooming in on Thiri at the end
   function homeCam(h) {
@@ -4066,11 +4284,13 @@
   }
   function startGame(m, night = storyNight) {
     if (typeof m === 'string') mode = m;
-    storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 7) : 1;
+    storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 50) : 1;
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
-    music('duck', 1); music('play', mode === 'story' ? NIGHT_MUSIC[storyNight - 1] : 'park');
-    music('ambience', mode === 'story' ? NIGHT_MUSIC[storyNight - 1] : 'park');
+    const mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : 'free';
+    const sceneTrack = ({ school: 'school', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
+    music('duck', 1); music('play', sceneTrack);
+    music('ambience', sceneTrack);
     cv.hidden = false;
     $('#welcomeScreen').hidden = true; $('#levelBriefingScreen').hidden = true; $('#nightReadyScreen').hidden = true; $('#welcomeCardsScreen').hidden = true; $('#helpScreen').hidden = true;
     $('#prologueScreen').hidden = true; $('#awakeningScreen').hidden = true;
@@ -4090,116 +4310,104 @@
     if (!startGuidedTutorial()) showNextJitTip();
     cv.focus?.();
   }
-  const LEVEL_MAP_LIMIT = 7, LEVEL_MAP_STEP = 92;
+  const LEVEL_MAP_LIMIT = 50, LEVEL_MAP_STEP = 240;
   const LEVEL_MAP_CHAPTERS = new Map(NIGHT_CHAPTERS.map(chapter => [chapter.night, chapter]));
-  const levelMapX = level => 50 + Math.sin(level * .72) * 24;
+  // Seeded variation gives each stretch its own shape and keeps it stable on revisit.
   const mapRandom = seed => { const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
-  function buildMapScenery(height) {
-    const parts = [`<rect x="0" y="0" width="100" height="${height}" fill="url(#mapNightFill)"/>`];
-    const y7 = (LEVEL_MAP_LIMIT - 7) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2;
-    for (let i = 0; i < 280; i++) {
-      const x = 2 + mapRandom(i + 11) * 96, y = mapRandom(i + 901) * height;
-      const rx = .12 + mapRandom(i + 1901) * .2, ry = .45 + mapRandom(i + 2901) * 1.15;
-      const alpha = .18 + mapRandom(i + 3901) * .48;
-      parts.push(`<ellipse class="map-stars" cx="${x.toFixed(2)}" cy="${y.toFixed(1)}" rx="${rx.toFixed(2)}" ry="${ry.toFixed(2)}" opacity="${alpha.toFixed(2)}"/>`);
+  const mapStops = [];
+  for (let level = 1, x = 140; level <= LEVEL_MAP_LIMIT; level++) {
+    if (level > 1) x += 230 + mapRandom(level + 91) * 100;
+    mapStops.push({ x, bend: mapRandom(level + 17) });
+  }
+  function mapPoint(level) {
+    const height = Math.max(180, $('#levelMapViewport').clientHeight);
+    const stop = mapStops[level - 1];
+    return { x: stop.x, y: height * (.25 + stop.bend * .41) };
+  }
+  // Pixel coordinates keep the illustrated terrain proportional at every screen size.
+  function drawNightMap(width, height, river) {
+    const random = mapRandom;
+    const parts = [
+      `<defs><linearGradient id="trailGround" x2="0" y2="1"><stop stop-color="#243d45"/><stop offset="1" stop-color="#172d39"/></linearGradient><linearGradient id="trailWater" x2="0" y2="1"><stop stop-color="#367a91"/><stop offset="1" stop-color="#224b70"/></linearGradient></defs>`,
+      `<rect width="${width}" height="${height}" fill="url(#trailGround)"/>`
+    ];
+    // Mossy clearings and small stones give the banks a hand-illustrated texture.
+    for (let i = 0; i < width / 35; i++) {
+      const x = random(i + 3) * width, y = random(i + 8) * height;
+      parts.push(`<ellipse cx="${x}" cy="${y}" rx="${12 + random(i) * 30}" ry="${5 + random(i + 6) * 12}" fill="#507365" opacity=".17"/>`);
     }
-    const ridge = (side, base, spread, seed, className) => {
-      const pts = [], step = 720, count = Math.ceil(height / step);
-      for (let i = 0; i <= count; i++) {
-        const y = Math.min(height, i * step);
-        let x = base + mapRandom(seed + i * 7.31) * spread + Math.sin(i * .43 + seed) * 2.4 + Math.sin(i * .13 + seed * .7) * 3.2;
-        x = Math.max(2, Math.min(43, x)); if (side === 'right') x = 100 - x;
-        pts.push({ x, y });
+    parts.push(`<path d="${river}" class="map-river-cliff"/><path d="${river}" class="map-river-bank"/><path d="${river}" class="map-river-water"/><path d="${river}" class="map-river-ripple"/>`);
+    const tree = (x, y, scale) => `<g transform="translate(${x} ${y}) scale(${scale})"><ellipse cy="6" rx="24" ry="9" fill="#0b1825" opacity=".5"/><path d="M-4 2L-3-37H4L5 2Z" fill="#6a5358"/><path d="M0-82L-27-43H-17L-34-20Q0-9 34-20L17-43H27Z" fill="#24434c" stroke="#41616a" stroke-width="2"/><path d="M0-81L-26-43H-15L-32-21" fill="none" stroke="#709187" stroke-opacity=".5" stroke-width="3"/></g>`;
+    for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
+      const point = mapPoint(level), x = point.x;
+      const scale = Math.min(1.3, height / 310);
+      const treeCount = Math.floor(random(level + 200) * 4);
+      for (let j = 0; j < treeCount; j++) {
+        const seed = level * 19 + j;
+        const size = scale * (.55 + random(seed + 400) * .55);
+        const tx = x - 100 + random(seed + 500) * 190;
+        const ty = random(seed + 600) > .5 ? height - 8 - random(seed + 700) * 20 : 76 * size + random(seed + 800) * 10;
+        parts.push(tree(tx, ty, size));
       }
-      const edge = pts.map(p => `${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join(' L ');
-      const boundary = side === 'left' ? `M 0 0 L 0 ${height} L ${pts[pts.length - 1].x.toFixed(2)} ${height} L ${pts.slice(0, -1).reverse().map(p => `${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join(' L ')}` : `M 100 0 L 100 ${height} L ${pts[pts.length - 1].x.toFixed(2)} ${height} L ${pts.slice(0, -1).reverse().map(p => `${p.x.toFixed(2)} ${p.y.toFixed(1)}`).join(' L ')}`;
-      return `<path class="${className}" d="${boundary} Z"/><path class="map-ridge-edge" d="M ${edge}"/>`;
-    };
-    for (const side of ['left', 'right']) {
-      parts.push(ridge(side, 18, 13, side === 'left' ? 4 : 29, 'map-ridge-far'));
-      parts.push(ridge(side, 9, 12, side === 'left' ? 51 : 76, 'map-ridge-mid'));
-    }
-    const mountainBand = (y, seed, className, peakHeight, depth) => {
-      let peaks = '';
-      for (let i = 0; i <= 25; i++) {
-        const x = i * 4, peak = y + 10 + mapRandom(seed + i * 3.71) * peakHeight + Math.sin(i * .9 + seed) * 10;
-        peaks += `L${x.toFixed(1)} ${peak.toFixed(1)} `;
+      // River stones and fireflies sit outside the chapter labels and hit areas.
+      parts.push(`<path d="M${x - 27} ${point.y + 17}q27-15 55 0l-5 17q-22 9-47-1Z" fill="#102b43" opacity=".6"/>`);
+      for (let j = 0; j < 4; j++) {
+        const fx = x - 105 + random(level * 9 + j) * 200, fy = height * (.12 + random(level * 8 + j) * .76);
+        parts.push(`<circle cx="${fx}" cy="${fy}" r="6" fill="#ffe9a0" opacity=".05"/><circle cx="${fx}" cy="${fy}" r="1.5" fill="#ffe9a0" opacity=".8"/>`);
       }
-      const baseline = y + depth, bottom = baseline + 120;
-      return `<path class="${className}" d="M0 ${bottom}L0 ${baseline}${peaks}L100 ${baseline}L100 ${bottom}Z"/>`;
-    };
-    for (let i = 0, y = 160; y < height; i++, y += 1120) {
-      parts.push(mountainBand(y, i + 401, 'map-range-far', 170, 250));
-      parts.push(mountainBand(y + 360, i + 709, 'map-range-mid', 110, 150));
-    }
-    parts.push(mountainBand(y7 + 35, 3217, 'map-range-far', 165, 230));
-    parts.push(mountainBand(y7 + 120, 4217, 'map-range-mid', 110, 145));
-    for (let i = 0; i < 20; i++) {
-      const y = 500 + i * 2780 + mapRandom(i + 8001) * 800;
-      parts.push(`<ellipse class="map-fog" cx="${(34 + mapRandom(i + 8101) * 32).toFixed(1)}" cy="${y.toFixed(1)}" rx="${(28 + mapRandom(i + 8201) * 14).toFixed(1)}" ry="${(42 + mapRandom(i + 8301) * 46).toFixed(1)}"/>`);
-    }
-    for (const side of ['left', 'right']) parts.push(ridge(side, 2, 8, side === 'left' ? 103 : 128, 'map-ridge-near'));
-    for (let i = 0, y = 170; y < height - 36; i++, y += 480 + mapRandom(i + 9001) * 390) {
-      const tree = (x, py, seed) => {
-        const h = 18 + mapRandom(seed) * 12, w = 1.55 + mapRandom(seed + 1) * .75;
-        const d = `M 0 0 L ${-w} ${h * .35} L ${-w * .35} ${h * .35} L ${-w * 1.25} ${h * .68} L ${-w * .55} ${h * .68} L ${-w * 1.75} ${h} L ${w * 1.75} ${h} L ${w * .55} ${h * .68} L ${w * 1.25} ${h * .68} L ${w * .35} ${h * .35} L ${w} ${h * .35} Z M -.45 ${h} L -.45 ${h + 4} L .45 ${h + 4} L .45 ${h} Z`;
-        return `<path class="map-tree" transform="translate(${x.toFixed(2)} ${py.toFixed(1)})" d="${d}"/>`;
-      };
-      parts.push(tree(3 + mapRandom(i + 9101) * 14, y, i + 9201));
-      parts.push(tree(83 + mapRandom(i + 9301) * 14, y + 35 + mapRandom(i + 9401) * 65, i + 9501));
-    }
-    for (let i = 0, level = 120; level < LEVEL_MAP_LIMIT; i++, level += 145) {
-      const x = i % 2 ? 21 + mapRandom(i + 9701) * 8 : 71 + mapRandom(i + 9801) * 8;
-      const y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 24;
-      parts.push(`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><path class="map-shrine" d="M-9 0V-39H9V0 M-14 -39H14L12 -44H-12Z M-10 -25H10L9 -29H-9Z M-4 -39V-51H4V-39Z M-6 -51H6L5 -55H-5Z"/><path class="map-shrine-light" d="M-14 -39H14 M-10 -25H10 M-7 -5H7"/></g>`);
-    }
-    parts.push(`<ellipse class="map-fog" cx="82" cy="${(y7 + 62).toFixed(1)}" rx="10" ry="45" opacity=".5"/><ellipse class="map-moon" cx="82" cy="${(y7 + 25).toFixed(1)}" rx="4.8" ry="26"/><g transform="translate(80 ${(y7 + 115).toFixed(1)})"><path class="map-cave" d="M-8 26V-7Q-8 -27 0 -29Q8 -27 8 -7V26Z"/><path class="map-cave-inner" d="M-5 26V-6Q-5 -19 0 -21Q5 -19 5 -6V26Z"/><ellipse class="map-cave-light" cx="-6.7" cy="8" rx=".55" ry="2.2"/></g>`);
-    for (let level = 25; level <= LEVEL_MAP_LIMIT; level += 25) {
-      const x = levelMapX(level), y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 19;
-      parts.push(`<path class="map-ledge" d="M${(x - 7.5).toFixed(2)} ${y.toFixed(1)}l1.8-5h11.4l1.8 5-2 3h-11Z"/><path class="map-ledge-top" d="M${(x - 5.8).toFixed(2)} ${(y - 4.8).toFixed(1)}h11.6l1.4 3h-14.4Z"/>`);
-    }
-    for (const level of LEVEL_MAP_CHAPTERS.keys()) {
-      const x = levelMapX(level), y = (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + 19;
-      parts.push(`<path class="map-ledge" d="M${(x - 8.5).toFixed(2)} ${y.toFixed(1)}l2-5h13l2 5-2 3h-15Z"/><path class="map-ledge-top" d="M${(x - 6.5).toFixed(2)} ${(y - 4.8).toFixed(1)}h13l1.5 3h-16Z"/>`);
+      if (random(level + 1000) < .36) {
+        const ly = Math.max(34, height * (.11 + random(level + 1100) * .09)), lx = x + 75 + random(level + 1200) * 30;
+        parts.push(`<g transform="translate(${lx} ${ly})"><circle r="30" fill="#ffe6a0" opacity=".06"/><path d="M0 22V-10h-12" fill="none" stroke="#a69b89" stroke-width="3"/><rect x="-20" y="-12" width="15" height="20" rx="4" fill="#efd58b"/><path d="M-18-6h11M-18 2h11" stroke="#ad8d64"/></g>`);
+      }
+      if (random(level + 1300) < .27) {
+        parts.push(`<g transform="translate(${x + 30} 30)"><circle r="25" fill="#eff3cf" opacity=".05"/><path d="M6-15A17 17 0 1 0 16 10 15 15 0 0 1 6-15Z" fill="#e6ebc9" opacity=".9"/></g>`);
+        const ly = height - 12 - random(level + 1400) * 25, lx = x - 65 + random(level + 1500) * 130, scale = Math.min(.85, height / 420) * (.8 + random(level + 1600) * .3);
+        const kind = Math.floor(random(level + 1700) * 5);
+        const landmarks = [
+          '<path d="M-40 0v-52h80V0Z" fill="#576378"/><path d="M-47-52L0-77l47 25Z" fill="#aa8190"/><path d="M-9 0v-26H9V0" fill="#d6b675"/><path d="M-27-39h12v13h-12m42-13h12v13H15" fill="#f8dca0"/>',
+          '<path d="M-38 0v-27m76 27v-27M-45-23h90M-42-34h84" stroke="#ba9d86" stroke-width="6"/><path d="M-42-60h84" stroke="#536c6d" stroke-width="3"/>',
+          '<path d="M-38 0v-38h76V0" fill="#79637e"/><path d="M-47-38L0-70l47 32Z" fill="#cd9e97"/><path d="M-42-36h84" stroke="#f8dc9a" stroke-width="5"/><path d="M-25-24h50v17h-50Z" fill="#e1c88e"/>',
+          '<path d="M-50 0L-22-52 0-21 22-71 53 0Z" fill="#73828b"/><path d="M22-71L8-40l14 6 11-12Z" fill="#bdc6c0"/>',
+          '<path d="M-46 0h92M-35-7v-22m70 22v-22M-45-23h90" stroke="#af9c88" stroke-width="6"/><path d="M-23-39q23 20 46 0l-8 14h-30Z" fill="#ba8a81"/>'
+        ];
+        parts.push(`<g transform="translate(${lx} ${ly}) scale(${scale})">${landmarks[kind]}</g>`);
+      }
     }
     $('#mapScenery').innerHTML = parts.join('');
   }
   function syncStoryMapBackdrop() {
-    const screen = $('#storyMapScreen'), track = $('#levelMapTrack');
-    const backdrop = $('#storyMapBackdrop'), fill = $('#storyMapBackdropFill'), scenery = $('#storyMapBackdropScenery');
-    const height = Math.max(1, Math.ceil(screen.clientHeight || innerHeight));
-    backdrop.setAttribute('viewBox', `0 0 100 ${height}`);
-    fill.setAttribute('height', String(height));
-    const visibleMapY = Math.max(0, -track.getBoundingClientRect().top);
-    scenery.setAttribute('transform', `translate(0 ${-visibleMapY})`);
+    const viewport = $('#levelMapViewport');
+    $('#mapPrevious').disabled = viewport.scrollLeft <= 1;
+    $('#mapNext').disabled = viewport.scrollLeft >= viewport.scrollWidth - viewport.clientWidth - 1;
   }
   function buildLevelMap() {
     const track = $('#levelMapTrack'), path = $('#levelMapPath'), route = $('#levelMapRoute'), svg = $('#levelMapSvg');
     track.querySelectorAll('.level-entry').forEach(entry => entry.remove());
-    const height = LEVEL_MAP_LIMIT * LEVEL_MAP_STEP;
-    track.style.height = `${height}px`; svg.style.height = `${height}px`; svg.setAttribute('viewBox', `0 0 100 ${height}`);
-    buildMapScenery(height);
-    const sourceScenery = $('#mapScenery'), backdropScenery = $('#storyMapBackdropScenery');
-    backdropScenery.replaceChildren(...Array.from(sourceScenery.children).filter(node => node.tagName.toLowerCase() !== 'rect').map(node => node.cloneNode(true)));
-    sourceScenery.replaceChildren();
-    syncStoryMapBackdrop();
+    const height = Math.max(180, $('#levelMapViewport').clientHeight), width = mapStops[LEVEL_MAP_LIMIT - 1].x + 150;
+    track.style.height = `${height}px`; track.style.width = `${width}px`;
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     let d = '', prev = null;
-    for (let level = LEVEL_MAP_LIMIT; level >= 1; level--) {
-      const point = { x: levelMapX(level), y: (LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2 };
-      if (!prev) d = `M ${point.x.toFixed(2)} ${point.y}`;
-      else d += ` Q ${((prev.x + point.x) / 2 + Math.sin(level * .29) * 3).toFixed(2)} ${((prev.y + point.y) / 2).toFixed(1)} ${point.x.toFixed(2)} ${point.y}`;
+    for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
+      const point = mapPoint(level);
+      if (!prev) d = `M ${point.x} ${point.y}`;
+      else {
+        const span = point.x - prev.x;
+        const bend = .28 + mapRandom(level + 1800) * .4;
+        d += ` C ${prev.x + span * bend} ${prev.y} ${point.x - span * (1 - bend)} ${point.y} ${point.x} ${point.y}`;
+      }
       prev = point;
     }
+    drawNightMap(width, height, d);
     route.setAttribute('d', d); path.setAttribute('d', d);
     svg.querySelector('.path-halo').setAttribute('d', d);
-    $('#levelMapCount').textContent = `${unlockedLevel} / 7 hours unlocked`;
+    $('#levelMapCount').textContent = `${unlockedLevel} / 50 levels unlocked · ★ ${totalStars()}/21`;
     $('#roomStatus').textContent = thiriSleepStage >= 7 ? 'Thiri woke up' : thiriSleepStage >= 5 ? 'Thiri is almost awake' : thiriSleepStage >= 3 ? 'Thiri is stirring' : 'Thiri is sleeping';
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
-      const chapter = LEVEL_MAP_CHAPTERS.get(level), x = levelMapX(level);
+      const chapter = LEVEL_MAP_CHAPTERS.get(level), point = mapPoint(level);
       const entry = document.createElement('div');
-      entry.className = `level-entry ${x > 50 ? 'caption-left' : 'caption-right'}`;
-      entry.style.left = `${x}%`;
-      entry.style.top = `${(LEVEL_MAP_LIMIT - level) * LEVEL_MAP_STEP + LEVEL_MAP_STEP / 2}px`;
+      entry.className = `level-entry${point.y > height * .43 ? ' label-above' : ''}`;
+      entry.style.left = `${point.x}px`;
+      entry.style.top = `${point.y}px`;
       const button = document.createElement('button');
       const playable = level <= unlockedLevel;
       button.type = 'button'; button.dataset.level = String(level);
@@ -4212,21 +4420,74 @@
       if (chapter) {
         const caption = document.createElement('span'); caption.className = 'level-caption';
         const name = document.createElement('strong'); name.textContent = `${hourOf(level)} · ${chapter.name}`;
-        const sub = document.createElement('span'); sub.textContent = chapter.sub;
-        caption.appendChild(name); caption.appendChild(sub); entry.appendChild(caption);
+        const sub = document.createElement('span'); sub.textContent = level < unlockedLevel ? 'Completed · Play again' : level === unlockedLevel ? 'Your next adventure' : 'Complete the previous chapter';
+        caption.appendChild(name); caption.appendChild(sub);
+        const bestScore = getBest(`mk-best-n${level}`), st = nightStars[level] || 0;
+        if (playable && (bestScore || st)) {
+          const rec = document.createElement('span'); rec.className = 'level-best';
+          rec.innerHTML = [1, 2, 3].map(i => `<b style="color:${i <= st ? '#f6c453' : 'rgba(255,255,255,.28)'}">★</b>`).join('') + (bestScore ? ` Best ${bestScore.toLocaleString()}` : '');
+          rec.setAttribute('aria-label', `${st} of 3 stars${bestScore ? `, best score ${bestScore}` : ''}`);
+          caption.appendChild(rec);
+        }
+        entry.appendChild(caption);
       }
       track.appendChild(entry);
     }
   }
   function focusLevelMap(level = unlockedLevel) {
-    const screen = $('#storyMapScreen');
-    const target = $(`#levelMapTrack button[data-level="${level}"]`);
-    if (!target) return;
-    const targetCenter = target.getBoundingClientRect().top + target.offsetHeight / 2;
-    const desired = screen.scrollTop + targetCenter - screen.clientHeight / 2;
-    screen.scrollTop = Math.max(0, Math.min(screen.scrollHeight - screen.clientHeight, desired));
+    const viewport = $('#levelMapViewport');
+    viewport.scrollLeft = mapPoint(level).x - viewport.clientWidth / 2;
+    syncStoryMapBackdrop();
   }
-  $('#storyMapScreen').addEventListener('scroll', syncStoryMapBackdrop, { passive: true });
+  const mapViewport = $('#levelMapViewport');
+  mapViewport.addEventListener('scroll', syncStoryMapBackdrop, { passive: true });
+  let mapPointerDrag = null, mapSuppressClickUntil = 0;
+  mapViewport.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('button,a,input')) return;
+    mapPointerDrag = { id: event.pointerId, x: event.clientX, scrollLeft: mapViewport.scrollLeft, moved: false };
+    mapViewport.setPointerCapture(event.pointerId);
+  });
+  mapViewport.addEventListener('pointermove', event => {
+    if (!mapPointerDrag || event.pointerId !== mapPointerDrag.id) return;
+    const distance = event.clientX - mapPointerDrag.x;
+    if (!mapPointerDrag.moved && Math.abs(distance) < 4) return;
+    mapPointerDrag.moved = true;
+    mapViewport.scrollLeft = mapPointerDrag.scrollLeft - distance;
+    event.preventDefault();
+  });
+  const finishMapDrag = event => {
+    if (!mapPointerDrag || event.pointerId !== mapPointerDrag.id) return;
+    if (mapPointerDrag.moved) mapSuppressClickUntil = performance.now() + 350;
+    mapPointerDrag = null;
+  };
+  mapViewport.addEventListener('pointerup', finishMapDrag);
+  mapViewport.addEventListener('pointercancel', finishMapDrag);
+  mapViewport.addEventListener('click', event => {
+    if (performance.now() > mapSuppressClickUntil) return;
+    event.preventDefault(); event.stopPropagation(); mapSuppressClickUntil = 0;
+  }, true);
+  mapViewport.addEventListener('wheel', event => {
+    if (event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+    event.preventDefault();
+    mapViewport.scrollLeft += event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? mapViewport.clientWidth : 1);
+  }, { passive: false });
+  function panLevelMap(direction) {
+    mapViewport.scrollBy({ left: direction * Math.max(LEVEL_MAP_STEP, mapViewport.clientWidth * .75), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  }
+  $('#mapPrevious').addEventListener('click', () => panLevelMap(-1));
+  $('#mapNext').addEventListener('click', () => panLevelMap(1));
+  $('#mapCurrent').addEventListener('click', () => focusLevelMap());
+  mapViewport.addEventListener('keydown', event => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    if (event.key === 'Home' || event.key === 'End') focusLevelMap(event.key === 'Home' ? 1 : LEVEL_MAP_LIMIT);
+    else panLevelMap(event.key === 'ArrowLeft' ? -1 : 1);
+  });
+  new ResizeObserver(() => {
+    if ($('#storyMapScreen').hidden) return;
+    const height = Math.max(180, mapViewport.clientHeight);
+    if ($('#levelMapTrack').style.height !== `${height}px`) { buildLevelMap(); focusLevelMap(); }
+  }).observe(mapViewport);
   function showHub(focus = true) {
     music('duck', 1); music('play', 'menu'); music('ambience', 'menu');
     $('#startScreen').hidden = false; $('#menuHub').hidden = false; $('#storyMapScreen').hidden = true;
@@ -4471,7 +4732,7 @@
   // ---- Morning ending cutscene ----
   function playEnding() {
     csKind = 'ending'; CS_SCENES = ENDING_SCENES; CS_LINES = ENDING_LINES; csImgs = endingImgs;
-    music('stop'); initAudio(); state = 'intro'; cv.hidden = true;
+    music('duck', 1); music('play', 'ending'); music('ambience', null); initAudio(); state = 'intro'; cv.hidden = true;
     ['#welcomeScreen', '#welcomeCardsScreen', '#helpScreen', '#levelBriefingScreen', '#nightReadyScreen', '#startScreen', '#endScreen', '#awakeningScreen', '#shopScreen', '#bookScreen'].forEach(id => { const el = $(id); if (el) el.hidden = true; });
     const sm = $('#storyMapScreen'); if (sm) sm.hidden = true;
     $('#prologueScreen').hidden = false; $('#introContinueBtn').hidden = true; $('#introSkipBtn').textContent = 'Skip →';
@@ -4503,9 +4764,6 @@
   // test shortcut: open the game with ?ending in the address to jump straight to the morning ending
   if (/[?&]ending\b/.test(location.search)) setTimeout(() => playEnding(), 900);
   $('#storyBtn').addEventListener('click', () => showStoryMap(true));
-  $('#goalNightBtn').addEventListener('click', () => showStoryMap(true));
-  $('#goalBookBtn').addEventListener('click', () => $('#bookBtn').click());
-  $('#goalUpgradeBtn').addEventListener('click', () => $('#shopBtn').click());
   $('#mapHubBackBtn').addEventListener('click', () => showHub(true));
   $('#infoBtn').addEventListener('click', () => openHelp('hub'));
   $('#introSkipBtn').addEventListener('click', leaveIntro);
@@ -4538,7 +4796,7 @@
     $('#awakeningCompleteLine').hidden = false; $('#awakeningActions').hidden = false; $('#awakeningReplayBtn').focus({ preventScroll: true });
   }
   function playFinalAwakening() {
-    music('stop');
+    music('duck', 1); music('play', 'ending'); music('ambience', null);
     if (finalAwakeningSeen) { showEnd(); return; }
     finalAwakeningSeen = true;
     if (thiriSleepStage < 7) { thiriSleepStage = 7; saveStoryProgress(); }
@@ -4712,7 +4970,7 @@
     mapGuidePending = true;
     const coat = MK_COATS[MK_PROFILE.coat] || MK_COATS.ginger;
     $('#mapGuideCat').src = coat.img; $('#mapGuideName').textContent = MK_PROFILE.cat;
-    $('#mapGuideText').textContent = `${MK_PROFILE.cat} will follow the glowing path with you. Choose the lit hour at its base to see the first goal.`;
+    $('#mapGuideText').textContent = `${MK_PROFILE.cat} will follow the glowing path with you. Swipe along the trail and choose a glowing chapter to see its goal.`;
     $('#mapGuide').hidden = false; $('#mapGuideDismiss').focus({ preventScroll: true });
   }
   function dismissMapGuide() {
@@ -4732,7 +4990,7 @@
     $('#levelBriefingGoal').textContent = goal ? `Bring home: ${goal}` : 'Find the little lights that are ready to come home.';
     $('#levelBriefingTip').textContent = chapter.tutorialHint || chapter.newMoodling || chapter.sub;
     const seconds = Math.max(0, Math.floor(chapter.timeLimit || 0));
-    $('#levelBriefingTime').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} before sunrise`;
+    { const g = starGoals(briefingNight); $('#levelBriefingTime').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} before sunrise · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}`; }
     $('#levelBriefingScreen').hidden = false; $('#levelBriefingStart').focus({ preventScroll: true });
   }
   function closeLevelBriefing() {
@@ -4825,6 +5083,7 @@
   $('#profileBtn').addEventListener('click', () => showSetup(false));
   $('#settingsBtn').addEventListener('click', () => {
     $('#showTipsToggle').checked = MK_PROFILE.showTips !== false; $('#tipLanguageSelect').value = MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en';
+    $('#gentleModeToggle').checked = gentleMode;
     $('#settingsReplayTutorial').disabled = MK_PROFILE.showTips === false;
     $('#settingsGuidanceStatus').textContent = ''; $('#hubSettingsScreen').hidden = false; $('#settingsCloseBtn').focus({ preventScroll: true });
   });
@@ -4836,6 +5095,7 @@
     $('#settingsReplayTutorial').disabled = !MK_PROFILE.showTips; persistGuidanceProgress();
   });
   $('#tipLanguageSelect').addEventListener('change', e => { MK_PROFILE.tipLanguage = e.target.value === 'my' ? 'my' : 'en'; persistGuidanceProgress(); });
+  $('#gentleModeToggle').addEventListener('change', e => { gentleMode = !!e.target.checked; try { localStorage.setItem('mk-gentle-mode', gentleMode ? '1' : '0'); } catch (err) {} });
   $('#settingsReplayTutorial').addEventListener('click', () => {
     if (!MK_PROFILE.showTips) return;
     MK_PROFILE.tutorialDone = false; persistGuidanceProgress(); $('#hubSettingsScreen').hidden = true; showStoryMap(false);
@@ -4898,16 +5158,21 @@
   });
   $('#freeBtn').addEventListener('click', () => startGame('free'));
   $('#againBtn').addEventListener('click', () => {
-    if (R && R.won && !R.free && R.night < 7) startGame('story', R.night + 1);
+    if (R && R.won && !R.free && R.night < 50) startGame('story', R.night + 1);
     else startGame(mode, storyNight);
   });
   $('#endReplayBtn').addEventListener('click', () => startGame(mode, storyNight));
-  $('#menuBtn').addEventListener('click', () => { mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns(); showMainMenu(true); });
+  $('#menuBtn').addEventListener('click', () => {
+    mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns();
+    if (R?.failReason === 'fall' && mode === 'story') { $('#endScreen').hidden = true; showStoryMap(true); }
+    else showMainMenu(true);
+  });
 
   let last = performance.now();
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(.033, (now - last) / 1000); last = now;
+    if (document.hidden) return;
     pauseBtn.hidden = state !== 'play';
     if (mobileLandscapeRequired && !orientationGate.hidden) return;
     if (state === 'intro' || state === 'awakening') { t += dt; return; }
@@ -4922,7 +5187,9 @@
       drawHome();
       return;
     }
-    render(dt);
+    // DOM menus have their own artwork. Do not repaint the hidden game world
+    // underneath them: it wastes mobile GPU memory and rendering time.
+    if (!cv.hidden) render(dt);
   }
   requestAnimationFrame(frame);
 })();
