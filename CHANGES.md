@@ -1,5 +1,9 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Shwe's feet alignment
+
+- Aligned Shwe's animated sprite and worn items to the gameplay paw baseline, fixing the feet clipping below the ground in the attached gameplay recording.
+
 ## Voice acting in the intro and ending
 
 - Every spoken line of the intro and the morning ending now has its voice clip (`frontend/assets/audio/voice`). The words type out at the speed they are spoken, the next line starts after the voice ends, and the music dips while someone speaks.

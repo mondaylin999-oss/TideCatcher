@@ -3294,10 +3294,12 @@
     else { tail = Math.sin(t * 1.7) * .12 + Math.pow(Math.max(0, Math.sin(t * .83 + .7)), 8) * .28; breath = Math.sin(t * 2.2) * .016; }
     if (c.on) { ctx.fillStyle = 'rgba(8,10,24,.35)'; ctx.beginPath(); ctx.ellipse(-2, 2, ww * .36, 4.5, 0, 0, 7); ctx.fill(); }
     if (eyesT > 0) { ctx.shadowColor = '#c8ff8a'; ctx.shadowBlur = 16; }
-    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, -hh + 6 + bob, ww, hh, { back, front, tail, breath });
-    if (!ok) ctx.drawImage(spr, -ww / 2 - 2, -hh + 6 + bob, ww, hh);
+    // cat.y is the paw baseline; keep the sprite's bottom edge on that line.
+    const spriteY = -hh + bob;
+    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, { back, front, tail, breath });
+    if (!ok) ctx.drawImage(spr, -ww / 2 - 2, spriteY, ww, hh);
     ctx.shadowBlur = 0;
-    drawCatGear(c, -ww / 2 - 2, -hh + 6 + bob, ww, hh, moving);
+    drawCatGear(c, -ww / 2 - 2, spriteY, ww, hh, moving);
     return true;
   }
   function drawCat() {
