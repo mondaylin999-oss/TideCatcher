@@ -1,5 +1,9 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Language picker
+
+- Replaced the tip-language dropdown in Settings with a compact flag-based dialog matching the supplied reference, including clear selection feedback and keyboard/touch-friendly close behavior.
+
 ## Mobile level-map dragging
 
 - Enabled finger and stylus dragging on the horizontal level map. Dragging starts on the map surface; level buttons remain tappable.

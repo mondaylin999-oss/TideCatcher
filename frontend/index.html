@@ -230,11 +230,21 @@
     <div class="guidance-settings">
       <label class="guidance-toggle"><span>Show tips</span><input class="cozy-toggle" id="showTipsToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
       <label class="guidance-toggle"><span>Gentle mode · no life lost on falls</span><input class="cozy-toggle" id="gentleModeToggle" type="checkbox" role="switch" data-sfx="toggle"></label>
-      <label class="guidance-language">Tip language<select id="tipLanguageSelect"><option value="en">English</option><option value="my">မြန်မာ</option></select></label>
+      <div class="guidance-language"><span>Tip language</span><button class="language-picker-trigger" id="languagePickerBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="languagePickerScreen"><span class="language-current-flag" id="languageCurrentFlag" aria-hidden="true">🇬🇧</span><span id="languageCurrentLabel">English</span><span class="language-trigger-chevron" aria-hidden="true">⌄</span></button></div>
       <p class="muted guidance-status" id="settingsGuidanceStatus" aria-live="polite"></p>
       <div class="guidance-actions"><button class="btn ghost" id="settingsHelpBtn" type="button" data-sfx="toggle">How to play</button><button class="btn ghost" id="settingsReplayTutorial" type="button" data-sfx="toggle">Replay tutorial</button></div>
     </div>
     <button class="btn ghost" id="settingsCloseBtn" type="button">Back to home</button>
+  </section>
+</div>
+<div class="overlay language-picker-screen" id="languagePickerScreen" hidden role="dialog" aria-modal="true" aria-labelledby="languagePickerTitle">
+  <section class="panel language-picker-panel">
+    <button class="language-picker-close" id="languagePickerClose" type="button" aria-label="Close language selection">×</button>
+    <h2 id="languagePickerTitle">Language</h2>
+    <div class="language-options" role="group" aria-label="Tip language">
+      <button class="language-option" id="languageOptionMy" type="button" data-language="my" aria-pressed="false"><span class="language-flag" aria-hidden="true">🇲🇲</span><span class="language-option-name" lang="my">မြန်မာ</span><span class="language-check" aria-hidden="true">✓</span></button>
+      <button class="language-option" id="languageOptionEn" type="button" data-language="en" aria-pressed="false"><span class="language-flag" aria-hidden="true">🇬🇧</span><span class="language-option-name">English</span><span class="language-check" aria-hidden="true">✓</span></button>
+    </div>
   </section>
 </div>
 <div class="overlay help-screen" id="helpScreen" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">

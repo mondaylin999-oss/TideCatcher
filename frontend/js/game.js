@@ -5135,8 +5135,44 @@
     }
   });
   $('#profileBtn').addEventListener('click', () => showSetup(false));
+  function refreshLanguagePicker() {
+    const language = MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en';
+    const myanmar = language === 'my';
+    $('#languageCurrentFlag').textContent = myanmar ? '🇲🇲' : '🇬🇧';
+    $('#languageCurrentLabel').textContent = myanmar ? 'မြန်မာ' : 'English';
+    $('#languageOptionMy').classList.toggle('is-selected', myanmar);
+    $('#languageOptionMy').setAttribute('aria-pressed', String(myanmar));
+    $('#languageOptionEn').classList.toggle('is-selected', !myanmar);
+    $('#languageOptionEn').setAttribute('aria-pressed', String(!myanmar));
+  }
+  function closeLanguagePicker(restoreFocus = true) {
+    $('#languagePickerScreen').hidden = true;
+    $('#languagePickerBtn').setAttribute('aria-expanded', 'false');
+    if (restoreFocus) $('#languagePickerBtn').focus({ preventScroll: true });
+  }
+  $('#languagePickerBtn').addEventListener('click', () => {
+    refreshLanguagePicker();
+    $('#languagePickerScreen').hidden = false;
+    $('#languagePickerBtn').setAttribute('aria-expanded', 'true');
+    $(`#languagePickerScreen [data-language="${MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en'}"]`).focus({ preventScroll: true });
+  });
+  $('#languagePickerScreen').addEventListener('click', event => {
+    if (event.target.id === 'languagePickerScreen' || event.target.id === 'languagePickerClose') closeLanguagePicker();
+    const option = event.target.closest('[data-language]');
+    if (!option) return;
+    MK_PROFILE.tipLanguage = option.dataset.language === 'my' ? 'my' : 'en';
+    persistGuidanceProgress(); refreshLanguagePicker(); closeLanguagePicker();
+  });
+  $('#languagePickerScreen').addEventListener('keydown', event => {
+    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeLanguagePicker(); return; }
+    if (event.key !== 'Tab') return;
+    const buttons = Array.from($('#languagePickerScreen').querySelectorAll('button:not([disabled])'));
+    const first = buttons[0], last = buttons[buttons.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
   $('#settingsBtn').addEventListener('click', () => {
-    $('#showTipsToggle').checked = MK_PROFILE.showTips !== false; $('#tipLanguageSelect').value = MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en';
+    $('#showTipsToggle').checked = MK_PROFILE.showTips !== false; refreshLanguagePicker();
     $('#gentleModeToggle').checked = gentleMode;
     $('#settingsReplayTutorial').disabled = MK_PROFILE.showTips === false;
     $('#settingsGuidanceStatus').textContent = ''; $('#hubSettingsScreen').hidden = false; $('#settingsCloseBtn').focus({ preventScroll: true });
@@ -5148,7 +5184,6 @@
     if (!MK_PROFILE.showTips) { activeJitTip = null; jitTipQueue = []; hideCoachTip(); }
     $('#settingsReplayTutorial').disabled = !MK_PROFILE.showTips; persistGuidanceProgress();
   });
-  $('#tipLanguageSelect').addEventListener('change', e => { MK_PROFILE.tipLanguage = e.target.value === 'my' ? 'my' : 'en'; persistGuidanceProgress(); });
   $('#gentleModeToggle').addEventListener('change', e => { gentleMode = !!e.target.checked; try { localStorage.setItem('mk-gentle-mode', gentleMode ? '1' : '0'); } catch (err) {} });
   $('#settingsReplayTutorial').addEventListener('click', () => {
     if (!MK_PROFILE.showTips) return;
