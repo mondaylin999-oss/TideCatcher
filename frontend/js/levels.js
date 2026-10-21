@@ -177,6 +177,11 @@
   // Hilltop: every hill's middle stone pillar crumbles, not just the first one
   for (const p of levels[5].platforms) if (p[2] === 90 && p[1] === 420) p[3] = 'crumbling';
   for (let night = 8; night <= 50; night++) levels[night] = makeChallengeLevel(night);
+  // One pit-bearing story level per five levels. The ground profile already
+  // spans the entire route; clearing gaps restores solid ground beneath roosts.
+  for (let night = 1; night <= 50; night++) {
+    if (night % 5 !== 0) levels[night].pits = [];
+  }
   root.TC_LEVELS = levels;
   if (typeof module !== 'undefined' && module.exports) module.exports = levels;
 })(typeof window !== 'undefined' ? window : globalThis);

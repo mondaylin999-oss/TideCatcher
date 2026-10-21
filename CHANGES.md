@@ -126,3 +126,7 @@
 
 - Added explicit Wrangler static-assets configuration for frontend/, preventing Git history and repository-only files from being uploaded. The failed build included a 65 MiB Git pack, exceeding Cloudflare's 25 MiB asset limit.
 - Preserved legacy frontend and TideCatcher.html entry URLs with redirects.
+
+## Pit frequency
+
+- Story pits now appear only on levels 5, 10, 15, 20, 25, 30, 35, 40, 45 and 50. Other story levels have solid ground beneath their existing roosts. Free Play layouts are unchanged.
