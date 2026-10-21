@@ -1,5 +1,11 @@
 # Cozy night sticker book
 
+## Compact post-night screens
+
+- Fit the bedroom moment and results into landscape viewports with visible action buttons.
+- Removed duplicate bedroom narration, repeated story details, tips, secondary statistics and the shop shortcut from results. Kept score, feelings brought home, Glow, outcome and continue/retry/menu actions.
+- Used a side-by-side bedroom composition on short phones and a three-column summary on results.
+
 ## Hidden canvas rendering
 
 - Stopped drawing the game world while its canvas is hidden behind DOM menus and while the browser tab is hidden. This removes unnecessary mobile graphics work; gameplay resumes rendering when visible.

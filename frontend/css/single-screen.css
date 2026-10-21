@@ -145,3 +145,32 @@
   #setupForm #setupNote{font-size:13px}
   #setupForm .prologue-actions .btn{min-height:48px;padding:10px 18px;font-size:16px}
 }
+
+/* Post-night screens: one concise moment, then the essential run summary. */
+#nightWakeScreen,#endScreen{padding:12px}
+#nightWakeScreen>.panel,#endScreen>.panel{width:min(880px,calc(100% - 80px));max-width:none;max-height:calc(100dvh - 24px);padding:clamp(12px,3vh,24px);gap:clamp(6px,1.5vh,14px);overflow:visible}
+#nightWakeEyebrow,#nightWakeLine,#endTip,#nightStoryline,#endMissions,
+#endScreen .secondary-result,#endShopBtn,#newBestSticker{display:none!important}
+#nightWakeScreen h1,#endScreen h1{font-size:clamp(20px,4vh,32px);line-height:1.15}
+#nightWakeScreen .wake-art{min-height:0;height:clamp(90px,35vh,250px)}
+#nightWakeScreen .wake-art canvas{min-height:0;width:100%;height:100%;object-fit:contain}
+#nightWakeScreen .wake-copy strong{font-size:clamp(14px,2.8vh,19px);line-height:1.35}
+#nightWakeContinue{justify-self:end}
+#endScreen .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#endScreen .stat{padding:clamp(8px,2vh,16px);gap:3px}
+#endScreen .stat strong{font-size:clamp(22px,5vh,36px)}
+#endScreen .stat span{font-size:10px}
+#endScreen .stars{font-size:22px;line-height:1}
+#endScreen .eyebrow{font-size:10px;line-height:1.2}
+#endMsg{font-size:clamp(12px,2.5vh,15px);line-height:1.35}
+#endScreen .actions{display:flex;flex-wrap:nowrap;gap:8px}
+#endScreen .actions .btn{flex:1;min-width:0}
+#nightWakeScreen .btn,#endScreen .btn{min-height:44px;padding:8px 12px;font-size:clamp(14px,2.8vh,18px);line-height:1.2}
+@media(orientation:landscape) and (max-height:450px){
+  #nightWakeScreen>.panel{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-rows:auto 1fr auto;gap:12px 18px}
+  #nightWakeScreen .wake-art{grid-column:1;grid-row:1/4;height:min(62vh,220px)}
+  #nightWakeTitle,#nightWakeScreen .wake-copy,#nightWakeContinue{grid-column:2}
+  #nightWakeTitle{grid-row:1}#nightWakeScreen .wake-copy{grid-row:2;align-self:center}#nightWakeContinue{grid-row:3}
+  #endScreen>.panel{gap:6px;padding:12px 16px}
+  #endScreen .stat{padding:8px}
+}
