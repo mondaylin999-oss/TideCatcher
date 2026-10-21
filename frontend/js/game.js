@@ -4915,6 +4915,7 @@
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(.033, (now - last) / 1000); last = now;
+    if (document.hidden) return;
     pauseBtn.hidden = state !== 'play';
     if (mobileLandscapeRequired && !orientationGate.hidden) return;
     if (state === 'intro' || state === 'awakening') { t += dt; return; }
@@ -4929,7 +4930,9 @@
       drawHome();
       return;
     }
-    render(dt);
+    // DOM menus have their own artwork. Do not repaint the hidden game world
+    // underneath them: it wastes mobile GPU memory and rendering time.
+    if (!cv.hidden) render(dt);
   }
   requestAnimationFrame(frame);
 })();

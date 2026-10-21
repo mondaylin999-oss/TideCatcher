@@ -1,5 +1,10 @@
 # Cozy night sticker book
 
+## Hidden canvas rendering
+
+- Stopped drawing the game world while its canvas is hidden behind DOM menus and while the browser tab is hidden. This removes unnecessary mobile graphics work; gameplay resumes rendering when visible.
+- The latest phone photo confirms artifacts can occur on the updated home layout; the exact device-specific cause remains unconfirmed.
+
 ## Mobile home rendering follow-up
 
 - Added content-versioned stylesheet and script URLs so refreshed pages do not reuse older asset versions.
