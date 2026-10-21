@@ -5161,7 +5161,7 @@
     const option = event.target.closest('[data-language]');
     if (!option) return;
     MK_PROFILE.tipLanguage = option.dataset.language === 'my' ? 'my' : 'en';
-    persistGuidanceProgress(); refreshLanguagePicker(); closeLanguagePicker();
+    persistGuidanceProgress(); refreshLanguagePicker();
   });
   $('#languagePickerScreen').addEventListener('keydown', event => {
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeLanguagePicker(); return; }

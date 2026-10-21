@@ -270,7 +270,7 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .guidance-toggle,.guidance-language{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--cream);font-weight:700}
 .guidance-toggle .cozy-toggle{flex:0 0 50px;cursor:pointer}
 .language-picker-trigger{display:flex;align-items:center;gap:9px;min-width:145px;min-height:44px;padding:6px 12px;border:1px solid var(--line);border-radius:var(--radius-pill);background:var(--bg-deep);color:var(--cream);font:700 14px var(--body);cursor:pointer}
-.language-current-flag{display:grid;place-items:center;width:28px;height:28px;overflow:hidden;border-radius:50%;background:#fff;font-size:21px;line-height:1}
+.language-current-flag{display:grid;place-items:center;width:28px;height:28px;overflow:hidden;border-radius:50%;background:transparent;font-size:21px;line-height:1}
 .language-trigger-chevron{margin-left:auto;color:var(--muted);font-size:17px}
 .language-picker-screen{z-index:90;padding:20px;background:rgba(5,8,16,.72);backdrop-filter:blur(8px)}
 .language-picker-panel{position:relative;width:min(440px,100%);max-height:calc(100dvh - 40px);overflow:auto;padding:30px 24px 24px;gap:20px;border:1px solid rgba(177,198,224,.22);border-radius:28px;background:#0d1420;box-shadow:0 24px 80px rgba(0,0,0,.58)}
@@ -279,7 +279,7 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .language-options{display:grid;gap:10px}
 .language-option{display:grid;grid-template-columns:48px minmax(0,1fr) 24px;align-items:center;gap:12px;width:100%;min-height:68px;padding:9px 14px;border:1px solid transparent;border-radius:24px;background:#121c2a;color:#d9e0e8;text-align:left;font:500 17px var(--body);cursor:pointer;transition:background .16s,border-color .16s}
 .language-option.is-selected{border-color:#416b91;background:#1b3b5c;color:#f3f5f7}
-.language-flag{display:grid;place-items:center;width:42px;height:42px;overflow:hidden;border:1px solid rgba(255,255,255,.15);border-radius:50%;background:#fff;font-size:28px;line-height:1}
+.language-flag{display:grid;place-items:center;width:42px;height:42px;overflow:hidden;border-radius:50%;background:transparent;font-size:28px;line-height:1}
 .language-option-name[lang="my"]{font-family:'Padauk',var(--body);font-size:18px}
 .language-check{visibility:hidden;justify-self:center;color:#eaf3f9;font-size:22px;font-weight:800}
 .language-option.is-selected .language-check{visibility:visible}

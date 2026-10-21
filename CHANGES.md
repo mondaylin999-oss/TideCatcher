@@ -3,6 +3,7 @@
 ## Language picker
 
 - Replaced the tip-language dropdown in Settings with a compact flag-based dialog matching the supplied reference, including clear selection feedback and keyboard/touch-friendly close behavior.
+- Kept the picker open after a choice so the selected-language checkmark is immediately visible; removed the white disks behind the flag icons.
 
 ## Mobile level-map dragging
 
