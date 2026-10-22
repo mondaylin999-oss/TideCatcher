@@ -9,12 +9,25 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Padauk:wght@400;700&display=swap">
 <link rel="stylesheet" href="css/theme.css?v=ae0a5a6e0e1a">
 <link rel="stylesheet" href="css/styles.css?v=d56824e6fa9c">
-<link rel="stylesheet" href="css/cozy.css?v=6f341d54f62e">
+<link rel="stylesheet" href="css/cozy.css?v=20261023-paw-loader">
 <link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 </head>
 <body>
 <canvas id="game" aria-label="TideCatcher prototype game" hidden></canvas>
+<div class="boot-screen" id="bootLoadingScreen" role="status" aria-live="polite" aria-label="Loading TideCatcher">
+  <div class="boot-loading-card">
+    <div class="boot-moon" aria-hidden="true"><div class="boot-paw-trail">
+      <svg class="boot-paw boot-paw-one" viewBox="0 0 72 72"><ellipse cx="36" cy="48" rx="17" ry="14"/><ellipse cx="17" cy="29" rx="7" ry="9"/><ellipse cx="31" cy="19" rx="7" ry="9"/><ellipse cx="45" cy="19" rx="7" ry="9"/><ellipse cx="57" cy="29" rx="7" ry="9"/></svg>
+      <svg class="boot-paw boot-paw-two" viewBox="0 0 72 72"><ellipse cx="36" cy="48" rx="17" ry="14"/><ellipse cx="17" cy="29" rx="7" ry="9"/><ellipse cx="31" cy="19" rx="7" ry="9"/><ellipse cx="45" cy="19" rx="7" ry="9"/><ellipse cx="57" cy="29" rx="7" ry="9"/></svg>
+      <svg class="boot-paw boot-paw-three" viewBox="0 0 72 72"><ellipse cx="36" cy="48" rx="17" ry="14"/><ellipse cx="17" cy="29" rx="7" ry="9"/><ellipse cx="31" cy="19" rx="7" ry="9"/><ellipse cx="45" cy="19" rx="7" ry="9"/><ellipse cx="57" cy="29" rx="7" ry="9"/></svg>
+    </div></div>
+    <p class="boot-kicker">TIDECATCHER</p>
+    <h1>Following the pawprints</h1>
+    <p class="boot-loading-message">Waking Shwe and gathering the moonlight…</p>
+    <div class="boot-loading-bar" aria-hidden="true"><span></span></div>
+  </div>
+</div>
 
 <div id="touch" hidden>
   <div id="stickZone"><div id="stick" hidden><div id="knob"></div></div></div>
@@ -155,7 +168,7 @@
   </form>
 </div>
 
-<div class="overlay hub-screen" id="startScreen">
+<div class="overlay hub-screen" id="startScreen" hidden>
   <header class="hub-topbar" aria-label="TideCatcher home">
     <div class="hub-brand"><span class="hub-brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M5 28c6-8 12-8 19 0s13 8 19 0v9c-6 7-12 7-19 0s-13-7-19 0z" fill="currentColor" opacity=".72"/><path d="M6 21c6-8 12-8 18 0s12 8 18 0" fill="none" stroke="#e8f1f5" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="11" r="4" fill="#e0b04a"/></svg></span><span class="hub-brand-copy"><span class="hub-brand-kicker">THE NIGHT SIDE</span><strong>TideCatcher</strong></span></div>
     <div class="hub-currencies" aria-label="Saved collection totals">
@@ -374,7 +387,7 @@
 <script src="js/levels.js?v=851133b04e66"></script>
 <script src="js/tc-sfx.js?v=2e3b239c26f8"></script>
 <script src="js/tc-game-audio.js?v=5a66f4ed7efc"></script>
-<script src="js/game.js?v=1db6b0548f82"></script>
+<script src="js/game.js?v=20261023-paw-loader"></script>
 <script src="js/cozy-ui.js?v=f6823dfb3d93"></script>
 </body>
 </html>

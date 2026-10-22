@@ -5220,11 +5220,20 @@
   $('#resetScreen').addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeReset(); } });
   paintCoat(COAT); renameAll();
 
+  const bootScreen = $('#bootLoadingScreen'), bootStartedAt = performance.now();
   buildLevelMap();
   if (!MK_HAS_PROFILE && MK_PROFILE.welcomeSeen) showSetup(true);
   else if (!MK_HAS_PROFILE) showWelcome();
   else showMainMenu(false);
   syncMobileOrientationGate();
+  const pageReady = document.readyState === 'complete' ? Promise.resolve() : new Promise(resolve => addEventListener('load', resolve, { once: true }));
+  const fontsReady = document.fonts?.ready || Promise.resolve();
+  const fontWait = Promise.race([fontsReady.catch(() => {}), new Promise(resolve => setTimeout(resolve, 1600))]);
+  const minimumBoot = new Promise(resolve => setTimeout(resolve, Math.max(0, 800 - (performance.now() - bootStartedAt))));
+  Promise.all([pageReady, fontWait, minimumBoot]).then(() => {
+    bootScreen.classList.add('is-leaving');
+    setTimeout(() => { bootScreen.hidden = true; }, 260);
+  });
   pauseBtn.addEventListener('click', pauseGame);
   pauseContinueBtn.addEventListener('click', resumeGame);
   pauseHelpBtn.addEventListener('click', () => openHelp('pause'));

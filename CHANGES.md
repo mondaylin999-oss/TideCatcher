@@ -1,5 +1,9 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Startup loading screen
+
+- Added a moonlit startup screen with an animated cat paw trail while the page and fonts finish loading. The home screen stays hidden until startup is ready, avoiding a flash of the home page before the app initializes.
+
 ## Language picker
 
 - Replaced the tip-language dropdown in Settings with a compact flag-based dialog matching the supplied reference, including clear selection feedback and keyboard/touch-friendly close behavior.
