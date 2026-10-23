@@ -1,5 +1,14 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Heart Workshop and Lantern Town
+
+- Added two home destinations with landscape layouts, touch scrolling, keyboard navigation and reduced-motion support.
+- Heart Workshop has 50 handmade feelings: nine catchable basics, 18 first mixes, 15 second mixes, seven deep feelings and Whole Heart. Tap ingredients or drag them into bowls; valid recipes consume one of each light and save their result. Unknown pairs cost nothing. Discovered recipes remain visible even after spending their lights. Hints cost 20 Glow.
+- Added a separate saved light inventory. New catches (including Golden and extra catches, excluding tutorial/ambush-only catches) bank after successful story nights or completed Free Play runs. Abandoned and failed story nights do not bank lights. Existing Mood Book records are preserved; historical catches are not retroactively converted into spendable stock. Scoring and Moodling behavior are unchanged.
+- Lantern Town has ten illustrated places with ingredient requirements, memories, warm windows, 30 Glow per place and existing trail/comfort-item rewards. Spending lights never removes discoveries. Place rewards are tracked once per save.
+- Discover all seven deep feelings, then combine Happiness and Love for Whole Heart. Lighting all ten places and discovering Whole Heart unlocks a replayable sky-lantern ending with Thiri drawing her town and a permanent cosmetic golden collar for Shwe. The existing chapter ending remains available.
+- Progress uses the existing browser save/reset model. No external service, AI generation or backend is required. Recipe and place transactions refuse consumption when browser storage cannot save.
+
 ## Startup loading screen
 
 - Added a moonlit startup screen with an animated cat paw trail while the page and fonts finish loading. The home screen stays hidden until startup is ready, avoiding a flash of the home page before the app initializes.

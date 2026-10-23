@@ -1041,6 +1041,8 @@
   const requiredTotal = () => Object.values(need).reduce((sum, n) => sum + n, 0);
   const caughtTotal = () => Object.values(got).reduce((sum, n) => sum + n, 0);
   let cat, mood = [], parts = [], floats = [], trail = [], hist = [], camX = 0, respawnQ = [], banner = null;
+  // Workshop lights are banked only at the run's normal completion boundary.
+  let workshopRun = [], goldenCollar = false;
   let scratchSpots = [], scratchTarget = null, scratchAnim = 0, rocks = [], buriedHome = null, shake = 0;
   // Calm (4 AM, Lakeside): it sits dim on a lily pad. Shwe gathers FLY_NEED fireflies by walking slowly,
   // then brings them to Calm, which lights up and comes home. Running/jumping/pouncing near a firefly scatters it.
@@ -1469,6 +1471,7 @@
     lives = 3; checkpointX = currentLevel.catStart ?? 200; fallDimT = 0; respawnT = 0; pitTipShown = false; edgeSoundAt = 0; pendingFallFail = false; jumpHeld = false;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
+    workshopRun = [];
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
     scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false; breathTipShown = false;
     const buryStyle = BURY_SPOTS[currentMapKey()];
@@ -1653,6 +1656,7 @@
       tone(660, .18, 'triangle', .08);
       return;
     }
+    workshopRun.push(m.type);
     if (mode === 'story' && m.type !== 'G' && got[m.type] >= need[m.type]) {
       // an extra catch (this feeling is already home): no penalty, half the usual Glow, and it floats home too
       cat.pounce = 0; cat.bounced = true;
@@ -3182,7 +3186,8 @@
   function drawCatGear(c, x0, y0, ww, hh, moving, force) {
     const has = force || activeItems || {};
     if (!force && state !== 'play' && state !== 'paused' && state !== 'ending') return;
-    if (!has.scarf && !has.bell && !has.jar && !has.sand) return;
+    const showGoldenCollar = !force && goldenCollar;
+    if (!has.scarf && !has.bell && !has.jar && !has.sand && !showGoldenCollar) return;
     const P = GEAR_POS[MK_PROFILE.coat] || GEAR_POS.ginger, k = hh / 70;
     const nx = x0 + (P.n[0] - .03) * ww, ny = y0 + (P.n[1] + .12) * hh, nr = P.n[2] * ww * .85 / k;
     const bx = x0 + (P.b[0] - .02) * ww, by = y0 + (P.b[1] - .045) * hh;
@@ -3224,9 +3229,9 @@
       ctx.restore();
     }
     ctx.translate(nx, ny); ctx.scale(k, k);
-    if (has.bell && !has.scarf) {   // thin ribbon collar with a tiny buckle
+    if ((has.bell || showGoldenCollar) && !has.scarf) {   // thin ribbon collar with a tiny buckle
       ctx.beginPath(); ctx.moveTo(-nr, -3.5); ctx.quadraticCurveTo(0, 2.6, nr, -4.5);
-      ctx.strokeStyle = OL; ctx.lineWidth = 3.6; ctx.stroke(); ctx.strokeStyle = '#4f7bff'; ctx.lineWidth = 2.2; ctx.stroke();
+      ctx.strokeStyle = OL; ctx.lineWidth = 3.6; ctx.stroke(); ctx.strokeStyle = showGoldenCollar ? '#ffe08a' : '#4f7bff'; ctx.lineWidth = 2.2; ctx.stroke();
       ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = .6; ctx.beginPath(); ctx.moveTo(-nr * .8, -3.4); ctx.quadraticCurveTo(0, 1.6, nr * .8, -4.2); ctx.stroke();
     }
     if (has.scarf) {
@@ -3509,6 +3514,8 @@
   let R = null;
   function finish(won, failReason = null) {
     if (state === 'over' || state === 'home') return;
+    if (won || mode === 'free') window.TCHeart?.bank(workshopRun);
+    workshopRun = [];
     state = 'over'; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
     if (mode === 'story' && storyNight === 1 && won && hits === 0) bump('nohit');
@@ -5289,5 +5296,29 @@
     // underneath them: it wastes mobile GPU memory and rendering time.
     if (!cv.hidden) render(dt);
   }
+  window.TCHeart?.bind({
+    glow: () => glow,
+    spend: amount => { if (glow < amount) return false; glow -= amount; saveUpg(); refreshHubStats(); return true; },
+    enter: () => { state = 'menu'; $('#startScreen').hidden = true; cv.hidden = true; },
+    home: () => showMainMenu(true),
+    play: () => showStoryMap(true),
+    chime: () => tone(784, .25, 'sine', .06, 180),
+    portrait: id => bookPortrait(id, 0, true),
+    rewardName: id => TRAILS[id] ? TRAILS[id].name + ' trail' : (ITEMS.find(i => i.id === id)?.name || id),
+    rewards: lit => {
+      let claimed = [];
+      try { const saved = JSON.parse(localStorage.getItem('mk-town-rewards') || '[]'); if (Array.isArray(saved)) claimed = saved; } catch (_) {}
+      for (const place of window.TCHeartData.places) {
+        if (!lit.includes(place.id) || claimed.includes(place.id)) continue;
+        glow += 30;
+        if (TRAILS[place.reward]) { if (!ownedTrails.includes(place.reward)) ownedTrails.push(place.reward); }
+        else itemStock[place.reward] = (itemStock[place.reward] || 0) + 1;
+        claimed.push(place.id);
+      }
+      saveUpg(); saveShop();
+      try { localStorage.setItem('mk-town-rewards', JSON.stringify(claimed)); } catch (_) {}
+    },
+    collar: () => { goldenCollar = true; }
+  });
   requestAnimationFrame(frame);
 })();
