@@ -2680,60 +2680,26 @@
     for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
-  // Cute night details over the school picture: strings of pastel fairy lights, little paper stars and floating sparkles.
-  const SCHOOL_STRINGS = [[10, 838, 168, 34], [872, 1292, 168, 26], [1328, 1868, 168, 34], [1904, 2440, 168, 30]];   // [x0, x1, y, sag] in picture units
-  const SCHOOL_BULBS = ['#ffb3d1', '#b8f0d8', '#fff0a8', '#d9c4ff', '#a8dcff'];
+  // A few warm lights leave the hallway and playable shelves easy to read.
+  const SCHOOL_STRINGS = [[80, 690, 168, 24], [1440, 1910, 168, 22]];
+  const SCHOOL_BULBS = ['#ffe6b5', '#e9d9c6'];
   function drawSchoolCute(x0, x1) {
     const W = SCHOOL_WALL_W, off = camX * SCHOOL_PARALLAX;
     ctx.save();
     for (let k = Math.floor(off / W); k * W - off < VW; k++) {
       const sx = camX + k * W - off, X = px => k % 2 ? sx + W - px : sx + px;
       SCHOOL_STRINGS.forEach(([a, b, y, sag], si) => {
-        const n = Math.round((b - a) / 26), pts = [];
+        const n = Math.round((b - a) / 64), pts = [];
         for (let i = 0; i <= n; i++) { const u = i / n; pts.push([X(a + (b - a) * u), y + sag * Math.sin(Math.PI * u)]); }
-        ctx.strokeStyle = 'rgba(40,28,60,.75)'; ctx.lineWidth = 1.6; ctx.beginPath(); pts.forEach(([x, yy], i) => i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy)); ctx.stroke();
+        ctx.strokeStyle = 'rgba(40,28,60,.55)'; ctx.lineWidth = 1.2; ctx.beginPath(); pts.forEach(([x, yy], i) => i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy)); ctx.stroke();
         pts.forEach(([x, yy], i) => {
-          if (i === 0 || i === n || x < x0 - 30 || x > x1 + 30) return;
-          const c = SCHOOL_BULBS[(i + si * 2) % SCHOOL_BULBS.length], tw = .55 + .45 * Math.sin(t * (1.1 + (i % 4) * .35) + i * 1.7 + si);
-          ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .2 * tw;
-          ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, yy + 6, 9, 0, 7); ctx.fill();
-          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = .6 + .4 * tw;
-          ctx.beginPath(); ctx.ellipse(x, yy + 6, 3.6, 5, 0, 0, 7); ctx.fill();
-          ctx.globalAlpha = 1;
-          // a little paper star hanging from some of the bulbs
-          if ((i + si) % 5 === 2) {
-            const sw = Math.sin(t * 1.3 + i) * .12, hx = x + Math.sin(sw) * 26, hy = yy + 6 + Math.cos(sw) * 26;
-            ctx.strokeStyle = 'rgba(243,236,255,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, yy + 8); ctx.lineTo(hx, hy); ctx.stroke();
-            ctx.fillStyle = (i + si) % 2 ? '#ffd6e8' : '#fff3b8'; star(hx, hy + 5, 5, 7, 3, sw); ctx.fill();
-          }
+          if (i === 0 || i === n || x < x0 - 20 || x > x1 + 20) return;
+          ctx.fillStyle = SCHOOL_BULBS[(i + si) % SCHOOL_BULBS.length];
+          ctx.globalAlpha = .08; ctx.beginPath(); ctx.arc(x, yy + 5, 7, 0, 7); ctx.fill();
+          ctx.globalAlpha = .65; ctx.beginPath(); ctx.ellipse(x, yy + 5, 2.5, 3.5, 0, 0, 7); ctx.fill();
         });
+        ctx.globalAlpha = 1;
       });
-    }
-    // rainbow paper bunting lower on the wall
-    const FLAGS = ['#ff8fb8', '#ffb877', '#ffe27a', '#8fe0a8', '#7cc6ff', '#b99bff'];
-    for (let k = Math.floor(off / W); k * W - off < VW; k++) {
-      const sx = camX + k * W - off, X = px => k % 2 ? sx + W - px : sx + px;
-      [[18, 820, 236, 22], [1340, 1860, 236, 18]].forEach(([a, b, y, sag]) => {
-        const n = Math.round((b - a) / 30);
-        ctx.strokeStyle = 'rgba(255,240,250,.55)'; ctx.lineWidth = 1.2; ctx.beginPath();
-        for (let i = 0; i <= n; i++) { const u = i / n, x = X(a + (b - a) * u), yy = y + sag * Math.sin(Math.PI * u); i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); }
-        ctx.stroke();
-        for (let i = 0; i < n; i++) {
-          const u = (i + .5) / n, x = X(a + (b - a) * u), yy = y + sag * Math.sin(Math.PI * u);
-          if (x < x0 - 20 || x > x1 + 20) continue;
-          const sway = Math.sin(t * 1.2 + i * .9) * 1.5;
-          ctx.fillStyle = FLAGS[i % FLAGS.length]; ctx.globalAlpha = .9;
-          ctx.beginPath(); ctx.moveTo(x - 10, yy); ctx.lineTo(x + 10, yy); ctx.lineTo(x + sway, yy + 18); ctx.closePath(); ctx.fill();
-          ctx.globalAlpha = 1;
-        }
-      });
-    }
-    // slow floating sparkles in the air
-    for (let i = 0; i < 26; i++) {
-      const wx = ((i * 397) % 1600) + Math.floor((camX - 300) / 1600) * 1600 + (i % 2 ? 800 : 0), x = wx + Math.sin(t * .4 + i) * 20;
-      if (x < x0 - 20 || x > x1 + 20) continue;
-      const y = 140 + ((i * 131 + t * 9) % 300), a = .35 + .35 * Math.sin(t * 1.6 + i * 2.3);
-      ctx.fillStyle = `rgba(255,240,250,${Math.max(0, a)})`; star(x, y, 4, 3.2, 1.1, t * .5 + i); ctx.fill();
     }
     ctx.restore();
   }
@@ -2842,6 +2808,8 @@
       if (p.type === 'bouncy') { ctx.fillStyle=mid; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.fill(); ctx.strokeStyle=light; ctx.lineWidth=1.5; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.stroke(); }
     }
     for (const prop of currentProps) {
+      // The hallway picture already supplies furniture; omit extra chair stacks.
+      if (map === 'school' && prop.kind === 'chairs') continue;
       const x=prop.x, w=prop.w || 80, gy=terrainY(x+w/2); if (x+w < x0 || x > x1) continue;
       ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
       if (prop.kind === 'desk') { ctx.fillStyle=dark; ctx.fillRect(x,gy-32,w,8); ctx.fillRect(x+8,gy-24,7,24); ctx.fillRect(x+w-15,gy-24,7,24); ctx.fillStyle=light; ctx.fillRect(x+12,gy-38,24,5); ctx.fillStyle=mid; ctx.fillRect(x+42,gy-40,18,8); }

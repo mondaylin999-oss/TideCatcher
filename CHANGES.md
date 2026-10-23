@@ -1,5 +1,10 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Quieter school scenery
+
+- Removed the extra rainbow bunting, dangling paper stars, floating decorative sparkles and chair stacks from school maps. Kept two sparse strings of steady warm lights instead of four dense animated strings.
+- Kept school platforms, pits, checkpoints, hiding spots, collectibles and Moodlings in place so the playable route remains intact. Applies to every school-themed night.
+
 ## Heart Workshop and Lantern Town
 
 - Refined the artwork with layered hills, moon haze, shaded masonry, roof tiles, framed windows, building shadows, a leafy tree, bridge railings and water reflections. The Workshop now has ceramic mixing bowls and subtle wood-like surfaces. These are lightweight SVG/CSS details; recipes, rewards and progression are unchanged.
