@@ -312,13 +312,9 @@
   const FRUST_WARN = 3;  // a Frustrated that appears later shows a 3-second warning before it can charge
   let frustWakeAt = FRUST_SLEEP + 1.5;
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
-  // ---------- School map (Nights 1-2) ----------
-  // Night-time school hallway behind a flat floor. The wall picture is one 2445-wide image (drawn
-  // mirrored every other repeat so it never shows a seam); platforms are drawn in code as wooden shelves.
+  // School hallways use cached architectural variants; playable shelves stay separate.
   const SCHOOL_NIGHTS = [1, 2];
-  const SCHOOL_WALL = new Image();
-  SCHOOL_WALL.src = 'assets/school/hallway-night.webp';
-  const SCHOOL_WALL_W = 2445, SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
+  const SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
   function inSchool() { return mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school'); }
   // ---------- Hilltop park map (Night 5) ----------
   // Layout from the team's level design: a stepped stone terrace (high gate terrace, bench step,
@@ -2636,7 +2632,9 @@
     for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
-  function drawSchoolWall(alpha = 1, mirrorY = false) { return drawPictureLayer(SCHOOL_WALL, SCHOOL_WALL_W, SCHOOL_WALL_H, SCHOOL_PARALLAX, alpha, mirrorY); }
+  function drawSchoolWall(alpha = 1, mirrorY = false) {
+    return window.TCSchoolHallways?.draw(ctx, {level:storyNight,cam:camX,width:VW,ground:GROUND,alpha,mirror:mirrorY,parallax:SCHOOL_PARALLAX}) || false;
+  }
   // Draws a hallway/park picture that repeats along the level, mirrored every other time (no seams).
   function drawPictureLayer(IMG, W, H, parallax, alpha = 1, mirrorY = false) {
     if (!IMG.complete || !IMG.naturalWidth) return false;
@@ -2694,33 +2692,9 @@
     for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
-  // A few warm lights leave the hallway and playable shelves easy to read.
-  const SCHOOL_STRINGS = [[80, 690, 168, 24], [1440, 1910, 168, 22]];
-  const SCHOOL_BULBS = ['#ffe6b5', '#e9d9c6'];
-  function drawSchoolCute(x0, x1) {
-    const W = SCHOOL_WALL_W, off = camX * SCHOOL_PARALLAX;
-    ctx.save();
-    for (let k = Math.floor(off / W); k * W - off < VW; k++) {
-      const sx = camX + k * W - off, X = px => k % 2 ? sx + W - px : sx + px;
-      SCHOOL_STRINGS.forEach(([a, b, y, sag], si) => {
-        const n = Math.round((b - a) / 64), pts = [];
-        for (let i = 0; i <= n; i++) { const u = i / n; pts.push([X(a + (b - a) * u), y + sag * Math.sin(Math.PI * u)]); }
-        ctx.strokeStyle = 'rgba(40,28,60,.55)'; ctx.lineWidth = 1.2; ctx.beginPath(); pts.forEach(([x, yy], i) => i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy)); ctx.stroke();
-        pts.forEach(([x, yy], i) => {
-          if (i === 0 || i === n || x < x0 - 20 || x > x1 + 20) return;
-          ctx.fillStyle = SCHOOL_BULBS[(i + si) % SCHOOL_BULBS.length];
-          ctx.globalAlpha = .08; ctx.beginPath(); ctx.arc(x, yy + 5, 7, 0, 7); ctx.fill();
-          ctx.globalAlpha = .65; ctx.beginPath(); ctx.ellipse(x, yy + 5, 2.5, 3.5, 0, 0, 7); ctx.fill();
-        });
-        ctx.globalAlpha = 1;
-      });
-    }
-    ctx.restore();
-  }
   function drawSchoolWorld(x0, x1) {
     ctx.fillStyle = '#16122a'; ctx.fillRect(x0, -OY - 10, x1 - x0, SCHOOL_WALL_H + OY + 12);
     if (!drawSchoolWall()) { ctx.fillStyle = '#2b2546'; ctx.fillRect(x0, 0, x1 - x0, GROUND); }
-    else drawSchoolCute(x0, x1);
     // glossy hallway floor with a faint reflection of the wall
     const floor = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
     floor.addColorStop(0, '#4a3c63'); floor.addColorStop(.18, '#30284a'); floor.addColorStop(1, '#130f22');
@@ -5036,7 +5010,8 @@
     $('#levelBriefingEyebrow').textContent = `${hourOf(briefingNight).toUpperCase()} · THE NIGHT SIDE`;
     $('#levelBriefingTitle').textContent = chapter.name;
     const visualChapter = window.TCVisualChapters?.forLevel(briefingNight);
-    $('#levelBriefingSub').textContent = visualChapter ? `${visualChapter.name} · Levels ${visualChapter.first}–${visualChapter.last}. ${visualChapter.description}` : chapter.sub;
+    const hallway = window.TC_LEVELS?.[briefingNight]?.map === 'school' ? window.TCSchoolHallways?.forLevel(briefingNight) : null;
+    $('#levelBriefingSub').textContent = visualChapter ? `${hallway ? hallway.name + ' · ' : ''}${visualChapter.name} · Levels ${visualChapter.first}–${visualChapter.last}. ${visualChapter.description}` : chapter.sub;
     const goal = Object.entries(chapter.feelingsNeeded || {}).map(([type, count]) => `${BRIEFING_FEELING_NAMES[type] || type} ×${count}`).join(' · ');
     $('#levelBriefingGoal').textContent = goal ? `Bring home: ${goal}` : 'Find the little lights that are ready to come home.';
     $('#levelBriefingTip').textContent = chapter.tutorialHint || chapter.newMoodling || chapter.sub;

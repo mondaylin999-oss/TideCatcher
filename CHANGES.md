@@ -1,5 +1,13 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Cleaner school hallway variations
+
+- Replaced the repeated illustrated school wall with five architectural backgrounds: classroom wing, window gallery, art corridor, library passage and courtyard arcade. Consecutive school visits rotate through the styles, with alternating bay arrangements along longer routes.
+- Added recessed windows, door frames, quiet notice/art displays, glazed library shelves and fixed wall lights. Removed the old decorative string-light layer; lower walls stay clear around playable roosts.
+- Kept platform geometry and interaction objects in their existing rendering layers. School visual chapters now apply lighting/dust without drawing outdoor landmark silhouettes inside corridors. Briefings identify the hallway style.
+- Background tiles are drawn once and cached, with a four-tile cache limit to control mobile memory usage.
+- Browser checks covered all eleven school levels, all five styles, scrolling across tile joins, the hallway name in a briefing and a compact landscape view. Level data remained unchanged; desktop artwork was visually inspected.
+
 ## Ten visual chapters across fifty levels
 
 - Added one visual identity for each consecutive group of five levels: Lamplit Beginnings (1–5), Misty Gardens (6–10), River Lanterns (11–15), Amber Autumn (16–20), Silver Rain (21–25), Bamboo Shadows (26–30), Indigo Ruins (31–35), Winter Starlight (36–40), Cloud Terraces (41–45) and Dawn Blossoms (46–50).

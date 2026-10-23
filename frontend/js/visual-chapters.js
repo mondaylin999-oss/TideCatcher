@@ -29,7 +29,7 @@
     const hill=ground-95;
     const start=Math.floor(cam*.24/640)-1;
     // Sparse, distant landmarks stay above the playable floor.
-    for(let k=start;k<(cam*.24+width)/640+1;k++){
+    for(let k=start;map!=='school' && k<(cam*.24+width)/640+1;k++){
       const x=cam+k*640-cam*.24+220, y=hill-12+(k%2)*12;
       g.save();g.globalAlpha=map==='school'?.32:.6;
       if(c.index>0){g.translate(x,y);g.scale(1.25,1.25);g.translate(-x,-y);}
