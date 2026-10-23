@@ -870,6 +870,7 @@
   function tutorialTarget() {
     if (nightGuide.active) {
       const action = (guideCopy().tutorial || [])[nightGuide.step]?.action;
+      if (action === 'move' || action === 'sneak') return { x: clamp(nightGuide.origin + 80, 40, WORLD - 40), y: terrainY(nightGuide.origin + 80) - 25 };
       if (action === 'catch') { const m = ensureTutorialCatchMoodling(); return m || { x: cat.x + cat.face * 110, y: terrainY(cat.x) - 34 }; }
       if (action === 'dodge' || action === 'dizzy-pounce') { const m = ensureTutorialFrustrated(); return m || { x: cat.x + cat.face * 100, y: terrainY(cat.x) - 20 }; }
       if (action === 'eyes' || action === 'scratch') { const x = tutorialSpotX(); return { x, y: terrainY(x) - 14 }; }
@@ -891,7 +892,10 @@
   function showTutorialStep() {
     const step = (guideCopy().tutorial || [])[nightGuide.step];
     if (!step) { finishGuidedTutorial(); return; }
-    showCoachTip({ kicker: guideCopy().tutorialLabel, title: step.title, text: step.text, action: step.action, skip: true });
+    nightGuide.origin = cat.x; nightGuide.jumped = false;
+    $('#shweTeacher').src = COAT.heroImg || COAT.img;
+    $('#tipCoach').classList.add('shwe-lesson');
+    showCoachTip({ kicker: `${MK_PROFILE.cat} · ${nightGuide.step + 1} / 4`, title: step.title, text: step.text, action: step.action, skip: true });
     if (step.action === 'catch') ensureTutorialCatchMoodling();
     if (step.action === 'dodge' || step.action === 'dizzy-pounce') ensureTutorialFrustrated();
     if (step.action === 'home' && nightGuide.pendingWin) onTutorialAction('home', cat);
@@ -899,6 +903,7 @@
   function startGuidedTutorial() {
     if (!MK_PROFILE.showTips || MK_PROFILE.tutorialDone || mode !== 'story' || storyNight !== 1) return false;
     nightGuide.active = true; nightGuide.step = 0; nightGuide.success = 0; nightGuide.pendingWin = false; nightGuide.buffered = [];
+    document.body.classList.add('learning-with-shwe');
     showTutorialStep(); return true;
   }
   function beginStoryEnding() {
@@ -907,7 +912,11 @@
   }
   function finishGuidedTutorial() {
     nightGuide.active = false; nightGuide.success = 0; nightGuide.buffered = [];
-    mood = mood.filter(m => !m.tutorialOnly); hideCoachTip();
+    document.body.classList.remove('learning-with-shwe');
+    mood = mood.filter(m => !m.tutorialOnly); hideCoachTip(); $('#tipCoach').classList.remove('shwe-lesson');
+    cat.x = currentLevel.catStart ?? 200; cat.y = terrainY(cat.x); cat.vx = 0; cat.vy = 0; cat.on = true; cat.platform = null; cat.pounce = 0; cat.inv = 1.5; hist = []; camX = 0;
+    announce(guideCopy().tutorialComplete || 'You did it! Let’s bring the feelings home.', GOLD, 2.5);
+    warmup = 1.5; frustWakeAt = t + FRUST_SLEEP + warmup;
     MK_PROFILE.tutorialDone = true; persistGuidanceProgress();
     if (nightGuide.pendingWin) beginStoryEnding();
   }
@@ -920,16 +929,17 @@
     if (!nightGuide.active) return;
     const steps = guideCopy().tutorial || [], current = steps[nightGuide.step];
     if (!current) return;
-    if (nightGuide.success > 0) {
-      if (steps[nightGuide.step + 1]?.action === action) nightGuide.buffered.push({ action, target });
-      return;
-    }
+    if (nightGuide.success > 0) return;
+    if (current.action === 'jump' && action === 'jump') { nightGuide.jumped = true; return; }
+    if (current.action === 'jump' && action === 'land' && nightGuide.jumped) action = 'jump';
     if (current.action !== action) return;
+    if ((action === 'move' || action === 'sneak') && (!cat.on || Math.abs(cat.x - nightGuide.origin) < 70)) return;
+    if (action === 'catch' && !target?.tutorialCatch) return;
     if (action === 'dodge' && target?.tutorialDodge) { target.state = 'dizzy'; target.st = 3; }
     nightGuide.success = .52;
     const point = target && Number.isFinite(target.x) ? target : cat;
     burst(point.x, point.y - 18, GOLD, 13); sfx('ui', 'sparkle'); tone(880, .12, 'sine', .04, 180);
-    showCoachTip({ kicker: guideCopy().tutorialLabel, title: current.title, text: guideCopy().success, action: current.action, skip: true, success: true });
+    showCoachTip({ kicker: `${MK_PROFILE.cat} · ${nightGuide.step + 1} / 4`, title: current.title, text: guideCopy().success, action: current.action, skip: true, success: true });
   }
   function guidanceTimerPaused() { return nightGuide.active || !!activeJitTip; }
   function queueJitTip(key, target = null, title = null) {
@@ -971,6 +981,7 @@
     if (combo >= 2 && !guidanceSeen('mechanic:combo')) queueJitTip('combo', m, guideCopy().mechanicTitles?.combo || 'Combo');
   }
   function updateGuidance(dt) {
+    if (nightGuide.active && nightGuide.jumped && cat.justLanded) onTutorialAction('land', cat);
     if (nightGuide.active) {
       const action = (guideCopy().tutorial || [])[nightGuide.step]?.action;
       if (action === 'dodge' || action === 'dizzy-pounce') ensureTutorialFrustrated();
@@ -1086,6 +1097,7 @@
   function hazNotice(kind, text, c) { if (hazSeen[kind]) return; hazSeen[kind] = true; announce(text, c, 2.4); }
   function hazPhase(h, period, idle, warn) { const q = ((t + h.off) % period + period) % period; return q < idle ? 'idle' : q < idle + warn ? 'warn' : 'on'; }
   function updHazards(dt) {
+    if (nightGuide.active) return;
     if (state !== 'play' && state !== 'ending') return;
     for (const h of hazards) {
       h.cd = Math.max(0, h.cd - dt); h.squeakT = Math.max(0, h.squeakT - dt);
@@ -1805,6 +1817,7 @@
   }
 
   function updMood(m, dt) {
+    if (nightGuide.active && !m.tutorialOnly) return;
     const chapter = mode === 'story' ? chapterFor(storyNight) : { moodlingSpeed: 1, frustratedChargeSpeed: 1, frustratedWindup: .55, nervousHearingMul: 1, nervousPanicTime: 1.1 };
     const sp = mode === 'free' ? 1 + Math.min(.6, level * .1) : (chapter.moodlingSpeed * (chaos ? 1.25 : 1));
     if (m.sky && m.skyPhase === 'cleared') return;
@@ -1991,6 +2004,7 @@
     const cx = cat.x + cat.face * 16, cy = cat.y - 24;
     for (const m of mood) {
       if (m.dead) continue;
+      if (nightGuide.active && !m.tutorialOnly) continue;
       if (m.sky && m.skyFeature === 'C' && m.skyPhase === 'scratchReq') { failSkyChallenge(m); cat.pounce = 0; return; }
       if (m.sky && m.skyPhase !== 'ground') {
         if (m.skyPhase === 'falling' && m.hitCooldown <= 0 && (m.skyFeature === 'B' || m.skyFeature === 'C')) {
@@ -2021,7 +2035,7 @@
         continue;
       }
       if (m.type === 'F' && m.state === 'dizzy') onTutorialAction('dizzy-pounce', m);
-      if (m.tutorialOnly) { m.dead = true; m.alpha = 0; cat.pounce = 0; burst(m.x, m.y, GOLD, 12); continue; }
+      if (m.tutorialOnly) { catchIt(m); continue; }
       if (m.type === 'L' && mode === 'story' && storyNight === 1) {
         m.state = 'revealed'; m.alpha = 1; m.sit = 0; cat.pounce = 0;
         float(cat.x, cat.y - 70, 'Sit quietly beside Lonely', BLUE); tone(330, .15, 'sine', .035); continue;
@@ -3026,6 +3040,7 @@
   function moodLabel(m, text, c, dy = 40) { ctx.font = `600 13px ${BODY}`; ctx.textAlign = 'center'; ctx.fillStyle = c; ctx.fillText(text, m.x, m.y - dy); }
   function drawMoods() {
     for (const m of mood) {
+      if (nightGuide.active && !m.tutorialOnly) continue;
       if (m.alpha < .02) continue;
       ctx.save(); ctx.globalAlpha = m.alpha;
       const look = clamp((cat.x - m.x) / 160, -2.5, 2.5), near = Math.abs(cat.x - m.x) < 3 * T;
@@ -4262,6 +4277,7 @@
     if (ac && ac.state === 'suspended') ac.resume();
   }
   function startGame(m, night = storyNight) {
+    document.body.classList.remove('learning-with-shwe'); $('#tipCoach').classList.remove('shwe-lesson');
     if (typeof m === 'string') mode = m;
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 50) : 1;
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
@@ -5162,9 +5178,8 @@
   $('#gentleModeToggle').addEventListener('change', e => { gentleMode = !!e.target.checked; try { localStorage.setItem('mk-gentle-mode', gentleMode ? '1' : '0'); } catch (err) {} });
   $('#settingsReplayTutorial').addEventListener('click', () => {
     if (!MK_PROFILE.showTips) return;
-    MK_PROFILE.tutorialDone = false; persistGuidanceProgress(); $('#hubSettingsScreen').hidden = true; showStoryMap(false);
-    if (!$('#mapGuide').hidden) dismissMapGuide();
-    $(`#levelMapTrack button[data-level="1"]`)?.focus({ preventScroll: true });
+    MK_PROFILE.tutorialDone = false; persistGuidanceProgress(); $('#hubSettingsScreen').hidden = true;
+    startGame('story', 1);
   });
   $('#hubSettingsScreen').addEventListener('click', e => { if (e.target.id === 'hubSettingsScreen') { $('#hubSettingsScreen').hidden = true; $('#settingsBtn').focus({ preventScroll: true }); } });
   $('#hubSettingsScreen').addEventListener('keydown', e => {

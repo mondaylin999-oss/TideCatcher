@@ -1,5 +1,13 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Learn with Shwe
+
+- Replaced the nine-step first-night sequence with four short playable lessons: walk, jump and land, sneak, and pounce on a harmless practice Moodling. Shwe appears beside localized dialogue and a step counter, with keyboard or touch control hints.
+- Movement and sneaking require actual ground travel; jumping requires a completed landing. Fixed the practice target's catch path so a successful pounce advances the tutorial.
+- Normal Moodlings and hazards wait while the night timer is paused. Practice catches grant no score, Glow, Mood Book entries or Workshop lights. Finishing or skipping returns Shwe to the start of the normal first night.
+- Settings → Replay tutorial now launches practice immediately. Completion is saved using the existing tutorial preference.
+- Checked all four lessons using real keyboard input in a browser, including catch completion, timer/reward isolation and skipping. Inspected desktop and compact landscape layouts.
+
 ## Quieter school scenery
 
 - Removed the extra rainbow bunting, dangling paper stars, floating decorative sparkles and chair stacks from school maps. Kept two sparse strings of steady warm lights instead of four dense animated strings.
