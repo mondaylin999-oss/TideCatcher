@@ -1,5 +1,13 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Ten visual chapters across fifty levels
+
+- Added one visual identity for each consecutive group of five levels: Lamplit Beginnings (1–5), Misty Gardens (6–10), River Lanterns (11–15), Amber Autumn (16–20), Silver Rain (21–25), Bamboo Shadows (26–30), Indigo Ruins (31–35), Winter Starlight (36–40), Cloud Terraces (41–45) and Dawn Blossoms (46–50).
+- Each chapter adds its own light palette, distant scenery and atmospheric details, including garden trees, festival gates, autumn branches, rain shelters, bamboo, old arches, frosted pines, terraces and blossoms. Indoor school scenery stays sparse and uses colored light/dust instead of indoor weather.
+- Map nodes and captions identify each visual chapter; level briefings describe its atmosphere. Existing story locations, collision geometry, difficulty, collectibles and Free Play remain intact.
+- Effects use lightweight canvas shapes without image filters; reduced-motion mode freezes decorative movement.
+- Browser checks rendered all fifty levels, verified chapter boundaries and unchanged level data, checked a chapter briefing and inspected desktop/compact-landscape views.
+
 ## Learn with Shwe
 
 - Replaced the nine-step first-night sequence with four short playable lessons: walk, jump and land, sneak, and pounce on a harmless practice Moodling. Shwe appears beside localized dialogue and a step counter, with keyboard or touch control hints.

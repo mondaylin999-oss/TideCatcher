@@ -2891,6 +2891,7 @@
     for(let x=Math.floor(x0/190)*190;x<x1;x+=190){const y=terrainY(x)+6;ctx.strokeStyle='rgba(90,129,82,.65)';ctx.lineWidth=1.5;for(let k=0;k<5;k++){const side=k%2?1:-1,yy=y-k*4;ctx.beginPath();ctx.moveTo(x,yy);ctx.quadraticCurveTo(x+side*9,yy-8,x+side*17,yy-12);ctx.stroke();}}
     for(let x=Math.floor((x0+95)/330)*330;x<x1;x+=330){const y=terrainY(x)+3;ctx.strokeStyle='rgba(91,135,91,.68)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x,y+6);ctx.quadraticCurveTo(x+1,y,x,y-5);ctx.stroke();for(let k=0;k<5;k++){const a=k*Math.PI*2/5;ctx.fillStyle=k%2?'#e5c28b':'#e7d5bc';ctx.beginPath();ctx.arc(x+Math.cos(a)*3,y-5+Math.sin(a)*3,1.7,0,Math.PI*2);ctx.fill();}ctx.fillStyle='#d4a84f';ctx.beginPath();ctx.arc(x,y-5,1.5,0,Math.PI*2);ctx.fill();}
     }
+    if (mode === 'story') window.TCVisualChapters?.draw(ctx, { level: storyNight, cam: camX, width: VW, height: VH, ground: GROUND, time: t, reduced: reduce, map: currentMapKey() });
     drawLevelDecor(x0, x1);
   }
   // ---------- cute Moodling art (from the character sheet; drawn with SVG paths) ----------
@@ -4299,7 +4300,8 @@
     $('#startScreen').hidden = true; $('#endScreen').hidden = true; pauseScreen.hidden = true; pauseBtn.hidden = false;
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
-    announce(mode === 'free' ? 'Free Mode · every catch adds time' : `${chapter.name} · ${chapter.sub}`, INK, 2.1);
+    const visualTheme = mode === 'story' ? window.TCVisualChapters?.forLevel(storyNight) : null;
+    announce(mode === 'free' ? 'Free Mode · every catch adds time' : `${visualTheme?.name || chapter.name} · ${chapter.sub}`, INK, 2.1);
     if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); }
     if (mode === 'free') queueJitTip('free', cat, guideCopy().mechanicTitles?.free || 'Free Play');
     if (!startGuidedTutorial()) showNextJitTip();
@@ -4407,6 +4409,8 @@
       const playable = level <= unlockedLevel;
       button.type = 'button'; button.dataset.level = String(level);
       button.className = `level-node${playable ? ' is-playable' : ''}${level === unlockedLevel ? ' is-current' : ''}`;
+      const visualTheme = window.TCVisualChapters?.forLevel(level);
+      if (visualTheme) { button.style.borderColor = visualTheme.accent; entry.dataset.visualChapter = String(visualTheme.index + 1); }
       button.textContent = String(level); button.disabled = !playable;
       button.setAttribute('aria-label', playable ? `${hourOf(level)}, ${chapter.name}, playable${level === unlockedLevel ? ', current hour' : ''}` : `${hourOf(level)}, ${chapter.name}, locked until ${hourOf(level - 1)} is complete`);
       button.title = playable ? `Play ${hourOf(level)} · ${chapter.name}` : `${hourOf(level)} · complete ${hourOf(level - 1)} to unlock`;
@@ -4416,6 +4420,7 @@
         const caption = document.createElement('span'); caption.className = 'level-caption';
         const name = document.createElement('strong'); name.textContent = `${hourOf(level)} · ${chapter.name}`;
         const sub = document.createElement('span'); sub.textContent = level < unlockedLevel ? 'Completed · Play again' : level === unlockedLevel ? 'Your next adventure' : 'Complete the previous chapter';
+        if (visualTheme) { sub.textContent = `${visualTheme.name} · ${level < unlockedLevel ? 'Completed' : level === unlockedLevel ? 'Up next' : 'Locked'}`; sub.style.color = visualTheme.accent; }
         caption.appendChild(name); caption.appendChild(sub);
         const bestScore = getBest(`mk-best-n${level}`), st = nightStars[level] || 0;
         if (playable && (bestScore || st)) {
@@ -5030,7 +5035,8 @@
     if (!chapter) return;
     $('#levelBriefingEyebrow').textContent = `${hourOf(briefingNight).toUpperCase()} · THE NIGHT SIDE`;
     $('#levelBriefingTitle').textContent = chapter.name;
-    $('#levelBriefingSub').textContent = chapter.sub;
+    const visualChapter = window.TCVisualChapters?.forLevel(briefingNight);
+    $('#levelBriefingSub').textContent = visualChapter ? `${visualChapter.name} · Levels ${visualChapter.first}–${visualChapter.last}. ${visualChapter.description}` : chapter.sub;
     const goal = Object.entries(chapter.feelingsNeeded || {}).map(([type, count]) => `${BRIEFING_FEELING_NAMES[type] || type} ×${count}`).join(' · ');
     $('#levelBriefingGoal').textContent = goal ? `Bring home: ${goal}` : 'Find the little lights that are ready to come home.';
     $('#levelBriefingTip').textContent = chapter.tutorialHint || chapter.newMoodling || chapter.sub;
