@@ -2,6 +2,8 @@
 
 ## Heart Workshop and Lantern Town
 
+- Refined the artwork with layered hills, moon haze, shaded masonry, roof tiles, framed windows, building shadows, a leafy tree, bridge railings and water reflections. The Workshop now has ceramic mixing bowls and subtle wood-like surfaces. These are lightweight SVG/CSS details; recipes, rewards and progression are unchanged.
+
 - Added two home destinations with landscape layouts, touch scrolling, keyboard navigation and reduced-motion support.
 - Heart Workshop has 50 handmade feelings: nine catchable basics, 18 first mixes, 15 second mixes, seven deep feelings and Whole Heart. Tap ingredients or drag them into bowls; valid recipes consume one of each light and save their result. Unknown pairs cost nothing. Discovered recipes remain visible even after spending their lights. Hints cost 20 Glow.
 - Added a separate saved light inventory. New catches (including Golden and extra catches, excluding tutorial/ambush-only catches) bank after successful story nights or completed Free Play runs. Abandoned and failed story nights do not bank lights. Existing Mood Book records are preserved; historical catches are not retroactively converted into spendable stock. Scoring and Moodling behavior are unchanged.

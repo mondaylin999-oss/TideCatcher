@@ -44,20 +44,35 @@
   function townArt(s,ending=false) {
     const lit=id=>s.lit.includes(id), gold='#ffe399', dark='#393052';
     return `<svg class="town-art" viewBox="0 0 1000 390" preserveAspectRatio="none" role="img" aria-label="${s.lit.length} of 10 places glowing in Lantern Town">
-      <defs><linearGradient id="townSky" x2="0" y2="1"><stop stop-color="#15112d"/><stop offset="1" stop-color="${s.lit.length===10?'#594078':'#292044'}"/></linearGradient></defs><rect width="1000" height="390" fill="url(#townSky)"/>
+      <defs>
+        <linearGradient id="townSky" x2="0" y2="1"><stop stop-color="#101727"/><stop offset=".65" stop-color="#2e304b"/><stop offset="1" stop-color="${s.lit.length===10?'#786079':'#444157'}"/></linearGradient>
+        <linearGradient id="townPlaster" x2="1" y2="1"><stop stop-color="#777080"/><stop offset=".55" stop-color="#514b60"/><stop offset="1" stop-color="#36354b"/></linearGradient>
+        <linearGradient id="townRoof" x2="0" y2="1"><stop stop-color="#786f86"/><stop offset="1" stop-color="#343445"/></linearGradient>
+        <linearGradient id="townWater" x2="0" y2="1"><stop stop-color="#354e63"/><stop offset="1" stop-color="#172635"/></linearGradient>
+        <radialGradient id="townLight"><stop stop-color="#ffe5ac" stop-opacity=".35"/><stop offset=".45" stop-color="#ffc875" stop-opacity=".12"/><stop offset="1" stop-color="#ffc875" stop-opacity="0"/></radialGradient>
+        <pattern id="townBricks" width="26" height="14" patternUnits="userSpaceOnUse"><path d="M0 0H26M0 7H26M13 0V7M0 7V14M26 7V14" stroke="#d1b9b0" stroke-opacity=".12" fill="none" stroke-width=".7"/></pattern>
+        <pattern id="townTiles" width="12" height="7" patternUnits="userSpaceOnUse"><path d="M0 6H12M6 0V6" stroke="#b0a0ad" stroke-opacity=".22" stroke-width=".65"/></pattern>
+      </defs><rect width="1000" height="390" fill="url(#townSky)"/>
       ${Array.from({length:47},(_,i)=>`<circle cx="${(i*173+41)%990}" cy="${(i*71+23)%220}" r="${i%3===0?1.6:1}" fill="#e7d2b1" opacity=".5"/>`).join('')}
-      <path d="M899 28a30 30 0 1 0 35 42 30 30 0 0 1-35-42" fill="#fff0bd"/>
+      <ellipse cx="910" cy="54" rx="95" ry="80" fill="url(#townLight)"/><path d="M899 28a30 30 0 1 0 35 42 30 30 0 0 1-35-42" fill="#fff0d0"/>
+      <path d="M0 245Q80 155 180 219T390 190T620 203T820 180T1000 221V390H0" fill="#303649"/>
       <path d="M0 280 80 240 180 265 300 220 400 260 560 195 690 255 850 125 1000 235V390H0" fill="#2c2548"/><path d="M0 330Q200 315 380 335T750 330T1000 335V390H0" fill="#18182e"/>
       ${D.places.map((p,i)=>{
-        const [x,y]=pos[i], c=lit(p.id)?gold:dark, glow=lit(p.id)?`<ellipse cx="${x}" cy="${y-15}" rx="53" ry="66" fill="#ffd578" opacity=".09"/>`:'';
+        const [x,y]=pos[i], c=lit(p.id)?gold:dark, glow=lit(p.id)?`<ellipse cx="${x}" cy="${y+10}" rx="85" ry="100" fill="url(#townLight)"/><path d="M${x-15} 315l-25 20h85l-30-20" fill="#f4c988" opacity=".12"/>`:'';
         let art='';
         if(i===0) art=`<path d="M${x} 330V${y-40}" stroke="#716182" stroke-width="5"/><rect x="${x-10}" y="${y-48}" width="20" height="27" rx="7" fill="${c}"/>`;
         else if(i===3) art=`<path d="M${x-38} 330l12-95h52l12 95M${x-15} 235v65m30-65v65" stroke="${c}" stroke-width="4" fill="none"/><path d="M${x-22} 302h44" stroke="${c}" stroke-width="7"/>`;
-        else if(i===8) art=`<path d="M${x} 280V135" stroke="#78617d" stroke-width="12"/><circle cx="${x}" cy="130" r="47" fill="${lit(p.id)?'#83b987':'#343052'}"/>${[[-20,0],[15,15],[2,-20]].map(([dx,dy])=>`<circle cx="${x+dx}" cy="${130+dy}" r="4" fill="${c}"/>`).join('')}`;
-        else if(i===9) art=`<path d="M865 349q65-22 130 0" stroke="#70b9cb" opacity=".5" stroke-width="14" fill="none"/><path d="M865 330q65-50 130 0" stroke="${c}" stroke-width="9" fill="none"/>`;
+        else if(i===8) art=`<path d="M${x-6} 280q12-90 0-145m5 55-28-38m29 24 24-33" stroke="#655047" stroke-width="9" fill="none"/>${[[-28,5,26],[24,4,31],[-6,-24,33],[-31,-18,21],[28,-24,23],[0,17,30]].map(([dx,dy,r],j)=>`<circle cx="${x+dx}" cy="${130+dy}" r="${r}" fill="${lit(p.id)?['#506c61','#627b64','#718b70'][j%3]:['#313f42','#3b4b4c','#465754'][j%3]}"/>`).join('')}${[[-20,0],[15,15],[2,-20]].map(([dx,dy])=>`<circle cx="${x+dx}" cy="${130+dy}" r="3" fill="${c}"/>`).join('')}`;
+        else if(i===9) art=`<path d="M850 338q70-12 150 0v52H850Z" fill="url(#townWater)"/>${Array.from({length:9},(_,j)=>`<path d="M${865+j%3*24} ${347+j*4}h${40-j*2}" stroke="${lit(p.id)?'#b8a47a':'#6d879a'}" opacity=".25"/>`).join('')}<path d="M865 330q65-50 130 0M865 315q65-50 130 0" stroke="${lit(p.id)?'#bba17a':'#746d68'}" stroke-width="5" fill="none"/>${[0,1,2,3,4,5].map(j=>`<path d="M${865+j*26} ${330-24*Math.sin(j*Math.PI/5)}v-16" stroke="#9b8b76" stroke-width="3"/>`).join('')}`;
         else if(i===5) art=`<path d="M${x-43} 330v-70h86v70M${x-55} 260l55-50 55 50" fill="none" stroke="${lit(p.id)?'#dfb567':'#514364'}" stroke-width="9"/><path d="M${x-32} 270q32 18 64 0" stroke="${c}" fill="none"/>${[-25,0,25].map(dx=>`<rect x="${x+dx-5}" y="280" width="10" height="15" rx="4" fill="${c}"/>`).join('')}`;
         else art=`<rect x="${x-39}" y="${y}" width="78" height="${330-y}" rx="3" fill="#44365f"/><path d="M${x-48} ${y}l48-35 48 35Z" fill="#5b477c"/><rect x="${x-8}" y="304" width="16" height="26" fill="#211a36"/>${[-22,11].map(dx=>`<rect x="${x+dx}" y="${y+12}" width="15" height="20" rx="1" fill="${c}"/>`).join('')}${i===1?[-22,11].map(dx=>`<rect x="${x+dx}" y="${y+43}" width="15" height="20" fill="${c}"/>`).join(''):''}`;
-        return glow+art;
+        if(![0,3,5,8,9].includes(i)) {
+          art=art.replace('fill="#44365f"','fill="url(#townPlaster)"').replace('fill="#5b477c"','fill="url(#townRoof)"');
+          art+=`<rect x="${x-39}" y="${y}" width="78" height="${330-y}" fill="url(#townBricks)"/><path d="M${x+39} ${y}l10 7v${323-y}h-10Z" fill="#282939"/><path d="M${x-48} ${y}l48-35 48 35Z" fill="url(#townTiles)"/><path d="M${x-48} ${y}h96" stroke="#a599a2" stroke-width="2"/><rect x="${x+20}" y="${y-31}" width="8" height="18" fill="#625960"/><path d="M${x-12} 330h24" stroke="#8c8490" stroke-width="4"/>${[-22,11].map(dx=>`<path d="M${x+dx+7.5} ${y+12}v20m-7.5-10h15" stroke="#79644f" stroke-width="1.5"/><path d="M${x+dx-2} ${y+33}h19" stroke="#b1a18b" stroke-width="2"/>`).join('')}`;
+          if(i===2)art+=`<rect x="${x-27}" y="${y+10}" width="54" height="30" rx="2" fill="#54483e" stroke="#a48c6f"/>${[-19,-4,11].map(dx=>`<rect x="${x+dx}" y="${y+14}" width="11" height="20" fill="${lit(p.id)?'#d8be88':'#81716a'}"/>`).join('')}`;
+          if(i===6)art+=`<rect x="${x-27}" y="${y+10}" width="54" height="28" fill="${lit(p.id)?'#e5d6a9':'#797484'}"/>${['#c48887','#c9b277','#8bad9b','#8c93b2'].map((color,j)=>`<circle cx="${x-17+j*11}" cy="${y+24}" r="4" fill="${color}"/>`).join('')}`;
+        }
+        return `<ellipse cx="${x+8}" cy="332" rx="45" ry="6" fill="#0a1121" opacity=".45"/>`+glow+art;
       }).join('')}
       ${s.lit.length===10?Array.from({length:16},(_,i)=>`<g class="town-lantern" style="--delay:${i*.3}s"><rect x="${30+i*62}" y="${40+(i*43)%160}" width="9" height="13" rx="4" fill="#ffd37e"/></g>`).join(''):''}
       ${ending?'<g transform="translate(455 300)"><rect x="0" y="-6" width="52" height="36" rx="3" fill="#fff0c5"/><path d="m5 20 12-15 13 12 15-8" fill="none" stroke="#b183a9" stroke-width="3"/><circle cx="-20" cy="-20" r="13" fill="#d8ab90"/><path d="M-34-23q3-24 28-6v15" fill="#322035"/><path d="M-21-7v40m0-30L5 10" stroke="#cba0dc" stroke-width="11" stroke-linecap="round"/><ellipse cx="78" cy="24" rx="18" ry="10" fill="#dfab60"/><path d="m87 18-2-15 9 6 9-6-2 17" fill="#dfab60"/><path d="M86 20h14" stroke="#ffde73" stroke-width="4"/></g>':''}
