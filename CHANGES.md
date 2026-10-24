@@ -1,5 +1,12 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Outdoor passages at school
+
+- School routes now open outdoors once every three background sections, starting after the first hallway. The scene rotates among a moonlit courtyard, a covered walkway and a quiet garden across school visits.
+- The outdoor sections have matching passage piers, distant school windows, restrained moonlight and stone paving. Existing level geometry, platforms and collectibles remain in place.
+- Outdoor backgrounds are cached with the hallway tiles; their scenery has no fake roosts or gameplay collisions.
+- Browser checked all eleven school levels, scene transitions and all three outdoor styles. Level data stayed unchanged.
+
 ## Cleaner school hallway variations
 
 - Replaced the repeated illustrated school wall with five architectural backgrounds: classroom wing, window gallery, art corridor, library passage and courtyard arcade. Consecutive school visits rotate through the styles, with alternating bay arrangements along longer routes.

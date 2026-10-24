@@ -314,7 +314,7 @@
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
   // School hallways use cached architectural variants; playable shelves stay separate.
   const SCHOOL_NIGHTS = [1, 2];
-  const SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
+  const SCHOOL_WALL_H = 474, SCHOOL_TILE_W = 1440, SCHOOL_PARALLAX = .9;
   function inSchool() { return mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school'); }
   // ---------- Hilltop park map (Night 5) ----------
   // Layout from the team's level design: a stepped stone terrace (high gate terrace, bench step,
@@ -2699,6 +2699,20 @@
     const floor = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
     floor.addColorStop(0, '#4a3c63'); floor.addColorStop(.18, '#30284a'); floor.addColorStop(1, '#130f22');
     ctx.fillStyle = floor; ctx.fillRect(x0, GROUND, x1 - x0, VH + OY + 60 - GROUND);
+    // Outdoor passages have stone paving while indoor sections keep the glossy floor.
+    const schoolOffset = camX * SCHOOL_PARALLAX;
+    for (let k = Math.floor(schoolOffset / SCHOOL_TILE_W); k * SCHOOL_TILE_W - schoolOffset < VW; k++) {
+      if (!window.TCSchoolHallways?.outdoorFor(storyNight, k)) continue;
+      const left = camX + k * SCHOOL_TILE_W - schoolOffset + 72;
+      const width = SCHOOL_TILE_W - 144;
+      const paving = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
+      paving.addColorStop(0, '#58616a'); paving.addColorStop(.25, '#3d4552'); paving.addColorStop(1, '#1d2031');
+      ctx.fillStyle = paving; ctx.fillRect(left, GROUND, width, VH + OY + 60 - GROUND);
+      ctx.strokeStyle = 'rgba(199,207,195,.17)'; ctx.lineWidth = 1;
+      for (let x = left + 90; x < left + width; x += 145) {
+        ctx.beginPath(); ctx.moveTo(x, GROUND); ctx.lineTo(x - 28, VH + OY + 60); ctx.stroke();
+      }
+    }
     ctx.save(); ctx.beginPath(); ctx.rect(x0, GROUND, x1 - x0, 110); ctx.clip(); drawSchoolWall(.32, true);
     const fade = ctx.createLinearGradient(0, GROUND, 0, GROUND + 110); fade.addColorStop(0, 'rgba(19,15,34,0)'); fade.addColorStop(1, 'rgba(19,15,34,.95)');
     ctx.fillStyle = fade; ctx.fillRect(x0, GROUND, x1 - x0, 110); ctx.restore();
