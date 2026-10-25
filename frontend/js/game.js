@@ -328,16 +328,9 @@
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
   // School hallways use cached architectural variants; playable shelves stay separate.
   const SCHOOL_NIGHTS = [1, 2];
-<<<<<<< HEAD
-  const SCHOOL_WALL = new Image();
-  SCHOOL_WALL.src = 'assets/school/hallway-night.webp';
-  const SCHOOL_WALL_W = 2445, SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
-  function inSchool() { return (mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school')) || (mode === 'free' && currentLevel?.map === 'school'); }
-=======
   const SCHOOL_WALL_H = 474, SCHOOL_TILE_W = 1440, SCHOOL_PARALLAX = .9;
-  function inSchool() { return mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school'); }
+  function inSchool() { return (mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school')) || (mode === 'free' && currentLevel?.map === 'school'); }
   function inRooftop() { return mode === 'story' && currentLevel?.map === 'rooftop'; }
->>>>>>> 0b5bc43ddc88afc70c9c4065e38f9bf5f0f2deba
   // ---------- Hilltop park map (Night 5) ----------
   // Layout from the team's level design: a stepped stone terrace (high gate terrace, bench step,
   // lamp step, low walkway along the railing, back up), tree-branch ledges and stone pillars to jump on,
@@ -622,11 +615,7 @@
       ...finalChapter,
       night,
       name: `${CHALLENGE_NAMES[(night - 8) % CHALLENGE_NAMES.length]} ${String(night).padStart(2, '0')}`,
-<<<<<<< HEAD
-      sub: `Endless Nights · route ${night - 7} · more gaps and quicker bridges`,
-=======
-      sub: (night - 8) % 5 === 3 ? `Challenge route ${night - 7} · chimneys and quiet roof ledges` : `Challenge route ${night - 7} · more gaps and quicker bridges`,
->>>>>>> 0b5bc43ddc88afc70c9c4065e38f9bf5f0f2deba
+      sub: (night - 8) % 5 === 3 ? `Endless Nights · route ${night - 7} · chimneys and quiet roof ledges` : `Endless Nights · route ${night - 7} · more gaps and quicker bridges`,
       theme: CHALLENGE_THEMES[(night - 8) % CHALLENGE_THEMES.length],
       musicRoot: finalChapter.musicRoot * Math.pow(2, ((night - 8) % 9 - 4) / 12),
       feelingsNeeded: { ...finalChapter.feelingsNeeded },
@@ -4464,13 +4453,8 @@
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 50) : 1;
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
-<<<<<<< HEAD
     const freePick = FREE_MAPS.find(m => m.id === freeMap), mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : (freePick && freePick.level && freeMapOpen(freePick) ? freePick.id : 'free');
-    const sceneTrack = ({ school: 'school', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
-=======
-    const mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : 'free';
     const sceneTrack = ({ school: 'school', rooftop: 'hilltop', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
->>>>>>> 0b5bc43ddc88afc70c9c4065e38f9bf5f0f2deba
     music('duck', 1); music('play', sceneTrack);
     music('ambience', sceneTrack);
     cv.hidden = false;
@@ -4650,13 +4634,9 @@
       const button = document.createElement('button');
       const playable = level <= unlockedLevel;
       button.type = 'button'; button.dataset.level = String(level);
-<<<<<<< HEAD
       button.className = `level-node${playable ? ' is-playable' : ''}${level === unlockedLevel ? ' is-current' : ''} ${level <= 7 ? 'sb-hour' : 'sb-route'}`;
-=======
-      button.className = `level-node${playable ? ' is-playable' : ''}${level === unlockedLevel ? ' is-current' : ''}`;
       const visualTheme = window.TCVisualChapters?.forLevel(level);
       if (visualTheme) { button.style.borderColor = visualTheme.accent; entry.dataset.visualChapter = String(visualTheme.index + 1); }
->>>>>>> 0b5bc43ddc88afc70c9c4065e38f9bf5f0f2deba
       button.textContent = String(level); button.disabled = !playable;
       button.setAttribute('aria-label', playable ? `${hourOf(level)}, ${chapter.name}, playable${level === unlockedLevel ? ', current hour' : ''}` : `${hourOf(level)}, ${chapter.name}, locked until ${hourOf(level - 1)} is complete`);
       button.title = playable ? `Play ${hourOf(level)} · ${chapter.name}` : `${hourOf(level)} · complete ${hourOf(level - 1)} to unlock`;
