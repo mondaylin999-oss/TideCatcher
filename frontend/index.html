@@ -9,13 +9,30 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Padauk:wght@400;700&display=swap">
 <link rel="stylesheet" href="css/theme.css?v=ae0a5a6e0e1a">
 <link rel="stylesheet" href="css/styles.css?v=d56824e6fa9c">
-<link rel="stylesheet" href="css/cozy.css?v=6f341d54f62e">
+<link rel="stylesheet" href="css/cozy.css?v=20261024-shwe-tutorial">
 <link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
+<<<<<<< HEAD
 <link rel="stylesheet" href="css/sketchbook.css?v=sb5">
+=======
+<link rel="stylesheet" href="css/heart.css?v=20261024-heart-depth">
+>>>>>>> 0b5bc43ddc88afc70c9c4065e38f9bf5f0f2deba
 </head>
 <body>
 <canvas id="game" aria-label="TideCatcher prototype game" hidden></canvas>
+<div class="boot-screen" id="bootLoadingScreen" role="status" aria-live="polite" aria-label="Loading TideCatcher">
+  <div class="boot-loading-card">
+    <div class="boot-moon" aria-hidden="true"><div class="boot-paw-trail">
+      <svg class="boot-paw boot-paw-one" viewBox="0 0 72 72"><ellipse cx="36" cy="48" rx="17" ry="14"/><ellipse cx="17" cy="29" rx="7" ry="9"/><ellipse cx="31" cy="19" rx="7" ry="9"/><ellipse cx="45" cy="19" rx="7" ry="9"/><ellipse cx="57" cy="29" rx="7" ry="9"/></svg>
+      <svg class="boot-paw boot-paw-two" viewBox="0 0 72 72"><ellipse cx="36" cy="48" rx="17" ry="14"/><ellipse cx="17" cy="29" rx="7" ry="9"/><ellipse cx="31" cy="19" rx="7" ry="9"/><ellipse cx="45" cy="19" rx="7" ry="9"/><ellipse cx="57" cy="29" rx="7" ry="9"/></svg>
+      <svg class="boot-paw boot-paw-three" viewBox="0 0 72 72"><ellipse cx="36" cy="48" rx="17" ry="14"/><ellipse cx="17" cy="29" rx="7" ry="9"/><ellipse cx="31" cy="19" rx="7" ry="9"/><ellipse cx="45" cy="19" rx="7" ry="9"/><ellipse cx="57" cy="29" rx="7" ry="9"/></svg>
+    </div></div>
+    <p class="boot-kicker">TIDECATCHER</p>
+    <h1>Following the pawprints</h1>
+    <p class="boot-loading-message">Waking Shwe and gathering the moonlight…</p>
+    <div class="boot-loading-bar" aria-hidden="true"><span></span></div>
+  </div>
+</div>
 
 <div id="touch" hidden>
   <div id="stickZone"><div id="stick" hidden><div id="knob"></div></div></div>
@@ -59,6 +76,7 @@
 </div>
 <div class="tip-coach" id="tipCoach" hidden role="region" aria-live="polite" aria-atomic="true" aria-label="Gameplay tip">
   <div class="tip-coach-card">
+    <img class="shwe-teacher" id="shweTeacher" alt="" aria-hidden="true">
     <div class="tip-coach-copy"><span class="tip-coach-kicker" id="tipCoachKicker"></span><strong id="tipCoachTitle"></strong><p id="tipCoachText"></p><div class="tip-coach-control" id="tipCoachControl" aria-label="Suggested control"></div></div>
     <button class="btn ghost tip-coach-skip" id="tutorialSkipBtn" type="button" data-sfx="back" hidden>Skip tutorial</button>
   </div>
@@ -156,7 +174,7 @@
   </form>
 </div>
 
-<div class="overlay hub-screen" id="startScreen">
+<div class="overlay hub-screen" id="startScreen" hidden>
   <header class="hub-topbar" aria-label="TideCatcher home">
     <div class="hub-brand"><span class="hub-brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M5 28c6-8 12-8 19 0s13 8 19 0v9c-6 7-12 7-19 0s-13-7-19 0z" fill="currentColor" opacity=".72"/><path d="M6 21c6-8 12-8 18 0s12 8 18 0" fill="none" stroke="#e8f1f5" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="11" r="4" fill="#e0b04a"/></svg></span><span class="hub-brand-copy"><span class="hub-brand-kicker">THE NIGHT SIDE</span><strong>TideCatcher</strong></span></div>
     <div class="hub-currencies" aria-label="Saved collection totals">
@@ -214,11 +232,21 @@
     <div class="guidance-settings">
       <label class="guidance-toggle"><span>Show tips</span><input class="cozy-toggle" id="showTipsToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
       <label class="guidance-toggle"><span>Gentle mode · no life lost on falls</span><input class="cozy-toggle" id="gentleModeToggle" type="checkbox" role="switch" data-sfx="toggle"></label>
-      <label class="guidance-language">Tip language<select id="tipLanguageSelect"><option value="en">English</option><option value="my">မြန်မာ</option></select></label>
+      <div class="guidance-language"><span>Tip language</span><button class="language-picker-trigger" id="languagePickerBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="languagePickerScreen"><span class="language-current-flag" id="languageCurrentFlag" aria-hidden="true">🇬🇧</span><span id="languageCurrentLabel">English</span><span class="language-trigger-chevron" aria-hidden="true">⌄</span></button></div>
       <p class="muted guidance-status" id="settingsGuidanceStatus" aria-live="polite"></p>
       <div class="guidance-actions"><button class="btn ghost" id="settingsHelpBtn" type="button" data-sfx="toggle">How to play</button><button class="btn ghost" id="settingsReplayTutorial" type="button" data-sfx="toggle">Replay tutorial</button></div>
     </div>
     <button class="btn ghost" id="settingsCloseBtn" type="button">Back to home</button>
+  </section>
+</div>
+<div class="overlay language-picker-screen" id="languagePickerScreen" hidden role="dialog" aria-modal="true" aria-labelledby="languagePickerTitle">
+  <section class="panel language-picker-panel">
+    <button class="language-picker-close" id="languagePickerClose" type="button" aria-label="Close language selection">×</button>
+    <h2 id="languagePickerTitle">Language</h2>
+    <div class="language-options" role="group" aria-label="Tip language">
+      <button class="language-option" id="languageOptionMy" type="button" data-language="my" aria-pressed="false"><span class="language-flag" aria-hidden="true">🇲🇲</span><span class="language-option-name" lang="my">မြန်မာ</span><span class="language-check" aria-hidden="true">✓</span></button>
+      <button class="language-option" id="languageOptionEn" type="button" data-language="en" aria-pressed="false"><span class="language-flag" aria-hidden="true">🇬🇧</span><span class="language-option-name">English</span><span class="language-check" aria-hidden="true">✓</span></button>
+    </div>
   </section>
 </div>
 <div class="overlay help-screen" id="helpScreen" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
@@ -344,11 +372,15 @@
 </div>
 
 <script src="js/customization.js?v=bce48748bfe6"></script>
-<script src="js/tips.js?v=130b26bdf0ee"></script>
-<script src="js/levels.js?v=4a720166acd1"></script>
+<script src="js/tips.js?v=20261024-shwe-tutorial"></script>
+<script src="js/levels.js?v=20261025-rooftops"></script>
+<script src="js/visual-chapters.js?v=20261025-rooftops"></script>
+<script src="js/school-hallways.js?v=20261024-school-outdoors"></script>
 <script src="js/tc-sfx.js?v=2e3b239c26f8"></script>
 <script src="js/tc-game-audio.js?v=5a66f4ed7efc"></script>
-<script src="js/game.js?v=1db6b0548f82"></script>
+<script src="js/heart-data.js?v=20261024-heart-town"></script>
+<script src="js/heart-ui.js?v=20261024-heart-depth"></script>
+<script src="js/game.js?v=20261025-rooftops"></script>
 <script src="js/cozy-ui.js?v=f6823dfb3d93"></script>
 <script src="js/sketchbook.js?v=sb4"></script>
 <script src="js/afterstory.js?v=as2"></script>

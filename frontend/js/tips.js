@@ -9,17 +9,13 @@
         { title: 'Every night grows something', text: 'Earn Glow, upgrade Shwe, fill the Mood Book (17 feelings), complete 7 story nights, then take on 43 tougher moonlit routes.' }
       ],
       tutorial: [
-        { title: 'Move', text: 'Walk a little to guide Shwe.', action: 'move' },
-        { title: 'Jump', text: 'Hop once to learn the jump.', action: 'jump' },
-        { title: 'Sneak', text: 'Hold Shift or nudge the stick halfway.', action: 'sneak' },
-        { title: 'Catch a Moodling', text: 'Pounce the glowing practice Moodling.', action: 'catch' },
-        { title: 'Dodge Frustrated', text: 'Step aside when Frustrated charges.', action: 'dodge' },
-        { title: 'Pounce while dizzy', text: 'Pounce again while Frustrated is dizzy.', action: 'dizzy-pounce' },
-        { title: 'Night Eyes', text: 'Night Eyes reveal nearby hiding places.', action: 'eyes' },
-        { title: 'Scratch a hiding spot', text: 'Scratch the glowing practice spot nearby.', action: 'scratch' },
-        { title: 'Bring the lights home', text: 'Bring each required light home before sunrise.', action: 'home' }
+        { title: 'Walk with me', text: 'Meow! Guide me toward the glowing paw circle. Move a few steps along the floor.', action: 'move' },
+        { title: 'A little hop', text: 'Let’s jump! Press Jump, then land safely on a shelf or the floor.', action: 'jump' },
+        { title: 'Soft paws', text: 'Now walk quietly for a few steps. Hold Shift while moving, or keep the joystick inside its inner ring.', action: 'sneak' },
+        { title: 'Bring a light home', text: 'See our glowing practice friend? Move close and press Pounce to catch it. It cannot hurt us.', action: 'catch' }
       ],
-      success: 'Lovely! Another little step learned.',
+      tutorialComplete: 'You did it! Now let’s bring the feelings home.',
+      success: 'Purrfect! You learned it by doing it.',
       skipTutorial: 'Skip tutorial',
       jitLabel: 'A little tip',
       struggleLabel: 'A gentle hint',
@@ -93,17 +89,13 @@
         { title: 'ညတိုင်း တစ်စုံတစ်ရာ ကြီးထွားလာသည်', text: 'Glow ရယူပါ၊ Shwe ကို အဆင့်မြှင့်ပါ၊ Mood Book တွင် ခံစားချက် ၁၇ မျိုးစုပါ၊ ည ၇ ညနှင့် နေထွက်အဆုံးသတ်ကို ဖွင့်ပါ။' }
       ],
       tutorial: [
-        { title: 'ရွေ့ပါ', text: 'Shwe ကို လမ်းညွှန်ရန် အနည်းငယ် လျှောက်ပါ။', action: 'move' },
-        { title: 'ခုန်ပါ', text: 'ခုန်ခြင်းကို လေ့လာရန် တစ်ကြိမ် ခုန်ပါ။', action: 'jump' },
-        { title: 'တိတ်တိတ်လေး သွားပါ', text: 'Shift ကိုဖိထားပါ၊ သို့မဟုတ် joystick ကို တစ်ဝက်တွန်းပါ။', action: 'sneak' },
-        { title: 'Moodling ဖမ်းပါ', text: 'တောက်ပသော လေ့ကျင့် Moodling ကို ခုန်တိုက်ပါ။', action: 'catch' },
-        { title: 'Frustrated ကို ရှောင်ပါ', text: 'Frustrated ပြေးဝင်လာချိန် ဘေးသို့ ရွေ့ပါ။', action: 'dodge' },
-        { title: 'မူးနေချိန် ခုန်တိုက်ပါ', text: 'Frustrated မူးဝေနေချိန်တွင် ထပ်ခုန်တိုက်ပါ။', action: 'dizzy-pounce' },
-        { title: 'Night Eyes', text: 'အနီးရှိ ပုန်းကွယ်ရာများကို Night Eyes ဖြင့် ရှာပါ။', action: 'eyes' },
-        { title: 'ပုန်းရာကို ကုတ်ပါ', text: 'တောက်ပနေသော လေ့ကျင့်ရာနေရာကို ကုတ်ပါ။', action: 'scratch' },
-        { title: 'အလင်းများကို အိမ်ပြန်ပို့ပါ', text: 'နေမထွက်မီ လိုအပ်သော အလင်းတိုင်းကို အိမ်ပြန်ပို့ပါ။', action: 'home' }
+        { title: 'အတူလျှောက်ကြမယ်', text: 'ညောင်! တောက်ပတဲ့ စက်ဝိုင်းဘက်ကို ခြေလှမ်းအနည်းငယ် လျှောက်ကြမယ်။', action: 'move' },
+        { title: 'နည်းနည်းခုန်ကြမယ်', text: 'Jump ကိုနှိပ်ပြီး ခုန်ပါ။ စင်ပေါ် ဒါမှမဟုတ် ကြမ်းပြင်ပေါ် ပြန်ဆင်းကြမယ်။', action: 'jump' },
+        { title: 'တိတ်တိတ်လေးလျှောက်မယ်', text: 'ရွေ့ရင်း Shift ကိုဖိထားပါ။ ဖုန်းမှာ joystick အတွင်းစက်ဝိုင်းထဲကနေ ဖြည်းဖြည်းတွန်းပြီး ခြေလှမ်းအနည်းငယ် လျှောက်ပါ။', action: 'sneak' },
+        { title: 'အလင်းလေးကိုဖမ်းမယ်', text: 'တောက်ပတဲ့ လေ့ကျင့်ဖော်လေးအနားကိုသွားပြီး Pounce ကိုနှိပ်ပါ။ သူက အန္တရာယ်မပေးပါဘူး။', action: 'catch' }
       ],
-      success: 'ကောင်းလိုက်တာ! အဆင့်ငယ်လေးတစ်ခု ထပ်သင်ယူပြီးပါပြီ။',
+      tutorialComplete: 'တတ်သွားပြီ! ခံစားချက်လေးတွေကို အိမ်ပြန်ပို့ကြမယ်။',
+      success: 'ကောင်းလိုက်တာ! ကိုယ်တိုင်လုပ်ပြီး သင်ယူတတ်မြောက်သွားပြီ။',
       skipTutorial: 'သင်ခန်းစာ ကျော်မည်',
       jitLabel: 'အကြံပြုချက်လေး',
       struggleLabel: 'ညင်သာသော အကူအညီ',

@@ -1,5 +1,76 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Quiet Rooftops
+
+- The eight "Quiet Rooftops" challenge nights now use a rooftop map instead of hill scenery. Distant houses, chimneys, laundry lines and tiled roofs form a readable moonlit route.
+- Warm roof cushions sit on solid sections, including the existing checkpoint positions. Dormer nooks mark hiding locations and the existing platform geometry is drawn as roof ledges.
+- Added rooftop-themed buried finds and map labels. Scoring, Moodling behavior and level geometry are unchanged.
+- Browser checked all eight rooftop nights, a rooftop briefing and compact mobile landscape; script checks and the level-data comparison passed.
+
+## Outdoor passages at school
+
+- School routes now open outdoors once every three background sections, starting after the first hallway. The scene rotates among a moonlit courtyard, a covered walkway and a quiet garden across school visits.
+- The outdoor sections have matching passage piers, distant school windows, restrained moonlight and stone paving. Existing level geometry, platforms and collectibles remain in place.
+- Outdoor backgrounds are cached with the hallway tiles; their scenery has no fake roosts or gameplay collisions.
+- Browser checked all eleven school levels, scene transitions and all three outdoor styles. Level data stayed unchanged.
+
+## Cleaner school hallway variations
+
+- Replaced the repeated illustrated school wall with five architectural backgrounds: classroom wing, window gallery, art corridor, library passage and courtyard arcade. Consecutive school visits rotate through the styles, with alternating bay arrangements along longer routes.
+- Added recessed windows, door frames, quiet notice/art displays, glazed library shelves and fixed wall lights. Removed the old decorative string-light layer; lower walls stay clear around playable roosts.
+- Kept platform geometry and interaction objects in their existing rendering layers. School visual chapters now apply lighting/dust without drawing outdoor landmark silhouettes inside corridors. Briefings identify the hallway style.
+- Background tiles are drawn once and cached, with a four-tile cache limit to control mobile memory usage.
+- Browser checks covered all eleven school levels, all five styles, scrolling across tile joins, the hallway name in a briefing and a compact landscape view. Level data remained unchanged; desktop artwork was visually inspected.
+
+## Ten visual chapters across fifty levels
+
+- Added one visual identity for each consecutive group of five levels: Lamplit Beginnings (1–5), Misty Gardens (6–10), River Lanterns (11–15), Amber Autumn (16–20), Silver Rain (21–25), Bamboo Shadows (26–30), Indigo Ruins (31–35), Winter Starlight (36–40), Cloud Terraces (41–45) and Dawn Blossoms (46–50).
+- Each chapter adds its own light palette, distant scenery and atmospheric details, including garden trees, festival gates, autumn branches, rain shelters, bamboo, old arches, frosted pines, terraces and blossoms. Indoor school scenery stays sparse and uses colored light/dust instead of indoor weather.
+- Map nodes and captions identify each visual chapter; level briefings describe its atmosphere. Existing story locations, collision geometry, difficulty, collectibles and Free Play remain intact.
+- Effects use lightweight canvas shapes without image filters; reduced-motion mode freezes decorative movement.
+- Browser checks rendered all fifty levels, verified chapter boundaries and unchanged level data, checked a chapter briefing and inspected desktop/compact-landscape views.
+
+## Learn with Shwe
+
+- Replaced the nine-step first-night sequence with four short playable lessons: walk, jump and land, sneak, and pounce on a harmless practice Moodling. Shwe appears beside localized dialogue and a step counter, with keyboard or touch control hints.
+- Movement and sneaking require actual ground travel; jumping requires a completed landing. Fixed the practice target's catch path so a successful pounce advances the tutorial.
+- Normal Moodlings and hazards wait while the night timer is paused. Practice catches grant no score, Glow, Mood Book entries or Workshop lights. Finishing or skipping returns Shwe to the start of the normal first night.
+- Settings → Replay tutorial now launches practice immediately. Completion is saved using the existing tutorial preference.
+- Checked all four lessons using real keyboard input in a browser, including catch completion, timer/reward isolation and skipping. Inspected desktop and compact landscape layouts.
+
+## Quieter school scenery
+
+- Removed the extra rainbow bunting, dangling paper stars, floating decorative sparkles and chair stacks from school maps. Kept two sparse strings of steady warm lights instead of four dense animated strings.
+- Kept school platforms, pits, checkpoints, hiding spots, collectibles and Moodlings in place so the playable route remains intact. Applies to every school-themed night.
+
+## Heart Workshop and Lantern Town
+
+- Refined the artwork with layered hills, moon haze, shaded masonry, roof tiles, framed windows, building shadows, a leafy tree, bridge railings and water reflections. The Workshop now has ceramic mixing bowls and subtle wood-like surfaces. These are lightweight SVG/CSS details; recipes, rewards and progression are unchanged.
+
+- Added two home destinations with landscape layouts, touch scrolling, keyboard navigation and reduced-motion support.
+- Heart Workshop has 50 handmade feelings: nine catchable basics, 18 first mixes, 15 second mixes, seven deep feelings and Whole Heart. Tap ingredients or drag them into bowls; valid recipes consume one of each light and save their result. Unknown pairs cost nothing. Discovered recipes remain visible even after spending their lights. Hints cost 20 Glow.
+- Added a separate saved light inventory. New catches (including Golden and extra catches, excluding tutorial/ambush-only catches) bank after successful story nights or completed Free Play runs. Abandoned and failed story nights do not bank lights. Existing Mood Book records are preserved; historical catches are not retroactively converted into spendable stock. Scoring and Moodling behavior are unchanged.
+- Lantern Town has ten illustrated places with ingredient requirements, memories, warm windows, 30 Glow per place and existing trail/comfort-item rewards. Spending lights never removes discoveries. Place rewards are tracked once per save.
+- Discover all seven deep feelings, then combine Happiness and Love for Whole Heart. Lighting all ten places and discovering Whole Heart unlocks a replayable sky-lantern ending with Thiri drawing her town and a permanent cosmetic golden collar for Shwe. The existing chapter ending remains available.
+- Progress uses the existing browser save/reset model. No external service, AI generation or backend is required. Recipe and place transactions refuse consumption when browser storage cannot save.
+
+## Startup loading screen
+
+- Added a moonlit startup screen with an animated cat paw trail while the page and fonts finish loading. The home screen stays hidden until startup is ready, avoiding a flash of the home page before the app initializes.
+
+## Language picker
+
+- Replaced the tip-language dropdown in Settings with a compact flag-based dialog matching the supplied reference, including clear selection feedback and keyboard/touch-friendly close behavior.
+- Kept the picker open after a choice so the selected-language checkmark is immediately visible; removed the white disks behind the flag icons.
+
+## Mobile level-map dragging
+
+- Enabled finger and stylus dragging on the horizontal level map. Dragging starts on the map surface; level buttons remain tappable.
+
+## Shwe's feet alignment
+
+- Aligned Shwe's animated sprite and worn items to the gameplay paw baseline, fixing the feet clipping below the ground in the attached gameplay recording.
+
 ## Voice acting in the intro and ending
 
 - Every spoken line of the intro and the morning ending now has its voice clip (`frontend/assets/audio/voice`). The words type out at the speed they are spoken, the next line starts after the voice ends, and the music dips while someone speaks.
@@ -121,3 +192,12 @@
 - **Guided Night 1:** The real Night 1 pauses its countdown while each accessible coach step waits for movement, jumping, sneaking, a harmless practice catch, a Frustrated dodge and dizzy pounce, Night Eyes, scratching, and completing the required lights. Each step has an on-canvas target marker, device-specific keyboard/touch control art, a success sparkle/chime, and an always-visible Skip tutorial control.
 - **Later help:** New-mechanic, Free Play, combo, and gentle struggle hints use one-time four-second coach bubbles and the existing chapter hint state; a per-run struggle hint appears after three hits from one Moodling or 30 seconds without a catch. The Info button and pause menu both open a full How to play guide with keyboard/touch controls, known and unknown Moodlings, upgrades, and combos.
 - **Preferences and saves:** `mk-profile`/`mk-onboarding` now safely retain `welcomeSeen`, `tutorialDone`, `tipsSeen`, Show tips, and the English/Burmese-ready copy choice. Reset still removes every `mk-` key. Settings includes Show tips, an English/Burmese-ready tip language selector, and Replay tutorial. All editable Welcome, tutorial, just-in-time, struggle, and sky-tip copy lives in `frontend/js/tips.js`.
+
+## Cloudflare deployment
+
+- Added explicit Wrangler static-assets configuration for frontend/, preventing Git history and repository-only files from being uploaded. The failed build included a 65 MiB Git pack, exceeding Cloudflare's 25 MiB asset limit.
+- Preserved legacy frontend and TideCatcher.html entry URLs with redirects.
+
+## Pit frequency
+
+- Story pits now appear only on levels 5, 10, 15, 20, 25, 30, 35, 40, 45 and 50. Other story levels have solid ground beneath their existing roosts. Free Play layouts are unchanged.

@@ -73,7 +73,7 @@
     return level;
   };
   const makeChallengeLevel = night => {
-    const map = ['school', 'park', 'festival', 'hill', 'lake'][(night - 8) % 5];
+    const map = ['school', 'park', 'festival', 'rooftop', 'lake'][(night - 8) % 5];
     const pitCount = Math.min(18, 4 + Math.floor((night - 8) / 3));
     const bridgeWidth = 90, pitWidth = bridgeWidth * 5, safeRun = 440, firstPit = 680;
     const width = firstPit + pitCount * (pitWidth + safeRun) - safeRun + 700;
@@ -101,6 +101,7 @@
     }
     return {
       night, map, width, pits, checkpoints, ground: ground(width, groundPoints), platforms,
+      restSpots: map === 'rooftop' ? [220, ...checkpoints] : [],
       hideSpots, burySpots, spawnZones, catStart: 150, homeLight: [width - 150, 390], props: [], pitToBridgeRatio: 5
     };
   };
@@ -177,6 +178,11 @@
   // Hilltop: every hill's middle stone pillar crumbles, not just the first one
   for (const p of levels[5].platforms) if (p[2] === 90 && p[1] === 420) p[3] = 'crumbling';
   for (let night = 8; night <= 50; night++) levels[night] = makeChallengeLevel(night);
+  // One pit-bearing story level per five levels. The ground profile already
+  // spans the entire route; clearing gaps restores solid ground beneath roosts.
+  for (let night = 1; night <= 50; night++) {
+    if (night % 5 !== 0) levels[night].pits = [];
+  }
   root.TC_LEVELS = levels;
   if (typeof module !== 'undefined' && module.exports) module.exports = levels;
 })(typeof window !== 'undefined' ? window : globalThis);
