@@ -1,5 +1,12 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Quiet Rooftops
+
+- The eight "Quiet Rooftops" challenge nights now use a rooftop map instead of hill scenery. Distant houses, chimneys, laundry lines and tiled roofs form a readable moonlit route.
+- Warm roof cushions sit on solid sections, including the existing checkpoint positions. Dormer nooks mark hiding locations and the existing platform geometry is drawn as roof ledges.
+- Added rooftop-themed buried finds and map labels. Scoring, Moodling behavior and level geometry are unchanged.
+- Browser checked all eight rooftop nights, a rooftop briefing and compact mobile landscape; script checks and the level-data comparison passed.
+
 ## Outdoor passages at school
 
 - School routes now open outdoors once every three background sections, starting after the first hallway. The scene rotates among a moonlit courtyard, a covered walkway and a quiet garden across school visits.

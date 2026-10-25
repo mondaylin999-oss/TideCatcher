@@ -22,14 +22,14 @@
     // Tint the existing place rather than replacing its readable platforms.
     const wash=g.createLinearGradient(0,0,0,ground);
     wash.addColorStop(0,c.sky);wash.addColorStop(1,c.shade);
-    g.globalAlpha=c.index===0?.09:map==='school'?.3:.42;g.fillStyle=wash;g.fillRect(cam-50,-100,width+100,height+200);
+    g.globalAlpha=c.index===0?.09:(map==='school'||map==='rooftop')?.3:.42;g.fillStyle=wash;g.fillRect(cam-50,-100,width+100,height+200);
     g.globalAlpha=1;
     const line=(x,y,x2,y2,color,w=2)=>{g.strokeStyle=color;g.lineWidth=w;g.beginPath();g.moveTo(x,y);g.lineTo(x2,y2);g.stroke();};
     const ellipse=(x,y,rx,ry,color)=>{g.fillStyle=color;g.beginPath();g.ellipse(x,y,rx,ry,0,0,Math.PI*2);g.fill();};
     const hill=ground-95;
     const start=Math.floor(cam*.24/640)-1;
     // Sparse, distant landmarks stay above the playable floor.
-    for(let k=start;map!=='school' && k<(cam*.24+width)/640+1;k++){
+    for(let k=start;map!=='school' && map!=='rooftop' && k<(cam*.24+width)/640+1;k++){
       const x=cam+k*640-cam*.24+220, y=hill-12+(k%2)*12;
       g.save();g.globalAlpha=map==='school'?.32:.6;
       if(c.index>0){g.translate(x,y);g.scale(1.25,1.25);g.translate(-x,-y);}
