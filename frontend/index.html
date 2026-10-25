@@ -12,7 +12,11 @@
 <link rel="stylesheet" href="css/cozy.css?v=20261024-shwe-tutorial">
 <link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
+<<<<<<< HEAD
+<link rel="stylesheet" href="css/sketchbook.css?v=sb5">
+=======
 <link rel="stylesheet" href="css/heart.css?v=20261024-heart-depth">
+>>>>>>> 0b5bc43ddc88afc70c9c4065e38f9bf5f0f2deba
 </head>
 <body>
 <canvas id="game" aria-label="TideCatcher prototype game" hidden></canvas>
@@ -112,7 +116,7 @@
 <div class="overlay welcome-screen" id="welcomeScreen" hidden aria-labelledby="welcomeTitle">
   <div class="welcome-backdrop" aria-hidden="true"><span class="welcome-moon"></span><span class="welcome-tide"></span><span class="welcome-tide welcome-tide-back"></span></div>
   <section class="welcome-panel" aria-describedby="welcomeDescription">
-    <p class="eyebrow welcome-eyebrow">A story of a girl, her cat, and the feelings they chase</p>
+    <p class="eyebrow welcome-eyebrow">Thiri’s sketchbook · please don’t peek</p>
     <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/ginger-realistic-sprite.png" alt="Shwe, a cat ready to follow the night lights" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
     <h1 id="welcomeTitle" class="welcome-title">TideCatcher</h1>
     <p id="welcomeDescription" class="welcome-description">When Thiri falls asleep with a heavy heart, Shwe follows her little feelings into the Night Side.</p>
@@ -122,7 +126,7 @@
       <div class="welcome-progress" id="welcomeProgressBar" role="progressbar" aria-label="Preparing story scenes" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0"><span id="welcomeProgress"></span></div>
     </div>
     <button class="btn welcome-begin" id="welcomeBeginBtn" type="button" disabled>Begin the story →</button>
-    <p class="welcome-note">One quiet night. A long journey home.</p>
+    <p class="welcome-note">One quiet night. Seven hours. Every colour back home.</p>
   </section>
 </div>
 <div class="overlay welcome-cards-screen" id="welcomeCardsScreen" hidden role="dialog" aria-modal="true" aria-labelledby="welcomeCardsTitle">
@@ -185,43 +189,26 @@
       <button class="hub-side-btn hub-side-reset" id="resetBtn" type="button"><span>RESET</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 8.5A8 8 0 1 1 4 14"/><path d="M4 4v5h5"/><path d="M12 8v4l2.6 1.6"/></svg></button>
     </nav>
   </header>
-  <main class="hub-layout" id="menuHub">
-
-    <section class="hub-hero" aria-label="Shwe watching the moonlit tide from a pier">
-      <div class="hub-hero-mist mist-one" aria-hidden="true"></div><div class="hub-hero-mist mist-two" aria-hidden="true"></div>
-      <div class="hub-hero-art"><svg id="hubHeroSvg" viewBox="0 0 520 620" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Shwe, the selected cat, watching the moonlit tide from a pier">
-        <defs><linearGradient id="hubHeroSky" x2="0" y2="1"><stop stop-color="#23384a"/><stop offset=".56" stop-color="#122738"/><stop offset="1" stop-color="#0b1620"/></linearGradient><radialGradient id="hubHeroMoon"><stop stop-color="#f9f2d6" stop-opacity=".9"/><stop offset="1" stop-color="#a9c4d4" stop-opacity="0"/></radialGradient><linearGradient id="hubHeroWater" x2="0" y2="1"><stop stop-color="#315266" stop-opacity=".55"/><stop offset="1" stop-color="#09151e"/></linearGradient></defs>
-        <ellipse cx="264" cy="154" rx="156" ry="156" fill="url(#hubHeroMoon)"/><circle cx="264" cy="154" r="57" fill="#d9e6df" opacity=".78"/><path d="M0 308q76-44 143 0t134 0 132 0 111 0v312H0Z" fill="url(#hubHeroSky)"/><path d="M0 404q72-28 142 0t138 0 135 0 105 0v216H0Z" fill="url(#hubHeroWater)"/><path d="M0 445q65-18 129 0t129 0 129 0 133 0M0 490q74-15 143 0t130 0 128 0 119 0M0 538q60-12 123 0t130 0 136 0 131 0" fill="none" stroke="#a9c4d4" stroke-opacity=".22" stroke-width="2"/>
-        <path d="M35 397 143 330l91 67M143 330v-43m0 17 37 25M405 398l65-45v48" fill="none" stroke="#607987" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".66"/><path d="M52 395h415v27H52zM77 423v105m351-105v105M112 423v86m277-86v86" fill="#172832" stroke="#8098a0" stroke-opacity=".58" stroke-width="3"/>
-        <path d="M372 325 408 270m-20 2q22-13 39 2l-17 26q-18 4-27-8Z" fill="none" stroke="#a9c4d4" stroke-width="3" stroke-linejoin="round"/><path d="M393 273 410 292m-12-24 19 22m-24-10 23 8" stroke="#a9c4d4" stroke-width="1.5" opacity=".75"/><path d="M407 377v-36q0-10 10-10t10 10v36m-24 0h28" fill="none" stroke="#e0b04a" stroke-width="4" stroke-linecap="round"/><circle cx="417" cy="350" r="11" fill="#e0b04a" opacity=".28"/><circle cx="417" cy="350" r="5" fill="#f5df9b"/><ellipse cx="280" cy="430" rx="95" ry="8" fill="#a9c4d4" opacity=".14"/>
-        <g fill="#e8f1f5" opacity=".62"><circle cx="116" cy="293" r="2"/><circle cx="170" cy="257" r="1.5"/><circle cx="365" cy="224" r="2"/><circle cx="436" cy="302" r="1.4"/><circle cx="93" cy="366" r="1.5"/></g>
-      </svg>
-      <img id="hubHeroCat" src="assets/cats/ginger-realistic.png" alt="" decoding="async" draggable="false"></div>
-      <div class="hub-hero-label"><span>YOUR COMPANION</span><strong id="hubCatName">SHWE</strong><i>Keep the little lights close.</i></div>
-      <span class="hub-spray spray-a" aria-hidden="true"></span><span class="hub-spray spray-b" aria-hidden="true"></span><span class="hub-spray spray-c" aria-hidden="true"></span>
-    </section>
-    <section class="hub-content" aria-label="Play modes and collection">
-      <div class="hub-content-heading"><span>A POCKETFUL OF POSSIBILITIES</span><h1>Where will you go?</h1></div>
-      <button class="hub-card hub-story-card" id="storyBtn" type="button" aria-label="Story mode: open the level map">
-        <svg class="hub-story-scene" viewBox="0 0 800 280" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="hubStorySky" x2="0" y2="1"><stop stop-color="#30475a"/><stop offset=".56" stop-color="#172c3b"/><stop offset="1" stop-color="#0b1720"/></linearGradient><linearGradient id="hubStoryWater" x2="0" y2="1"><stop stop-color="#38727d"/><stop offset="1" stop-color="#0b1821"/></linearGradient></defs><rect width="800" height="280" fill="url(#hubStorySky)"/><circle cx="636" cy="70" r="37" fill="#e0d9b9" opacity=".82"/><path d="M0 155h800v125H0z" fill="url(#hubStoryWater)"/><path d="M0 188q92-24 184 0t184 0 184 0 248 0M0 231q70-17 150 0t170 0 170 0 170 0 140 0" fill="none" stroke="#b3d0d5" stroke-opacity=".25" stroke-width="2"/><path d="M0 0h195v157H0zm30 41h107v76H30zm126 0h41v115h-41zM229 40h199v115H229zM454 0h36v155h-36z" fill="#172630" stroke="#718792" stroke-opacity=".55" stroke-width="4"/><path d="M261 64h135v78H261zm40 0v78m38-78v78m39-78v78" fill="#243c4a" stroke="#899da1" stroke-width="3"/><path d="M0 154h800v18H0zm80 0v70m90-70v70m530-70v70m44-70v70" fill="#253943" stroke="#a9c4d4" stroke-opacity=".6" stroke-width="3"/><path d="M520 154v-90m0 8q40 18 74 0v36q-34 18-74 0" fill="#3fd0c9" opacity=".72"/><path d="M666 154q0-29 20-29t20 29m-49 0h59" fill="none" stroke="#e0b04a" stroke-width="4"/><circle cx="686" cy="137" r="7" fill="#e0b04a" opacity=".65"/><path d="M590 161v-29q0-14 13-14t13 14v29m-30 0h34" fill="#09151e" stroke="#a9c4d4" stroke-width="2"/><path d="M598 134q6-8 12 0" fill="none" stroke="#3fd0c9" stroke-width="3"/><g fill="#c1d5d8" opacity=".45"><circle cx="45" cy="205" r="2"/><circle cx="744" cy="204" r="2"/><circle cx="350" cy="251" r="1.5"/></g></svg>
-        <span class="hub-story-shade" aria-hidden="true"></span><span class="hub-story-plate">STORY MODE</span><span class="hub-story-copy"><strong>Story Mode</strong><span>Choose a chapter and bring every feeling home.</span></span><span class="hub-story-arrow" aria-hidden="true">↗</span>
-      </button>
-      <div class="hub-small-grid">
-        <button class="hub-card hub-small-card free-card" id="freeBtn" type="button" aria-label="Free Play">
-          <svg class="hub-small-scene" viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="hubFreeSea" x2="0" y2="1"><stop stop-color="#16444e"/><stop offset="1" stop-color="#0b1821"/></linearGradient></defs><rect width="360" height="170" fill="#112632"/><circle cx="271" cy="111" r="66" fill="#3fd0c9" opacity=".1"/><path d="M0 105q50-28 100 0t100 0 160 0v65H0Z" fill="url(#hubFreeSea)"/><path d="M0 124q50-14 102 0t104 0 154 0M0 149q55-12 110 0t112 0 138 0" fill="none" stroke="#83c7cb" stroke-opacity=".35" stroke-width="2"/><path d="M75 111q52-69 107-15 38 37 86 5" fill="none" stroke="#3fd0c9" stroke-width="3" stroke-dasharray="4 8"/><path d="M126 76 169 48m-18 5q24-15 40 3l-21 25q-18 2-27-8Z" fill="none" stroke="#d9e8e2" stroke-width="3"/><circle cx="268" cy="98" r="8" fill="#a9fff0"/><circle cx="268" cy="98" r="20" fill="#3fd0c9" opacity=".25"/></svg>
-          <span class="hub-small-head"><span>FREE PLAY</span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5q9 1 11 8l4 4-3 3-4-5Q5 14 4 5Z"/><path d="M15 14 20 9M14 19l-2 2"/></svg></i></span><span class="hub-small-copy">Stay out under the moon and keep the chain alive.</span>
-        </button>
-        <button class="hub-card hub-small-card shop-card" id="shopBtn" type="button" aria-label="Shop upgrades">
-          <svg class="hub-small-scene" viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="360" height="170" fill="#1c2b35"/><path d="M48 112h264l-26 34H76Z" fill="#111e27" stroke="#82969b" stroke-width="3"/><path d="M83 112V68h191v44M68 68h221L260 45H98Z" fill="#233944" stroke="#91a7a8" stroke-width="3"/><path d="M110 68V44m37 24V43m37 25V43m37 25V43m36 25V44" stroke="#a9c4d4" stroke-opacity=".45" stroke-width="2"/><path d="M107 85q22 29 44 0t43 0 43 0" fill="none" stroke="#3fd0c9" stroke-opacity=".8" stroke-width="3"/><path d="M139 86v22m55-22v22m54-22v22" stroke="#a9c4d4" stroke-opacity=".5" stroke-width="1.5"/><circle cx="287" cy="59" r="8" fill="#e0b04a"/><circle cx="287" cy="59" r="20" fill="#e0b04a" opacity=".17"/><path d="M37 153q55-13 110 0t108 0 105 0" fill="none" stroke="#76b9c0" stroke-opacity=".35" stroke-width="2"/></svg>
-          <span class="hub-small-head"><span>SHOP</span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 19 9l-7 12L5 9z"/><path d="M5 9h14M9 9l3 12 3-12"/></svg></i></span><span class="hub-small-copy">Treats and upgrades for Shwe.</span><span class="hub-small-value" id="shopBtnValue">0 Glow</span>
-        </button>
-        <button class="hub-card hub-small-card book-card" id="bookBtn" type="button" aria-label="Open Mood Book">
-          <svg class="hub-small-scene" viewBox="0 0 360 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><radialGradient id="hubBookLight"><stop stop-color="#3fd0c9" stop-opacity=".7"/><stop offset="1" stop-color="#3fd0c9" stop-opacity="0"/></radialGradient></defs><rect width="360" height="170" fill="#182c3a"/><circle cx="180" cy="95" r="76" fill="url(#hubBookLight)"/><path d="M74 60q49-16 106 8v68q-56-23-106-8zm212 0q-49-16-106 8v68q56-23 106-8z" fill="#d7e5df" stroke="#e0b04a" stroke-width="3"/><path d="M180 68v68M92 72q36-7 71 6m105-6q-36-7-71 6M92 91q36-7 71 6m105-6q-36-7-71 6" fill="none" stroke="#3b6974" stroke-width="3" stroke-linecap="round"/><circle cx="126" cy="42" r="5" fill="#e0b04a"/><path d="m126 31 2 8 7 3-7 3-2 8-3-8-7-3 7-3zM250 35l2 6 6 2-6 3-2 6-2-6-6-3 6-2z" fill="#f6d782"/></svg>
-          <span class="hub-small-head"><span>MOOD BOOK</span><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 5q5-2 9 2v14q-4-4-9-2zm18 0q-5-2-9 2v14q4-4 9-2z"/></svg></i></span><span class="hub-small-copy">Every feeling Shwe has brought home.</span><span class="hub-small-value" id="bookBtnValue">0 / 17 found</span>
-        </button>
-
-      </div>
-    </section>
+  <main class="room-hub" id="menuHub">
+    <div class="hub-hero-art" hidden aria-hidden="true"></div>
+    <div class="rh-wrap">
+     <div class="rh-stage" id="roomStage">
+      <img class="rh-room" src="assets/home/room-grey.webp" alt="" draggable="false">
+      <img class="rh-room rh-col" src="assets/home/room.webp" alt="" draggable="false">
+      <img class="rh-thiri" id="rhThiriGrey" src="assets/home/thiri-s0-grey.webp" alt="" draggable="false">
+      <img class="rh-thiri rh-col" id="rhThiri" src="assets/home/thiri-s0.webp" alt="" draggable="false">
+      <span class="rh-zzz" aria-hidden="true"><i>z</i><i>z</i><i>z</i></span>
+      <img id="hubHeroCat" class="rh-cat" src="assets/cats/ginger-realistic.png" alt="" decoding="async" draggable="false">
+      <span class="rh-cattag" aria-hidden="true" id="hubCatName">SHWE</span>
+      <button class="rh-spot rh-main" id="storyBtn" type="button" style="--x:24.85%;--y:10.62%;--w:14.20%;--h:35.01%;--tx:50.4%;--ty:52%" aria-label="Story Mode: follow her lost feelings out of the window"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Story Mode</b><i>Out the window, after her feelings</i></span></button>
+      <button class="rh-spot" id="freeBtn" type="button" style="--x:85.95%;--y:5.48%;--w:11.70%;--h:33.72%;--tx:50.0%;--ty:84%" aria-label="Free Play: wander the places you have found"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Free Play</b><i>A moonlit wander</i></span></button>
+      <button class="rh-spot" id="bookBtn" type="button" style="--x:34.50%;--y:46.09%;--w:10.75%;--h:9.92%;--tx:49.8%;--ty:5.9%" aria-label="Mood Book: every feeling brought home"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Mood Book</b><i><span id="bookBtnValue">0 / 17 found</span></i></span></button>
+      <button class="rh-spot" id="shopBtn" type="button" style="--x:82.40%;--y:48.31%;--w:10.55%;--h:22.87%;--tx:50.2%;--ty:13.3%" aria-label="Shop: treats and upgrades"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Treat box</b><i><span id="shopBtnValue">0 Glow</span></i></span></button>
+      <button class="rh-spot" id="roomHelpBtn" type="button" style="--x:44.00%;--y:29.17%;--w:10.70%;--h:14.59%;--tx:50.0%;--ty:9.6%" aria-label="How to play"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>How to play</b><i>Notes on the corkboard</i></span></button>
+      <button class="rh-spot" id="roomBedBtn" type="button" style="--x:4.75%;--y:44.92%;--w:22.25%;--h:29.17%;--tx:37.5%;--ty:7.6%" aria-label="Change names or cat"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b><span class="sb-girl">Thiri</span></b><i>Asleep</i></span></button>
+     </div>
+    </div>
+    <div class="hub-content-heading rh-caption"><span>WHILE <b class="sb-girl">THIRI</b> SLEEPS…</span><h1>Where will <span class="sb-cat">Shwe</span> go tonight?</h1></div>
   </main>
   <section class="story-map-screen" id="storyMapScreen" hidden aria-labelledby="storyMapTitle">
     <div class="panel story-map-panel">
@@ -355,7 +342,7 @@
 
 <div class="overlay" id="shopScreen" hidden>
   <div class="panel">
-    <p class="eyebrow">Upgrade Shwe</p>
+    <p class="eyebrow"><span class="sb-cat">Shwe</span>’s treat tin</p>
     <h1>Glow treats</h1>
     <p>You earn Glow for every feeling you catch, in both modes. Bigger combos earn more. You have <span class="glowpill" id="glowAmt">0</span> Glow.</p>
     <div class="shop" id="shopList"></div>
@@ -365,9 +352,9 @@
 
 <div class="overlay" id="bookScreen" hidden>
   <div class="panel wide">
-    <p class="eyebrow">Shwe's collection</p>
+    <p class="eyebrow"><span class="sb-girl">Thiri</span>’s feelings</p>
     <h1>Mood Book</h1>
-    <p>Every feeling you bring home is recorded here. Rare ones appear now and then with sparkles around them. <b class="gold" id="bookCount">0 / 15 found</b></p>
+    <p>Every feeling <span class="sb-cat">Shwe</span> brings home gets a page in her sketchbook. Rare ones sparkle, so look closely. <b class="gold" id="bookCount">0 / 15 found</b></p>
     <div class="book" id="bookList"></div>
     <button class="btn ghost" id="bookBack">Back</button>
   </div>
@@ -395,5 +382,7 @@
 <script src="js/heart-ui.js?v=20261024-heart-depth"></script>
 <script src="js/game.js?v=20261025-rooftops"></script>
 <script src="js/cozy-ui.js?v=f6823dfb3d93"></script>
+<script src="js/sketchbook.js?v=sb4"></script>
+<script src="js/afterstory.js?v=as2"></script>
 </body>
 </html>

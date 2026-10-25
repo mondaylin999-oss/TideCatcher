@@ -1,0 +1,464 @@
+/* ==========================================================================
+   Thiri's Sketchbook skin
+   The menus become pages of Thiri's sketchbook: paper cards, washi tape,
+   sticky notes and crayon headings. Loaded last; it only restyles, so the
+   layout rules in cozy.css / single-screen.css still decide sizes.
+   Colour comes back as feelings come home: sketchbook.js sets
+   --sb-colour (0 = pencil grey … 1 = full colour) from Thiri's progress.
+   ========================================================================== */
+/* Gaegu (SIL Open Font License 1.1), bundled so it works offline and on any host.
+   Its curly apostrophe is full-width, so ‘ ’ fall back to the next font. */
+@font-face{font-family:"Gaegu";font-style:normal;font-weight:400;font-display:swap;src:url("../assets/fonts/gaegu-latin-400-normal.woff2") format("woff2"); unicode-range:U+0000-2017,U+201A-FFFF}
+@font-face{font-family:"Gaegu";font-style:normal;font-weight:700;font-display:swap;src:url("../assets/fonts/gaegu-latin-700-normal.woff2") format("woff2"); unicode-range:U+0000-2017,U+201A-FFFF}
+
+:root{
+  --sb-paper:#f6eedc; --sb-paper-2:#fffdf6; --sb-paper-shade:#e9dfc8;
+  --sb-ink:#2b2547; --sb-ink-2:#4a4460; --sb-pencil:#6b6480; --sb-rule:rgba(86,112,170,.16);
+  --sb-tape:rgba(185,163,255,.72); --sb-tape-2:rgba(255,207,92,.7); --sb-tape-3:rgba(255,143,184,.6);
+  --sb-hand:"Gaegu","Fredoka","Padauk",system-ui,sans-serif;
+  --sb-colour:1;
+  --sb-shadow:0 14px 28px rgba(8,5,25,.42),0 2px 0 rgba(255,255,255,.5) inset;
+  --sb-ticket:polygon(0 0,100% 0,98.5% 22%,100% 44%,98.5% 66%,100% 88%,100% 100%,0 100%,0 88%,1.5% 66%,0 44%,1.5% 22%);
+}
+
+/* ---------- paper pages (every dialog and screen card) ---------- */
+.overlay .panel:not(.story-map-panel){
+  --ink:var(--sb-ink); --cream:var(--sb-ink); --muted:var(--sb-ink-2); --line:rgba(59,53,80,.22);
+  --bg-card:var(--sb-paper-2); --bg-raised:#efe6d0; --glass:var(--sb-paper-2); --soft-light:rgba(0,0,0,0);
+  --lilac:#6a4ab8; --mint:#2f8a5a; --sky:#2f6fb0; --pink:#c24f86; --peach:#c46a2a; --coral:#c2473f;
+  position:relative; color:var(--sb-ink);
+  background-color:var(--sb-paper);
+  background-image:repeating-linear-gradient(transparent 0 29px,var(--sb-rule) 29px 30px);
+  border:0; border-radius:4px 6px 5px 3px; box-shadow:var(--sb-shadow);
+}
+.overlay .panel:not(.story-map-panel)::after{
+  content:""; position:absolute; top:-12px; left:50%; width:110px; height:26px; margin-left:-55px; transform:rotate(-2deg);
+  background:var(--sb-tape); clip-path:polygon(0 0,100% 0,96% 25%,100% 50%,96% 75%,100% 100%,0 100%,4% 75%,0 50%,4% 25%);
+  pointer-events:none; z-index:2;
+}
+.overlay .panel:not(.story-map-panel) h1,.overlay .panel:not(.story-map-panel) h2{font-family:var(--sb-hand); font-weight:700; color:var(--sb-ink); letter-spacing:-.5px; text-shadow:none}
+.overlay .panel h1{font-size:clamp(30px,5vh,44px); line-height:1.02}
+.overlay .panel h2{font-size:clamp(28px,4.6vh,40px); line-height:1.02}
+.overlay .panel h3{font-family:var(--sb-hand); font-weight:700; font-size:24px; color:var(--sb-ink)}
+.overlay .panel:not(.story-map-panel) .eyebrow{color:#8a4a5a; font-weight:800; letter-spacing:.12em}
+.overlay .panel:not(.story-map-panel) .muted,.overlay .panel:not(.story-map-panel) p{color:var(--sb-ink-2)}
+.overlay .panel .gold{color:#9c6610}
+
+/* ---------- buttons: honey tickets and pencil outlines ---------- */
+.overlay .panel .btn,.hub-screen .btn:not(.ghost),.awakening-panel .btn{
+  border:0; border-radius:2px; clip-path:var(--sb-ticket); background:#f6c453; color:var(--sb-ink);
+  font-family:var(--sb-hand); font-weight:700; font-size:clamp(19px,2.8vh,24px)!important; letter-spacing:-.3px;
+  box-shadow:inset 0 -4px 0 rgba(120,70,10,.22);
+}
+.overlay .panel .btn:hover{filter:brightness(1.05)}
+.overlay .panel .btn:active{transform:translateY(2px)}
+.overlay .panel .btn.ghost{
+  clip-path:none; border-radius:10px; background:transparent; color:var(--sb-ink);
+  border:2.5px dashed rgba(59,53,80,.55); box-shadow:none;
+}
+.overlay .panel .btn.ghost:hover{background:rgba(59,53,80,.06)}
+.overlay .panel .btn.danger,.overlay .panel .btn.warn{background:#e8737a; color:#2b1020}
+.overlay .panel :focus-visible{outline:3px solid #4d6fd6; outline-offset:3px}
+
+/* ---------- results: sticky notes ---------- */
+.overlay .panel .stat{
+  border:0; border-radius:2px; background:#ffe28a; color:var(--sb-ink); box-shadow:0 6px 12px rgba(30,20,60,.18);
+  transform:rotate(-1.5deg);
+}
+.overlay .panel .stat:nth-child(2n){background:#cfe6ff; transform:rotate(1.2deg)}
+.overlay .panel .stat:nth-child(3n){background:#ffd3e3; transform:rotate(-.6deg)}
+.overlay .panel .stat span{color:rgba(43,37,71,.75)}
+.overlay .panel .stat strong{font-family:var(--sb-hand); font-weight:700; color:var(--sb-ink)}
+.overlay .panel .stars{color:#e0a12a; text-shadow:0 0 0 #fff, 1px 1px 0 #fff}
+.overlay .panel .stars .off{color:rgba(59,53,80,.25); text-shadow:none}
+.overlay .panel .new-best{background:#e8587a; color:#fff; font-family:var(--sb-hand)}
+/* the stars / keepsakes note was hidden to fit the screen: bring it back as a small pinned line */
+#endScreen #endMissions:not([hidden]){display:block!important; margin:0; padding:6px 12px; background:var(--sb-paper-2); border-left:4px solid #e0a12a;
+  font-size:13px; line-height:1.35; color:var(--sb-ink); box-shadow:0 4px 8px rgba(30,20,60,.12); transform:rotate(-.4deg)}
+
+/* ---------- small paper things inside pages ---------- */
+.overlay .panel .briefing-objective,.overlay .panel .briefing-tip,.overlay .panel .help-section,
+.overlay .panel .missions,.overlay .panel .audio-settings,.overlay .panel .item,.overlay .panel .shop .item,
+.overlay .panel .book .entry,.overlay .panel .page{
+  background:var(--sb-paper-2); border:1.5px solid rgba(59,53,80,.14); border-radius:4px; box-shadow:0 4px 10px rgba(30,20,60,.1); color:var(--sb-ink);
+}
+.overlay .panel .briefing-tip{background:#fff3a8; border:0; transform:rotate(.6deg)}
+.overlay .panel .briefing-time{display:inline-block; padding:4px 12px; background:#ffe28a; color:var(--sb-ink); border-radius:2px; font-weight:800; transform:rotate(-1deg)}
+.overlay .panel input[type=text],.overlay .panel select{background:var(--sb-paper-2); color:var(--sb-ink); border:2px solid rgba(59,53,80,.35)}
+
+/* ---------- tips: a sticky note near the bottom, away from the counters ---------- */
+.tip-coach{top:auto!important; bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+.tip-coach-card{border:0!important; border-radius:2px!important; background:#fff3a8!important; color:var(--sb-ink)!important;
+  box-shadow:0 8px 16px rgba(8,5,25,.4)!important; transform:rotate(-.8deg); clip-path:polygon(0 0,100% 0,100% 74%,94% 100%,0 100%)}
+.tip-coach-kicker{color:#8a4a5a!important}
+.tip-coach-copy strong{font-family:var(--sb-hand); font-size:20px!important; color:var(--sb-ink)!important}
+.tip-coach-copy p,.tip-coach-control{color:var(--sb-ink-2)!important}
+.tip-coach-skip{background:transparent!important; color:var(--sb-ink)!important; border:2px dashed rgba(59,53,80,.5)!important; box-shadow:none!important}
+@media (hover:none) and (pointer:coarse){ .tip-coach{width:min(330px,calc(100vw - 300px))} }
+
+/* ---------- home: Thiri's bedroom behind the menu ---------- */
+#startScreen.hub-screen{background:#120d24; isolation:isolate}
+#startScreen.hub-screen::before,#startScreen.hub-screen::after{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background-size:cover; background-position:30% 55%}
+#startScreen.hub-screen::before{background-image:linear-gradient(180deg,rgba(18,13,36,.72),rgba(18,13,36,.35) 35%,rgba(18,13,36,.6)),url("../assets/home/room-grey.webp")}
+#startScreen.hub-screen::after{background-image:linear-gradient(180deg,rgba(18,13,36,.72),rgba(18,13,36,.35) 35%,rgba(18,13,36,.6)),url("../assets/home/room.webp"); opacity:var(--sb-colour)}
+
+.hub-brand-copy strong{font-family:var(--sb-hand); font-weight:700; font-size:38px; letter-spacing:0; line-height:1}
+.hub-brand-copy strong .sb-letter{color:#a9a3b8; transition:color .6s}
+.hub-brand-copy strong .sb-letter.on{color:var(--c)}
+.hub-content-heading h1{font-family:var(--sb-hand); font-weight:700; font-size:clamp(30px,5vh,46px); color:#fff6e6}
+.hub-currency-pill{background:#ffe28a; color:var(--sb-ink); border:0; border-radius:2px; transform:rotate(1.5deg); box-shadow:0 6px 12px rgba(8,5,25,.4)}
+.hub-currency-pill:nth-child(2){background:#cfe6ff; transform:rotate(-1.5deg)}
+.hub-currency-pill *{color:var(--sb-ink)!important}
+
+/* the hub cards become photos taped into the sketchbook */
+.hub-card,.hub-hero{border:0!important; border-radius:3px!important; box-shadow:0 0 0 8px var(--sb-paper),0 16px 30px rgba(8,5,25,.55)!important; overflow:visible}
+.hub-card::after,.hub-hero::after{content:""; position:absolute; top:-16px; left:50%; width:84px; height:24px; margin-left:-42px; z-index:3; pointer-events:none;
+  background:var(--sb-tape-2); clip-path:polygon(0 0,100% 0,96% 25%,100% 50%,96% 75%,100% 100%,0 100%,4% 75%,0 50%,4% 25%); transform:rotate(-3deg)}
+.hub-small-card:nth-child(2)::after{background:var(--sb-tape-3); transform:rotate(4deg)}
+.hub-small-card:nth-child(3)::after{background:var(--sb-tape); transform:rotate(-1deg)}
+.hub-story-copy strong,.hub-small-head>span,.hub-story-plate{font-family:var(--sb-hand); font-weight:700; letter-spacing:0}
+.hub-story-copy strong{font-size:clamp(26px,4vh,36px)}
+.hub-small-head>span{font-size:clamp(18px,2.6vh,24px)}
+.hub-hero-label strong{font-family:var(--sb-hand); font-weight:700; letter-spacing:0}
+
+/* ---------- story map: keeps its night scenery, with handwritten labels ---------- */
+.story-map-heading h2{font-family:var(--sb-hand)!important; font-weight:700; font-size:clamp(30px,5vh,44px)!important; letter-spacing:0}
+.level-caption strong{font-family:var(--sb-hand); font-weight:700; font-size:18px!important; letter-spacing:0}
+.level-node{font-family:var(--sb-hand)!important; font-weight:700}
+.story-map-panel .btn:not(.ghost){clip-path:var(--sb-ticket); border-radius:2px; background:#f6c453; color:var(--sb-ink); font-family:var(--sb-hand); font-weight:700; box-shadow:none}
+
+/* outline buttons that sit on the dark room keep a light pencil line */
+.hub-screen>.btn.ghost,.map-hub-back{font-family:var(--sb-hand); font-weight:700; font-size:20px}
+
+@media (prefers-reduced-motion:reduce){ .hub-brand-copy strong .sb-letter{transition:none} }
+
+/* honey-coloured chips keep dark ink (they used the night colour for their text) */
+.overlay .panel .buy,.overlay .panel .claim,.overlay .panel [aria-selected="true"],.overlay .panel .tab.on,.overlay .panel .tab.active,
+.overlay .panel .glow-count,.overlay .panel .pill,.overlay .panel .badge,.overlay .panel .rarity{color:var(--sb-ink)!important}
+.overlay .panel .buy,.overlay .panel .claim{font-family:var(--sb-hand); font-weight:700; font-size:18px; letter-spacing:0}
+/* help: the dark control rows become light index cards */
+.overlay .panel .help-control-row,.overlay .panel .help-mood-entry{background:#efe6d0; border-color:rgba(59,53,80,.14)}
+.overlay .panel .help-control-row strong{color:#6a4ab8}
+.overlay .panel .help-control-row span,.overlay .panel .help-mood-entry strong{color:var(--sb-ink)}
+/* pause buttons were sized for the old font */
+.pause-actions .btn{font-size:clamp(19px,2.6vh,23px)!important}
+/* handwriting reads better slightly tighter */
+.hub-story-copy strong,.hub-small-head>span,.hub-brand-copy strong,.hub-content-heading h1,.level-caption strong,.tip-coach-copy strong{letter-spacing:-.5px!important}
+.overlay .panel .briefing-objective strong{color:#9c6610}
+.overlay .panel .briefing-tip strong{color:#8a4a5a}
+/* phone held sideways: keep the tip note between the move stick and the action buttons */
+@media (max-height:520px){ .tip-coach{width:min(300px,calc(100vw - 360px))!important; left:46%!important} }
+
+/* ==========================================================================
+   After the story: Heart Workshop and Lantern Town (js/afterstory.js)
+   ========================================================================== */
+.hub-content-heading{position:relative}
+.as-doors{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+.as-door{display:flex; align-items:center; gap:8px; min-height:48px; padding:6px 14px 6px 8px; border:0; border-radius:2px; cursor:pointer;
+  background:var(--sb-paper); color:var(--sb-ink); box-shadow:0 8px 16px rgba(8,5,25,.45); transform:rotate(-1.2deg); font-family:var(--body); text-align:left}
+.as-door:nth-child(2){transform:rotate(1.4deg); background:#fff3d6}
+.as-door:hover{filter:brightness(1.04); transform:rotate(0) translateY(-2px)}
+.as-door:focus-visible{outline:3px solid #8fc3ff; outline-offset:3px}
+.as-door b{display:block; font-family:var(--sb-hand); font-weight:700; font-size:21px; line-height:1; letter-spacing:-.4px}
+.as-door i{display:block; font-style:normal; font-size:11px; font-weight:700; color:var(--sb-ink-2)}
+.as-door-ico{width:30px; height:30px; flex:0 0 auto}
+.as-doors.locked .as-door{background:#d9d0bd; color:#4a4460}
+.as-doors.locked .as-door-ico{filter:grayscale(1); opacity:.6}
+.as-lock-note{flex-basis:100%; margin:2px 0 0; padding:6px 10px; background:#fff3a8; color:var(--sb-ink); font-size:12px; font-weight:700; transform:rotate(-.5deg); max-width:360px}
+@media (max-height:520px){ .as-door{min-height:40px; padding:4px 10px 4px 6px} .as-door b{font-size:17px} .as-door i{font-size:10px} .as-door-ico{width:24px; height:24px} .as-doors{margin-top:4px; gap:6px} }
+
+.as-screen{z-index:1400}
+.as-screen .as-back{position:fixed; top:calc(env(safe-area-inset-top,0px) + 12px); left:calc(env(safe-area-inset-left,0px) + 12px); z-index:3;
+  background:#9a82e8; color:#1d1733; border:0; font-family:var(--sb-hand); font-weight:700; font-size:20px; min-height:44px; padding:6px 14px; border-radius:10px; box-shadow:none}
+.as-screen>.as-panel{width:min(1120px,calc(100vw - 24px))!important; max-width:none!important; max-height:calc(100dvh - 32px); overflow:auto; display:grid; gap:10px; padding:26px 28px 22px!important}
+.as-panel h3{margin:6px 0 4px; font-size:22px!important}
+.as-small{font-size:12px; margin:6px 0 0}
+.as-workshop{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:22px}
+@media (max-width:760px),(max-height:520px){ .as-workshop{grid-template-columns:1fr} .as-panel{padding:18px 16px!important} }
+.as-jars{display:grid; grid-template-columns:repeat(auto-fill,minmax(92px,1fr)); gap:8px}
+.as-jar{display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 4px 6px; min-height:44px; cursor:pointer; color:var(--sb-ink);
+  background:rgba(255,255,255,.55); border:2.5px solid #3b3550; border-radius:16px 16px 22px 22px; position:relative; font-family:var(--body)}
+.as-jar::before{content:""; position:absolute; top:-7px; left:50%; width:44%; height:8px; margin-left:-22%; background:#c9915a; border:2px solid #3b3550; border-radius:3px}
+.as-jar b{font-family:var(--sb-hand); font-weight:700; font-size:17px; line-height:1}
+.as-jar i{font-style:normal; font-size:12px; font-weight:800; color:var(--sb-ink-2)}
+.as-jar.on{background:#fff3a8; box-shadow:0 0 0 3px #e0a12a}
+.as-jar.empty{opacity:.45; cursor:not-allowed}
+.as-jar:focus-visible{outline:3px solid #4d6fd6; outline-offset:2px}
+.as-face{object-fit:contain; display:block}
+.as-blob{display:inline-grid; place-items:center; border-radius:50%; border:2.5px solid #2b2547; flex:0 0 auto}
+.as-blob svg{width:70%; height:auto}
+.as-blob.q{width:30px; height:30px; background:transparent; border-style:dashed; color:var(--sb-pencil); font-weight:800}
+.as-pot{display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; padding:12px; background:rgba(154,130,232,.14); border-radius:14px}
+.as-slot{display:grid; place-items:center; width:100px; min-height:104px; border:2.5px dashed #9a95a8; border-radius:14px; font-family:var(--sb-hand); font-size:34px; color:var(--sb-pencil); text-align:center}
+.as-slot.full{border-style:solid; border-color:#3b3550; background:var(--sb-paper-2)}
+.as-slot b{font-size:17px; line-height:1; color:var(--sb-ink); padding:0 4px}
+.as-slot.result{width:120px; border-color:#e0a12a}
+.as-slot.result.full{box-shadow:0 0 0 5px rgba(242,181,58,.25)}
+.as-op{font-family:var(--sb-hand); font-weight:700; font-size:36px; color:var(--sb-ink)}
+.as-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+.as-row .btn{flex:1 1 160px}
+.as-row .btn[disabled]{opacity:.5; cursor:not-allowed}
+.as-note{min-height:1.3em; margin:6px 0 0; font-weight:700; font-size:14px; color:var(--sb-ink)!important}
+.as-note.good{color:#2f7a52!important}
+.as-note.bad{color:#b03a3f!important}
+.as-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); gap:6px}
+.as-found{display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10px; font-weight:700; color:var(--sb-ink); text-align:center}
+.as-found em{font-style:normal; line-height:1.1}
+.as-found.unknown{display:grid; place-items:center; height:52px; border:2px dashed #b0aac0; border-radius:50%; width:40px; margin:0 auto; color:var(--sb-pencil); font-size:18px}
+.as-hints{margin:6px 0 0; padding-left:18px; font-size:13px; color:var(--sb-ink-2)}
+
+.as-count{display:inline-block; justify-self:start; margin:0; padding:6px 14px; background:#ffe28a; color:var(--sb-ink)!important; font-family:var(--sb-hand); font-weight:700; font-size:22px; transform:rotate(-1deg)}
+.as-townwrap{border-radius:4px; overflow:hidden; box-shadow:0 0 0 6px var(--sb-paper-2),0 10px 20px rgba(30,20,60,.25)}
+.as-town{display:block; width:100%; height:auto}
+.as-place{cursor:pointer; outline:none}
+.as-place.picked>*:not(circle){filter:drop-shadow(0 0 6px #fff3a8)}
+.as-place:focus-visible>*:not(circle){filter:drop-shadow(0 0 6px #8fc3ff)}
+.as-lantern{animation:as-rise 6s ease-in-out infinite alternate}
+@keyframes as-rise{from{transform:translateY(0)}to{transform:translateY(-18px)}}
+@media (prefers-reduced-motion:reduce){ .as-lantern{animation:none} }
+.as-chips{display:flex; flex-wrap:wrap; gap:6px}
+.as-chip{min-height:36px; padding:4px 12px; border-radius:18px; border:2px dashed #9a95a8; background:transparent; color:var(--sb-ink); font-family:var(--sb-hand); font-weight:700; font-size:18px; cursor:pointer}
+.as-chip.lit{background:#f6c453; border:2px solid #f6c453}
+.as-chip.on{box-shadow:0 0 0 3px #4d6fd6}
+.as-place-note{padding:12px 16px; background:var(--sb-paper-2); box-shadow:0 6px 14px rgba(30,20,60,.15); transform:rotate(-.3deg)}
+.as-place-note h3{margin:0 0 6px}
+.as-needs{list-style:none; margin:0 0 10px; padding:0; display:grid; gap:6px}
+.as-needs li{display:flex; align-items:center; gap:8px; font-size:14px; color:var(--sb-ink)}
+.as-needs li>span:not(.as-blob){flex:1}
+.as-needs li b{font-size:12px}
+.as-needs li.ok b{color:#2f7a52}
+.as-needs li.no b{color:#b03a3f}
+.as-memory{font-family:var(--sb-hand); font-size:24px; line-height:1.2; color:#6a4ab8!important; margin:0}
+.as-place-note .btn[disabled]{opacity:.5; cursor:not-allowed}
+.as-sign{position:absolute; left:-130px; top:52px; padding:4px 10px; background:#f6c453; color:#2b2547; font-family:var(--sb-hand); font-weight:700; font-size:20px; white-space:nowrap; transform:rotate(-4deg); box-shadow:0 6px 12px rgba(8,5,25,.4); pointer-events:none}
+.as-sign.end{left:40px; background:#f6eedc}
+@media (min-width:900px) and (min-height:600px){ .as-town-layout{display:grid; grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr); gap:16px; align-items:start} }
+.as-screen>.as-panel{padding-top:64px!important}
+
+/* ==========================================================================
+   Story map: Shwe's Night Map in Thiri's sketchbook (drawn by game.js)
+   ========================================================================== */
+.story-map-panel>.level-map-window{background:#f6eedc!important; border:0!important; border-radius:4px!important; box-shadow:0 0 0 6px #fffdf6,0 14px 30px rgba(5,3,20,.5)!important}
+#levelMapSvg .path-line,#levelMapSvg .path-route,#levelMapSvg .path-halo{stroke:transparent!important}
+.level-entry .level-node.sb-hour{width:98px!important; height:98px!important; border:0!important; border-radius:50%; background:transparent!important;
+  color:transparent!important; text-shadow:none!important; box-shadow:none!important; font-size:1px!important}
+.level-entry .level-node.sb-hour::after,.level-entry .level-node.sb-route::after{display:none!important}
+.level-entry .level-node.sb-hour:not(:disabled):hover{background:rgba(242,181,58,.14)!important}
+.level-entry .level-node.sb-route{border:2.5px solid #3b3550!important; border-radius:50%; background:#fffdf6!important; color:#2b2547!important;
+  font-family:var(--sb-hand)!important; font-weight:700; text-shadow:none!important; box-shadow:0 4px 8px rgba(30,20,60,.25)!important}
+.level-entry .level-node.sb-route.is-current{background:#f6c453!important; box-shadow:0 0 0 4px #e65a5f,0 6px 12px rgba(30,20,60,.3)!important}
+.level-entry .level-node.sb-route:disabled{background:transparent!important; border:2.5px dashed #9a95a8!important; color:#7d7894!important; box-shadow:none!important}
+.level-node:focus-visible{outline:3px solid #4d6fd6!important; outline-offset:6px!important}
+.level-entry .level-caption{background:#fffdf6!important; border:0!important; border-radius:2px!important; box-shadow:0 6px 12px rgba(30,20,60,.18)!important; text-shadow:none!important}
+.level-entry .level-caption strong{color:#2b2547!important}
+.level-entry .level-caption span{color:#4a4460!important}
+.level-entry.sb-hour-entry .level-caption{top:60px!important; transform:translateX(-50%) rotate(-1deg)}
+.level-entry.sb-hour-entry.label-above .level-caption{top:auto!important; bottom:60px!important}
+.story-map-panel .map-guide{background:#fff3a8!important; color:#2b2547; border:0!important; border-radius:2px!important}
+.story-map-panel .map-guide *{color:#2b2547}
+
+/* ==========================================================================
+   Free Play map picker
+   ========================================================================== */
+.free-map-screen{z-index:1300}
+.free-map-panel{width:min(860px,calc(100vw - 24px))!important; max-width:none!important; max-height:calc(100dvh - 24px); overflow:auto}
+.free-map-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; padding:6px}
+@media (max-width:640px),(max-height:520px){ .free-map-grid{grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px} }
+.free-map-card{display:flex; flex-direction:column; gap:4px; padding:8px 8px 10px; border:0; border-radius:2px; background:#fffdf6; color:#2b2547; text-align:left; cursor:pointer;
+  box-shadow:0 8px 16px rgba(30,20,60,.22); transform:rotate(-1.2deg); font-family:var(--body); min-height:44px}
+.free-map-card:nth-child(2n){transform:rotate(1.2deg)}
+.free-map-card:hover:not(:disabled){transform:rotate(0) translateY(-3px)}
+.free-map-card:focus-visible{outline:3px solid #4d6fd6; outline-offset:3px}
+.free-map-card.chosen{box-shadow:0 0 0 4px #e0a12a,0 8px 16px rgba(30,20,60,.22)}
+.free-map-art{display:block; aspect-ratio:16/9; width:100%; background:#2a2150 center/cover no-repeat; border-radius:2px}
+.map-classic .free-map-art{background:radial-gradient(circle at 70% 30%,#fff3c4 0 8%,transparent 9%),linear-gradient(180deg,#2b2550,#43356f)}
+.map-lake .free-map-art{background:radial-gradient(circle at 75% 25%,#fff3c4 0 7%,transparent 8%),repeating-linear-gradient(180deg,transparent 0 10px,rgba(160,220,255,.25) 10px 12px),linear-gradient(180deg,#3a2f6a 0 55%,#3f6f9a 55%)}
+.free-map-card strong{font-family:var(--sb-hand); font-weight:700; font-size:22px; line-height:1; letter-spacing:-.4px}
+.free-map-card span:last-child{font-size:12px; color:#4a4460}
+.free-map-card.locked{background:#e9e1cf; cursor:not-allowed}
+.free-map-card.locked .free-map-art{filter:grayscale(1) brightness(1.3) contrast(.6); opacity:.55}
+@media (max-height:520px){ .free-map-card strong{font-size:18px} .free-map-card span:last-child{font-size:11px} }
+
+/* ==========================================================================
+   Story skin, part 2: every menu lives in Thiri's room and her sketchbook
+   ========================================================================== */
+/* ---------- her room behind the menus (grey at first, colour as feelings come home) ---------- */
+#shopScreen,#bookScreen,#setupScreen,#welcomeScreen{background:#120d24!important; isolation:isolate}
+#shopScreen::before,#bookScreen::before,#setupScreen::before,#welcomeScreen::before,
+#shopScreen::after,#bookScreen::after,#setupScreen::after,#welcomeScreen::after{
+  content:""; position:fixed; inset:-14px; z-index:-1; pointer-events:none; animation:none; filter:blur(3px);
+  background:linear-gradient(180deg,rgba(18,13,36,.8),rgba(18,13,36,.55) 40%,rgba(18,13,36,.82)),url("../assets/home/room-grey.webp") 30% 55%/cover no-repeat}
+#shopScreen::after,#bookScreen::after,#setupScreen::after,#welcomeScreen::after{
+  background:linear-gradient(180deg,rgba(18,13,36,.8),rgba(18,13,36,.55) 40%,rgba(18,13,36,.82)),url("../assets/home/room.webp") 30% 55%/cover no-repeat; opacity:var(--sb-colour)}
+#welcomeScreen::before,#welcomeScreen::after{opacity:1}
+#welcomeScreen::after{opacity:calc(var(--sb-colour) * .6)}
+
+/* ---------- first screen: the cover of Thiri's sketchbook ---------- */
+.welcome-backdrop{display:none}
+#welcomeScreen .welcome-panel{
+  position:relative; width:min(100%,560px); max-width:560px; gap:12px; padding:46px 34px 24px 46px; color:var(--sb-ink);
+  border:0; border-radius:6px 16px 16px 6px; backdrop-filter:none;
+  background-color:#c69a63;
+  background-image:radial-gradient(rgba(90,58,26,.2) 1px,transparent 1.6px),radial-gradient(rgba(255,240,210,.16) 1px,transparent 1.6px),linear-gradient(90deg,rgba(60,34,12,.28) 0 16px,transparent 16px 22px,rgba(255,240,210,.08) 22px);
+  background-size:7px 7px,11px 11px,100% 100%; background-position:0 0,3px 5px,0 0;
+  box-shadow:0 2px 0 #a97f4c,0 4px 0 #f1e7d2,0 6px 0 #a97f4c,0 8px 0 #efe4cc,0 24px 44px rgba(5,3,20,.65);
+}
+/* the elastic band that keeps the sketchbook closed */
+#welcomeScreen .welcome-panel::after{content:""; position:absolute; top:0; bottom:0; right:44px; width:12px; background:#8a3a5c; box-shadow:inset 3px 0 0 rgba(255,255,255,.18),2px 0 3px rgba(0,0,0,.25); pointer-events:none}
+.welcome-eyebrow{justify-self:start; margin:0; padding:4px 12px; background:var(--sb-paper-2); color:var(--sb-ink)!important; font-family:var(--sb-hand)!important; font-weight:700; font-size:18px!important; letter-spacing:0!important; text-transform:none!important; transform:rotate(-2deg); box-shadow:0 4px 8px rgba(40,20,10,.25)}
+.welcome-mascot{width:auto!important; height:auto!important; padding:10px 10px 34px; border:0!important; border-radius:2px!important; background:#fffdf6!important; box-shadow:0 10px 18px rgba(40,20,10,.35); transform:rotate(-3deg)}
+.welcome-mascot::before{content:""; position:absolute; top:-12px; left:50%; width:70px; height:22px; margin-left:-35px; background:var(--sb-tape); transform:rotate(4deg); z-index:2;
+  clip-path:polygon(0 0,100% 0,96% 25%,100% 50%,96% 75%,100% 100%,0 100%,4% 75%,0 50%,4% 25%)}
+.welcome-mascot img{width:200px!important; height:140px!important; object-fit:contain; animation:none!important; filter:none!important;
+  background:radial-gradient(circle at 78% 22%,#fff3c4 0 9%,rgba(255,243,196,.25) 10%,transparent 18%),linear-gradient(180deg,#2b2550,#43356f 70%,#5a4a7e)}
+.welcome-cat-name{left:0!important; right:0; bottom:4px!important; transform:none!important; padding:0!important; border:0!important; background:none!important; color:var(--sb-ink)!important; font-family:var(--sb-hand)!important; font-weight:700!important; font-size:22px!important; text-align:center}
+.welcome-orb{z-index:3}
+#welcomeScreen .welcome-title{display:inline-block; margin:4px 0 0; padding:6px 26px 4px; background:#fffdf6; border-radius:3px; transform:rotate(-1.5deg); box-shadow:0 6px 12px rgba(40,20,10,.3);
+  font-family:var(--sb-hand); font-weight:700; font-size:clamp(46px,8vw,66px); line-height:1; letter-spacing:0;
+  color:var(--sb-ink); -webkit-text-fill-color:currentColor; background-clip:border-box; -webkit-background-clip:border-box; text-shadow:none; filter:none; animation:none}
+#welcomeScreen .welcome-title .sb-letter{display:inline-block; color:var(--c); -webkit-text-fill-color:var(--c); transform:rotate(var(--r,0deg))}
+#welcomeScreen .welcome-description{max-width:30ch; margin:0; color:var(--sb-ink)!important; font-family:var(--sb-hand)!important; font-weight:700; font-size:clamp(19px,2.6vw,23px)!important; line-height:1.25!important}
+#welcomeScreen .welcome-loading-copy{color:var(--sb-ink)!important; font-family:var(--sb-hand); font-weight:700; font-size:17px!important}
+#welcomeScreen .loading-stars{color:transparent; -webkit-text-stroke:1.5px rgba(59,53,80,.55)}
+#welcomeScreen .loading-stars .filled{color:#ffd25a; -webkit-text-stroke:1.5px #3b3550; text-shadow:none}
+#welcomeScreen .welcome-progress{height:6px!important; border:0!important; background:rgba(59,53,80,.2)!important; border-radius:3px}
+#welcomeScreen .welcome-progress>span{background:#3b3550!important; border-radius:3px}
+#welcomeScreen .welcome-begin{border:0; border-radius:2px; clip-path:var(--sb-ticket); background:#f6c453; color:var(--sb-ink); font-family:var(--sb-hand); font-weight:700; font-size:24px; box-shadow:inset 0 -4px 0 rgba(120,70,10,.22); outline-offset:4px}
+#welcomeScreen .welcome-begin:focus-visible{outline:3px solid #fffdf6}
+#welcomeScreen .welcome-note{color:#3b2a18!important; font-family:var(--sb-hand); font-weight:700; font-size:16px!important; letter-spacing:0!important}
+@media (max-height:520px){
+  #welcomeScreen .welcome-panel{padding:28px 22px 14px 34px; gap:6px}
+  .welcome-mascot{padding:6px 6px 24px} .welcome-mascot img{width:130px!important; height:84px!important} .welcome-cat-name{font-size:17px!important}
+  #welcomeScreen .welcome-title{font-size:40px} #welcomeScreen .welcome-description{font-size:17px!important}
+}
+
+/* ---------- home: the cards are pages of the sketchbook, drawn in crayon ---------- */
+#startScreen .hub-card{--bg-card:var(--sb-paper-2); color:var(--sb-ink);
+  background-color:var(--sb-paper-2)!important; background-image:repeating-linear-gradient(transparent 0 25px,var(--sb-rule) 25px 26px)!important}
+#startScreen .hub-story-card{--accent:#b8512a} #startScreen .free-card{--accent:#2f7f52} #startScreen .shop-card{--accent:#b8467c} #startScreen .book-card{--accent:#6a4ab8}
+#startScreen .hub-story-scene,#startScreen .hub-small-scene{opacity:1!important}
+#startScreen .hub-story-shade{display:none}
+#startScreen .hub-story-copy strong,#startScreen .hub-small-head>span{color:var(--accent)!important}
+#startScreen .hub-story-copy span,#startScreen .hub-small-copy{color:var(--sb-ink-2)!important; font-weight:600}
+#startScreen .hub-small-head i{color:var(--accent); border-color:var(--accent); background:var(--sb-paper-2)}
+#startScreen .hub-small-value{color:var(--accent)!important}
+#startScreen .hub-story-plate{background:#ffe28a; color:var(--sb-ink); border-radius:2px; font-family:var(--sb-hand); font-weight:700; font-size:15px; letter-spacing:0; transform:rotate(-2deg)}
+#startScreen .hub-story-arrow{color:var(--accent); border-color:var(--accent)}
+#startScreen .hub-card:focus-visible{outline:3px solid #8fc3ff; outline-offset:6px}
+.hub-content-heading h1 .sb-cat,.hub-content-heading span .sb-girl{font:inherit; letter-spacing:inherit; color:inherit}
+.hub-content-heading>span{color:#e6dcff!important}
+.hub-hero-label span .sb-girl{font:inherit}
+
+/* ---------- shop: Shwe's treat tin ---------- */
+#shopScreen>.panel{width:min(860px,calc(100vw - 24px))!important; max-width:none!important}
+#shopScreen .shop-tabs{gap:4px; border-bottom:2px solid rgba(59,53,80,.25); padding:0 6px}
+#shopScreen .shop-tab{margin-bottom:-2px; padding:6px 16px 4px; border:2px solid rgba(59,53,80,.3); border-bottom:0; border-radius:10px 10px 0 0; background:#efe6d0; color:var(--sb-ink);
+  font-family:var(--sb-hand); font-weight:700; font-size:20px; min-height:44px}
+#shopScreen .shop-tab[aria-selected="true"]{background:#f6c453; border-color:rgba(59,53,80,.45); color:var(--sb-ink)}
+#shopScreen .shop{grid-template-columns:repeat(auto-fill,minmax(min(100%,370px),1fr)); gap:14px}
+#shopScreen .item{transform:rotate(-.5deg)} #shopScreen .item:nth-child(2n){transform:rotate(.5deg)}
+#shopScreen .item h3{font-family:var(--sb-hand); font-weight:700; font-size:24px}
+#shopScreen .item.in-use{box-shadow:0 0 0 3px #e0a12a,0 4px 10px rgba(30,20,60,.1)}
+#shopScreen .shop-cat{background:radial-gradient(circle at 50% 60%,rgba(246,196,83,.3),transparent 70%); border-radius:8px}
+#shopScreen .pip{background:rgba(59,53,80,.18)} #shopScreen .pip.on{background:#e0a12a}
+#shopScreen .glowpill{background:#ffe28a; color:var(--sb-ink); font-family:var(--sb-hand); font-weight:700; padding:0 8px}
+
+/* ---------- Mood Book: each feeling is a photo taped in; missing ones are pencil outlines ---------- */
+#bookScreen .book{gap:18px 14px; padding-top:8px}
+#bookScreen .book .entry{position:relative; border:0; border-radius:2px; background:#fffdf6; box-shadow:0 6px 12px rgba(30,20,60,.16); transform:rotate(-.8deg); padding-top:20px}
+#bookScreen .book .entry:nth-child(2n){transform:rotate(.9deg)}
+#bookScreen .book .entry:nth-child(3n){transform:rotate(-.3deg)}
+#bookScreen .book .entry::before{content:""; position:absolute; top:-9px; left:50%; width:62px; height:18px; margin-left:-31px; transform:rotate(-3deg); background:var(--sb-tape-2);
+  clip-path:polygon(0 0,100% 0,96% 25%,100% 50%,96% 75%,100% 100%,0 100%,4% 75%,0 50%,4% 25%)}
+#bookScreen .book .entry:nth-child(3n+1)::before{background:var(--sb-tape); transform:rotate(2deg)}
+#bookScreen .book .entry:nth-child(3n+2)::before{background:var(--sb-tape-3)}
+#bookScreen .book .entry:has(.rare){background:radial-gradient(circle at 90% 10%,rgba(255,226,138,.55),transparent 55%),#fffdf6}
+#bookScreen .book .entry.unknown{background:rgba(255,253,246,.35); border:2.5px dashed rgba(59,53,80,.35); box-shadow:none; transform:none}
+#bookScreen .book .entry.unknown::before{display:none}
+#bookScreen .book .entry.unknown svg{opacity:.4; filter:grayscale(1)}
+#bookScreen .entry h3{font-family:var(--sb-hand); font-weight:700; font-size:24px; color:var(--sb-ink)}
+#bookScreen .entry.unknown h3{color:var(--sb-pencil)}
+#bookScreen .entry .tag{justify-self:start; padding:1px 9px; border:2px solid currentColor; border-radius:20px; background:transparent!important; color:#6a4ab8!important; font-weight:800; transform:rotate(-3deg)}
+#bookScreen .entry .tag.rare{color:#b8467c!important}
+#bookScreen .entry .line{font-family:var(--sb-hand); font-style:normal; font-weight:700; font-size:19px; line-height:1.15; color:#6a4ab8}
+
+/* ---------- settings: pencil bars and readable headings ---------- */
+.overlay .panel legend{font-family:var(--sb-hand); font-weight:700; font-size:24px; color:var(--sb-ink)!important; padding:0 6px}
+.overlay .panel .mbar{height:10px; border-radius:5px; background:rgba(59,53,80,.14)!important; border:0}
+.overlay .panel .mbar i{background:#9a82e8!important; border-radius:5px}
+.overlay .panel .mrow.done .mbar i{background:#e0a12a!important}
+.overlay .panel .missions b,.overlay .panel .mhead b{font-family:var(--sb-hand); font-weight:700; font-size:21px}
+.overlay .panel input[type=range]{accent-color:#e0a12a}
+/* crayon doodles sit on the right of each card; the words keep the left side */
+#startScreen .hub-card>svg.sb-doodle{position:absolute!important; inset:auto!important; right:12px!important; bottom:12px!important; top:44px!important; left:auto!important; width:42%!important; height:auto!important; max-height:calc(100% - 56px)}
+#startScreen .hub-story-card>svg.sb-doodle{top:16px!important; max-height:calc(100% - 28px); width:46%!important}
+#startScreen .hub-small-copy,#startScreen .hub-small-value{max-width:56%!important}
+#startScreen .hub-story-copy{max-width:52%!important}
+.overlay .panel .cozy-progress{background:rgba(59,53,80,.14)!important; border:0!important; height:10px}
+.overlay .panel .cozy-progress>i{background:#9a82e8!important}
+#startScreen .hub-story-copy span .sb-girl,#startScreen .hub-small-copy .sb-cat{display:inline!important; font:inherit!important; color:inherit!important}
+#welcomeScreen .welcome-panel{padding-right:76px}
+@media (max-height:520px){ #welcomeScreen .welcome-panel{padding-right:64px} .welcome-mascot{align-self:center!important; justify-self:center} }
+/* setup: the cat's photo is taped in, the steps are handwritten */
+#setupScreen .setup-preview{border:0!important; border-radius:2px!important; background:#fffdf6!important; box-shadow:0 8px 16px rgba(30,20,60,.2)!important; transform:rotate(-2deg); padding-bottom:30px}
+#setupScreen .setup-tag{background:none!important; border:0!important; color:var(--sb-ink)!important; font-family:var(--sb-hand)!important; font-weight:700; font-size:24px!important; left:0!important; right:0; text-align:center; transform:none!important; box-shadow:none!important}
+#setupScreen .setup-step{font-family:var(--sb-hand); font-weight:700; font-size:clamp(22px,3.4vh,28px); color:#6a4ab8; letter-spacing:-.3px}
+
+/* ==========================================================================
+   Home = Thiri's bedroom. Everything you can do is something in her room:
+   the window (Story Mode), the far window (Free Play), the glowing book on
+   her desk (Mood Book), the toy box (Shop), the corkboard (How to play) and
+   her bed (names and cat). Positions are in % of the painting (2000 × 857).
+   ========================================================================== */
+#startScreen>.hub-topbar{background:linear-gradient(180deg,rgba(14,10,30,.88),rgba(14,10,30,.45) 70%,rgba(14,10,30,0))!important; border:0!important; box-shadow:none!important; position:relative; z-index:5}
+.room-hub{position:fixed; inset:0; z-index:0; display:block; overflow:hidden; background:#0f0b20}
+.room-hub[hidden]{display:none!important}
+.room-hub::before{content:""; position:absolute; inset:-30px; background:url("../assets/home/room-grey.webp") 30% 55%/cover no-repeat; filter:blur(18px) brightness(.45); pointer-events:none}
+.rh-wrap{position:absolute; inset:0; display:grid; place-items:center; container-type:size}
+.rh-stage{position:relative; width:min(100cqw,233.4cqh); aspect-ratio:2000/857; container-type:inline-size; box-shadow:0 0 60px 30px rgba(10,7,25,.65); user-select:none; -webkit-user-select:none}
+.rh-room{position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none}
+.rh-col{opacity:var(--sb-colour)}
+.rh-thiri{position:absolute; left:4.19%; top:43.56%; width:23.245%; height:31.61%; pointer-events:none; animation:rh-breathe 4.5s ease-in-out infinite}
+@keyframes rh-breathe{50%{transform:translateY(.12%)}}
+/* Shwe waits on the windowsill, ready to go */
+.rh-cat{position:absolute; left:30.6%; top:31.2%; height:15.2%; width:auto; pointer-events:none; filter:drop-shadow(0 6px 6px rgba(0,0,0,.45))}
+.rh-cattag{position:absolute; left:33%; top:46.4%; transform:translateX(-50%) rotate(-3deg); padding:.1cqw .6cqw; background:#ffe28a; color:#2b2547; font-family:var(--sb-hand); font-weight:700; font-size:max(11px,1.05cqw); letter-spacing:0; border-radius:2px; pointer-events:none; box-shadow:0 2px 5px rgba(0,0,0,.35)}
+.rh-zzz{position:absolute; left:13.5%; top:44%; color:#e6dcff; font-family:var(--sb-hand); font-weight:700; pointer-events:none}
+.rh-zzz i{position:absolute; font-style:normal; font-size:max(12px,1.3cqw); opacity:0; animation:rh-z 4.2s ease-in-out infinite}
+.rh-zzz i:nth-child(2){animation-delay:1.4s; font-size:max(14px,1.6cqw)} .rh-zzz i:nth-child(3){animation-delay:2.8s; font-size:max(16px,1.9cqw)}
+@keyframes rh-z{0%{opacity:0; transform:translate(0,0)}25%{opacity:.85}100%{opacity:0; transform:translate(2.2cqw,-4cqw)}}
+
+/* the things you can touch */
+.rh-spot{position:absolute; left:var(--x); top:var(--y); width:var(--w); height:var(--h); margin:0; padding:0; border:0; background:transparent; cursor:pointer; border-radius:1.2cqw; color:inherit; font:inherit; -webkit-tap-highlight-color:transparent}
+.rh-glow{position:absolute; inset:0; border-radius:inherit; border:2px dashed rgba(255,226,138,0); background:radial-gradient(ellipse at center,rgba(255,226,138,.0),transparent 70%); transition:border-color .25s,background .25s}
+.rh-spot:hover .rh-glow,.rh-spot:focus-visible .rh-glow{border-color:rgba(255,226,138,.85); background:radial-gradient(ellipse at center,rgba(255,226,138,.22),transparent 72%)}
+.rh-spot:focus-visible{outline:none}
+.rh-spot::after{content:""; position:absolute; left:50%; top:50%; width:1.1cqw; height:1.1cqw; min-width:9px; min-height:9px; margin:-.55cqw 0 0 -.55cqw; border-radius:50%; background:#fff3a8; box-shadow:0 0 0 0 rgba(255,243,168,.7); animation:rh-ping 2.4s ease-out infinite; pointer-events:none}
+.rh-spot:hover::after,.rh-spot:focus-visible::after{display:none}
+@keyframes rh-ping{0%{box-shadow:0 0 0 0 rgba(255,243,168,.75)}70%{box-shadow:0 0 0 1.4cqw rgba(255,243,168,0)}100%{box-shadow:0 0 0 0 rgba(255,243,168,0)}}
+/* paper tags pinned beside each thing */
+.rh-tag{position:absolute; left:var(--tx); top:var(--ty); transform:translate(-50%,-100%) rotate(-2deg); display:grid; gap:.1cqw; padding:.45cqw 1.1cqw .5cqw; min-width:9cqw; text-align:center; white-space:nowrap;
+  background:#fffdf6; color:#2b2547; border-radius:2px; box-shadow:0 .5cqw 1.2cqw rgba(5,3,20,.5); transition:transform .2s; z-index:2; pointer-events:none}
+.rh-tag::before{content:""; position:absolute; top:-.7cqw; left:50%; width:4.2cqw; height:1.2cqw; margin-left:-2.1cqw; background:var(--sb-tape); transform:rotate(3deg);
+  clip-path:polygon(0 0,100% 0,96% 25%,100% 50%,96% 75%,100% 100%,0 100%,4% 75%,0 50%,4% 25%)}
+.rh-tag b{font-family:var(--sb-hand); font-weight:700; font-size:max(15px,1.75cqw); line-height:1; letter-spacing:-.3px}
+.rh-tag i{font-style:normal; font-weight:700; font-size:max(10px,.82cqw); line-height:1.2; color:#4a4460}
+.rh-spot:nth-of-type(2n) .rh-tag{transform:translate(-50%,-100%) rotate(1.5deg)}
+.rh-spot:hover .rh-tag,.rh-spot:focus-visible .rh-tag{transform:translate(-50%,-112%) rotate(0); box-shadow:0 0 0 3px #ffe28a,0 .7cqw 1.6cqw rgba(5,3,20,.55)}
+.rh-main .rh-tag{background:#f6c453; padding:.6cqw 1.5cqw .65cqw}
+.rh-main .rh-tag b{font-size:max(18px,2.3cqw)}
+.rh-main .rh-tag::before{background:var(--sb-tape-3)}
+#freeBtn .rh-tag b{color:#2f7f52} #shopBtn .rh-tag b{color:#b8467c} #bookBtn .rh-tag b{color:#6a4ab8} #roomHelpBtn .rh-tag b{color:#2f6fb0} #roomBedBtn .rh-tag b{color:#b8512a}
+#roomHelpBtn .rh-tag,#roomBedBtn .rh-tag{opacity:.92; min-width:0}
+/* caption on the floor, with the after-story doors */
+.rh-caption{position:absolute; left:max(14px,2vw); bottom:max(10px,1.6vh); z-index:4; padding:0!important; text-shadow:0 2px 8px rgba(0,0,0,.8); max-width:min(640px,60vw)}
+.rh-caption>span{display:block; font:800 11px var(--body); letter-spacing:.14em; color:#e6dcff!important}
+.rh-caption h1{margin:2px 0 0; font-family:var(--sb-hand); font-weight:700; font-size:clamp(24px,4.4vh,40px)!important; line-height:1; color:#fff6e6; letter-spacing:-.4px}
+.rh-caption .as-doors{margin-top:8px}
+@media (max-height:520px){
+  .rh-caption>span{display:none} .rh-caption h1{font-size:20px!important}
+  .rh-tag i{display:none} .rh-main .rh-tag i{display:block}
+  #roomHelpBtn .rh-tag,#roomBedBtn .rh-tag{display:none}
+}
+@media (prefers-reduced-motion:reduce){ .rh-thiri,.rh-zzz i,.rh-spot::after{animation:none} .rh-zzz i{opacity:.6} }
