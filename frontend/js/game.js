@@ -297,8 +297,22 @@
     for (const [a,b] of zones) { candidates.push(a+40,b-40,(a+b)/2); for (const p of currentProps) candidates.push(p.x-45,p.x+(p.w||80)+45); }
     return candidates.map(safeLevelX).filter(v => v >= 80 && v <= WORLD-80 && zones.some(([a,b]) => v >= a && v <= b) && !(currentProps || []).some(p => v >= p.x-34 && v <= p.x+(p.w||80)+34)).sort((a,b) => Math.abs(a-x)-Math.abs(b-x))[0] ?? levelSpawnX();
   }
+  // Free Play maps: the classic free routes, or any story map Shwe has already reached
+  const FREE_MAPS = [
+    { id: 'classic', name: 'Classic routes', note: 'The original Free Play paths', level: 0, opens: 1 },
+    { id: 'school', name: 'School', note: '11 PM · the school hallway', level: 2, opens: 1 },
+    { id: 'park', name: 'The Park', note: '1 AM · swings and slides', level: 3, opens: 3 },
+    { id: 'festival', name: 'Lighting Festival', note: '2 AM · lanterns and boats', level: 4, opens: 4 },
+    { id: 'hill', name: 'Hilltop Park', note: '3 AM · windy stone steps', level: 5, opens: 5 },
+    { id: 'lake', name: 'Lakeside', note: '4 AM · logs and lily pads', level: 6, opens: 6 }
+  ];
+  let freeMap = 'classic';
+  try { const saved = localStorage.getItem('mk-free-map'); if (FREE_MAPS.some(m => m.id === saved)) freeMap = saved; } catch (e) {}
+  const freeMapOpen = m => m.id === 'classic' || unlockedLevel >= m.opens;
   function selectLevelForRun() {
     if (mode === 'story') return window.TC_LEVELS[storyNight];
+    const pick = FREE_MAPS.find(m => m.id === freeMap);
+    if (pick && pick.level && freeMapOpen(pick) && window.TC_LEVELS[pick.level]) return window.TC_LEVELS[pick.level];
     const variants = window.TC_LEVELS.free.variants;
     return variants[Math.floor(Math.random() * variants.length)];
   }
@@ -319,13 +333,13 @@
   const SCHOOL_WALL = new Image();
   SCHOOL_WALL.src = 'assets/school/hallway-night.webp';
   const SCHOOL_WALL_W = 2445, SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
-  function inSchool() { return mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school'); }
+  function inSchool() { return (mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school')) || (mode === 'free' && currentLevel?.map === 'school'); }
   // ---------- Hilltop park map (Night 5) ----------
   // Layout from the team's level design: a stepped stone terrace (high gate terrace, bench step,
   // lamp step, low walkway along the railing, back up), tree-branch ledges and stone pillars to jump on,
   // and a tree hollow, bin and bushes to hide in. The far city view comes from the team's picture.
   const HILL_NIGHTS = [5];
-  function inHill() { return mode === 'story' && (HILL_NIGHTS.includes(storyNight) || currentLevel?.map === 'hill'); }
+  function inHill() { return (mode === 'story' && (HILL_NIGHTS.includes(storyNight) || currentLevel?.map === 'hill')) || (mode === 'free' && currentLevel?.map === 'hill'); }
   const HILL_W = 1400;
   function hillY(x) { return terrainY(x); }
   const HILL_VISTA = new Image();
@@ -452,7 +466,7 @@
   // mountains, a lake with the sun's reflection, a rowboat, then the shore path, reed beds and
   // Calm's lily pads and wooden jetties (platforms).
   const LAKE_NIGHTS = [6, 7];
-  function inLake() { return mode === 'story' && (LAKE_NIGHTS.includes(storyNight) || currentLevel?.map === 'lake'); }
+  function inLake() { return (mode === 'story' && (LAKE_NIGHTS.includes(storyNight) || currentLevel?.map === 'lake')) || (mode === 'free' && currentLevel?.map === 'lake'); }
   const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
   const lerpC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(',')})`; };
   function dawnP() {
@@ -565,7 +579,7 @@
   const PARK_NIGHTS = [3];
   const PARK_WALL = new Image();
   PARK_WALL.src = 'assets/park/park-night.webp';
-  function inPark() { return mode === 'story' && (PARK_NIGHTS.includes(storyNight) || currentLevel?.map === 'park'); }
+  function inPark() { return (mode === 'story' && (PARK_NIGHTS.includes(storyNight) || currentLevel?.map === 'park')) || (mode === 'free' && currentLevel?.map === 'park'); }
   // ---------- Lighting festival map (Night 4) ----------
   // Far back: sky + pagoda hill picture (barely moves). Middle: palm and roof silhouettes in code.
   // Front: boardwalk over dark water, stalls (hiding spots), a few lantern strings, raised decks.
@@ -575,7 +589,7 @@
   const FEST_COLORS = ['255,156,207', '185,162,255', '143,227,224', '255,227,163', '255,143,163', '160,200,255'];
   const FEST_CLOTH = ['#7b2d8e', '#b8336a', '#1f7f86', '#3a5fc0', '#8e3fb0', '#2f8f5e'];
   const festCol = i => FEST_COLORS[((Math.floor(i) % FEST_COLORS.length) + FEST_COLORS.length) % FEST_COLORS.length];
-  function inFestival() { return mode === 'story' && (FESTIVAL_NIGHTS.includes(storyNight) || currentLevel?.map === 'festival'); }
+  function inFestival() { return (mode === 'story' && (FESTIVAL_NIGHTS.includes(storyNight) || currentLevel?.map === 'festival')) || (mode === 'free' && currentLevel?.map === 'festival'); }
   function currentMapKey() {
     if (inSchool()) return 'school';
     if (inPark()) return 'park';
@@ -603,7 +617,7 @@
       ...finalChapter,
       night,
       name: `${CHALLENGE_NAMES[(night - 8) % CHALLENGE_NAMES.length]} ${String(night).padStart(2, '0')}`,
-      sub: `Challenge route ${night - 7} · more gaps and quicker bridges`,
+      sub: `Endless Nights · route ${night - 7} · more gaps and quicker bridges`,
       theme: CHALLENGE_THEMES[(night - 8) % CHALLENGE_THEMES.length],
       musicRoot: finalChapter.musicRoot * Math.pow(2, ((night - 8) % 9 - 4) / 12),
       feelingsNeeded: { ...finalChapter.feelingsNeeded },
@@ -845,7 +859,9 @@
     $('#prologueScreen').hidden = true; $('#welcomeCardsScreen').hidden = false; renderWelcomeCard(startIndex, false); $('#welcomeNextBtn').focus({ preventScroll: true });
   }
   function finishWelcomeCards() {
-    MK_PROFILE.welcomeSeen = true; persistGuidanceProgress(); $('#welcomeCardsScreen').hidden = true; showSetup(true);
+    MK_PROFILE.welcomeSeen = true; persistGuidanceProgress(); $('#welcomeCardsScreen').hidden = true;
+    // names were chosen before the intro, so the welcome cards lead straight to the map
+    if (MK_HAS_PROFILE) { mapGuidePending = true; showStoryMap(true); } else showSetup(true);
   }
   function welcomeNext() { if (welcomeCardIndex >= (guideCopy().welcome || []).length - 1) finishWelcomeCards(); else renderWelcomeCard(welcomeCardIndex + 1); }
   function welcomePrevious() { if (welcomeCardIndex > 0) renderWelcomeCard(welcomeCardIndex - 1); }
@@ -1663,6 +1679,7 @@
       if (m.sky) { m.skyPhase = 'cleared'; m.skyTimer = 0; }
       m.dead = true; m.alpha = 0; hitstop = .05;
       if (window.TCSfx) sfx('caught', m.type); else tone(880, .12, 'sine', .05);
+      tcLight(m.type);
       return;
     }
     if (m.sky) { m.skyPhase = 'cleared'; m.skyTimer = 0; }
@@ -1687,7 +1704,7 @@
       glowRun += bonus; bump('glow', bonus); runNew.push(info.n);
       announce(`New in the Mood Book: ${info.n}  +${bonus} Glow`, info.c, 2.2);
     }
-    book[key] = (book[key] || 0) + 1; saveBook();
+    book[key] = (book[key] || 0) + 1; saveBook(); tcLight(m.type);
     if (m.type === 'F' || m.type === 'N' || m.type === 'L') bump('catch' + m.type);
     if (m.type === 'N') runN++;
     if (m.type === 'G') bump('golden');
@@ -3368,14 +3385,58 @@
     ctx.globalAlpha = 1;
   }
 
+  // ---- sketchbook HUD helpers: paper notes, washi tape, crayon ink ----
+  const HAND = '"Gaegu", ' + DISP, PAPER = '#f6eedc', PAPER2 = '#fffdf6', SB_INK = '#2b2547', SB_INK2 = '#4a4460';
+  function sbPaper(x, y, w, h, rot = 0, fill = PAPER) {
+    ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.rotate(rot);
+    ctx.shadowColor = 'rgba(8,5,25,.45)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
+    ctx.fillStyle = fill; ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.restore();
+  }
+  function sbTape(cx, cy, w, h, rot, color) {
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.fillStyle = color;
+    const z = h / 4; ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2, -h / 2);
+    for (let i = 1; i <= 4; i++) ctx.lineTo(w / 2 - (i % 2 ? 4 : 0), -h / 2 + z * i);
+    ctx.lineTo(-w / 2, h / 2);
+    for (let i = 3; i >= 0; i--) ctx.lineTo(-w / 2 + (i % 2 ? 4 : 0), -h / 2 + z * i);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  function sbPaw(x, y, k, alive) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+    ctx.lineWidth = 1.4; ctx.strokeStyle = alive ? '#4a1830' : 'rgba(59,53,80,.55)'; ctx.fillStyle = alive ? '#e8587a' : 'rgba(0,0,0,0)';
+    if (!alive) ctx.setLineDash([2, 2]);
+    for (const [cx, cy, rx, ry] of [[0, 4, 6.5, 5.5], [-7.5, -3, 2.8, 2.8], [-2.5, -7, 2.8, 2.8], [2.5, -7, 2.8, 2.8], [7.5, -3, 2.8, 2.8]]) { ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+    ctx.restore();
+  }
+  function sbSticker(x, y, r, ring, ready, glowing, key, icon) {
+    ctx.save();
+    ctx.shadowColor = 'rgba(8,5,25,.45)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+    ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.beginPath(); ctx.arc(x, y, r + 4, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowColor = 'rgba(0,0,0,0)';
+    ctx.strokeStyle = glowing ? '#c8ff8a' : ready ? '#8fe0ff' : 'rgba(255,255,255,.75)'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(x, y, r + 2, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(ring, 0, 1)); ctx.stroke();
+    ctx.fillStyle = ready || glowing ? PAPER : '#d9d0bd'; ctx.beginPath(); ctx.arc(x, y, r - 1, 0, Math.PI * 2); ctx.fill();
+    icon(x, y);
+    ctx.fillStyle = SB_INK; rrect(x + r - 10, y + r - 12, 18, 18, 4); ctx.fill();
+    ctx.fillStyle = PAPER; ctx.font = `800 11px ${BODY}`; ctx.textAlign = 'center'; ctx.fillText(key, x + r - 1, y + r + 1);
+    ctx.restore();
+  }
   function chip(x, y, type, have, needN, width = 104, compact = false) {
     const done = have >= needN;
     const h = compact ? 30 : 40, iconX = compact ? 17 : 22, iconY = compact ? 15 : 20;
-    ctx.fillStyle = 'rgba(22,15,44,.82)'; ctx.strokeStyle = done ? col(type) : 'rgba(243,236,255,.2)'; ctx.lineWidth = compact ? 1.5 : 2;
+    ctx.fillStyle = PAPER; ctx.strokeStyle = done ? '#2f9a63' : 'rgba(59,53,80,.18)'; ctx.lineWidth = done ? 2.5 : 1.5;
     ctx.beginPath(); ctx.roundRect ? canvasRoundRect(ctx, x, y, width, h, h / 2) : ctx.rect(x, y, width, h); ctx.fill(); ctx.stroke();
+    // a feeling Shwe hasn't caught yet tonight stays in pencil grey
+    if (!have) { ctx.save(); ctx.filter = 'grayscale(1) opacity(.55)'; }
     lightShape(type, x + iconX, y + iconY, compact ? .74 : .95);
-    ctx.fillStyle = INK; ctx.font = `800 ${compact ? 13 : 20}px ${DISP}`; ctx.textAlign = 'left';
-    ctx.fillText(done ? '✓' : `${have}/${needN}`, x + (compact ? 31 : 44), y + (compact ? 20 : 27));
+    if (!have) ctx.restore();
+    ctx.fillStyle = done ? '#2f7a52' : have ? SB_INK : '#6b6480'; ctx.font = `700 ${compact ? 17 : 26}px ${HAND}`; ctx.textAlign = 'left';
+    ctx.fillText(`${have}/${needN}`, x + (compact ? 31 : 44), y + (compact ? 21 : 29));
+    if (done) {
+      ctx.save(); ctx.strokeStyle = '#2f9a63'; ctx.lineWidth = compact ? 3 : 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      const cx = x + width - (compact ? 8 : 10), cy = y + (compact ? 2 : 0);
+      ctx.beginPath(); ctx.moveTo(cx - 9, cy + 1); ctx.lineTo(cx - 4, cy + 6); ctx.lineTo(cx + 6, cy - 7); ctx.stroke(); ctx.restore();
+    }
   }
   function drawHUD() {
     if (state === 'menu') return;
@@ -3384,20 +3445,16 @@
     const urgent = tl <= 15 && state === 'play';
     ctx.textAlign = 'left';
     const hudCompact = innerWidth <= 400;
-    ctx.fillStyle = uiToken('--glass'); rrect(HUD_X, top - 2, HUD_CARD_W, 74, 22); ctx.fill();
-    ctx.font = `800 ${urgent ? (hudCompact ? 34 : 38) + Math.sin(t * 10) * 2 : hudCompact ? 32 : 36}px ${DISP}`; ctx.fillStyle = urgent ? RED : INK;
-    ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, HUD_X + 10, top + 34);
-    ctx.font = `600 ${hudCompact ? 13 : 15}px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText('SCORE', HUD_X + 12, top + 60);
-    ctx.font = `800 ${hudCompact ? 20 : 22}px ${DISP}`; ctx.fillStyle = INK; ctx.fillText(score.toLocaleString(), HUD_X + 72, top + 61);
+    sbPaper(HUD_X, top - 2, HUD_CARD_W, 74, -.025);
+    sbTape(HUD_X + HUD_CARD_W / 2, top - 4, 54, 16, -.04, 'rgba(154,130,232,.72)');
+    ctx.font = `700 ${urgent ? (hudCompact ? 42 : 46) + Math.sin(t * 10) * 2 : hudCompact ? 40 : 44}px ${HAND}`; ctx.fillStyle = urgent ? '#c2473f' : SB_INK;
+    ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, HUD_X + 12, top + 36);
+    ctx.font = `700 ${hudCompact ? 12 : 13}px ${BODY}`; ctx.fillStyle = SB_INK2; ctx.fillText('SCORE', HUD_X + 13, top + 60);
+    ctx.font = `700 ${hudCompact ? 24 : 26}px ${HAND}`; ctx.fillStyle = SB_INK; ctx.fillText(score.toLocaleString(), HUD_X + 66, top + 62);
     if (mode === 'story') {
       const lx = HUD_X + HUD_CARD_W + 10, ly = top + 8;
-      ctx.fillStyle = 'rgba(22,15,44,.82)'; rrect(lx, ly, 68, 32, 16); ctx.fill();
-      for (let i = 0; i < 3; i++) {
-        const x = lx + 14 + i * 20, y = ly + 16;
-        ctx.fillStyle = i < lives ? (i === 0 ? '#ffc978' : '#f4e8c7') : 'rgba(243,236,255,.28)';
-        ctx.beginPath(); ctx.arc(x, y + 3, 4, 0, Math.PI * 2); ctx.fill();
-        for (const [dx, dy] of [[-4,-4],[0,-6],[4,-4]]) { ctx.beginPath(); ctx.arc(x + dx, y + dy, 2.2, 0, Math.PI * 2); ctx.fill(); }
-      }
+      sbPaper(lx, ly, 74, 34, .03, PAPER2);
+      for (let i = 0; i < 3; i++) sbPaw(lx + 15 + i * 22, ly + 18, .82, i < lives);
     }
     const hudChapter = mode === 'story' ? chapterFor(storyNight) : null;
     const skyEnabled = !!hudChapter && skyTotalFor(hudChapter) > 0;
@@ -3406,20 +3463,20 @@
     if (skyEnabled) {
       const sx = compactSky ? HUD_X : HUD_X + HUD_CARD_W + 86, sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
       ctx.save(); ctx.globalAlpha = skyLive ? .84 + .16 * Math.sin(t * 5) : 1;
-      ctx.fillStyle = 'rgba(22,15,44,.78)'; ctx.strokeStyle = skyLive ? 'rgba(205,224,255,.62)' : 'rgba(243,236,255,.22)'; ctx.lineWidth = 1.5;
+      ctx.fillStyle = PAPER2; ctx.strokeStyle = skyLive ? '#4d6fd6' : 'rgba(59,53,80,.25)'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.roundRect ? canvasRoundRect(ctx, sx, sy, sw, sh, 14) : ctx.rect(sx, sy, sw, sh); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#e7edff'; ctx.beginPath(); ctx.arc(sx + 15, sy + 14, 7, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(22,15,44,.95)'; ctx.beginPath(); ctx.arc(sx + 19, sy + 11, 6, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#e7edff'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(sx + 25, sy + 10); ctx.lineTo(sx + 25, sy + 20); ctx.lineTo(sx + 22, sy + 17); ctx.moveTo(sx + 25, sy + 20); ctx.lineTo(sx + 28, sy + 17); ctx.stroke();
-      ctx.font = `800 13px ${DISP}`; ctx.textAlign = 'left'; ctx.fillStyle = INK; ctx.fillText(skyLive ? 'Sky · ↓' : `Sky ×${skyRemaining(hudChapter)}`, sx + 35, sy + 19);
+      ctx.fillStyle = '#f2b53a'; ctx.beginPath(); ctx.arc(sx + 15, sy + 14, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = PAPER2; ctx.beginPath(); ctx.arc(sx + 19, sy + 11, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = SB_INK; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(sx + 25, sy + 10); ctx.lineTo(sx + 25, sy + 20); ctx.lineTo(sx + 22, sy + 17); ctx.moveTo(sx + 25, sy + 20); ctx.lineTo(sx + 28, sy + 17); ctx.stroke();
+      ctx.font = `700 18px ${HAND}`; ctx.textAlign = 'left'; ctx.fillStyle = SB_INK; ctx.fillText(skyLive ? 'Sky · ↓' : `Sky ×${skyRemaining(hudChapter)}`, sx + 35, sy + 20);
       ctx.restore();
     }
     const comboY = top + 96 + (skyEnabled && compactSky ? 32 : 0);
     if (combo > 1) {
-      ctx.fillStyle = uiToken('--glass'); rrect(10, comboY - 28, 140 + combo * 3, 52, 22); ctx.fill();
-      ctx.font = `600 ${24 + combo}px ${DISP}`; ctx.fillStyle = combo >= 5 ? SHY : combo >= 3 ? CALM : GOLD; ctx.fillText(`×${combo} combo`, 20, comboY);
-      ctx.fillStyle = 'rgba(246,196,83,.25)'; ctx.fillRect(22, comboY + 8, 120, 5);
-      ctx.fillStyle = GOLD; ctx.fillRect(22, comboY + 8, 120 * clamp(comboT / 4, 0, 1), 5);
+      sbPaper(12, comboY - 28, 140 + combo * 3, 50, .02, combo >= 5 ? '#ffd3e3' : combo >= 3 ? '#d9f2c8' : '#ffe28a');
+      ctx.font = `700 ${30 + combo}px ${HAND}`; ctx.fillStyle = SB_INK; ctx.fillText(`×${combo} combo`, 22, comboY);
+      ctx.fillStyle = 'rgba(59,53,80,.18)'; ctx.fillRect(22, comboY + 8, 120, 5);
+      ctx.fillStyle = combo >= 5 ? '#c24f86' : combo >= 3 ? '#2f9a63' : '#c48a10'; ctx.fillRect(22, comboY + 8, 120 * clamp(comboT / 4, 0, 1), 5);
     }
     if (skyEnabled && skySpawned > 0) {
       const perfectY = top + (combo > 1 ? (compactSky ? 160 : 128) : (compactSky ? 104 : 92));
@@ -3427,18 +3484,38 @@
     }
     {
       let ay = skyEnabled ? top + (combo > 1 ? (compactSky ? 186 : 153) : (compactSky ? 128 : 116)) : top + (combo > 1 ? 132 : 92);
-      ctx.textAlign = 'left'; ctx.font = `600 14px ${BODY}`;
-      ctx.fillStyle = eyesT > 0 ? '#c8ff8a' : eyesCd > 0 ? MUTED : BLUE;
-      ctx.fillText(eyesT > 0 ? 'Night eyes open' : eyesCd > 0 ? `Eyes in ${Math.ceil(eyesCd)}s` : 'Night eyes ready · E', 22, ay);
+      const sr = 19, sy0 = ay + 8;
+      sbSticker(22 + sr, sy0, sr, eyesT > 0 ? 1 : eyesCd > 0 ? 1 - eyesCd / 9 : 1, eyesCd <= 0, eyesT > 0, 'E', (x, y) => {
+        ctx.fillStyle = '#cfe6ff'; ctx.strokeStyle = SB_INK; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x - 11, y); ctx.quadraticCurveTo(x, y - 10, x + 11, y); ctx.quadraticCurveTo(x, y + 10, x - 11, y); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = SB_INK; ctx.beginPath(); ctx.arc(x, y, 3.6, 0, Math.PI * 2); ctx.fill();
+      });
+      let nx = 22 + sr * 2 + 16;
       if (upg.purr > 0) {
-        ay += 20; ctx.fillStyle = purrCd > 0 ? MUTED : '#c8ff8a';
-        ctx.fillText(purrCd > 0 ? `Purr in ${Math.ceil(purrCd)}s` : 'Purr ready · K', 22, ay);
+        const full = uv('purr') || 1;
+        sbSticker(nx + sr, sy0, sr, purrCd > 0 ? 1 - purrCd / full : 1, purrCd <= 0, purrT > 0, 'K', (x, y) => {
+          ctx.fillStyle = '#ffd3e3'; ctx.strokeStyle = SB_INK; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(x, y + 8); ctx.bezierCurveTo(x - 12, y, x - 9, y - 9, x, y - 4); ctx.bezierCurveTo(x + 9, y - 9, x + 12, y, x, y + 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+        });
+        nx += sr * 2 + 16;
       }
       const packed = ITEMS.filter(i => activeItems[i.id] && i.id !== 'sand').map(i => i.icon).join(' ');
-      if (packed) { ay += 20; ctx.fillStyle = INK; ctx.fillText(packed, 22, ay); }
+      if (packed) { ctx.textAlign = 'left'; ctx.font = `600 18px ${BODY}`; ctx.fillStyle = INK; ctx.fillText(packed, nx, sy0 + 6); }
     }
     if (mode === 'story') {
       const types = Object.keys(need).filter(type => need[type] > 0), compactNeeds = types.length >= 7 && VW < 1050;
+      {
+        const n = compactNeeds ? Math.min(4, types.length) : types.length, w0 = compactNeeds ? 72 : types.length >= 7 ? 64 : types.length >= 5 ? 78 : types.length === 4 ? 88 : 96, g0 = compactNeeds ? 6 : 8;
+        const rows = compactNeeds ? Math.ceil(types.length / 4) : 1, tw = n * (w0 + g0) - g0 + 28, th = compactNeeds ? rows * 34 + 14 : 56;
+        const tx = VW - 22 - (n * (w0 + g0) - g0) - 14, ty = top - 2;
+        ctx.save(); ctx.translate(tx + tw / 2, ty + th / 2); ctx.rotate(-.008);
+        ctx.shadowColor = 'rgba(8,5,25,.35)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+        ctx.fillStyle = 'rgba(154,130,232,.86)'; ctx.beginPath(); ctx.moveTo(-tw / 2, -th / 2); ctx.lineTo(tw / 2, -th / 2);
+        for (let i = 1; i <= 6; i++) ctx.lineTo(tw / 2 - (i % 2 ? 6 : 0), -th / 2 + th * i / 6);
+        ctx.lineTo(-tw / 2, th / 2);
+        for (let i = 5; i >= 0; i--) ctx.lineTo(-tw / 2 + (i % 2 ? 6 : 0), -th / 2 + th * i / 6);
+        ctx.closePath(); ctx.fill(); ctx.restore();
+      }
       if (compactNeeds) {
         const columns = 4, width = 72, gap = 6, rowStep = 34, startX = VW - 22 - columns * (width + gap) + gap;
         types.forEach((type, i) => chip(startX + (i % columns) * (width + gap), top + 6 + Math.floor(i / columns) * rowStep, type, got[type] || 0, need[type], width, true));
@@ -3447,8 +3524,9 @@
         let x = VW - 22 - types.length * (width + gap) + gap;
         for (const type of types) { chip(x, top + 6, type, got[type] || 0, need[type], width); x += width + gap; }
       }
-      ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.textAlign = 'right';
-      ctx.fillText(`${hourOf(storyNight).toUpperCase()} · ${chapterFor(storyNight).name.toUpperCase()}`, VW - 22, top + (compactNeeds ? 87 : 64));
+      ctx.font = `700 12px ${BODY}`; ctx.textAlign = 'right'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(12,8,28,.7)'; ctx.fillStyle = '#f6eedc';
+      const hl = `${hourOf(storyNight).toUpperCase()} · ${chapterFor(storyNight).name.toUpperCase()}`, hy = top + (compactNeeds ? 96 : 72);
+      ctx.strokeText(hl, VW - 22, hy); ctx.fillText(hl, VW - 22, hy);
     } else {
       ctx.textAlign = 'right'; ctx.font = `800 28px ${DISP}`; ctx.fillStyle = INK;
       ctx.fillText(`${caughtN} caught`, VW - 22, top + 34);
@@ -3468,15 +3546,21 @@
       // wrap long tips onto several lines so they always fit the screen
       const maxW = Math.min(VW - 80, 900); let size = 30, lines;
       for (;;) {
-        ctx.font = `800 ${size}px ${DISP}`; lines = []; let line = '';
+        ctx.font = `700 ${Math.round(size * 1.15)}px ${HAND}`; lines = []; let line = '';
         for (const w of banner.text.split(' ')) { const tryL = line ? line + ' ' + w : w; if (ctx.measureText(tryL).width > maxW && line) { lines.push(line); line = w; } else line = tryL; }
         lines.push(line); if (lines.length <= 3 || size <= 18) break; size -= 3;
       }
       const bubbleW = Math.min(maxW + 36, Math.max(...lines.map(line => ctx.measureText(line).width)) + 36);
-      ctx.fillStyle = uiToken('--glass'); rrect((VW - bubbleW) / 2, 126, bubbleW, lines.length * size * 1.2 + 22, 22); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(VW / 2 - 12, 126); ctx.lineTo(VW / 2, 114); ctx.lineTo(VW / 2 + 12, 126); ctx.fill();
-      ctx.lineWidth = 3; ctx.strokeStyle = uiToken('--bg-card'); ctx.fillStyle = banner.c;
-      lines.forEach((ln, i) => { const y = 160 + i * size * 1.2; ctx.strokeText(ln, VW / 2, y); ctx.fillText(ln, VW / 2, y); });
+      const bh = lines.length * size * 1.2 + 26;
+      sbPaper((VW - bubbleW) / 2, 124, bubbleW, bh, -.006, PAPER2);
+      sbTape(VW / 2, 124, 70, 18, .03, 'rgba(255,207,92,.75)');
+      ctx.font = `700 ${Math.round(size * 1.15)}px ${HAND}`;
+      lines.forEach((ln, i) => {
+        const y = 160 + i * size * 1.2, w = ctx.measureText(ln).width;
+        ctx.strokeStyle = banner.c; ctx.globalAlpha = a * .55; ctx.lineWidth = 5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(VW / 2 - w / 2, y + 6); ctx.quadraticCurveTo(VW / 2, y + 9, VW / 2 + w / 2, y + 5); ctx.stroke();
+        ctx.globalAlpha = a; ctx.fillStyle = SB_INK; ctx.fillText(ln, VW / 2, y);
+      });
       ctx.globalAlpha = 1;
     }
   }
@@ -3920,16 +4004,16 @@
   const THIRI_IMG = {};
   THIRI_POSES.forEach(k => { const c = new Image(), g = new Image(); c.src = `assets/home/thiri-${k}.webp`; g.src = `assets/home/thiri-${k}-grey.webp`; THIRI_IMG[k] = { c, g }; });
   const imgOk = im => im && im.complete && im.naturalWidth > 0;
-  // where the Thiri pictures sit in the room (room units): head on the pillow, arm over the blanket
-  const TB = [110, 390, 250, 140];
+  // where the Thiri pictures sit in the room (room units): the whole bed with Thiri tucked in under the blanket
+  const TB = [83.8, 373.3, 464.9, 270.9];
   function drawThiriInBed(pose, warm, dawn, breath) {
     // pick the two nearest poses and blend between them
     const p = clamp(pose, 0, 7); let i = 0; while (i < THIRI_AT.length - 1 && THIRI_AT[i + 1] <= p) i++;
     const j = Math.min(THIRI_AT.length - 1, i + 1), f = j === i ? 0 : clamp(p - (THIRI_AT[j] - 1), 0, 1);  // change pose during the last hour before the next one
     const layers = [[THIRI_POSES[i], 1 - f], [THIRI_POSES[j], f]];
     // soft moonlight on her so she is easy to find
-    const gl = ctx.createRadialGradient(250, 470, 10, 250, 470, 150); gl.addColorStop(0, `rgba(214,206,255,${.16 + .08 * warm})`); gl.addColorStop(1, 'rgba(214,206,255,0)');
-    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = gl; ctx.fillRect(100, 320, 300, 300); ctx.globalCompositeOperation = 'source-over';
+    const gl = ctx.createRadialGradient(225, 478, 10, 225, 478, 150); gl.addColorStop(0, `rgba(214,206,255,${.16 + .08 * warm})`); gl.addColorStop(1, 'rgba(214,206,255,0)');
+    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = gl; ctx.fillRect(75, 328, 300, 300); ctx.globalCompositeOperation = 'source-over';
     const lift = breath * .35;
     for (const [k, a] of layers) {
       if (a <= .01) continue; const im = THIRI_IMG[k];
@@ -3987,7 +4071,7 @@
     // Thiri, then Shwe curled up beside her
     const warm = Math.max(look.wash * 1.6, look.col.F || 0) * .85 + (look.pose >= 7 ? .15 : 0);
     drawThiriInBed(look.pose, clamp(warm, 0, 1), look.dawn || 0, Math.sin(t * 2.2) * 1.4);
-    if (look.cat) { ctx.save(); ctx.translate(look.cat.x, look.cat.y); ctx.scale(1.25, 1.25); drawCurled(0, 0, look.cat.sleep); ctx.restore(); }
+    if (look.cat) drawRoomCat(look.cat.x, look.cat.y, look.cat.sleep ? 'sleep' : 'sit');
     // night shade and vignette
     ctx.restore();
     const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .75);
@@ -4025,7 +4109,7 @@
       won, preview, night, stage, diary: chapterFor(night).diary, phase: 'enter', pt: 0, p: 0, m: 0, capT: 0, total: n, given: { F: 0, N: 0, L: 0, C: 0, B: 0, E: 0, S: 0, J: 0, G: 0 },
       nF: types.filter(x => x === 'F').length, nN: types.filter(x => x === 'N').length,
       lights: types.map((ty, i) => ({ type: ty, x: VW * .42, y: 150, sx: VW / 2 - (n - 1) * 20 + i * 40, sy: 112, state: 'wait', delay: .55 + i * .12, ft: 0, fx: 0, fy: 0 })),
-      catX: 392, catY: 474, poseFrom, poseTo, poseK: 0, zoom: 0, focus: null, base, col: { ...base }, grow: {}, travel: [], rings: [],
+      catX: 440, catY: 477, poseFrom, poseTo, poseK: 0, zoom: 0, focus: null, base, col: { ...base }, grow: {}, travel: [], rings: [],
       parts: [], floats: [], react: 0, reactCol: INK, drag: null, canContinue: false, caption: false, finished: false
     };
     cv.hidden = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; state = 'home'; touchUI.hidden = true;
@@ -4060,7 +4144,7 @@
       const pose = Math.max(0, stage - 1) + blend, z = c.width / 1150;
       const col = roomColoursFor(stage - 1); NIGHT_TYPES[stage].forEach(k => { col[k] = Math.max(col[k], blend); });
       ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-      drawRoomScene(c.width, c.height, { x: 575, y: 470, z }, { col, wash: roomWash(stage - 1) + (roomWash(stage) - roomWash(stage - 1)) * blend, pose, dawn: stage >= 7 ? .5 * blend : 0, cat: { x: 392, y: 474, sleep: true } });
+      drawRoomScene(c.width, c.height, { x: 575, y: 470, z }, { col, wash: roomWash(stage - 1) + (roomWash(stage) - roomWash(stage - 1)) * blend, pose, dawn: stage >= 7 ? .5 * blend : 0, cat: { x: 440, y: 477, sleep: true } });
       ctx.restore();
     } finally { ctx = main; }
   }
@@ -4162,6 +4246,18 @@
   };
   cv.addEventListener('pointerup', dragEnd); cv.addEventListener('pointercancel', dragEnd);
 
+  // Shwe as he looks in the game: the chosen cat's sprite and rig, facing Thiri
+  function drawRoomCat(x, y, pose) {
+    const coat = MK_PROFILE.coat, spr = mkGetSprite(coat);
+    if (!spr || !spr.complete || !spr.naturalWidth) { ctx.save(); ctx.translate(x, y); ctx.scale(1.25, 1.25); drawCurled(0, 0, pose === 'sleep'); ctx.restore(); return; }
+    const hh = 68, ww = hh * spr.naturalWidth / spr.naturalHeight, jump = pose === 'jump';
+    const rig = jump ? { back: -.38, front: .32, tail: -.32 } : { back: 0, front: 0, tail: Math.sin(t * 1.7) * .12, breath: Math.sin(t * (pose === 'sleep' ? 1.3 : 2.2)) * .016 };
+    ctx.save(); ctx.translate(x, y); ctx.scale(-1, 1);
+    if (!jump) { ctx.fillStyle = 'rgba(40,12,40,.3)'; ctx.beginPath(); ctx.ellipse(-2, 2, ww * .34, 4, 0, 0, 7); ctx.fill(); }
+    ctx.filter = 'brightness(.9)';
+    if (!mkDrawRig(ctx, coat, -ww / 2, -hh + 6, ww, hh, rig)) ctx.drawImage(spr, -ww / 2, -hh + 6, ww, hh);
+    ctx.restore();
+  }
   function drawCurled(x, y, sleep) {
     ctx.save(); ctx.translate(x, y);
     ctx.strokeStyle = COAT.body; ctx.lineWidth = 6; ctx.lineCap = 'round';
@@ -4211,7 +4307,7 @@
     if (h.phase === 'enter') {
       const k = clamp(h.pt / 1.1, 0, 1), e = ease(k), a = roomToView(cam, 645, 360), b = roomToView(cam, h.catX, h.catY);
       const x = a.x + (b.x - a.x) * e, y = a.y + (b.y - a.y) * e - Math.sin(Math.PI * k) * 80 * cam.z;
-      ctx.save(); ctx.translate(x, y); ctx.scale(1.25 * cam.z, 1.25 * cam.z); drawCurled(0, 0, false); ctx.restore();
+      ctx.save(); ctx.translate(x, y); ctx.scale(cam.z, cam.z); drawRoomCat(0, 0, 'jump'); ctx.restore();
     }
     // a little spark travels from Thiri to the part of the room that gets its colour back
     for (const s of h.travel) {
@@ -4289,7 +4385,7 @@
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 50) : 1;
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
-    const mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : 'free';
+    const freePick = FREE_MAPS.find(m => m.id === freeMap), mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : (freePick && freePick.level && freeMapOpen(freePick) ? freePick.id : 'free');
     const sceneTrack = ({ school: 'school', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
     music('duck', 1); music('play', sceneTrack);
     music('ambience', sceneTrack);
@@ -4377,6 +4473,61 @@
     }
     $('#mapScenery').innerHTML = parts.join('');
   }
+  const HOUR_DOODLE = {
+    1: { c: '#e65a5f', art: '<path d="M-26 -2 L0 -24 L26 -2" FILL STROKE/><rect x="-21" y="-2" width="42" height="30" FILL2 STROKE/><rect x="-6" y="10" width="12" height="18" FILL STROKE/><path d="M0 -24 L0 -36 L12 -32 L0 -28" fill="#f2b53a" STROKE/>' },
+    2: { c: '#9a82e8', art: '<path d="M-18 -26 L18 -26 L16 -2 C14 10 6 14 0 14 C-6 14 -14 10 -16 -2 Z" fill="#f2b53a" STROKE/><path d="M-18 -20 C-30 -20 -30 -4 -16 -4 M18 -20 C30 -20 30 -4 16 -4" fill="none" STROKE/><path d="M0 14 L0 24 M-12 28 L12 28" STROKE/>' },
+    3: { c: '#4d9be6', art: '<path d="M-30 32 L-16 -30 L16 -30 L30 32" fill="none" STROKE/><path d="M-8 -30 L-8 10 M8 -30 L8 10" STROKE/><rect x="-14" y="8" width="28" height="7" rx="2" FILL STROKE/><path d="M-38 34 C-16 28 16 28 38 34" fill="none" stroke="#3fae74" stroke-width="3.5" stroke-linecap="round"/>' },
+    4: { c: '#f2b53a', art: '<path d="M0 -40 L0 -30" STROKE/><rect x="-12" y="-32" width="24" height="6" rx="2" fill="#7a3d33" STROKE/><path d="M-16 -24 C-22 -12 -22 4 -16 16 L16 16 C22 4 22 -12 16 -24 Z" fill="#ff8f6b" STROKE/><path d="M-18 -12 L18 -12 M-19 2 L19 2" stroke="#ffd38a" stroke-width="3"/><rect x="-12" y="16" width="24" height="6" rx="2" fill="#7a3d33" STROKE/><path d="M0 22 L0 36" stroke="#e65a5f" stroke-width="3" stroke-linecap="round"/>' },
+    5: { c: '#a67646', art: '<path d="M-40 32 C-22 6 -2 0 18 12 C28 18 36 24 42 32" fill="none" STROKE/><path d="M10 10 L10 -12" STROKE/><path d="M10 -34 C22 -34 28 -24 24 -16 C28 -8 20 -2 10 -4 C0 -2 -8 -8 -4 -16 C-8 -24 -2 -34 10 -34 Z" FILL STROKE/>' },
+    6: { c: '#3fae74', art: '<path d="M-40 10 C-28 4 -16 16 -2 10 C12 4 24 16 40 10" fill="none" stroke="#4d9be6" stroke-width="3" stroke-linecap="round"/><path d="M-40 24 C-28 18 -16 30 -2 24 C12 18 24 30 40 24" fill="none" stroke="#4d9be6" stroke-width="3" stroke-linecap="round"/><path d="M-22 -2 L22 -2 L14 8 L-14 8 Z" fill="#c9915a" STROKE/><path d="M0 -2 L0 -28 L16 -8 Z" FILL STROKE/>' },
+    7: { c: '#f59b57', art: '<path d="M-30 20 A30 30 0 0 1 30 20 Z" FILL STROKE/><path d="M0 -22 L0 -32 M-22 -12 L-29 -19 M22 -12 L29 -19 M-34 8 L-44 6 M34 8 L44 6" STROKE/><path d="M-44 22 L44 22" STROKE/>' }
+  };
+  function hourDoodle(level, x, y, state) {
+    const d = HOUR_DOODLE[level]; if (!d) return '';
+    const done = state === 'done', cur = state === 'current';
+    const ink = done ? '#3b3550' : '#7d7894';
+    const stroke = `stroke="${ink}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"${done ? '' : ' stroke-dasharray="5 4"'}`;
+    const art = d.art.replace(/ STROKE/g, ' ' + stroke).replace(/ FILL2/g, done ? ' fill="#fff3ea"' : ' fill="none"').replace(/ FILL/g, done ? ` fill="${d.c}"` : ' fill="none"');
+    const blob = done ? `<path d="M2 -46 C30 -48 50 -26 48 2 C46 30 24 48 -2 46 C-30 46 -48 26 -46 -2 C-44 -28 -26 -46 2 -46 Z" fill="${d.c}" opacity=".26"/>` : '';
+    const ring = cur ? `<path d="M2 -50 C34 -52 54 -26 52 4 C50 34 24 54 -4 52 C-34 50 -52 26 -50 -4 C-48 -32 -26 -50 8 -48" fill="none" stroke="#e65a5f" stroke-width="3.5" stroke-linecap="round"/><text x="0" y="-60" text-anchor="middle" font-family="Gaegu, Fredoka, sans-serif" font-weight="700" font-size="20" fill="#c2473f">Shwe is here!</text>` : '';
+    return `<g transform="translate(${x} ${y})" opacity="${state === 'locked' ? .75 : 1}">${blob}${ring}${art}</g>`;
+  }
+  function drawSketchMap(width, height, segs, current) {
+    const R = mapRandom, parts = [];
+    parts.push(`<defs><pattern id="sbDots" width="26" height="26" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.3" fill="rgba(86,112,170,.24)"/></pattern></defs>`);
+    parts.push(`<rect width="${width}" height="${height}" fill="#f6eedc"/><rect width="${width}" height="${height}" fill="url(#sbDots)"/>`);
+    // the Endless Nights pages are washed in lilac
+    const e0 = mapPoint(Math.min(8, LEVEL_MAP_LIMIT)).x - 120;
+    parts.push(`<rect x="${e0}" y="0" width="${width - e0}" height="${height}" fill="rgba(154,130,232,.12)"/>`);
+    // a fold every two pages of the sketchbook
+    for (let x = 1180; x < width; x += 1180) parts.push(`<rect x="${x - 26}" y="0" width="52" height="${height}" fill="url(#sbFold)"/>`);
+    parts.unshift(`<defs><linearGradient id="sbFold" x2="1"><stop offset="0" stop-color="rgba(60,40,80,0)"/><stop offset=".48" stop-color="rgba(60,40,80,.16)"/><stop offset=".52" stop-color="rgba(255,255,255,.4)"/><stop offset="1" stop-color="rgba(60,40,80,0)"/></linearGradient></defs>`);
+    // little pencil stars and moons in the margins
+    for (let i = 0; i < width / 140; i++) {
+      const x = R(i + 31) * width, y = R(i + 57) < .5 ? 14 + R(i + 77) * height * .12 : height - 18 - R(i + 99) * height * .1;
+      parts.push(R(i + 5) < .7 ? `<path d="M${x} ${y - 6} L${x + 1.6} ${y - 1.6} L${x + 6} ${y} L${x + 1.6} ${y + 1.6} L${x} ${y + 6} L${x - 1.6} ${y + 1.6} L${x - 6} ${y} L${x - 1.6} ${y - 1.6} Z" fill="none" stroke="#9a95a8" stroke-width="1.4"/>`
+        : `<path d="M${x + 4} ${y - 9} A9 9 0 1 0 ${x + 9} ${y + 5} A7 7 0 1 1 ${x + 4} ${y - 9} Z" fill="none" stroke="#9a95a8" stroke-width="1.4"/>`);
+    }
+    // the path: a soft crayon band, dark dashes where Shwe has walked, pencil dashes ahead
+    const all = segs.join(' '), done = segs.slice(0, Math.max(0, current - 1)).join(' '), ahead = segs.slice(Math.max(0, current - 1)).join(' ');
+    parts.push(`<path d="${all}" fill="none" stroke="#f2b53a" stroke-width="16" stroke-linecap="round" opacity=".28"/>`);
+    if (done) parts.push(`<path d="${done}" fill="none" stroke="#3b3550" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="2 12"/>`);
+    if (ahead) parts.push(`<path d="${ahead}" fill="none" stroke="#9a95a8" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 12"/>`);
+    // Shwe's paw prints on the part of the walk that is done
+    for (let level = 1; level < Math.min(current, LEVEL_MAP_LIMIT); level++) {
+      const a = mapPoint(level), b = mapPoint(level + 1), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 - 22, ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + 90;
+      parts.push(`<g transform="translate(${mx} ${my}) rotate(${ang})" fill="#3b3550" opacity=".4"><ellipse rx="5" ry="6"/><circle cx="-6" cy="-7" r="2.2"/><circle cx="0" cy="-9" r="2.2"/><circle cx="6" cy="-7" r="2.2"/></g>`);
+    }
+    for (let level = 1; level <= Math.min(7, LEVEL_MAP_LIMIT); level++) {
+      const pt = mapPoint(level);
+      parts.push(hourDoodle(level, pt.x, pt.y, level < current ? 'done' : level === current ? 'current' : 'locked'));
+    }
+    // headings written on the page
+    const s0 = mapPoint(1);
+    parts.push(`<text x="${Math.max(20, s0.x - 110)}" y="${Math.max(30, height * .1)}" font-family="Gaegu, Fredoka, sans-serif" font-weight="700" font-size="26" fill="#2b2547">Shwe's Night Map</text>`);
+    parts.push(`<text x="${e0 + 30}" y="${Math.max(30, height * .1)}" font-family="Gaegu, Fredoka, sans-serif" font-weight="700" font-size="26" fill="#6a4ab8">Endless Nights · after sunrise</text>`);
+    $('#mapScenery').innerHTML = parts.join('');
+  }
   function syncStoryMapBackdrop() {
     const viewport = $('#levelMapViewport');
     $('#mapPrevious').disabled = viewport.scrollLeft <= 1;
@@ -4388,18 +4539,19 @@
     const height = Math.max(180, $('#levelMapViewport').clientHeight), width = mapStops[LEVEL_MAP_LIMIT - 1].x + 150;
     track.style.height = `${height}px`; track.style.width = `${width}px`;
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    let d = '', prev = null;
+    let d = '', prev = null; const segs = [];
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const point = mapPoint(level);
       if (!prev) d = `M ${point.x} ${point.y}`;
       else {
         const span = point.x - prev.x;
         const bend = .28 + mapRandom(level + 1800) * .4;
-        d += ` C ${prev.x + span * bend} ${prev.y} ${point.x - span * (1 - bend)} ${point.y} ${point.x} ${point.y}`;
+        const seg = ` C ${prev.x + span * bend} ${prev.y} ${point.x - span * (1 - bend)} ${point.y} ${point.x} ${point.y}`;
+        d += seg; segs.push(`M ${prev.x} ${prev.y}${seg}`);
       }
       prev = point;
     }
-    drawNightMap(width, height, d);
+    drawSketchMap(width, height, segs, unlockedLevel);
     route.setAttribute('d', d); path.setAttribute('d', d);
     svg.querySelector('.path-halo').setAttribute('d', d);
     $('#levelMapCount').textContent = `${unlockedLevel} / 50 levels unlocked · ★ ${totalStars()}/21`;
@@ -4407,13 +4559,13 @@
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const chapter = LEVEL_MAP_CHAPTERS.get(level), point = mapPoint(level);
       const entry = document.createElement('div');
-      entry.className = `level-entry${point.y > height * .43 ? ' label-above' : ''}`;
+      entry.className = `level-entry${point.y > height * .43 ? ' label-above' : ''}${level <= 7 ? ' sb-hour-entry' : ''}`;
       entry.style.left = `${point.x}px`;
       entry.style.top = `${point.y}px`;
       const button = document.createElement('button');
       const playable = level <= unlockedLevel;
       button.type = 'button'; button.dataset.level = String(level);
-      button.className = `level-node${playable ? ' is-playable' : ''}${level === unlockedLevel ? ' is-current' : ''}`;
+      button.className = `level-node${playable ? ' is-playable' : ''}${level === unlockedLevel ? ' is-current' : ''} ${level <= 7 ? 'sb-hour' : 'sb-route'}`;
       button.textContent = String(level); button.disabled = !playable;
       button.setAttribute('aria-label', playable ? `${hourOf(level)}, ${chapter.name}, playable${level === unlockedLevel ? ', current hour' : ''}` : `${hourOf(level)}, ${chapter.name}, locked until ${hourOf(level - 1)} is complete`);
       button.title = playable ? `Play ${hourOf(level)} · ${chapter.name}` : `${hourOf(level)} · complete ${hourOf(level - 1)} to unlock`;
@@ -4427,7 +4579,7 @@
         const bestScore = getBest(`mk-best-n${level}`), st = nightStars[level] || 0;
         if (playable && (bestScore || st)) {
           const rec = document.createElement('span'); rec.className = 'level-best';
-          rec.innerHTML = [1, 2, 3].map(i => `<b style="color:${i <= st ? '#f6c453' : 'rgba(255,255,255,.28)'}">★</b>`).join('') + (bestScore ? ` Best ${bestScore.toLocaleString()}` : '');
+          rec.innerHTML = [1, 2, 3].map(i => `<b style="color:${i <= st ? '#e0a12a' : 'rgba(59,53,80,.25)'}">★</b>`).join('') + (bestScore ? ` Best ${bestScore.toLocaleString()}` : '');
           rec.setAttribute('aria-label', `${st} of 3 stars${bestScore ? `, best score ${bestScore}` : ''}`);
           caption.appendChild(rec);
         }
@@ -4629,7 +4781,15 @@
     if (!csVo.clips[path]) { const a = new Audio(path); a.preload = 'auto'; csVo.clips[path] = a; }
     return csVo.clips[path];
   }
-  const csVoPath = (kind, i) => `assets/audio/voice/${kind}/vo_${String(i).padStart(2, '0')}.mp3`;
+  // When the player chose their own names, lines that say "Thiri" or "Shwe" use a name-free recording
+  // (vo_XX-n.mp3, same line with "she" / "her cat", see assets/audio/voice/NAME-FREE-LINES.md).
+  // If that file is missing, the line shows as text only.
+  const CS_NAMED = { intro: [0, 3, 4, 10, 16, 21], ending: [2, 3, 4, 16] };
+  const csVoPath = (kind, i) => {
+    const line = (kind === 'ending' ? ENDING_LINES : INTRO_LINES)[i] || {}, txt = line.text || '';
+    const custom = (MK_PROFILE.girl !== 'Thiri' && txt.includes('Thiri')) || (MK_PROFILE.cat !== 'Shwe' && txt.includes('Shwe'));
+    return `assets/audio/voice/${kind}/vo_${String(i).padStart(2, '0')}${custom && CS_NAMED[kind].includes(i) ? '-n' : ''}.mp3`;
+  };
   function csVoPreload(kind) { CS_VOICE[kind].forEach((v, i) => { if (v[0]) csVoClip(csVoPath(kind, i)); }); }
   function csVoStop() {
     csVo.timers.forEach(clearTimeout); csVo.timers = [];
@@ -4813,6 +4973,16 @@
     $('#awakeningSkipBtn').hidden = true;
   }
   window.TCPlayEnding = playEnding;
+  // ---- after the story: Heart Workshop and Lantern Town (js/afterstory.js) use these ----
+  function tcLight(type) { try { window.dispatchEvent(new CustomEvent('tc:light', { detail: { type } })); } catch (e) {} }
+  window.TCBridge = {
+    glow: () => glow,
+    addGlow(n) { glow = Math.max(0, glow + Math.round(n)); saveUpg(); try { refreshShopBtns(); refreshHubStats(); } catch (e) {} },
+    storyDone: () => finalAwakeningSeen || thiriSleepStage >= 7,
+    portrait: ty => { try { return bookPortrait(ty, 0, true); } catch (e) { return ''; } },
+    sfx: (a, b) => { try { sfx(a, b); } catch (e) {} },
+    book: () => ({ ...book })
+  };
   // test shortcut: open the game with ?ending in the address to jump straight to the morning ending
   if (/[?&]ending\b/.test(location.search)) setTimeout(() => playEnding(), 900);
   $('#storyBtn').addEventListener('click', () => showStoryMap(true));
@@ -4879,7 +5049,7 @@
   $('#awakeningSkipBtn').addEventListener('click', revealAwakeningActions);
   $('#awakeningReplayBtn').addEventListener('click', () => startGame('story', 7));
   $('#awakeningBookBtn').addEventListener('click', () => { $('#awakeningScreen').hidden = true; state = 'menu'; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
-  $('#awakeningFreeBtn').addEventListener('click', () => startGame('free'));
+  $('#awakeningFreeBtn').addEventListener('click', () => openFreeMapPicker($('#awakeningFreeBtn')));
 
   // ---- Names + coat setup ----
   const coatTargets = [];
@@ -5097,9 +5267,10 @@
     try { localStorage.setItem('mk-profile', JSON.stringify(MK_PROFILE)); } catch (err) {}
     paintCoat(COAT); renameAll();
     setupEl.hidden = true;
-    if (setupFirstRun) { mapGuidePending = true; showStoryMap(true); } else showMainMenu(true);
+    // first run: the names are chosen first, so the intro can use them
+    if (setupFirstRun) playIntro('first-run'); else showMainMenu(true);
   });
-  $('#welcomeBeginBtn').addEventListener('click', () => playIntro('first-run'));
+  $('#welcomeBeginBtn').addEventListener('click', () => { initAudio(); showSetup(true); });
   $('#welcomeSkipBtn').addEventListener('click', finishWelcomeCards);
   $('#welcomeNextBtn').addEventListener('click', welcomeNext);
   $('#welcomeDots').addEventListener('click', e => { const dot = e.target.closest('.welcome-dot'); if (dot) renderWelcomeCard(+dot.dataset.slide); });
@@ -5117,7 +5288,7 @@
     if (e.shiftKey && document.activeElement === focusable[0]) { e.preventDefault(); focusable[focusable.length - 1].focus(); }
     else if (!e.shiftKey && document.activeElement === focusable[focusable.length - 1]) { e.preventDefault(); focusable[0].focus(); }
   });
-  $('#setupBackBtn').addEventListener('click', () => { if (setupFirstRun) showWelcomeCards(2); });
+  $('#setupBackBtn').addEventListener('click', () => { if (setupFirstRun) showWelcome(); });
   $('#mapGuideDismiss').addEventListener('click', () => { dismissMapGuide(); const current = $(`#levelMapTrack button[data-level="${unlockedLevel}"]`); if (current) current.focus({ preventScroll: true }); });
   $('#levelBriefingBack').addEventListener('click', closeLevelBriefing);
   $('#levelBriefingStart').addEventListener('click', beginNightSequence);
@@ -5208,7 +5379,36 @@
     const button = e.target.closest('button[data-level]'); if (!button || button.disabled) return;
     const night = +button.dataset.level; if (night <= unlockedLevel) showLevelBriefing(night, button);
   });
-  $('#freeBtn').addEventListener('click', () => startGame('free'));
+  // Free Play opens a map picker: every map Shwe has reached in the story, plus the classic routes
+  const FREE_MAP_ART = { school: 'assets/school/hallway-night.webp', park: 'assets/park/park-night.webp', festival: 'assets/festival/festival-back.webp', hill: 'assets/hill/hill-vista.webp' };
+  function openFreeMapPicker(returnFocus) {
+    let scr = $('#freeMapScreen');
+    if (!scr) {
+      scr = document.createElement('div'); scr.className = 'overlay free-map-screen'; scr.id = 'freeMapScreen'; scr.hidden = true;
+      scr.setAttribute('role', 'dialog'); scr.setAttribute('aria-modal', 'true'); scr.setAttribute('aria-labelledby', 'freeMapTitle');
+      scr.innerHTML = '<section class="panel free-map-panel"><p class="eyebrow">Free Play</p><h2 id="freeMapTitle">Where should Shwe play?</h2><p class="muted">Pick any place you have reached in the story. Every catch adds time.</p><div class="free-map-grid" id="freeMapGrid"></div><div class="actions"><button class="btn ghost" type="button" id="freeMapBack">Back</button></div></section>';
+      document.body.appendChild(scr);
+      $('#freeMapBack').addEventListener('click', () => { scr.hidden = true; (scr._return || $('#freeBtn'))?.focus?.(); });
+      scr.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); scr.hidden = true; (scr._return || $('#freeBtn'))?.focus?.(); } });
+    }
+    scr._return = returnFocus || $('#freeBtn');
+    const grid = $('#freeMapGrid'); grid.textContent = '';
+    for (const m of FREE_MAPS) {
+      const open = freeMapOpen(m), b = document.createElement('button');
+      b.type = 'button'; b.className = `free-map-card map-${m.id}${open ? '' : ' locked'}${m.id === freeMap ? ' chosen' : ''}`; b.disabled = !open;
+      b.setAttribute('aria-label', open ? `Play Free Mode at ${m.name}` : `${m.name}, locked until you reach ${hourOf(m.opens)} in the story`);
+      const art = document.createElement('span'); art.className = 'free-map-art'; art.setAttribute('aria-hidden', 'true');
+      if (FREE_MAP_ART[m.id]) art.style.backgroundImage = `url("${FREE_MAP_ART[m.id]}")`;
+      const nm = document.createElement('strong'); nm.textContent = m.name;
+      const nt = document.createElement('span'); nt.textContent = open ? m.note : `Reach ${hourOf(m.opens)} in the story`;
+      b.append(art, nm, nt);
+      b.addEventListener('click', () => { freeMap = m.id; try { localStorage.setItem('mk-free-map', m.id); } catch (e) {} scr.hidden = true; startGame('free'); });
+      grid.appendChild(b);
+    }
+    scr.hidden = false;
+    setTimeout(() => (grid.querySelector('.chosen:not([disabled])') || grid.querySelector('button:not([disabled])'))?.focus(), 30);
+  }
+  $('#freeBtn').addEventListener('click', () => openFreeMapPicker($('#freeBtn')));
   $('#againBtn').addEventListener('click', () => {
     if (R && R.won && !R.free && R.night < 50) startGame('story', R.night + 1);
     else startGame(mode, storyNight);
