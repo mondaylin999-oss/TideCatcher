@@ -920,6 +920,58 @@
     document.body.classList.add('learning-with-shwe');
     showTutorialStep(); return true;
   }
+  // When every feeling is home the night no longer ends by itself: a moon door opens near Shwe.
+  // The player can keep exploring (trinkets, keepsakes, score) and walk into the door to go home;
+  // if the timer runs out first, the night still ends safely.
+  let allHome = false, portal = null;
+  function reachAllHome() {
+    if (allHome || state !== 'play') return;
+    allHome = true; sfx('ui', 'reward'); openPortal();
+    announce('All feelings found! A moon door opened. Walk into it when you are ready to go home.', GOLD, 3.6);
+    float(cat.x, cat.y - 90, 'Time left still adds +20 points a second', GOLD);
+  }
+  function openPortal() {
+    const face = cat.face || 1, place = d => safeLevelX(clamp(cat.x + d, 160, WORLD - 160));
+    let x = place(face * 3 * T);
+    if (Math.abs(x - cat.x) < 1.5 * T) x = place(-face * 3 * T);
+    portal = { x, y: terrainY(x), open: 0, born: t };
+    burst(x, portal.y - 60, '#cfe0ff', 30); sfx('ui', 'unlock');
+  }
+  function updPortal(dt) {
+    if (!portal) return;
+    portal.open = Math.min(1, portal.open + dt / .8);
+    if (state === 'play' && portal.open >= 1 && !cat.falling && Math.abs(cat.x - portal.x) < 34 && Math.abs(cat.y - portal.y) < 80) {
+      burst(portal.x, portal.y - 60, '#fff3c4', 36); goHome();
+    }
+  }
+  function drawPortal() {
+    if (!portal) return;
+    const k = portal.open, e = 1 - Math.pow(1 - k, 3), x = portal.x, y = portal.y, w = 34 * e, h = 62 * e, cy = y - 66;
+    ctx.save();
+    ctx.drawImage(glowImg('#bcd0ff'), x - 90, cy - 90, 180, 180);
+    const g = ctx.createRadialGradient(x, cy, 4, x, cy, h);
+    g.addColorStop(0, '#fff6d8'); g.addColorStop(.35, '#9fb8ff'); g.addColorStop(1, '#2b2560');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, cy, w, h, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#ffe9a8'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) { const a = t * 1.6 + i * 2.1; ctx.beginPath(); ctx.ellipse(x, cy, w * .7, h * .7, 0, a, a + 1.2); ctx.stroke(); }
+    ctx.fillStyle = '#fff'; for (let i = 0; i < 6; i++) { const a = t * .9 + i, r = h * (.3 + .1 * (i % 3)); ctx.globalAlpha = .5 + .5 * Math.sin(t * 3 + i); ctx.fillRect(x + Math.cos(a) * w * .55, cy + Math.sin(a) * r, 2, 2); }
+    ctx.globalAlpha = 1;
+    if (k >= 1) {
+      const bob = Math.sin(t * 3) * 3; ctx.font = `700 22px ${HAND}`; ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(15,10,35,.55)'; ctx.fillText('Home', x + 1, cy - h - 12 + bob + 1);
+      ctx.fillStyle = '#fff3c4'; ctx.fillText('Home', x, cy - h - 12 + bob);
+      // when the door is off screen, a small sign at the edge points back to it
+      const left = camX + 26, right = camX + VW - 26;
+      if (x < left || x > right) {
+        const ax = x < left ? left : right, dir = x < left ? -1 : 1, ay = cat.y - 120;
+        ctx.fillStyle = 'rgba(255,243,196,.92)'; ctx.beginPath(); ctx.moveTo(ax + dir * 14, ay); ctx.lineTo(ax - dir * 6, ay - 12); ctx.lineTo(ax - dir * 6, ay + 12); ctx.closePath(); ctx.fill();
+        ctx.font = `700 18px ${HAND}`; ctx.textAlign = dir < 0 ? 'left' : 'right'; ctx.fillText('Home', ax - dir * 10, ay - 18);
+      }
+    }
+    ctx.restore();
+  }
+  function goHome() { if (!allHome || state !== 'play') return; initAudio(); sfx('ui', 'start'); beginStoryEnding(); }
   function beginStoryEnding() {
     if (state !== 'play') return;
     state = 'ending'; endT = 1.1; announce(moonHollow() ? 'The sun is up. Every feeling is home!' : 'All feelings found!', GOLD, 1.2);
@@ -1627,7 +1679,7 @@
     lives = 3; checkpointX = currentLevel.catStart ?? 200; fallDimT = 0; respawnT = 0; pitTipShown = false; edgeSoundAt = 0; pendingFallFail = false; jumpHeld = false;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
-    workshopRun = [];
+    workshopRun = []; allHome = false; portal = null;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
     scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false; breathTipShown = false;
     const buryStyle = BURY_SPOTS[currentMapKey()];
@@ -1861,7 +1913,7 @@
     if (window.TCSfx) sfx('caught', m.type); else { tone(f, .18, 'triangle', .09); setTimeout(() => tone(f * 1.5, .22, 'sine', .07), 70); }
     if (mode === 'story' && Object.entries(need).every(([type, count]) => got[type] >= count) && state === 'play') {
       if (nightGuide.active) { nightGuide.pendingWin = true; if (nightGuide.step === 8 && nightGuide.success <= 0) onTutorialAction('home', m); }
-      else beginStoryEnding();
+      else reachAllHome();
     }
   }
 
@@ -1872,6 +1924,7 @@
       if (c.fallTime >= .38) {
         c.falling = false; c.respawning = true; c.swinging = null; c.platform = null;
         if (mode === 'story' && !gentleMode) { lives = Math.max(0, lives - 1); sfx('ui', 'lifeLost'); }
+        if (mode === 'story' && !gentleMode && lives <= 0 && allHome) { lives = 1; c.respawning = true; respawnT = .5; fallDimT = .5; beginStoryEnding(); return; }
         if (mode === 'story' && !gentleMode && lives <= 0) {
           // Catches already recorded in the Mood Book remain banked; this run's carried lights do not.
           trail = []; got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); glowRun = 0; pendingFallFail = true;
@@ -2262,7 +2315,7 @@
     if (activeItems.sand && state === 'play' && t > 2.6) { activeItems.sand = false; burst(cat.x - cat.face * 8, cat.y - 50, GOLD, 14); float(cat.x, cat.y - 78, '⏳ The sand poured into your clock', GOLD); }
     for (const m of mood) updMood(m, purrT > 0 && Math.abs(m.x - cat.x) < 6 * T ? dt * .4 : dt);
     updFireflies(dt);
-    updHazards(dt); updTrinkets(dt);
+    updHazards(dt); updTrinkets(dt); updPortal(dt);
     checkCatches();
     mood = mood.filter(m => !m.dead);
     for (const r of respawnQ) r.at -= dt;
@@ -2287,7 +2340,7 @@
       }
       const sec = Math.ceil(timeLeft);
       if (sec <= 10 && sec < lastTick) { lastTick = sec; if (window.TCSfx) sfx('ui', sec <= 3 ? 'urgent' : 'countdown'); else tone(sec <= 3 ? 1200 : 880, .06, 'square', .03); }
-      if (timeLeft <= 0 && !pendingFallFail) { timeLeft = 0; sfx('ui', 'timeup'); finish(false); }
+      if (timeLeft <= 0 && !pendingFallFail) { timeLeft = 0; if (allHome) beginStoryEnding(); else { sfx('ui', 'timeup'); finish(false); } }
     } else if (state === 'ending') {
       endT -= dt; if (endT <= 0) finish(true);
     }
@@ -3631,6 +3684,31 @@
       ctx.beginPath(); ctx.moveTo(cx - 9, cy + 1); ctx.lineTo(cx - 4, cy + 6); ctx.lineTo(cx + 6, cy - 7); ctx.stroke(); ctx.restore();
     }
   }
+  // "Found" strip under the counters: trinkets picked up this run and Thiri's keepsakes on this night.
+  // It can be turned off in Settings (Show items found).
+  let showItemsHud = (() => { try { return localStorage.getItem('mk-show-items') !== '0'; } catch (e) { return true; } })();
+  function drawItemsFound(yTop) {
+    if (!showItemsHud) return;
+    const parts = [];
+    if (trinkets.length) parts.push({ kind: 't', text: `${trinkets.filter(k => k.taken).length}/${trinkets.length}` });
+    if (mode === 'story' && keepsakeTotal(storyNight)) parts.push({ kind: 'k', text: `${keepsakesFound(storyNight)}/${keepsakeTotal(storyNight)}` });
+    if (!parts.length) return;
+    ctx.save();
+    ctx.font = `700 12px ${BODY}`; const lw = ctx.measureText('FOUND').width + 10;
+    ctx.font = `700 19px ${HAND}`;
+    const widths = parts.map(p => 28 + ctx.measureText(p.text).width + 12), w = lw + widths.reduce((a, b) => a + b, 0) + 14, h = 30, x = VW - 22 - w, y = yTop;
+    sbPaper(x, y, w, h, .015, PAPER2);
+    ctx.font = `700 12px ${BODY}`; ctx.textAlign = 'left'; ctx.fillStyle = SB_INK2; ctx.fillText('FOUND', x + 10, y + h / 2 + 4);
+    let cx = x + 10 + lw;
+    parts.forEach((p, i) => {
+      const cy = y + h / 2;
+      if (p.kind === 't') drawTrinket('button', cx + 10, cy, ctx);
+      else { const [, c] = KEEPSAKE_ART[currentMapKey()] || KEEPSAKE_ART.free; ctx.save(); ctx.translate(cx + 10, cy); ctx.scale(.85, .85); drawKeepsake(currentMapKey(), 0, 0, c); ctx.restore(); }
+      ctx.font = `700 19px ${HAND}`; ctx.textAlign = 'left'; ctx.fillStyle = SB_INK; ctx.fillText(p.text, cx + 24, cy + 6);
+      cx += widths[i];
+    });
+    ctx.restore();
+  }
   function drawHUD() {
     if (state === 'menu') return;
     const top = 16 - Math.min(0, OY);
@@ -3720,11 +3798,13 @@
       ctx.font = `700 12px ${BODY}`; ctx.textAlign = 'right'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(12,8,28,.7)'; ctx.fillStyle = '#f6eedc';
       const hl = `${hourOf(storyNight).toUpperCase()} · ${chapterFor(storyNight).name.toUpperCase()}`, hy = top + (compactNeeds ? 96 : 72);
       ctx.strokeText(hl, VW - 22, hy); ctx.fillText(hl, VW - 22, hy);
+      drawItemsFound(hy + 8);
     } else {
       ctx.textAlign = 'right'; ctx.font = `800 28px ${DISP}`; ctx.fillStyle = INK;
       ctx.fillText(`${caughtN} caught`, VW - 22, top + 34);
       ctx.font = `600 13px ${BODY}`; ctx.fillStyle = VIOLET;
       ctx.fillText(`FREE MODE · LEVEL ${level + 1}`, VW - 22, top + 58);
+      drawItemsFound(top + 66);
     }
     if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
@@ -3764,7 +3844,7 @@
     if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
     ctx.save(); ctx.translate(-camX, 0);
-    drawWorld(); drawHazards(); drawTrinkets(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
+    drawWorld(); drawHazards(); drawTrinkets(); drawPortal(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); drawLevelDebug();
     ctx.restore();
     if (eyesT > 0) {
@@ -4065,6 +4145,8 @@
     initAudio(); glow += SHELF_BONUS; saveUpg(); sfx('ui', 'reward'); renderShelf(); refreshShopBtns();
   });
   $('#roomShelfBtn')?.addEventListener('click', openShelf);
+  $('#showItemsToggle')?.addEventListener('change', e => { showItemsHud = e.target.checked; try { localStorage.setItem('mk-show-items', showItemsHud ? '1' : '0'); } catch (err) {} });
+  $('#settingsBtn').addEventListener('click', () => { const tg = $('#showItemsToggle'); if (tg) tg.checked = showItemsHud; });
   $('#shelfBack').addEventListener('click', () => { $('#shelfScreen').hidden = true; showMainMenu(true); });
   function openShop(from) {
     music('play', 'menu'); music('ambience', 'menu');
@@ -5700,12 +5782,15 @@
     else showMainMenu(true);
   });
 
+  const goHomeBtn = document.getElementById('goHomeBtn');
+  goHomeBtn?.addEventListener('click', goHome);
   let last = performance.now();
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(.033, (now - last) / 1000); last = now;
     if (document.hidden) return;
     pauseBtn.hidden = state !== 'play';
+    if (goHomeBtn) goHomeBtn.hidden = true;   // going home is now done by walking into the moon door
     if (mobileLandscapeRequired && !orientationGate.hidden) return;
     if (state === 'intro' || state === 'awakening') { t += dt; return; }
     if (state === 'play' || state === 'ending') {
