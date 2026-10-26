@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 <link rel="stylesheet" href="css/heart.css?v=20261024-heart-depth">
-<link rel="stylesheet" href="css/sketchbook.css?v=sb8">
+<link rel="stylesheet" href="css/sketchbook.css?v=sb9">
 </head>
 <body>
 <canvas id="game" aria-label="TideCatcher prototype game" hidden></canvas>
@@ -201,6 +201,7 @@
       <button class="rh-spot" id="freeBtn" type="button" style="--x:85.95%;--y:5.48%;--w:11.70%;--h:33.72%;--tx:50.0%;--ty:84%" aria-label="Free Play: wander the places you have found"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Free Play</b><i>A moonlit wander</i></span></button>
       <button class="rh-spot" id="bookBtn" type="button" style="--x:34.50%;--y:46.09%;--w:10.75%;--h:9.92%;--tx:49.8%;--ty:5.9%" aria-label="Mood Book: every feeling brought home"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Mood Book</b><i><span id="bookBtnValue">0 / 17 found</span></i></span></button>
       <button class="rh-spot" id="shopBtn" type="button" style="--x:82.40%;--y:48.31%;--w:10.55%;--h:22.87%;--tx:50.2%;--ty:13.3%" aria-label="Shop: treats and upgrades"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Treat box</b><i><span id="shopBtnValue">0 Glow</span></i></span></button>
+      <button class="rh-spot" id="roomShelfBtn" type="button" style="--x:6.75%;--y:25.09%;--w:10.50%;--h:9.92%;--tx:50.0%;--ty:12.9%" aria-label="Thiri's shelf: the keepsakes you have found"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b><span class="sb-girl">Thiri</span>’s shelf</b><i id="shelfCount">0 / 0 keepsakes</i></span></button>
       <button class="rh-spot" id="roomHelpBtn" type="button" style="--x:44.00%;--y:29.17%;--w:10.70%;--h:14.59%;--tx:50.0%;--ty:9.6%" aria-label="How to play"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>How to play</b><i>Notes on the corkboard</i></span></button>
       <button class="rh-spot" id="roomBedBtn" type="button" style="--x:4.75%;--y:44.92%;--w:22.25%;--h:29.17%;--tx:37.5%;--ty:7.6%" aria-label="Change names or cat"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b><span class="sb-girl">Thiri</span></b><i>Asleep</i></span></button>
      </div>
@@ -347,6 +348,16 @@
   </div>
 </div>
 
+<div class="overlay" id="shelfScreen" hidden role="dialog" aria-modal="true" aria-labelledby="shelfTitle">
+  <div class="panel wide">
+    <p class="eyebrow"><span class="sb-girl">Thiri</span>’s shelf</p>
+    <h1 id="shelfTitle">Keepsakes</h1>
+    <p>Every keepsake <span class="sb-cat">Shwe</span> finds on the Night Side goes back on her shelf. Find a whole hour’s set for a bonus.</p>
+    <div class="shop shelf-list" id="shelfList"></div>
+    <button class="btn ghost" id="shelfBack">Back</button>
+  </div>
+</div>
+
 <div class="overlay" id="bookScreen" hidden>
   <div class="panel wide">
     <p class="eyebrow"><span class="sb-girl">Thiri</span>’s feelings</p>
@@ -377,7 +388,7 @@
 <script src="js/tc-game-audio.js?v=5a66f4ed7efc"></script>
 <script src="js/heart-data.js?v=20261024-heart-town"></script>
 <script src="js/heart-ui.js?v=20261024-heart-depth"></script>
-<script src="js/game.js?v=20261026-merge-fix"></script>
+<script src="js/game.js?v=20261026-pouch"></script>
 <script src="js/cozy-ui.js?v=f6823dfb3d93"></script>
 <script src="js/sketchbook.js?v=sb5"></script>
 <script src="js/afterstory.js?v=as2"></script>

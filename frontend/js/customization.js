@@ -22,15 +22,15 @@ function mkGetSprite(key) {
 /* Cat animation rig: each sprite is cut into body, tail, back legs and front legs,
    which bend separately to make walk, jump, pounce, scratch and idle poses. */
 var MK_RIGS = {
-  ginger: { hip: .750, split: .519, tailW: .318, tailH: .628, tailAmp: .75 },
-  burmese: { hip: .725, split: .452, tailW: .286, tailH: .576, tailAmp: 1 },
-  siamese: { hip: .706, split: .469, tailW: .304, tailH: .547, tailAmp: 1 },
+  ginger: { hip: .750, split: .519, tailW: .318, tailH: .628, tailAmp: .75, low: 0.565 },
+  burmese: { hip: .725, split: .452, tailW: .286, tailH: .576, tailAmp: 1, low: 0.562 },
+  siamese: { hip: .706, split: .469, tailW: .304, tailH: .547, tailAmp: 1, low: 0.521 },
   persian: { hip: .793, split: .462, tailW: .333, tailH: .647, tailAmp: .6 },
   mainecoon: { hip: .750, split: .519, tailW: .318, tailH: .628, tailAmp: .75 },
-  ragdoll: { hip: .795, split: .433, tailW: .300, tailH: .608, tailAmp: .75 },
-  british: { hip: .793, split: .490, tailW: .283, tailH: .517, tailAmp: .9 },
-  bengal: { hip: .725, split: .457, tailW: .284, tailH: .614, tailAmp: 1 },
-  sphynx: { hip: .713, split: .488, tailW: .285, tailH: .670, tailAmp: 1 }
+  ragdoll: { hip: .795, split: .433, tailW: .300, tailH: .608, tailAmp: .75, low: 0.521 },
+  british: { hip: .793, split: .490, tailW: .283, tailH: .517, tailAmp: .9, low: 0.597 },
+  bengal: { hip: .725, split: .457, tailW: .284, tailH: .614, tailAmp: 1, low: 0.534 },
+  sphynx: { hip: .713, split: .488, tailW: .285, tailH: .670, tailAmp: 1, low: 0.580 }
 };
 function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   var spr = mkGetSprite(key), r = MK_RIGS[key];
@@ -38,15 +38,22 @@ function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   var sw = spr.naturalWidth, sh = spr.naturalHeight, kx = dw / sw, ky = dh / sh;
   var hipS = Math.round(sh * r.hip), splitS = Math.round(sw * r.split);
   var tW = Math.round(sw * r.tailW), tH = Math.round(sh * r.tailH);
-  var legS = sh - hipS, dHip = hipS * ky, dLeg = legS * ky;
+  var legS = sh - hipS, dHip = hipS * ky;
   function piece(sx, sy, sW, sH) { g.drawImage(spr, sx, sy, sW, sH, dx + sx * kx, dy + sy * ky, sW * kx, sH * ky); }
   // legs first (behind the body edge), with a static belly patch to hide the gap between them
   var mid0 = Math.max(0, splitS - Math.round(sw * .08)), mid1 = Math.min(sw, splitS + Math.round(sw * .08));
   piece(mid0, hipS, mid1 - mid0, Math.round(legS * .22));
-  [[0, splitS, pose.back || 0], [splitS, sw - splitS, pose.front || 0]].forEach(function (p) {
-    g.save(); g.translate(dx + p[0] * kx, dy + dHip); g.transform(1, 0, p[2], 1, 0, 0);
-    g.drawImage(spr, p[0], hipS, p[1], legS, 0, 0, p[1] * kx, dLeg); g.restore();
-  });
+  // Below the belly the far hind leg can cross the split line; there the legs are cut at r.low
+  // (the gap between that leg and the front legs) so no piece of a paw moves with the wrong leg.
+  var footS = hipS + Math.round(legS * .22), lowS = r.low ? Math.round(sw * r.low) : splitS;
+  function legPart(x0, x1, sy, sH, shear) {
+    if (x1 <= x0 || sH <= 0) return;
+    g.save(); g.translate(dx + x0 * kx, dy + dHip); g.transform(1, 0, shear, 1, 0, 0);
+    g.drawImage(spr, x0, sy, x1 - x0, sH, 0, (sy - hipS) * ky, (x1 - x0) * kx, sH * ky); g.restore();
+  }
+  // the lower parts start a few pixels higher, so no hairline shows where the two cuts meet
+  legPart(0, splitS, hipS, footS - hipS, pose.back || 0); legPart(0, lowS, footS - 4, sh - footS + 4, pose.back || 0);
+  legPart(splitS, sw, hipS, footS - hipS, pose.front || 0); legPart(lowS, sw, footS - 4, sh - footS + 4, pose.front || 0);
   // upper body (breathes from the hip line), then the tail swaying from its base
   g.save(); g.translate(0, dy + dHip); g.scale(1, 1 + (pose.breath || 0)); g.translate(0, -(dy + dHip));
   piece(tW, 0, sw - tW, hipS + 1);

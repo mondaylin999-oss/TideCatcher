@@ -1270,6 +1270,134 @@
     else { ctx.fillStyle = c; ctx.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 4.2 : 10, a = -Math.PI / 2 + i * Math.PI / 5; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(160,120,60,.7)'; ctx.lineWidth = 1; ctx.stroke(); }
     ctx.restore();
   }
+  // ---------- Night trinkets and Shwe's pouch ----------
+  // Little things to sell. A few turn up in every run (not just once, unlike Thiri's keepsakes).
+  // They reach the pouch only when the night ends well; a failed night drops them.
+  // The pouch holds 12; trinkets are sold for Glow at the Treat box (shop, Pouch tab).
+  const TRINKETS = {
+    button: { name: 'Lost button', glow: 5, c: '#c9a2ff', w: 20 },
+    pebble: { name: 'Shiny pebble', glow: 5, c: '#bcd3e6', w: 20 },
+    feather: { name: 'Soft feather', glow: 6, c: '#f4efff', w: 20 },
+    cap: { name: 'Bottle cap', glow: 10, c: '#ff8f6b', w: 15 },
+    ribbon: { name: 'Ribbon scrap', glow: 12, c: '#ff9ab8', w: 15 },
+    goldbutton: { name: 'Golden button', glow: 30, c: '#ffd25a', w: 10 }
+  };
+  const POUCH_SIZE = 12;
+  let pouch = (() => { try { const a = JSON.parse(localStorage.getItem('mk-pouch') || '[]'); return Array.isArray(a) ? a.filter(k => TRINKETS[k]).slice(0, POUCH_SIZE) : []; } catch (e) { return []; } })();
+  function savePouch() { try { localStorage.setItem('mk-pouch', JSON.stringify(pouch)); } catch (e) {} }
+  let trinkets = [], trinketRun = [], lastTrinkets = null, pouchFullAt = -9;
+  function pickTrinket(rare) {
+    if (rare) return 'goldbutton';
+    const keys = Object.keys(TRINKETS), total = keys.reduce((n, k) => n + TRINKETS[k].w, 0);
+    let r = Math.random() * total;
+    for (const k of keys) { r -= TRINKETS[k].w; if (r <= 0) return k; }
+    return 'button';
+  }
+  function initTrinkets() {
+    trinkets = []; trinketRun = [];
+    const n = mode === 'free' ? 4 : 5, xs = [];
+    const plats = activePlats.filter(p => p.type !== 'crumbling' && p.type !== 'moving' && p[2] >= 60);
+    for (let i = 0; i < n; i++) {
+      const onPlat = plats.length > 0 && i % 2 === 1;   // every other one sits up on a ledge, a little harder to reach
+      let x, y;
+      if (onPlat) { const p = plats[Math.floor(Math.random() * plats.length)]; x = p[0] + 20 + Math.random() * (p[2] - 40); y = p[1] - 26; }
+      else { x = safeLevelX(300 + (WORLD - 600) * ((i + .3 + Math.random() * .4) / n)); y = terrainY(x) - 26; }
+      if (xs.some(v => Math.abs(v - x) < 140) || keepsakes.some(k => Math.abs(k.x - x) < 120)) continue;
+      xs.push(x);
+      trinkets.push({ x, y, type: pickTrinket(onPlat && Math.random() < .35), bob: Math.random() * 6, got: 0, taken: false });
+    }
+  }
+  function updTrinkets(dt) {
+    for (const k of trinkets) {
+      k.got = Math.max(0, k.got - dt);
+      if (k.taken || Math.abs(cat.x - k.x) >= 34 || Math.abs(cat.y - 28 - k.y) >= 48) continue;
+      if (pouch.length + trinketRun.length >= POUCH_SIZE) {
+        if (t - pouchFullAt > 3) { pouchFullAt = t; float(k.x, k.y - 40, 'Pouch full · sell some at the Treat box', '#ffb3c0'); }
+        continue;
+      }
+      const info = TRINKETS[k.type];
+      k.taken = true; k.got = 1; trinketRun.push(k.type);
+      burst(k.x, k.y, info.c, k.type === 'goldbutton' ? 22 : 12);
+      tone(k.type === 'goldbutton' ? 1175 : 880, .12, 'sine', .04);
+      float(k.x, k.y - 40, `${info.name} · pouch ${pouch.length + trinketRun.length}/${POUCH_SIZE}`, info.c);
+    }
+  }
+  function drawTrinket(type, x, y, g = ctx) {
+    g.save(); g.translate(x, y); g.lineJoin = 'round';
+    g.strokeStyle = 'rgba(43,37,71,.85)'; g.lineWidth = 1.5; g.fillStyle = TRINKETS[type].c;
+    if (type === 'button' || type === 'goldbutton') {
+      g.beginPath(); g.arc(0, 0, 8, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = 'rgba(43,37,71,.75)';
+      for (const [a, b] of [[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]]) { g.beginPath(); g.arc(a, b, 1.3, 0, 7); g.fill(); }
+    } else if (type === 'pebble') {
+      g.beginPath(); g.ellipse(0, 0, 9, 6.5, -.3, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.ellipse(-3, -2, 2.5, 1.4, -.3, 0, 7); g.fill();
+    } else if (type === 'feather') {
+      g.rotate(-.6); g.beginPath(); g.ellipse(0, 0, 4.5, 11, 0, 0, 7); g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(0, -11); g.lineTo(0, 13); g.stroke();
+    } else if (type === 'cap') {
+      g.beginPath(); for (let i = 0; i < 16; i++) { const r = i % 2 ? 7 : 8.6, a = i * Math.PI / 8; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(0, 0, 4, 0, 7); g.fill();
+    } else {
+      g.beginPath(); g.moveTo(-10, -4); g.quadraticCurveTo(0, -9, 10, -4); g.lineTo(8, 4); g.quadraticCurveTo(0, 0, -8, 4); g.closePath(); g.fill(); g.stroke();
+    }
+    g.restore();
+  }
+  function drawTrinkets() {
+    const x0 = camX - 60, x1 = camX + VW + 60;
+    for (const k of trinkets) {
+      if (k.x < x0 || k.x > x1 || (k.taken && k.got <= 0)) continue;
+      const y = k.y + Math.sin(t * 2.6 + k.bob) * 2.5 - (k.taken ? (1 - k.got) * 30 : 0);
+      ctx.globalAlpha = k.taken ? k.got : 1;
+      if (k.type === 'goldbutton') ctx.drawImage(glowImg(TRINKETS.goldbutton.c), k.x - 26, y - 26, 52, 52);
+      else if (Math.sin(t * 3 + k.bob) > .9) { ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.beginPath(); ctx.arc(k.x + 7, y - 7, 1.8, 0, 7); ctx.fill(); }
+      drawTrinket(k.type, k.x, y);
+      ctx.globalAlpha = 1;
+    }
+  }
+  function drawTrinketIcon(cv) {
+    const g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height);
+    g.save(); g.scale(cv.width / 28, cv.height / 28); drawTrinket(cv.dataset.t, 14, 14, g); g.restore();
+  }
+  // ---------- Thiri's shelf: every keepsake found goes back on her shelf ----------
+  const SHELF_BONUS = 100;
+  let shelfClaimed = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-shelf-claimed') || '[]')); } catch (e) { return new Set(); } })();
+  function keepsakeIds(night) {
+    const L = window.TC_LEVELS?.[night]; if (!L) return [];
+    const ids = (L.keepsakes || []).map((_, i) => `n${night}-${i}`);
+    if (!(chapterFor(night)?.feelingsNeeded?.B)) ids.push(`n${night}-dig`);
+    return ids;
+  }
+  function shelfTotals() {
+    let have = 0, all = 0;
+    for (let n = 1; n <= 7; n++) { const ids = keepsakeIds(n); all += ids.length; have += ids.filter(id => foundKeeps.has(id)).length; }
+    return { have, all };
+  }
+  function drawKeepIcon(cv) {
+    const main = ctx; ctx = cv.getContext('2d');
+    try { ctx.clearRect(0, 0, cv.width, cv.height); ctx.save(); ctx.scale(cv.width / 30, cv.height / 30); drawKeepsake(cv.dataset.map, 15, 15, cv.dataset.c); ctx.restore(); } finally { ctx = main; }
+  }
+  function renderShelf() {
+    const rows = [];
+    for (let n = 1; n <= 7; n++) {
+      const ids = keepsakeIds(n); if (!ids.length) continue;
+      const map = window.TC_LEVELS[n]?.map || 'free', [name, c] = KEEPSAKE_ART[map] || KEEPSAKE_ART.free;
+      const have = ids.filter(id => foundKeeps.has(id)).length, done = have === ids.length, claimed = shelfClaimed.has(`n${n}`);
+      const side = done ? (claimed ? '<button class="buy" disabled>Set complete ✓</button>' : `<button class="buy" data-shelf="${n}">Claim +${SHELF_BONUS} Glow</button>`) : `<span class="shelf-count">${have} / ${ids.length}</span>`;
+      const icons = ids.map(id => `<canvas class="keep-ico${foundKeeps.has(id) ? '' : ' missing'}" data-map="${map}" data-c="${c}" width="48" height="48" aria-hidden="true"></canvas>`).join('');
+      rows.push(`<div class="item shelf-row${done ? ' done' : ''}"><h3>${hourOf(n)} · ${chapterFor(n).name}</h3><div class="side">${side}</div><p class="shelf-icons">${icons}</p><p>${name[0].toUpperCase() + name.slice(1)}s · ${have} of ${ids.length} found${done ? '' : '. Look closer, or open Night Eyes.'}</p></div>`);
+    }
+    let eh = 0, ea = 0;
+    for (let n = 8; n <= 50; n++) { const ids = keepsakeIds(n); ea += ids.length; eh += ids.filter(id => foundKeeps.has(id)).length; }
+    if (ea) rows.push(`<div class="item shelf-row"><h3>Endless Nights</h3><div class="side"><span class="shelf-count">${eh} / ${ea}</span></div><p>Keepsakes found on the Endless routes.</p></div>`);
+    $('#shelfList').innerHTML = rows.join('');
+    document.querySelectorAll('#shelfList canvas.keep-ico').forEach(drawKeepIcon);
+  }
+  function openShelf() {
+    music('play', 'menu'); music('ambience', 'menu');
+    $('#startScreen').hidden = true; renderShelf(); $('#shelfScreen').hidden = false; $('#shelfScreen').scrollTop = 0; $('#shelfBack').focus({ preventScroll: true });
+  }
+
   const BURY_SPOTS = {
     school: { kind: 'school supplies', label: 'book pile', labelMarked: 'marked book pile', labels: ['book pile', 'school bag', 'lost-and-found box'], xs: [100, 550, 850, 1200, 1770, 2630, 3000, 3440, 3720], draw: drawSchoolBurySpot, debris: [{ shape: 'paper', color: '#f4dce8' }, { shape: 'paper', color: '#fff0bd' }, { shape: 'paper', color: '#b8c9eb' }], glow: '#a8dfff' },
     rooftop: { kind: 'roof finds', label: 'loose tiles', labelMarked: 'marked loose tiles', labels: ['loose tiles', 'folded cloth', 'roof basket'], xs: [], draw: drawRoofBurySpot, debris: [{ shape: 'chip', color: '#b59a92' }, { shape: 'paper', color: '#c9c3d4' }, { shape: 'straw', color: '#b69c79' }], glow: '#f3d9ac' },
@@ -1509,7 +1637,7 @@
     });
     buriedHome = null;
     if (need.B > 0) { buriedHome = rocks[Math.floor(Math.random() * rocks.length)]; buriedHome.marked = true; }
-    initHazards();
+    initHazards(); initTrinkets();
     if (mode === 'free') {
       goldDone = { a: true, b: true }; chaos = true;
       const zones = currentLevel.spawnZones || [[120, WORLD - 120]];
@@ -2134,7 +2262,7 @@
     if (activeItems.sand && state === 'play' && t > 2.6) { activeItems.sand = false; burst(cat.x - cat.face * 8, cat.y - 50, GOLD, 14); float(cat.x, cat.y - 78, '⏳ The sand poured into your clock', GOLD); }
     for (const m of mood) updMood(m, purrT > 0 && Math.abs(m.x - cat.x) < 6 * T ? dt * .4 : dt);
     updFireflies(dt);
-    updHazards(dt);
+    updHazards(dt); updTrinkets(dt);
     checkCatches();
     mood = mood.filter(m => !m.dead);
     for (const r of respawnQ) r.at -= dt;
@@ -3636,7 +3764,7 @@
     if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
     ctx.save(); ctx.translate(-camX, 0);
-    drawWorld(); drawHazards(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
+    drawWorld(); drawHazards(); drawTrinkets(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); drawLevelDebug();
     ctx.restore();
     if (eyesT > 0) {
@@ -3657,6 +3785,10 @@
   function finish(won, failReason = null) {
     if (state === 'over' || state === 'home') return;
     if (won || mode === 'free') window.TCHeart?.bank(workshopRun);
+    // trinkets carried this run are only safe once the night ends well
+    if (won || mode === 'free') { const kept = trinketRun.slice(0, Math.max(0, POUCH_SIZE - pouch.length)); pouch.push(...kept); savePouch(); lastTrinkets = { kept: kept.length, lost: 0 }; }
+    else lastTrinkets = { kept: 0, lost: trinketRun.length };
+    trinketRun = [];
     workshopRun = [];
     state = 'over'; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
@@ -3735,6 +3867,7 @@
     animateHubNumber($('#hubBookValue'), found, n => `${n} / 17`);
     $('#shopBtnValue').textContent = `${glow} Glow`;
     $('#bookBtnValue').textContent = `${found} / 17 found`;
+    { const sc = $('#shelfCount'); if (sc) { const s2 = shelfTotals(); sc.textContent = `${s2.have} / ${s2.all} keepsakes`; } }
     sizeHubCat();
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
     $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
@@ -3868,7 +4001,7 @@
     st.textContent = '.shop-tabs{display:flex;gap:8px;flex-wrap:wrap}.shop-tab{font-family:var(--display);font-weight:800;font-size:15px;border:2px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer}.shop-tab[aria-selected="true"]{background:var(--honey);border-color:var(--honey);color:var(--bg-deep)}.shop-cat{height:44px;width:56px;object-fit:contain;vertical-align:middle;margin-right:8px}.shop-icon{font-size:26px;vertical-align:middle;margin-right:8px}.swatch{display:inline-block;width:26px;height:26px;border-radius:50%;vertical-align:middle;margin-right:8px;border:2px solid rgba(255,255,255,.6)}.item.in-use{border-color:var(--honey)}.item .gear-prev{grid-row:span 3;width:96px;height:88px;object-fit:contain;background:radial-gradient(circle at 50% 60%,rgba(246,196,83,.18),transparent 70%);border-radius:14px}.item:has(.gear-prev){grid-template-columns:auto minmax(0,1fr) auto}.item:has(.gear-prev)>h3,.item:has(.gear-prev)>p{grid-column:2}.item:has(.gear-prev)>.side{grid-column:3;grid-row:1/span 3}.item .gear-prev{grid-column:1;grid-row:1/span 3!important}.pips .pip{width:13px}';
     document.head.appendChild(st);
     const tabs = document.createElement('div'); tabs.className = 'shop-tabs'; tabs.setAttribute('role', 'tablist');
-    [['upgrades', 'Upgrades'], ['cats', 'Cats'], ['items', 'Comfort items'], ['style', 'Style']].forEach(([id, label]) => {
+    [['upgrades', 'Upgrades'], ['cats', 'Cats'], ['items', 'Comfort items'], ['style', 'Style'], ['pouch', 'Pouch']].forEach(([id, label]) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'shop-tab'; b.dataset.tab = id; b.textContent = label; b.setAttribute('role', 'tab');
       b.addEventListener('click', () => { shopTab = id; renderShop(); }); tabs.appendChild(b);
     });
@@ -3878,6 +4011,15 @@
     $('#glowAmt').textContent = glow;
     document.querySelectorAll('.shop-tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === shopTab)));
     const price = (cost, attrs, verb = 'Buy') => `<button class="buy" ${attrs} ${glow < cost ? 'disabled' : ''}>${glow < cost ? '🔒 Can’t afford' : verb} · ${cost} Glow</button>`;
+    if (shopTab === 'pouch') {
+      const counts = {}; pouch.forEach(k => { counts[k] = (counts[k] || 0) + 1; });
+      const total = pouch.reduce((n, k) => n + TRINKETS[k].glow, 0);
+      const slots = Array.from({ length: POUCH_SIZE }, (_, i) => pouch[i]).map(k => k ? `<div class="pouch-slot" title="${TRINKETS[k].name}"><canvas class="trinket-ico" data-t="${k}" width="56" height="56" aria-hidden="true"></canvas><span>${TRINKETS[k].name}</span></div>` : '<div class="pouch-slot empty" aria-hidden="true"></div>').join('');
+      const rows = Object.keys(TRINKETS).filter(k => counts[k]).map(k => `<div class="item"><h3>${TRINKETS[k].name} ×${counts[k]}</h3><div class="side"><button class="buy" data-sell="${k}">Sell one · +${TRINKETS[k].glow} Glow</button></div><p>Worth ${TRINKETS[k].glow} Glow each.</p></div>`).join('');
+      $('#shopList').innerHTML = `<div class="pouch-box"><div class="pouch-slots" aria-label="${pouch.length} of ${POUCH_SIZE} pouch slots used">${slots}</div><p class="pouch-note">${pouch.length} / ${POUCH_SIZE} in the pouch. Trinkets turn up on every night. A night that fails drops the ones you were carrying.</p></div>${rows}${pouch.length ? `<div class="item"><h3>Everything</h3><div class="side"><button class="buy" data-sell="all">Sell all · +${total} Glow</button></div><p>Empty the pouch for ${total} Glow.</p></div>` : '<p class="pouch-note">The pouch is empty. Look out for shiny little things on the way: buttons, pebbles, feathers, bottle caps, ribbons and, now and then, a golden button.</p>'}`;
+      document.querySelectorAll('#shopList canvas.trinket-ico').forEach(drawTrinketIcon);
+      return;
+    }
     if (shopTab === 'cats') {
       $('#shopList').innerHTML = Object.keys(MK_COATS).map(k => {
         const owned = ownedCats.includes(k), using = MK_PROFILE.coat === k, info = CAT_SHOP[k];
@@ -3907,6 +4049,23 @@
       return `<div class="item" data-upgrade="${u.id}"><h3>${u.name}</h3><div class="side"><div class="pips" aria-label="Level ${lv} of ${UPG_MAX}">${Array.from({ length: UPG_MAX }, (_, i) => i).map(i => `<span class="pip${i < lv ? ' on' : ''}"></span>`).join('')}</div>${btn}</div><p>${u.desc}</p><p>Now: ${now}${next}</p></div>`;
     }).join('');
   }
+  // selling trinkets from the pouch, and claiming a full shelf set
+  $('#shopList').addEventListener('click', e => {
+    const b = e.target.closest('button[data-sell]'); if (!b) return;
+    let gain = 0;
+    if (b.dataset.sell === 'all') { gain = pouch.reduce((n, k) => n + TRINKETS[k].glow, 0); pouch = []; }
+    else { const i = pouch.indexOf(b.dataset.sell); if (i < 0) return; gain = TRINKETS[pouch[i]].glow; pouch.splice(i, 1); }
+    initAudio(); glow += gain; saveUpg(); savePouch(); sfx('ui', 'buy');
+    renderShop(); refreshShopBtns(); $('#shopBack').focus({ preventScroll: true });
+  });
+  $('#shelfList').addEventListener('click', e => {
+    const b = e.target.closest('button[data-shelf]'); if (!b) return;
+    const key = `n${b.dataset.shelf}`; if (shelfClaimed.has(key)) return;
+    shelfClaimed.add(key); try { localStorage.setItem('mk-shelf-claimed', JSON.stringify([...shelfClaimed])); } catch (err) {}
+    initAudio(); glow += SHELF_BONUS; saveUpg(); sfx('ui', 'reward'); renderShelf(); refreshShopBtns();
+  });
+  $('#roomShelfBtn')?.addEventListener('click', openShelf);
+  $('#shelfBack').addEventListener('click', () => { $('#shelfScreen').hidden = true; showMainMenu(true); });
   function openShop(from) {
     music('play', 'menu'); music('ambience', 'menu');
     shopFrom = from; $('#startScreen').hidden = true; $('#endScreen').hidden = true;
@@ -3983,6 +4142,8 @@
     }
     if (!R.free && R.newTrails?.length) extra.push(`★ ${totalStars()} stars! You unlocked the ${R.newTrails.join(' and ')} trail in the shop.`);
     if (!R.free && R.night && keepsakeTotal(R.night)) extra.push(`Thiri’s keepsakes on this night: ${keepsakesFound(R.night)}/${keepsakeTotal(R.night)}.`);
+    if (lastTrinkets?.kept) extra.push(`${lastTrinkets.kept} trinket${lastTrinkets.kept > 1 ? 's' : ''} safe in the pouch (${pouch.length}/${POUCH_SIZE}). Sell them at the Treat box.`);
+    if (lastTrinkets?.lost) extra.push(`${lastTrinkets.lost} trinket${lastTrinkets.lost > 1 ? 's were' : ' was'} dropped. They are only safe once the night ends well.`);
     $('#endMissions').textContent = extra.join(' '); $('#endMissions').hidden = !extra.length;
     $('#nightStoryline').hidden = true;
     if (R.free) {
