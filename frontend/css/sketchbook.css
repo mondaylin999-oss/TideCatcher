@@ -477,3 +477,27 @@
 #setupScreen .setup-preview.sb-step-girl .sb-girl-photo{display:block; width:100%; aspect-ratio:10/7; object-fit:cover; border-radius:2px}
 #setupScreen .setup-preview.sb-step-girl .sb-girl-cap{display:block; margin-top:8px; text-align:center; color:var(--sb-ink); font-family:var(--sb-hand); font-weight:700; font-size:24px; line-height:1}
 #setupScreen .setup-preview{margin-top:12px}
+
+/* ==========================================================================
+   Shwe's pouch (shop › Pouch) and Thiri's shelf
+   ========================================================================== */
+#shelfScreen{background:#120d24!important; isolation:isolate}
+#shelfScreen::before,#shelfScreen::after{content:""; position:fixed; inset:-14px; z-index:-1; pointer-events:none; filter:blur(3px);
+  background:linear-gradient(180deg,rgba(18,13,36,.8),rgba(18,13,36,.55) 40%,rgba(18,13,36,.82)),url("../assets/home/room-grey.webp") 30% 55%/cover no-repeat}
+#shelfScreen::after{background:linear-gradient(180deg,rgba(18,13,36,.8),rgba(18,13,36,.55) 40%,rgba(18,13,36,.82)),url("../assets/home/room.webp") 30% 55%/cover no-repeat; opacity:var(--sb-colour)}
+#roomShelfBtn .rh-tag b{color:#c2473f}
+.pouch-box{grid-column:1/-1; padding:14px 16px; background:#efe2c4; border-radius:18px 18px 26px 26px; box-shadow:inset 0 0 0 3px rgba(59,53,80,.25),0 6px 12px rgba(30,20,60,.12)}
+.pouch-slots{display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:8px}
+.pouch-slot{display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 4px; min-height:84px; background:#fffdf6; border-radius:12px; box-shadow:0 2px 4px rgba(30,20,60,.12)}
+.pouch-slot canvas{width:44px; height:44px}
+.pouch-slot span{font:700 11px/1.1 var(--body); color:var(--sb-ink); text-align:center}
+.pouch-slot.empty{background:transparent; border:2.5px dashed rgba(59,53,80,.28); box-shadow:none}
+.pouch-note{grid-column:1/-1; margin:8px 0 0; font-size:13px; color:var(--sb-ink-2)}
+@media (max-height:520px){ .pouch-slots{grid-template-columns:repeat(12,minmax(0,1fr)); gap:4px} .pouch-slot{min-height:0; padding:3px} .pouch-slot span{display:none} .pouch-slot canvas{width:30px; height:30px} }
+.shelf-list{grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr))!important; gap:14px}
+.shelf-row h3{font-family:var(--sb-hand); font-weight:700; font-size:22px!important}
+.shelf-row.done{box-shadow:0 0 0 3px #e0a12a,0 4px 10px rgba(30,20,60,.1)!important}
+.shelf-icons{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0}
+.keep-ico{width:40px; height:40px; background:radial-gradient(circle,#fff3c4 0 40%,transparent 70%); border-radius:50%}
+.keep-ico.missing{filter:grayscale(1) brightness(1.6); opacity:.35; background:none; outline:2px dashed rgba(59,53,80,.35); outline-offset:-4px}
+.shelf-count{font-family:var(--sb-hand); font-weight:700; font-size:24px; color:var(--sb-ink)}
