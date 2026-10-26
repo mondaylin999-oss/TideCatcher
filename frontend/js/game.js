@@ -563,7 +563,7 @@
       if (!pl.active || pl.type === 'sinking' || pl[0] + pl[2] < x0 || pl[0] > x1) continue;
       const x = pl[0], y = pl[1], w = pl[2];
       ctx.fillStyle = '#3a2830';
-      for (const px of [x + 8, x + w / 2 - 3, x + w - 14]) ctx.fillRect(px, y + 8, 6, GROUND - y - 8);
+      if (pl.type !== 'moving') for (const px of [x + 8, x + w / 2 - 3, x + w - 14]) ctx.fillRect(px, y + 8, 6, GROUND - y - 8);
       const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11); wood.addColorStop(0, '#b4876a'); wood.addColorStop(.4, '#7d5444'); wood.addColorStop(1, '#45293a');
       ctx.fillStyle = wood; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 12, 3); ctx.fill();
       ctx.strokeStyle = 'rgba(30,16,26,.5)'; ctx.lineWidth = 1; for (let k = x + 16; k < x + w; k += 18) { ctx.beginPath(); ctx.moveTo(k, y - 1); ctx.lineTo(k, y + 9); ctx.stroke(); }
@@ -2843,8 +2843,10 @@
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
       const x = p[0], y = platformDrawY(p), w = p[2];
+      if (p.type !== 'moving') {
       ctx.fillStyle = '#2a1a20'; ctx.fillRect(x + 10, y + 8, 7, GROUND - y - 8); ctx.fillRect(x + w - 17, y + 8, 7, GROUND - y - 8);
       ctx.strokeStyle = 'rgba(42,26,32,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 14, y + 12); ctx.lineTo(x + w - 14, GROUND - 20); ctx.stroke();
+      }
       const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11);
       wood.addColorStop(0, '#a77a5a'); wood.addColorStop(.4, '#74503e'); wood.addColorStop(1, '#3e2832');
       ctx.fillStyle = wood; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 12, 3); ctx.fill();
@@ -2900,9 +2902,17 @@
     const PARK_DECKS = ['#2fa69a', '#8b6fe0', '#3fb98a'];
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = platformDrawY(p), w = p[2], c = PARK_DECKS[Math.abs(Math.round(x / 97)) % PARK_DECKS.length];
-      ctx.fillStyle = '#6f6aa0'; ctx.fillRect(x + 10, y + 8, 6, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 6, GROUND - y - 8);
-      ctx.fillStyle = 'rgba(200,196,240,.35)'; ctx.fillRect(x + 10, y + 8, 2, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 2, GROUND - y - 8);
+      // colour comes from where the deck starts, so a moving deck keeps one colour while it glides
+      const home = p.type === 'moving' && p.path?.length ? p.path[0][0] : p[0];
+      const x = p[0], y = platformDrawY(p), w = p[2], c = PARK_DECKS[Math.abs(Math.round(home / 97)) % PARK_DECKS.length];
+      if (p.type === 'moving') {
+        // a gliding deck floats on its own: soft glow underneath instead of legs that would slide along the grass
+        ctx.fillStyle = 'rgba(255,233,165,.16)'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + 16, w * .42, 7, 0, 0, 7); ctx.fill();
+        ctx.fillStyle = 'rgba(8,6,18,.3)'; ctx.beginPath(); ctx.ellipse(x + w / 2, terrainY(x + w / 2) - 2, w * .4, 5, 0, 0, 7); ctx.fill();
+      } else {
+        ctx.fillStyle = '#6f6aa0'; ctx.fillRect(x + 10, y + 8, 6, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 6, GROUND - y - 8);
+        ctx.fillStyle = 'rgba(200,196,240,.35)'; ctx.fillRect(x + 10, y + 8, 2, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 2, GROUND - y - 8);
+      }
       ctx.fillStyle = c; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 13, 5); ctx.fill();
       ctx.strokeStyle = 'rgba(10,8,30,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 3, y + 1); ctx.lineTo(x + w - 3, y + 1); ctx.stroke();
@@ -2967,7 +2977,7 @@
     for(const p of activePlats){
       if(!p.active||p[0]+p[2]<x0||p[0]>x1)continue;
       const x=p[0],y=platformDrawY(p),w=p[2];
-      ctx.fillStyle='#2b2636';ctx.fillRect(x+12,y+8,7,GROUND-y-8);ctx.fillRect(x+w-19,y+8,7,GROUND-y-8);
+      if(p.type!=='moving'){ctx.fillStyle='#2b2636';ctx.fillRect(x+12,y+8,7,GROUND-y-8);ctx.fillRect(x+w-19,y+8,7,GROUND-y-8);}
       ctx.fillStyle='#6d6170';ctx.beginPath();canvasRoundRect(ctx,x-3,y-3,w+6,14,3);ctx.fill();
       ctx.fillStyle='#bba9a3';ctx.fillRect(x+3,y-3,w-6,3);
     }
