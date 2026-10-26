@@ -328,7 +328,9 @@
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
   // School hallways use cached architectural variants; playable shelves stay separate.
   const SCHOOL_NIGHTS = [1, 2];
-  const SCHOOL_WALL_H = 474, SCHOOL_TILE_W = 1440, SCHOOL_PARALLAX = .9;
+  const SCHOOL_WALL = new Image();
+  SCHOOL_WALL.src = 'assets/school/hallway-night.webp';
+  const SCHOOL_WALL_W = 2445, SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
   function inSchool() { return (mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school')) || (mode === 'free' && currentLevel?.map === 'school'); }
   function inRooftop() { return mode === 'story' && currentLevel?.map === 'rooftop'; }
   // ---------- Hilltop park map (Night 5) ----------
@@ -2851,10 +2853,7 @@
     for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
-  function drawSchoolWall(alpha = 1, mirrorY = false) {
-    return window.TCSchoolHallways?.draw(ctx, {level:storyNight,cam:camX,width:VW,ground:GROUND,alpha,mirror:mirrorY,parallax:SCHOOL_PARALLAX}) || false;
-  }
-  // Draws a hallway/park picture that repeats along the level, mirrored every other time (no seams).
+  function drawSchoolWall(alpha = 1, mirrorY = false) { return drawPictureLayer(SCHOOL_WALL, SCHOOL_WALL_W, SCHOOL_WALL_H, SCHOOL_PARALLAX, alpha, mirrorY); }
   function drawPictureLayer(IMG, W, H, parallax, alpha = 1, mirrorY = false) {
     if (!IMG.complete || !IMG.naturalWidth) return false;
     const off = camX * parallax;
@@ -2975,27 +2974,70 @@
     for(const spot of scratchSpots){if(spot.x<x0-60||spot.x>x1+60)continue;drawScratchSpot(spot.x,spot.y,spot.moodType,spot);}
     for(const rock of rocks){if(rock.x<x0-80||rock.x>x1+80)continue;drawRockFormation(rock.x,rock.y,rock,rockHoldsFeeling(rock));}
   }
+  const SCHOOL_STRINGS = [[10, 838, 168, 34], [872, 1292, 168, 26], [1328, 1868, 168, 34], [1904, 2440, 168, 30]];   // [x0, x1, y, sag] in picture units
+  const SCHOOL_BULBS = ['#ffb3d1', '#b8f0d8', '#fff0a8', '#d9c4ff', '#a8dcff'];
+  function drawSchoolCute(x0, x1) {
+    const W = SCHOOL_WALL_W, off = camX * SCHOOL_PARALLAX;
+    ctx.save();
+    for (let k = Math.floor(off / W); k * W - off < VW; k++) {
+      const sx = camX + k * W - off, X = px => k % 2 ? sx + W - px : sx + px;
+      SCHOOL_STRINGS.forEach(([a, b, y, sag], si) => {
+        const n = Math.round((b - a) / 26), pts = [];
+        for (let i = 0; i <= n; i++) { const u = i / n; pts.push([X(a + (b - a) * u), y + sag * Math.sin(Math.PI * u)]); }
+        ctx.strokeStyle = 'rgba(40,28,60,.75)'; ctx.lineWidth = 1.6; ctx.beginPath(); pts.forEach(([x, yy], i) => i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy)); ctx.stroke();
+        pts.forEach(([x, yy], i) => {
+          if (i === 0 || i === n || x < x0 - 30 || x > x1 + 30) return;
+          const c = SCHOOL_BULBS[(i + si * 2) % SCHOOL_BULBS.length], tw = .55 + .45 * Math.sin(t * (1.1 + (i % 4) * .35) + i * 1.7 + si);
+          ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .2 * tw;
+          ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, yy + 6, 9, 0, 7); ctx.fill();
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = .6 + .4 * tw;
+          ctx.beginPath(); ctx.ellipse(x, yy + 6, 3.6, 5, 0, 0, 7); ctx.fill();
+          ctx.globalAlpha = 1;
+          // a little paper star hanging from some of the bulbs
+          if ((i + si) % 5 === 2) {
+            const sw = Math.sin(t * 1.3 + i) * .12, hx = x + Math.sin(sw) * 26, hy = yy + 6 + Math.cos(sw) * 26;
+            ctx.strokeStyle = 'rgba(243,236,255,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, yy + 8); ctx.lineTo(hx, hy); ctx.stroke();
+            ctx.fillStyle = (i + si) % 2 ? '#ffd6e8' : '#fff3b8'; star(hx, hy + 5, 5, 7, 3, sw); ctx.fill();
+          }
+        });
+      });
+    }
+    // rainbow paper bunting lower on the wall
+    const FLAGS = ['#ff8fb8', '#ffb877', '#ffe27a', '#8fe0a8', '#7cc6ff', '#b99bff'];
+    for (let k = Math.floor(off / W); k * W - off < VW; k++) {
+      const sx = camX + k * W - off, X = px => k % 2 ? sx + W - px : sx + px;
+      [[18, 820, 236, 22], [1340, 1860, 236, 18]].forEach(([a, b, y, sag]) => {
+        const n = Math.round((b - a) / 30);
+        ctx.strokeStyle = 'rgba(255,240,250,.55)'; ctx.lineWidth = 1.2; ctx.beginPath();
+        for (let i = 0; i <= n; i++) { const u = i / n, x = X(a + (b - a) * u), yy = y + sag * Math.sin(Math.PI * u); i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); }
+        ctx.stroke();
+        for (let i = 0; i < n; i++) {
+          const u = (i + .5) / n, x = X(a + (b - a) * u), yy = y + sag * Math.sin(Math.PI * u);
+          if (x < x0 - 20 || x > x1 + 20) continue;
+          const sway = Math.sin(t * 1.2 + i * .9) * 1.5;
+          ctx.fillStyle = FLAGS[i % FLAGS.length]; ctx.globalAlpha = .9;
+          ctx.beginPath(); ctx.moveTo(x - 10, yy); ctx.lineTo(x + 10, yy); ctx.lineTo(x + sway, yy + 18); ctx.closePath(); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      });
+    }
+    // slow floating sparkles in the air
+    for (let i = 0; i < 26; i++) {
+      const wx = ((i * 397) % 1600) + Math.floor((camX - 300) / 1600) * 1600 + (i % 2 ? 800 : 0), x = wx + Math.sin(t * .4 + i) * 20;
+      if (x < x0 - 20 || x > x1 + 20) continue;
+      const y = 140 + ((i * 131 + t * 9) % 300), a = .35 + .35 * Math.sin(t * 1.6 + i * 2.3);
+      ctx.fillStyle = `rgba(255,240,250,${Math.max(0, a)})`; star(x, y, 4, 3.2, 1.1, t * .5 + i); ctx.fill();
+    }
+    ctx.restore();
+  }
   function drawSchoolWorld(x0, x1) {
     ctx.fillStyle = '#16122a'; ctx.fillRect(x0, -OY - 10, x1 - x0, SCHOOL_WALL_H + OY + 12);
     if (!drawSchoolWall()) { ctx.fillStyle = '#2b2546'; ctx.fillRect(x0, 0, x1 - x0, GROUND); }
+    else drawSchoolCute(x0, x1);
     // glossy hallway floor with a faint reflection of the wall
     const floor = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
     floor.addColorStop(0, '#4a3c63'); floor.addColorStop(.18, '#30284a'); floor.addColorStop(1, '#130f22');
     ctx.fillStyle = floor; ctx.fillRect(x0, GROUND, x1 - x0, VH + OY + 60 - GROUND);
-    // Outdoor passages have stone paving while indoor sections keep the glossy floor.
-    const schoolOffset = camX * SCHOOL_PARALLAX;
-    for (let k = Math.floor(schoolOffset / SCHOOL_TILE_W); k * SCHOOL_TILE_W - schoolOffset < VW; k++) {
-      if (!window.TCSchoolHallways?.outdoorFor(storyNight, k)) continue;
-      const left = camX + k * SCHOOL_TILE_W - schoolOffset + 72;
-      const width = SCHOOL_TILE_W - 144;
-      const paving = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
-      paving.addColorStop(0, '#58616a'); paving.addColorStop(.25, '#3d4552'); paving.addColorStop(1, '#1d2031');
-      ctx.fillStyle = paving; ctx.fillRect(left, GROUND, width, VH + OY + 60 - GROUND);
-      ctx.strokeStyle = 'rgba(199,207,195,.17)'; ctx.lineWidth = 1;
-      for (let x = left + 90; x < left + width; x += 145) {
-        ctx.beginPath(); ctx.moveTo(x, GROUND); ctx.lineTo(x - 28, VH + OY + 60); ctx.stroke();
-      }
-    }
     ctx.save(); ctx.beginPath(); ctx.rect(x0, GROUND, x1 - x0, 110); ctx.clip(); drawSchoolWall(.32, true);
     const fade = ctx.createLinearGradient(0, GROUND, 0, GROUND + 110); fade.addColorStop(0, 'rgba(19,15,34,0)'); fade.addColorStop(1, 'rgba(19,15,34,.95)');
     ctx.fillStyle = fade; ctx.fillRect(x0, GROUND, x1 - x0, 110); ctx.restore();
@@ -3751,7 +3793,7 @@
     }
     if (skyEnabled && skySpawned > 0) {
       const perfectY = top + (combo > 1 ? (compactSky ? 160 : 128) : (compactSky ? 104 : 92));
-      ctx.textAlign = 'left'; ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText(`Perfect skys: ${skyPerfect}`, 22, perfectY);
+      ctx.textAlign = 'left'; ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText(`Perfect skies: ${skyPerfect}`, 22, perfectY);
     }
     {
       let ay = skyEnabled ? top + (combo > 1 ? (compactSky ? 186 : 153) : (compactSky ? 128 : 116)) : top + (combo > 1 ? 132 : 92);
@@ -5524,7 +5566,7 @@
     $('#levelBriefingEyebrow').textContent = `${hourOf(briefingNight).toUpperCase()} · THE NIGHT SIDE`;
     $('#levelBriefingTitle').textContent = chapter.name;
     const visualChapter = window.TCVisualChapters?.forLevel(briefingNight);
-    const hallway = window.TC_LEVELS?.[briefingNight]?.map === 'school' ? window.TCSchoolHallways?.forLevel(briefingNight) : null;
+    const hallway = null;
     $('#levelBriefingSub').textContent = visualChapter ? `${hallway ? hallway.name + ' · ' : ''}${visualChapter.name} · Levels ${visualChapter.first}–${visualChapter.last}. ${visualChapter.description}` : chapter.sub;
     const goal = Object.entries(chapter.feelingsNeeded || {}).map(([type, count]) => `${BRIEFING_FEELING_NAMES[type] || type} ×${count}`).join(' · ');
     $('#levelBriefingGoal').textContent = goal ? `Bring home: ${goal}` : 'Find the little lights that are ready to come home.';
