@@ -1354,7 +1354,7 @@
   function saveFoundTrinkets() { try { localStorage.setItem('mk-trinkets-found', JSON.stringify([...foundTrinkets])); } catch (e) {} }
   function seededRnd(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let r = Math.imul(a ^ (a >>> 15), 1 | a); r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r; return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
   function initTrinkets() {
-    trinkets = []; trinketRun = []; trinketIds = [];
+    trinkets = []; trinketRun = []; trinketIds = []; pouchFullTold = false;
     const story = mode === 'story', rnd = story ? seededRnd(storyNight * 7919 + 17) : Math.random;
     const n = mode === 'free' ? 4 : 5, xs = [];
     const plats = activePlats.filter(p => p.type !== 'crumbling' && p.type !== 'moving' && p[2] >= 60);
@@ -1369,14 +1369,14 @@
       trinkets.push({ x, y, type, id, bob: rnd() * 6, got: 0, taken: gone, gone });
     }
   }
+  function pouchFull() { return pouch.length + trinketRun.length >= POUCH_SIZE; }
+  let pouchFullTold = false;
   function updTrinkets(dt) {
+    if (pouchFull() && !pouchFullTold && trinkets.some(k => !k.taken)) { pouchFullTold = true; announce('Shwe\u2019s pouch is full. Sell trinkets at the Treat box to find more.', '#ffb3c0', 2.6); }
     for (const k of trinkets) {
       k.got = Math.max(0, k.got - dt);
       if (k.taken || Math.abs(cat.x - k.x) >= 34 || Math.abs(cat.y - 28 - k.y) >= 48) continue;
-      if (pouch.length + trinketRun.length >= POUCH_SIZE) {
-        if (t - pouchFullAt > 3) { pouchFullAt = t; float(k.x, k.y - 40, 'Pouch full · sell some at the Treat box', '#ffb3c0'); }
-        continue;
-      }
+      if (pouchFull()) continue;
       const info = TRINKETS[k.type];
       k.taken = true; k.got = 1; trinketRun.push(k.type); if (k.id) (trinketIds || (trinketIds = [])).push(k.id);
       burst(k.x, k.y, info.c, k.type === 'goldbutton' ? 22 : 12);
@@ -1408,7 +1408,8 @@
   function drawTrinkets() {
     const x0 = camX - 60, x1 = camX + VW + 60;
     for (const k of trinkets) {
-      if (k.x < x0 || k.x > x1 || (k.taken && k.got <= 0)) continue;
+      // a full pouch hides the trinkets that are left: they stay for a later night once there is room
+      if (k.x < x0 || k.x > x1 || (k.taken && k.got <= 0) || (!k.taken && pouchFull())) continue;
       const y = k.y + Math.sin(t * 2.6 + k.bob) * 2.5 - (k.taken ? (1 - k.got) * 30 : 0);
       ctx.globalAlpha = k.taken ? k.got : 1;
       if (k.type === 'goldbutton') ctx.drawImage(glowImg(TRINKETS.goldbutton.c), k.x - 26, y - 26, 52, 52);
