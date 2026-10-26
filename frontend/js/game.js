@@ -4854,14 +4854,15 @@
     return csVo.clips[path];
   }
   // When the player chose their own names, lines that say "Thiri" or "Shwe" use a name-free recording
-  // (vo_XX-n.mp3, same line with "she" / "her cat", see assets/audio/voice/NAME-FREE-LINES.md).
-  // If that file is missing, the line shows as text only.
-  const CS_NAMED = { intro: [0, 3, 4, 10, 16, 21], ending: [2, 3, 4, 16] };
-  const csVoPath = (kind, i) => {
-    const line = (kind === 'ending' ? ENDING_LINES : INTRO_LINES)[i] || {}, txt = line.text || '';
-    const custom = (MK_PROFILE.girl !== 'Thiri' && txt.includes('Thiri')) || (MK_PROFILE.cat !== 'Shwe' && txt.includes('Shwe'));
-    return `assets/audio/voice/${kind}/vo_${String(i).padStart(2, '0')}${custom && CS_NAMED[kind].includes(i) ? '-n' : ''}.mp3`;
+  // (vo_XX-n.mp3, "the girl" / "her cat" instead of the name, see assets/audio/voice/NAME-FREE-LINES.md).
+  const CS_NAMED = { intro: { 0: 4.62, 3: 3.93, 4: 2.81, 10: 3.49, 16: .62, 21: 5.06 }, ending: { 2: 4.74, 3: 3.51, 4: 3.54, 16: 2.4 } };   // clip lengths in seconds
+  const csCustomLine = (kind, i) => {
+    if (!(i in CS_NAMED[kind])) return false;
+    const txt = ((kind === 'ending' ? ENDING_LINES : INTRO_LINES)[i] || {}).text || '';
+    return (MK_PROFILE.girl !== 'Thiri' && txt.includes('Thiri')) || (MK_PROFILE.cat !== 'Shwe' && txt.includes('Shwe'));
   };
+  const csVoPath = (kind, i) => `assets/audio/voice/${kind}/vo_${String(i).padStart(2, '0')}${csCustomLine(kind, i) ? '-n' : ''}.mp3`;
+  const csVoInfo = (kind, i) => { const v = CS_VOICE[kind]?.[i]; return v && csCustomLine(kind, i) ? [CS_NAMED[kind][i], v[1], v[2]] : v; };
   function csVoPreload(kind) { CS_VOICE[kind].forEach((v, i) => { if (v[0]) csVoClip(csVoPath(kind, i)); }); }
   function csVoStop() {
     csVo.timers.forEach(clearTimeout); csVo.timers = [];
@@ -4871,7 +4872,7 @@
   // Starts the voice for one line. Returns a tracker the typing and auto-advance read, or null when there is no voice.
   function csVoLine(kind, i, line) {
     csVoStop();
-    const v = CS_VOICE[kind]?.[i], lv = csVoLevel();
+    const v = csVoInfo(kind, i), lv = csVoLevel();
     if (!v || !v[0] || lv <= 0 || reduceVoice) return null;
     const lead = (i === 0 ? 1.4 : .3) + (line.who === 'cat' ? .8 : 0);   // let the meow finish before Shwe speaks
     const vo = { start: performance.now(), lead, dur: v[0] + (v[2] ? .7 : 0), gap: v[1], state: 'wait', endAt: 0 };
@@ -4914,7 +4915,7 @@
     introShot ^= 1;
     const inc = shots[introShot], out = shots[introShot ^ 1];
     inc.src = csImgs[i].src || `assets/${sc.dir || 'intro'}/${sc.img}.webp`; inc.alt = sc.alt;
-    const vv = csVoLevel() > 0 ? CS_VOICE[csKind] || [] : [];   // voiced scenes last as long as their lines take to say
+    const vv = csVoLevel() > 0 ? (CS_VOICE[csKind] || []).map((v, k) => csVoInfo(csKind, k)) : [];   // voiced scenes last as long as their lines take to say
     const dur = CS_LINES.reduce((t, l, k) => l.s !== i ? t : t + (vv[k]?.[0] ? .3 + vv[k][0] + (vv[k][2] ? .7 : 0) + vv[k][1] / 1000 : l.text.length / INTRO_CPS + .9 + l.text.length * .018), 1.5);
     [['--ox', sc.ox], ['--oy', sc.oy], ['--k0', sc.k0], ['--k1', sc.k1], ['--dx', sc.dx], ['--dy', sc.dy], ['--dur', dur.toFixed(1) + 's']]
       .forEach(([k, v]) => inc.style.setProperty(k, v));

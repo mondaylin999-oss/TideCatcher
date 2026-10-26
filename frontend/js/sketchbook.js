@@ -113,8 +113,26 @@
     if (help && !help.dataset.sb) { help.dataset.sb = '1'; help.addEventListener('click', () => document.getElementById('infoBtn')?.click()); }
     if (bed && !bed.dataset.sb) { bed.dataset.sb = '1'; bed.addEventListener('click', () => document.getElementById('profileBtn')?.click()); }
   }
+
+  // ---------- name setup: step 1 asks for HER name, so the photo shows her, not the cat ----------
+  function setupGirl() {
+    const pv = document.querySelector('#setupScreen .setup-preview'), gi = document.getElementById('girlNameInput');
+    if (!pv || !gi) return;
+    let cap = pv.querySelector('.sb-girl-cap');
+    if (!cap) {
+      const ph = document.createElement('img'); ph.className = 'sb-girl-photo'; ph.src = 'assets/home/girl-portrait.webp'; ph.alt = ''; ph.setAttribute('aria-hidden', 'true'); ph.draggable = false;
+      cap = document.createElement('span'); cap.className = 'sb-girl-cap'; cap.setAttribute('aria-hidden', 'true');
+      pv.append(ph, cap);
+      gi.addEventListener('input', setupGirl);
+      const field = gi.closest('.field');
+      if (field) new MutationObserver(setupGirl).observe(field, { attributes: true, attributeFilter: ['hidden'] });
+    }
+    const field = gi.closest('.field');
+    pv.classList.toggle('sb-step-girl', !!field && !field.hidden);
+    cap.textContent = gi.value.trim() || 'Your name';
+  }
   function watch() {
-    refresh(); names(); doodles(); coverTitle(); roomHub();
+    refresh(); names(); doodles(); coverTitle(); roomHub(); setupGirl();
     const hub = document.getElementById('startScreen');
     if (hub) new MutationObserver(refresh).observe(hub, { attributes: true, attributeFilter: ['hidden'] });
     addEventListener('storage', refresh);
