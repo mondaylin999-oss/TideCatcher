@@ -1989,7 +1989,9 @@
     let landed = false, landedOn = null;
     const floorY = terrainY(c.x);
     const pit = pitAt(c.x);
-    if (!pit && c.vy >= 0 && py <= floorY + 4 && c.y >= floorY) { c.y = floorY; landed = true; }
+    // the ground is solid everywhere except the pits; a step up of up to 40px (a steep stone step) is climbed
+    // instead of letting Shwe slip under it and fall through the map
+    if (!pit && c.vy >= 0 && py <= floorY + (wasOn ? 40 : 4) && c.y >= floorY) { c.y = floorY; landed = true; }
     else if (c.vy >= 0) {
       for (const p of activePlats) {
         if (!p.active || p.type === 'swinging') continue;
