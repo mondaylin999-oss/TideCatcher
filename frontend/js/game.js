@@ -3671,55 +3671,19 @@
   }
 
   function drawTrail() {
-    if (!trail.length) return;
-    const T0 = TRAILS[trailPick] || TRAILS.honey, rainbow = !!T0.rainbow;
-    const colAt = (u, a) => rainbow ? `hsla(${(u * 300 + t * 90) % 360},100%,70%,${a})` : `rgba(${T0.c},${a})`;
-    // A soft string: a smooth curve through Shwe and every light, sagging between them and gently swaying.
-    const P = [[cat.x - (cat.face || 1) * 10, cat.y - 30], ...trail.map(l => [l.x, l.y])];
-    const S = [];
-    for (let i = 0; i < P.length - 1; i++) {
-      const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
-      const len = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]), n = Math.max(6, Math.ceil(len / 6));
-      for (let k = 0; k < n; k++) {
-        const u = k / n, u2 = u * u, u3 = u2 * u;
-        let x = .5 * (2 * p1[0] + (-p0[0] + p2[0]) * u + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * u2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * u3);
-        let y = .5 * (2 * p1[1] + (-p0[1] + p2[1]) * u + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * u2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * u3);
-        const bell = Math.sin(Math.PI * u);
-        y += bell * (10 + Math.min(14, len * .12)) + bell * Math.sin(t * 3.2 + i * 1.7 + u * 6) * 5;   // sag + sway
-        S.push([x, y, (i + u) / Math.max(1, P.length - 1)]);
+    if (trail.length > 1) {
+      if (TRAILS[trailPick].rainbow) {
+        // each piece of the trail gets the next colour of the rainbow, slowly shifting
+        ctx.lineWidth = 5; ctx.lineCap = 'round';
+        let px = cat.x, py = cat.y - 34;
+        trail.forEach((l, i) => { ctx.strokeStyle = `hsla(${(i * 40 + t * 90) % 360},90%,70%,.9)`; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(l.x, l.y); ctx.stroke(); px = l.x; py = l.y; });
+      } else {
+        // the original thin string, just a little lighter so it reads on dark maps
+        ctx.strokeStyle = `rgba(${TRAILS[trailPick].c},${trailPick === 'honey' ? .32 : .6})`; ctx.lineWidth = trailPick === 'honey' ? 2.5 : 3; ctx.lineCap = 'round'; ctx.beginPath();
+        ctx.moveTo(cat.x, cat.y - 34); trail.forEach(l => ctx.lineTo(l.x, l.y)); ctx.stroke();
       }
     }
-    S.push([...P[P.length - 1], 1]);
-    const stroke = (w, style, from = 0) => {
-      ctx.lineWidth = w;
-      for (let j = 0; j < S.length - 1; j += 3) {
-        const e = Math.min(S.length - 1, j + 3);
-        ctx.strokeStyle = typeof style === 'function' ? style(S[j][2]) : style;
-        ctx.beginPath(); ctx.moveTo(S[j][0], S[j][1]); for (let q = j + 1; q <= e; q++) ctx.lineTo(S[q][0], S[q][1]); ctx.stroke();
-      }
-    };
-    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.globalCompositeOperation = 'lighter';
-    // Bright enough to read against every map, but softer than the Moodlings and hazards it must not hide.
-    stroke(14, u => colAt(u, .08));
-    stroke(8, u => colAt(u, .16));
-    ctx.globalCompositeOperation = 'source-over';
-    stroke(3.5, u => colAt(u, .85));
-    stroke(1.2, 'rgba(255,255,255,.45)');
-    ctx.globalCompositeOperation = 'lighter';
-    // halos behind the lights
-    trail.forEach((l, i) => {
-      const pulse = .8 + .2 * Math.sin(t * 4 + i * 1.3);
-      ctx.globalAlpha = .4 * pulse; ctx.drawImage(glowImg(rainbow ? `hsl(${((i + 1) / trail.length * 300 + t * 90) % 360},100%,70%)` : col(l.type)), l.x - 36, l.y - 36, 72, 72);
-    });
-    // sparkles running along the string
-    for (let k = 0; k < Math.min(14, S.length / 8); k++) {
-      const idx = Math.floor(((k * 9.7 + t * 18) % S.length + S.length) % S.length), [x, y, u] = S[idx];
-      ctx.globalAlpha = .35 + .3 * Math.sin(t * 5 + k * 2.1); ctx.fillStyle = k % 2 ? '#fff' : colAt(u, 1);
-      star(x, y + Math.sin(t * 5 + k) * 3, 4, 3, 1.1, t * 2 + k); ctx.fill();
-    }
-    ctx.restore();
-    trail.forEach(l => lightShape(l.type, l.x, l.y, 1.12, l.v));
+    trail.forEach(l => lightShape(l.type, l.x, l.y, 1, l.v));
   }
   function drawParts() {
     for (const p of parts) { ctx.globalAlpha = clamp(p.life / p.max, 0, 1); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
