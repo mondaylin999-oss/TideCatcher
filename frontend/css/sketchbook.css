@@ -518,3 +518,12 @@
 #heartScreen .heart-catalog .feeling-face{overflow:visible}
 #heartScreen .heart-stock{grid-auto-rows:max-content}
 #heartScreen .heart-stock button{flex-shrink:0;min-height:max-content}
+/* a feeling you have not discovered yet shows only as a dark silhouette, so the surprise stays */
+#heartScreen .heart-secret{display:contents}
+#heartScreen .heart-secret .feeling-face{filter:brightness(0) opacity(.45)}
+/* Mood Book: Heart Workshop pages */
+#bookScreen .book .book-section{grid-column:1/-1; margin:18px 0 0; font-family:var(--sb-hand); font-size:28px; color:var(--sb-ink); border-bottom:2.5px dashed rgba(59,53,80,.3); padding-bottom:4px}
+#bookScreen .book .book-section small{font-size:18px; color:#6a4ab8; margin-left:8px}
+#bookScreen .entry .book-mood{grid-row:span 4; width:64px; height:64px; overflow:visible}
+#bookScreen .entry .heart-secret{display:contents}
+#bookScreen .book .entry.unknown .heart-secret svg.book-mood{filter:brightness(0); opacity:.22}

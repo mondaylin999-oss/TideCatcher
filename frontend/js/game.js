@@ -4141,6 +4141,20 @@
       if (known) return `<div class="entry" data-feeling="${ty}">${iconSVG(ty, v, true)}<h3>${info.n}</h3>${tag}<p>${info.d}</p><p class="line">${info.line}</p></div>`;
       const hint = info.lock || (info.r === 'Rare' ? `A rare form of ${vinfo(ty, 0).n}. Look for sparkles.` : 'Catch one to fill this page.');
       return `<div class="entry unknown">${iconSVG(ty, v, false)}<h3>???</h3>${tag}<p>${hint}</p></div>`;
+    }).join('') + heartBookPages();
+  }
+  // Feelings made in the Heart Workshop get their own pages after the night Moodlings.
+  function heartBookPages() {
+    const HD = window.TCHeartData, art = window.TCMoodArt; if (!HD || !art) return '';
+    let made = [];
+    try { made = HD.create(localStorage).snapshot().discovered; } catch (e) {}
+    const mixed = HD.feelings.filter(f => f.tier > 0), have = mixed.filter(f => made.includes(f.id)).length;
+    const layer = ['', 'Layer 1', 'Layer 2', 'Deep feeling', 'The final feeling'];
+    $('#bookCount').textContent += ` · ${have} / ${mixed.length} made`;
+    return `<h2 class="book-section">Made in the Heart Workshop <small>${have} / ${mixed.length}</small></h2>` + mixed.map(f => {
+      const tag = `<span class="tag${f.tier >= 3 ? ' rare' : ''}">${layer[f.tier]}</span>`;
+      if (made.includes(f.id)) return `<div class="entry heart-page">${art.svg(f.id, 'book-mood')}<h3>${f.name}</h3>${tag}<p>${HD.byId[f.ingredients[0]].name} + ${HD.byId[f.ingredients[1]].name}</p><p class="line">${f.line}</p></div>`;
+      return `<div class="entry unknown heart-page"><span class="heart-secret">${art.svg(f.id, 'book-mood')}</span><h3>???</h3>${tag}<p>Mix two feelings in the Heart Workshop to find this one.</p></div>`;
     }).join('');
   }
   $('#bookBtn').addEventListener('click', () => { music('play', 'menu'); music('ambience', 'menu'); $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
