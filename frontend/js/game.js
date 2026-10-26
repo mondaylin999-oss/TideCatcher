@@ -165,6 +165,7 @@
     if (e.code === 'KeyK') purrQ = true;
     if (e.code === 'KeyE' || e.code === 'KeyL') eyesQ = true;
     if (e.code === 'KeyS') scratchQ = true;
+    if (e.code === 'KeyH' && state === 'play') { e.preventDefault(); enterPortal(); }
   });
   addEventListener('keyup', e => { keys[e.code] = false; if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) jumpHeld = false; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; scratchHeld = false; jumpHeld = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
@@ -923,13 +924,13 @@
     showTutorialStep(); return true;
   }
   // When every feeling is home the night no longer ends by itself: a moon door opens near Shwe.
-  // The player can keep exploring (trinkets, keepsakes, score) and walk into the door to go home;
+  // The player can keep exploring (trinkets, keepsakes, score) and stand at the door and press H to go home;
   // if the timer runs out first, the night still ends safely.
   let allHome = false, portal = null;
   function reachAllHome() {
     if (allHome || state !== 'play') return;
     allHome = true; sfx('ui', 'reward'); openPortal();
-    announce('All feelings found! A moon door opened. Walk into it when you are ready to go home.', GOLD, 3.6);
+    announce('All feelings found! A moon door opened. Stand in it and press H to go home.', GOLD, 3.6);
     float(cat.x, cat.y - 90, 'Time left still adds +20 points a second', GOLD);
   }
   function openPortal() {
@@ -942,10 +943,10 @@
   function updPortal(dt) {
     if (!portal) return;
     portal.open = Math.min(1, portal.open + dt / .8);
-    if (state === 'play' && portal.open >= 1 && !cat.falling && Math.abs(cat.x - portal.x) < 34 && Math.abs(cat.y - portal.y) < 80) {
-      burst(portal.x, portal.y - 60, '#fff3c4', 36); goHome();
-    }
   }
+  // Shwe has to stand at the moon door and press H (or tap the Go home button) to go through it.
+  function atPortal() { return !!portal && state === 'play' && portal.open >= 1 && !cat.falling && Math.abs(cat.x - portal.x) < 60 && Math.abs(cat.y - portal.y) < 90; }
+  function enterPortal() { if (!atPortal()) return; burst(portal.x, portal.y - 60, '#fff3c4', 36); goHome(); }
   function drawPortal() {
     if (!portal) return;
     const k = portal.open, e = 1 - Math.pow(1 - k, 3), x = portal.x, y = portal.y, w = 34 * e, h = 62 * e, cy = y - 66;
@@ -1339,26 +1340,33 @@
   const POUCH_SIZE = 12;
   let pouch = (() => { try { const a = JSON.parse(localStorage.getItem('mk-pouch') || '[]'); return Array.isArray(a) ? a.filter(k => TRINKETS[k]).slice(0, POUCH_SIZE) : []; } catch (e) { return []; } })();
   function savePouch() { try { localStorage.setItem('mk-pouch', JSON.stringify(pouch)); } catch (e) {} }
-  let trinkets = [], trinketRun = [], lastTrinkets = null, pouchFullAt = -9;
-  function pickTrinket(rare) {
+  let trinkets = [], trinketRun = [], trinketIds = [], lastTrinkets = null, pouchFullAt = -9;
+  function pickTrinket(rare, rnd = Math.random) {
     if (rare) return 'goldbutton';
     const keys = Object.keys(TRINKETS), total = keys.reduce((n, k) => n + TRINKETS[k].w, 0);
-    let r = Math.random() * total;
+    let r = rnd() * total;
     for (const k of keys) { r -= TRINKETS[k].w; if (r <= 0) return k; }
     return 'button';
   }
+  // Story trinkets sit in the same places every time you play a night, and once one is safely
+  // in the pouch it is gone from that night for good. Free mode still scatters new ones each run.
+  let foundTrinkets = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-trinkets-found') || '[]')); } catch (e) { return new Set(); } })();
+  function saveFoundTrinkets() { try { localStorage.setItem('mk-trinkets-found', JSON.stringify([...foundTrinkets])); } catch (e) {} }
+  function seededRnd(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let r = Math.imul(a ^ (a >>> 15), 1 | a); r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r; return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
   function initTrinkets() {
-    trinkets = []; trinketRun = [];
+    trinkets = []; trinketRun = []; trinketIds = [];
+    const story = mode === 'story', rnd = story ? seededRnd(storyNight * 7919 + 17) : Math.random;
     const n = mode === 'free' ? 4 : 5, xs = [];
     const plats = activePlats.filter(p => p.type !== 'crumbling' && p.type !== 'moving' && p[2] >= 60);
     for (let i = 0; i < n; i++) {
       const onPlat = plats.length > 0 && i % 2 === 1;   // every other one sits up on a ledge, a little harder to reach
       let x, y;
-      if (onPlat) { const p = plats[Math.floor(Math.random() * plats.length)]; x = p[0] + 20 + Math.random() * (p[2] - 40); y = p[1] - 26; }
-      else { x = safeLevelX(300 + (WORLD - 600) * ((i + .3 + Math.random() * .4) / n)); y = terrainY(x) - 26; }
+      if (onPlat) { const p = plats[Math.floor(rnd() * plats.length)]; x = p[0] + 20 + rnd() * (p[2] - 40); y = p[1] - 26; }
+      else { x = safeLevelX(300 + (WORLD - 600) * ((i + .3 + rnd() * .4) / n)); y = terrainY(x) - 26; }
       if (xs.some(v => Math.abs(v - x) < 140) || keepsakes.some(k => Math.abs(k.x - x) < 120)) continue;
       xs.push(x);
-      trinkets.push({ x, y, type: pickTrinket(onPlat && Math.random() < .35), bob: Math.random() * 6, got: 0, taken: false });
+      const type = pickTrinket(onPlat && rnd() < .35, rnd), id = story ? `n${storyNight}-t${i}` : null, gone = !!id && foundTrinkets.has(id);
+      trinkets.push({ x, y, type, id, bob: rnd() * 6, got: 0, taken: gone, gone });
     }
   }
   function updTrinkets(dt) {
@@ -1370,7 +1378,7 @@
         continue;
       }
       const info = TRINKETS[k.type];
-      k.taken = true; k.got = 1; trinketRun.push(k.type);
+      k.taken = true; k.got = 1; trinketRun.push(k.type); if (k.id) (trinketIds || (trinketIds = [])).push(k.id);
       burst(k.x, k.y, info.c, k.type === 'goldbutton' ? 22 : 12);
       tone(k.type === 'goldbutton' ? 1175 : 880, .12, 'sine', .04);
       float(k.x, k.y - 40, `${info.name} · pouch ${pouch.length + trinketRun.length}/${POUCH_SIZE}`, info.c);
@@ -3692,22 +3700,23 @@
     };
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.globalCompositeOperation = 'lighter';
-    stroke(22, u => colAt(u, .14));
-    stroke(12, u => colAt(u, .32));
+    // Bright enough to read against every map, but softer than the Moodlings and hazards it must not hide.
+    stroke(14, u => colAt(u, .08));
+    stroke(8, u => colAt(u, .16));
     ctx.globalCompositeOperation = 'source-over';
-    stroke(5, u => colAt(u, 1));
+    stroke(3.5, u => colAt(u, .85));
+    stroke(1.2, 'rgba(255,255,255,.45)');
     ctx.globalCompositeOperation = 'lighter';
-    stroke(2, 'rgba(255,255,255,.9)');
     // halos behind the lights
     trail.forEach((l, i) => {
       const pulse = .8 + .2 * Math.sin(t * 4 + i * 1.3);
-      ctx.globalAlpha = .9 * pulse; ctx.drawImage(glowImg(rainbow ? `hsl(${((i + 1) / trail.length * 300 + t * 90) % 360},100%,70%)` : col(l.type)), l.x - 48, l.y - 48, 96, 96);
+      ctx.globalAlpha = .4 * pulse; ctx.drawImage(glowImg(rainbow ? `hsl(${((i + 1) / trail.length * 300 + t * 90) % 360},100%,70%)` : col(l.type)), l.x - 36, l.y - 36, 72, 72);
     });
     // sparkles running along the string
-    for (let k = 0; k < Math.min(40, S.length / 4); k++) {
+    for (let k = 0; k < Math.min(14, S.length / 8); k++) {
       const idx = Math.floor(((k * 9.7 + t * 18) % S.length + S.length) % S.length), [x, y, u] = S[idx];
-      ctx.globalAlpha = .55 + .45 * Math.sin(t * 7 + k * 2.1); ctx.fillStyle = k % 2 ? '#fff' : colAt(u, 1);
-      star(x, y + Math.sin(t * 5 + k) * 3, 4, k % 3 ? 3.4 : 5, 1.3, t * 2 + k); ctx.fill();
+      ctx.globalAlpha = .35 + .3 * Math.sin(t * 5 + k * 2.1); ctx.fillStyle = k % 2 ? '#fff' : colAt(u, 1);
+      star(x, y + Math.sin(t * 5 + k) * 3, 4, 3, 1.1, t * 2 + k); ctx.fill();
     }
     ctx.restore();
     trail.forEach(l => lightShape(l.type, l.x, l.y, 1.12, l.v));
@@ -3894,6 +3903,12 @@
       ctx.fillText(`FREE MODE · LEVEL ${level + 1}`, VW - 22, top + 58);
       drawItemsFound(top + 66);
     }
+    if (atPortal()) {
+      const bob = Math.sin(t * 4) * 2;
+      ctx.textAlign='center';ctx.font=`800 20px ${DISP}`;ctx.lineWidth=5;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#fff3c4';
+      const msg = touchUI && !touchUI.hidden ? 'Tap  Go home  to go through the moon door' : 'H  Go home through the moon door';
+      ctx.strokeText(msg,VW/2,VH - 104 + bob);ctx.fillText(msg,VW/2,VH - 104 + bob);
+    }
     if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
       const prompt = scratchTarget.type === 'breath' ? (scratchTarget.mood.bphase < .5 ? 'Hold S · breathe in…' : 'Let go · breathe out…') : scratchTarget.type === 'sky' ? 'Scratch it! (S)' : scratchTarget.kind === 'rock' ? `S  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? scratchTarget.rock.labelMarked : scratchTarget.rock.label}` : `S  Scratch ${scratchTarget.caveX != null ? CAVE_LABELS[currentMapKey()] : 'hiding spot'}`, py=VH-74;
@@ -3954,9 +3969,9 @@
     if (state === 'over' || state === 'home') return;
     if (won || mode === 'free') window.TCHeart?.bank(workshopRun);
     // trinkets carried this run are only safe once the night ends well
-    if (won || mode === 'free') { const kept = trinketRun.slice(0, Math.max(0, POUCH_SIZE - pouch.length)); pouch.push(...kept); savePouch(); lastTrinkets = { kept: kept.length, lost: 0 }; }
+    if (won || mode === 'free') { const kept = trinketRun.slice(0, Math.max(0, POUCH_SIZE - pouch.length)); pouch.push(...kept); savePouch(); lastTrinkets = { kept: kept.length, lost: 0 }; trinketIds.slice(0, kept.length).forEach(id => foundTrinkets.add(id)); saveFoundTrinkets(); }
     else lastTrinkets = { kept: 0, lost: trinketRun.length };
-    trinketRun = [];
+    trinketRun = []; trinketIds = [];
     workshopRun = [];
     state = 'over'; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
@@ -5871,14 +5886,14 @@
   });
 
   const goHomeBtn = document.getElementById('goHomeBtn');
-  goHomeBtn?.addEventListener('click', goHome);
+  goHomeBtn?.addEventListener('click', enterPortal);
   let last = performance.now();
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(.033, (now - last) / 1000); last = now;
     if (document.hidden) return;
     pauseBtn.hidden = state !== 'play';
-    if (goHomeBtn) goHomeBtn.hidden = true;   // going home is now done by walking into the moon door
+    if (goHomeBtn) goHomeBtn.hidden = !atPortal();   // only while Shwe is standing at the moon door
     if (mobileLandscapeRequired && !orientationGate.hidden) return;
     if (state === 'intro' || state === 'awakening') { t += dt; return; }
     if (state === 'play' || state === 'ending') {
