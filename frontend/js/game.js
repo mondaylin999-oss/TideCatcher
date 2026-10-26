@@ -4025,6 +4025,7 @@
     animateHubNumber($('#hubBookValue'), found, n => `${n} / ${total}`);
     $('#shopBtnValue').textContent = `${glow} Glow`;
     $('#bookBtnValue').textContent = `${found} / ${total} found`;
+    { const tv = $('#roomTownValue'); if (tv && window.TCHeartData) { let lit = 0; try { lit = window.TCHeartData.create(localStorage).snapshot().lit.length; } catch (e) {} tv.textContent = `${lit} / ${window.TCHeartData.places.length} lit`; } }
     { const sc = $('#shelfCount'); if (sc) { const s2 = shelfTotals(); sc.textContent = `${s2.have} / ${s2.all} keepsakes`; } }
     sizeHubCat();
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
@@ -4165,6 +4166,9 @@
   }
   $('#bookBtn').addEventListener('click', () => { music('play', 'menu'); music('ambience', 'menu'); $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
   $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; showMainMenu(true); });
+  // Heart Workshop jar and Lantern Town model in Thiri's room
+  $('#roomHeartBtn')?.addEventListener('click', () => window.TCHeart?.open('workshop'));
+  $('#roomTownBtn')?.addEventListener('click', () => window.TCHeart?.open('town'));
   // The Glow and Mood Book counters at the top of the room open the Treat box and the Mood Book too.
   [['#hubBookValue', '#bookBtn', 'Open the Mood Book'], ['#hubGlowValue', '#shopBtn', 'Open the Treat box']].forEach(([val, target, label]) => {
     const pill = $(val)?.closest('.hub-currency-pill'); if (!pill) return;
