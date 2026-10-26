@@ -3752,8 +3752,9 @@
   function drawItemsFound(yTop) {
     if (!showItemsHud) return;
     const parts = [];
-    if (trinkets.length) parts.push({ kind: 't', text: `${trinkets.filter(k => k.taken).length}/${trinkets.length}` });
-    if (mode === 'story' && keepsakeTotal(storyNight)) parts.push({ kind: 'k', text: `${keepsakesFound(storyNight)}/${keepsakeTotal(storyNight)}` });
+    // only list a kind of item while some of it is still out on this map to find
+    if (trinkets.some(k => !k.taken) && !pouchFull()) parts.push({ kind: 't', text: `${trinkets.filter(k => k.taken).length}/${trinkets.length}` });
+    if (mode === 'story' && keepsakesFound(storyNight) < keepsakeTotal(storyNight)) parts.push({ kind: 'k', text: `${keepsakesFound(storyNight)}/${keepsakeTotal(storyNight)}` });
     if (!parts.length) return;
     ctx.save();
     ctx.font = `700 12px ${BODY}`; const lw = ctx.measureText('FOUND').width + 10;
