@@ -11,6 +11,7 @@
   const face=id=>{
     const f=D.byId[id], i=D.feelings.indexOf(f);
     if(f.tier===0 && bridge?.portrait) return `<img class="feeling-face" src="${bridge.portrait(id)}" alt="" draggable="false">`;
+    if(f.tier>0 && window.TCMoodArt?.has(id)) return window.TCMoodArt.svg(id);
     return `<svg class="feeling-face" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="33" r="25" fill="${f.color}"/><path d="M15 22Q26 8 42 14" fill="none" stroke="#fff" opacity=".3" stroke-width="6" stroke-linecap="round"/><ellipse cx="24" cy="30" rx="3" ry="4" fill="#30234c"/><ellipse cx="41" cy="30" rx="3" ry="4" fill="#30234c"/><path d="${i===0 || i===2 ? 'M25 45Q32 37 40 45' : 'M24 40Q32 50 41 40'}" fill="none" stroke="#30234c" stroke-width="3" stroke-linecap="round"/><circle cx="17" cy="39" r="4" fill="#e27a96" opacity=".45"/><circle cx="47" cy="39" r="4" fill="#e27a96" opacity=".45"/>${f.tier>1?'<path d="m50 3 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z" fill="#ffdf80"/>':''}</svg>`;
   };
   const name=id=>D.byId[id]?.name || id;
