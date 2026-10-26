@@ -2021,8 +2021,8 @@
     if (Math.abs(c.vx) > 0 && (currentLevel.pits || []).some(([a, b]) => c.x >= a - 52 && c.x <= b + 52) && t >= edgeSoundAt) { edgeSoundAt = t + 1.2; sfx('ui', 'edge'); }
     if (c.y > VH + OY - 10) beginFall();
     if (c.on && Math.abs(c.vx) > 90) {
-      c.walk += dt * Math.abs(c.vx) / 30;
-      const stepBeat = Math.floor(c.walk / 1.7);
+      c.walk += dt * Math.abs(c.vx) / 17;
+      const stepBeat = Math.floor(c.walk / Math.PI);
       if (stepBeat !== c.stepBeat) { c.stepBeat = stepBeat; sfx('ui', 'step'); }
     }
   }
@@ -3494,11 +3494,11 @@
   // Comfort items packed for this hour are worn by the cat: scarf + bell on the neck, jar + hourglass on the back.
   // Positions are fractions of each cat picture: n = [neck x, neck y, neck half-width], b = [back x, back y].
   const GEAR_POS = {
-    ginger: { n: [.73, .54, .13], b: [.40, .44] }, mainecoon: { n: [.73, .54, .13], b: [.40, .44] },
-    burmese: { n: [.69, .53, .11], b: [.38, .52] }, siamese: { n: [.69, .54, .11], b: [.40, .56] },
-    persian: { n: [.67, .60, .14], b: [.36, .48] }, ragdoll: { n: [.63, .60, .14], b: [.34, .50] },
-    british: { n: [.68, .59, .14], b: [.36, .50] }, bengal: { n: [.73, .53, .11], b: [.42, .52] },
-    sphynx: { n: [.73, .53, .10], b: [.40, .56] }
+    ginger: { n: [.73, 0.57, .13], b: [.40, 0.45] }, mainecoon: { n: [.73, 0.56, .13], b: [.40, 0.44] },
+    burmese: { n: [.69, 0.56, .11], b: [.38, 0.53] }, siamese: { n: [.69, 0.60, .11], b: [.40, 0.60] },
+    persian: { n: [.67, 0.64, .14], b: [.36, 0.49] }, ragdoll: { n: [.63, 0.65, .14], b: [.34, 0.52] },
+    british: { n: [.68, 0.62, .14], b: [.36, 0.51] }, bengal: { n: [.73, 0.58, .11], b: [.42, 0.55] },
+    sphynx: { n: [.73, 0.56, .10], b: [.40, 0.57] }
   };
   // Draws the packed comfort items on the cat. Everything is designed on a 70px-tall cat and scaled with it
   // (k = hh / 70), with dark outlines like the cat sprites so it reads clearly at game size.
@@ -3608,19 +3608,36 @@
     const spr = mkGetSprite(MK_PROFILE.coat);
     if (!spr || !spr.complete || !spr.naturalWidth) return false;
     const hh = 70, ww = hh * spr.naturalWidth / spr.naturalHeight;
-    const speed = Math.abs(c.vx), moving = c.on && speed > 10, running = moving && speed > 285, ph = c.walk;
-    const amp = c.sneak ? .14 : running ? .52 : .34;
-    let back = 0, front = 0, tail, breath = 0, bob = 0;
-    if (scratchAnim > 0 && c.on) { front = Math.sin(t * 20) * .58; back = -.08; tail = .28 + Math.sin(t * 8) * .12; breath = .01; bob = 1.3; }
-    else if (c.pounce > 0) { back = -.62; front = .72; tail = -.42; }
-    else if (!c.on) { const rising = c.vy < 0; back = rising ? -.38 : .25; front = rising ? .32 : -.24; tail = rising ? -.32 : .3; }
-    else if (moving) { back = Math.sin(ph) * amp; front = -Math.sin(ph + .18) * amp * .92; tail = Math.sin(ph * .48 + 1.1) * (running ? .28 : .18); bob = -Math.abs(Math.sin(ph)) * (c.sneak ? .55 : running ? 2.8 : 1.6); }
+    const speed = Math.abs(c.vx), moving = c.on && speed > 10, ph = c.walk;
+    // Stride grows smoothly with speed (no jump between walk and run), and the body rises and
+    // falls on a soft wave instead of a sharp bounce at every step.
+    // Gait: each leg pair swings forward with its paw lifted, then pushes back with the paw on the
+    // ground. Only the body bobs; the standing paws never leave the floor.
+    const pace = clamp((speed - 10) / 280, 0, 1), amp = c.sneak ? .2 : .28 + .2 * pace;
+    let back = 0, front = 0, tail, breath = 0, bodyY = 0, backLift = 0, frontLift = 0;
+    if (scratchAnim > 0 && c.on) { front = Math.sin(t * 20) * .58; frontLift = Math.max(0, Math.sin(t * 20)) * .25; back = -.08; tail = .28 + Math.sin(t * 8) * .12; breath = .01; bodyY = 1.3; }
+    else if (c.pounce > 0) { back = -.62; front = .72; tail = -.42; backLift = .12; frontLift = .2; }
+    else if (!c.on) { const rising = c.vy < 0; back = rising ? -.38 : .25; front = rising ? .32 : -.24; tail = rising ? -.32 : .3; backLift = rising ? .1 : .2; frontLift = rising ? .22 : .08; }
+    else if (moving) {
+      const lift = c.sneak ? .12 : .2 + .1 * pace;
+      back = Math.sin(ph) * amp; backLift = Math.max(0, Math.cos(ph)) ** 1.5 * lift;
+      front = -Math.sin(ph + 1.2) * amp * .95; frontLift = Math.max(0, -Math.cos(ph + 1.2)) ** 1.5 * lift;
+      tail = Math.sin(ph * .5 + 1.1) * (.12 + .12 * pace);
+      bodyY = -(1 - Math.cos(ph * 2)) * .5 * (c.sneak ? .4 : .6 + .8 * pace);
+    }
     else { tail = Math.sin(t * 1.7) * .12 + Math.pow(Math.max(0, Math.sin(t * .83 + .7)), 8) * .28; breath = Math.sin(t * 2.2) * .016; }
+    // ease every pose change (start, stop, jump, land) over a few frames instead of snapping
+    const P = c.rigPose || (c.rigPose = { back, front, tail, bodyY, backLift, frontLift, at: t });
+    const k = scratchAnim > 0 ? 1 : 1 - Math.exp(-Math.max(0, Math.min(.1, t - P.at)) * (moving ? 30 : 16));
+    for (const [key, v] of [['back', back], ['front', front], ['tail', tail], ['bodyY', bodyY], ['backLift', backLift], ['frontLift', frontLift]]) P[key] += (v - P[key]) * k;
+    P.at = t;
+    back = P.back; front = P.front; tail = P.tail; bodyY = P.bodyY; backLift = P.backLift; frontLift = P.frontLift;
+    const bob = 0;
     if (c.on) { ctx.fillStyle = 'rgba(8,10,24,.35)'; ctx.beginPath(); ctx.ellipse(-2, 2, ww * .36, 4.5, 0, 0, 7); ctx.fill(); }
     if (eyesT > 0) { ctx.shadowColor = '#c8ff8a'; ctx.shadowBlur = 16; }
     // cat.y is the paw baseline; keep the sprite's bottom edge on that line.
     const spriteY = -hh + bob;
-    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, { back, front, tail, breath });
+    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, { back, front, tail, breath, bodyY, backLift, frontLift });
     if (!ok) ctx.drawImage(spr, -ww / 2 - 2, spriteY, ww, hh);
     ctx.shadowBlur = 0;
     drawCatGear(c, -ww / 2 - 2, spriteY, ww, hh, moving);

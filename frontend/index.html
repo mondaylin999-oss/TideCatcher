@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 <link rel="stylesheet" href="css/heart.css?v=20261024-heart-depth">
-<link rel="stylesheet" href="css/sketchbook.css?v=sb16">
+<link rel="stylesheet" href="css/sketchbook.css?v=sb17">
 </head>
 <body>
 <canvas id="game" aria-label="TideCatcher prototype game" hidden></canvas>
@@ -115,7 +115,7 @@
   <div class="welcome-backdrop" aria-hidden="true"><span class="welcome-moon"></span><span class="welcome-tide"></span><span class="welcome-tide welcome-tide-back"></span></div>
   <section class="welcome-panel" aria-describedby="welcomeDescription">
     <p class="eyebrow welcome-eyebrow">Thiri’s sketchbook · please don’t peek</p>
-    <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/ginger-realistic-sprite.png" alt="Shwe, a cat ready to follow the night lights" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
+    <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/ginger-toon.png" alt="Shwe, a cat ready to follow the night lights" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
     <h1 id="welcomeTitle" class="welcome-title">TideCatcher</h1>
     <p id="welcomeDescription" class="welcome-description">When Thiri falls asleep with a heavy heart, Shwe follows her little feelings into the Night Side.</p>
     <div class="welcome-loading" id="welcomeLoading" role="status" aria-live="polite">
@@ -196,11 +196,11 @@
       <img class="rh-thiri" id="rhThiriGrey" src="assets/home/thiri-s0-grey.webp" alt="" draggable="false">
       <img class="rh-thiri rh-col" id="rhThiri" src="assets/home/thiri-s0.webp" alt="" draggable="false">
       <span class="rh-zzz" aria-hidden="true"><i>z</i><i>z</i><i>z</i></span>
-      <img id="hubHeroCat" class="rh-cat" src="assets/cats/ginger-realistic.png" alt="" decoding="async" draggable="false">
+      <img id="hubHeroCat" class="rh-cat" src="assets/cats/ginger-cute-sit.png" alt="" decoding="async" draggable="false">
       <span class="rh-cattag" aria-hidden="true" id="hubCatName">SHWE</span>
       <button class="rh-spot rh-main" id="storyBtn" type="button" style="--x:24.85%;--y:10.62%;--w:14.20%;--h:35.01%;--tx:50.4%;--ty:52%" aria-label="Story Mode: follow her lost feelings out of the window"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Story Mode</b><i>Out the window, after her feelings</i></span></button>
       <button class="rh-spot" id="freeBtn" type="button" style="--x:85.95%;--y:5.48%;--w:11.70%;--h:33.72%;--tx:50.0%;--ty:84%" aria-label="Free Play: wander the places you have found"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Free Play</b><i>A moonlit wander</i></span></button>
-      <button class="rh-spot" id="bookBtn" type="button" style="--x:34.50%;--y:46.09%;--w:10.75%;--h:9.92%;--tx:49.8%;--ty:5.9%" aria-label="Mood Book: every feeling brought home"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Mood Book</b><i><span id="bookBtnValue">0 / 17 found</span></i></span></button>
+      <button class="rh-spot rh-obj" id="bookBtn" type="button" style="--x:34.50%;--y:46.09%;--w:10.75%;--h:9.92%;--tx:49.8%;--ty:5.9%" aria-label="Mood Book: every feeling brought home"><span class="rh-glow" aria-hidden="true"></span><svg class="rh-art rh-book" viewBox="0 0 120 60" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs><radialGradient id="rhBookGlow" cx=".5" cy=".6" r=".6"><stop offset="0" stop-color="#fff1b8" stop-opacity=".85"/><stop offset="1" stop-color="#fff1b8" stop-opacity="0"/></radialGradient></defs><ellipse cx="60" cy="38" rx="66" ry="30" fill="url(#rhBookGlow)" class="rh-book-halo"/><ellipse cx="60" cy="57" rx="50" ry="3.5" fill="#000" opacity=".35"/><path d="M10 52 14 26q22-6 46 2 24-8 46-2l4 26q-26-6-50 2-24-8-50-2Z" fill="#8a6ad8" stroke="#3b2c4f" stroke-width="1.6" stroke-linejoin="round"/><path d="M15 48 18 24q20-5 42 3v26q-22-7-45-5Z" fill="#fffaf0" stroke="#3b2c4f" stroke-width="1.2" stroke-linejoin="round"/><path d="M105 48 102 24q-20-5-42 3v26q22-7 45-5Z" fill="#fff5e4" stroke="#3b2c4f" stroke-width="1.2" stroke-linejoin="round"/><path d="M60 27v26" stroke="#c9b6a0" stroke-width="1.2"/><g class="rh-book-doodles"><path d="M31 31l3 6 6 .8-4.4 4.2 1 6-5.6-3-5.6 3 1-6-4.4-4.2 6-.8Z" fill="#ff727d"/><circle cx="29" cy="38" r=".9" fill="#30234c"/><circle cx="33" cy="38" r=".9" fill="#30234c"/><path d="M46 32c3 4 7 7 7 10a7 6 0 0 1-14 0c0-3 4-6 7-10Z" fill="#79c7ff"/><circle cx="44" cy="41" r=".9" fill="#30234c"/><circle cx="48" cy="41" r=".9" fill="#30234c"/><circle cx="76" cy="38" r="6" fill="#b59aff"/><circle cx="74" cy="37.5" r=".9" fill="#30234c"/><circle cx="78" cy="37.5" r=".9" fill="#30234c"/><path d="M84 32h12M84 36h10M84 40h12M84 44h8" stroke="#b9aecf" stroke-width="1.4" stroke-linecap="round"/></g><path d="M66 27v30l3-3 3 3V27" fill="#ff8fb1" stroke="#3b2c4f" stroke-width="1"/><g class="rh-book-sparks" fill="#fff3b0"><path d="M24 12l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5Z"/><path d="M98 8l1.2 3 3 1.2-3 1.2-1.2 3-1.2-3-3-1.2 3-1.2Z"/><circle cx="60" cy="10" r="1.6"/></g></svg><span class="rh-tag"><b>Mood Book</b><i><span id="bookBtnValue">0 / 17 found</span></i></span></button>
       <button class="rh-spot" id="shopBtn" type="button" style="--x:82.40%;--y:48.31%;--w:10.55%;--h:22.87%;--tx:50.2%;--ty:13.3%" aria-label="Shop: treats and upgrades"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Treat box</b><i><span id="shopBtnValue">0 Glow</span></i></span></button>
       <button class="rh-spot" id="roomShelfBtn" type="button" style="--x:6.75%;--y:25.09%;--w:10.50%;--h:9.92%;--tx:50.0%;--ty:12.9%" aria-label="Thiri's shelf: the keepsakes you have found"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b><span class="sb-girl">Thiri</span>’s shelf</b><i id="shelfCount">0 / 0 keepsakes</i></span></button>
       <button class="rh-spot" id="roomHelpBtn" type="button" style="--x:44.00%;--y:29.17%;--w:10.70%;--h:14.59%;--tx:50.0%;--ty:9.6%" aria-label="How to play"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>How to play</b><i>Notes on the corkboard</i></span></button>
@@ -215,7 +215,7 @@
     <div class="panel story-map-panel">
       <div class="story-map-heading"><div><p class="eyebrow">THE NIGHT SIDE</p><h2 id="storyMapTitle">Choose your chapter</h2></div><span class="level-map-count" id="levelMapCount">1 / 50 levels unlocked</span><span class="room-status" id="roomStatus" aria-live="polite">Thiri is sleeping</span></div>
       <p class="level-map-hint">Your journey unfolds left to right. Swipe or use the arrows to explore.</p>
-      <div class="map-guide" id="mapGuide" hidden role="region" aria-labelledby="mapGuideName"><img class="map-guide-cat" id="mapGuideCat" src="assets/cats/ginger-realistic-sprite.png" alt="" aria-hidden="true" decoding="async"><div class="map-guide-copy"><strong id="mapGuideName">Shwe</strong><p id="mapGuideText">Follow the glowing path to the next feeling.</p></div><button class="btn ghost map-guide-dismiss" id="mapGuideDismiss" type="button">Got it</button></div>
+      <div class="map-guide" id="mapGuide" hidden role="region" aria-labelledby="mapGuideName"><img class="map-guide-cat" id="mapGuideCat" src="assets/cats/ginger-toon.png" alt="" aria-hidden="true" decoding="async"><div class="map-guide-copy"><strong id="mapGuideName">Shwe</strong><p id="mapGuideText">Follow the glowing path to the next feeling.</p></div><button class="btn ghost map-guide-dismiss" id="mapGuideDismiss" type="button">Got it</button></div>
       <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Chapter map. Use left and right arrow keys to explore." tabindex="0"><div class="level-map-track" id="levelMapTrack"><svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 4600" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg></div></div>
       <nav class="map-navigation" aria-label="Explore chapters"><button class="btn ghost" id="mapPrevious" type="button" aria-label="Previous chapters">←</button><button class="btn ghost" id="mapCurrent" type="button">Current chapter</button><button class="btn ghost" id="mapNext" type="button" aria-label="Next chapters">→</button></nav>
       <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Locked</span></div>
@@ -383,7 +383,7 @@
   </section>
 </div>
 
-<script src="js/customization.js?v=bce48748bfe6"></script>
+<script src="js/customization.js?v=20261026-gait"></script>
 <script src="js/tips.js?v=20261024-shwe-tutorial"></script>
 <script src="js/levels.js?v=20261025-rooftops"></script>
 <script src="js/visual-chapters.js?v=20261026-nolamps"></script>
@@ -393,7 +393,7 @@
 <script src="js/moodling-art.js?v=20261026-art"></script>
 <script src="js/heart-data.js?v=20261024-heart-town"></script>
 <script src="js/heart-ui.js?v=20261026-art2"></script>
-<script src="js/game.js?v=20261026-objs"></script>
+<script src="js/game.js?v=20261026-gait"></script>
 <script src="js/cozy-ui.js?v=20261026-endbtn"></script>
 <script src="js/sketchbook.js?v=sb5"></script>
 <script src="js/afterstory.js?v=as2"></script>
