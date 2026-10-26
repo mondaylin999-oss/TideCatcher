@@ -3691,7 +3691,7 @@
   }
 
   function drawTrail() {
-    if (trail.length > 1) {
+    if (trail.length > 0) {   // the string shows as soon as the first light follows Shwe
       if (TRAILS[trailPick].rainbow) {
         // each piece of the trail gets the next colour of the rainbow, slowly shifting
         ctx.lineWidth = 5; ctx.lineCap = 'round';
