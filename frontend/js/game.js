@@ -165,6 +165,7 @@
     if (e.code === 'KeyK') purrQ = true;
     if (e.code === 'KeyE' || e.code === 'KeyL') eyesQ = true;
     if (e.code === 'KeyS') scratchQ = true;
+    if (e.code === 'KeyH' && state === 'play') { e.preventDefault(); enterPortal(); }
   });
   addEventListener('keyup', e => { keys[e.code] = false; if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) jumpHeld = false; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; scratchHeld = false; jumpHeld = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
@@ -328,7 +329,9 @@
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
   // School hallways use cached architectural variants; playable shelves stay separate.
   const SCHOOL_NIGHTS = [1, 2];
-  const SCHOOL_WALL_H = 474, SCHOOL_TILE_W = 1440, SCHOOL_PARALLAX = .9;
+  const SCHOOL_WALL = new Image();
+  SCHOOL_WALL.src = 'assets/school/hallway-night.webp';
+  const SCHOOL_WALL_W = 2445, SCHOOL_WALL_H = 474, SCHOOL_PARALLAX = .9;
   function inSchool() { return (mode === 'story' && (SCHOOL_NIGHTS.includes(storyNight) || currentLevel?.map === 'school')) || (mode === 'free' && currentLevel?.map === 'school'); }
   function inRooftop() { return mode === 'story' && currentLevel?.map === 'rooftop'; }
   // ---------- Hilltop park map (Night 5) ----------
@@ -561,7 +564,7 @@
       if (!pl.active || pl.type === 'sinking' || pl[0] + pl[2] < x0 || pl[0] > x1) continue;
       const x = pl[0], y = pl[1], w = pl[2];
       ctx.fillStyle = '#3a2830';
-      for (const px of [x + 8, x + w / 2 - 3, x + w - 14]) ctx.fillRect(px, y + 8, 6, GROUND - y - 8);
+      if (pl.type !== 'moving') for (const px of [x + 8, x + w / 2 - 3, x + w - 14]) ctx.fillRect(px, y + 8, 6, GROUND - y - 8);
       const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11); wood.addColorStop(0, '#b4876a'); wood.addColorStop(.4, '#7d5444'); wood.addColorStop(1, '#45293a');
       ctx.fillStyle = wood; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 12, 3); ctx.fill();
       ctx.strokeStyle = 'rgba(30,16,26,.5)'; ctx.lineWidth = 1; for (let k = x + 16; k < x + w; k += 18) { ctx.beginPath(); ctx.moveTo(k, y - 1); ctx.lineTo(k, y + 9); ctx.stroke(); }
@@ -921,13 +924,13 @@
     showTutorialStep(); return true;
   }
   // When every feeling is home the night no longer ends by itself: a moon door opens near Shwe.
-  // The player can keep exploring (trinkets, keepsakes, score) and walk into the door to go home;
+  // The player can keep exploring (trinkets, keepsakes, score) and stand at the door and press H to go home;
   // if the timer runs out first, the night still ends safely.
   let allHome = false, portal = null;
   function reachAllHome() {
     if (allHome || state !== 'play') return;
     allHome = true; sfx('ui', 'reward'); openPortal();
-    announce('All feelings found! A moon door opened. Walk into it when you are ready to go home.', GOLD, 3.6);
+    announce('All feelings found! A moon door opened. Stand in it and press H to go home.', GOLD, 3.6);
     float(cat.x, cat.y - 90, 'Time left still adds +20 points a second', GOLD);
   }
   function openPortal() {
@@ -940,10 +943,10 @@
   function updPortal(dt) {
     if (!portal) return;
     portal.open = Math.min(1, portal.open + dt / .8);
-    if (state === 'play' && portal.open >= 1 && !cat.falling && Math.abs(cat.x - portal.x) < 34 && Math.abs(cat.y - portal.y) < 80) {
-      burst(portal.x, portal.y - 60, '#fff3c4', 36); goHome();
-    }
   }
+  // Shwe has to stand at the moon door and press H (or tap the Go home button) to go through it.
+  function atPortal() { return !!portal && state === 'play' && portal.open >= 1 && !cat.falling && Math.abs(cat.x - portal.x) < 60 && Math.abs(cat.y - portal.y) < 90; }
+  function enterPortal() { if (!atPortal()) return; burst(portal.x, portal.y - 60, '#fff3c4', 36); goHome(); }
   function drawPortal() {
     if (!portal) return;
     const k = portal.open, e = 1 - Math.pow(1 - k, 3), x = portal.x, y = portal.y, w = 34 * e, h = 62 * e, cy = y - 66;
@@ -1337,38 +1340,45 @@
   const POUCH_SIZE = 12;
   let pouch = (() => { try { const a = JSON.parse(localStorage.getItem('mk-pouch') || '[]'); return Array.isArray(a) ? a.filter(k => TRINKETS[k]).slice(0, POUCH_SIZE) : []; } catch (e) { return []; } })();
   function savePouch() { try { localStorage.setItem('mk-pouch', JSON.stringify(pouch)); } catch (e) {} }
-  let trinkets = [], trinketRun = [], lastTrinkets = null, pouchFullAt = -9;
-  function pickTrinket(rare) {
+  let trinkets = [], trinketRun = [], trinketIds = [], lastTrinkets = null, pouchFullAt = -9;
+  function pickTrinket(rare, rnd = Math.random) {
     if (rare) return 'goldbutton';
     const keys = Object.keys(TRINKETS), total = keys.reduce((n, k) => n + TRINKETS[k].w, 0);
-    let r = Math.random() * total;
+    let r = rnd() * total;
     for (const k of keys) { r -= TRINKETS[k].w; if (r <= 0) return k; }
     return 'button';
   }
+  // Story trinkets sit in the same places every time you play a night, and once one is safely
+  // in the pouch it is gone from that night for good. Free mode still scatters new ones each run.
+  let foundTrinkets = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-trinkets-found') || '[]')); } catch (e) { return new Set(); } })();
+  function saveFoundTrinkets() { try { localStorage.setItem('mk-trinkets-found', JSON.stringify([...foundTrinkets])); } catch (e) {} }
+  function seededRnd(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let r = Math.imul(a ^ (a >>> 15), 1 | a); r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r; return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
   function initTrinkets() {
-    trinkets = []; trinketRun = [];
+    trinkets = []; trinketRun = []; trinketIds = []; pouchFullTold = false;
+    const story = mode === 'story', rnd = story ? seededRnd(storyNight * 7919 + 17) : Math.random;
     const n = mode === 'free' ? 4 : 5, xs = [];
     const plats = activePlats.filter(p => p.type !== 'crumbling' && p.type !== 'moving' && p[2] >= 60);
     for (let i = 0; i < n; i++) {
       const onPlat = plats.length > 0 && i % 2 === 1;   // every other one sits up on a ledge, a little harder to reach
       let x, y;
-      if (onPlat) { const p = plats[Math.floor(Math.random() * plats.length)]; x = p[0] + 20 + Math.random() * (p[2] - 40); y = p[1] - 26; }
-      else { x = safeLevelX(300 + (WORLD - 600) * ((i + .3 + Math.random() * .4) / n)); y = terrainY(x) - 26; }
+      if (onPlat) { const p = plats[Math.floor(rnd() * plats.length)]; x = p[0] + 20 + rnd() * (p[2] - 40); y = p[1] - 26; }
+      else { x = safeLevelX(300 + (WORLD - 600) * ((i + .3 + rnd() * .4) / n)); y = terrainY(x) - 26; }
       if (xs.some(v => Math.abs(v - x) < 140) || keepsakes.some(k => Math.abs(k.x - x) < 120)) continue;
       xs.push(x);
-      trinkets.push({ x, y, type: pickTrinket(onPlat && Math.random() < .35), bob: Math.random() * 6, got: 0, taken: false });
+      const type = pickTrinket(onPlat && rnd() < .35, rnd), id = story ? `n${storyNight}-t${i}` : null, gone = !!id && foundTrinkets.has(id);
+      trinkets.push({ x, y, type, id, bob: rnd() * 6, got: 0, taken: gone, gone });
     }
   }
+  function pouchFull() { return pouch.length + trinketRun.length >= POUCH_SIZE; }
+  let pouchFullTold = false;
   function updTrinkets(dt) {
+    if (pouchFull() && !pouchFullTold && trinkets.some(k => !k.taken)) { pouchFullTold = true; announce('Shwe\u2019s pouch is full. Sell trinkets at the Treat box to find more.', '#ffb3c0', 2.6); }
     for (const k of trinkets) {
       k.got = Math.max(0, k.got - dt);
       if (k.taken || Math.abs(cat.x - k.x) >= 34 || Math.abs(cat.y - 28 - k.y) >= 48) continue;
-      if (pouch.length + trinketRun.length >= POUCH_SIZE) {
-        if (t - pouchFullAt > 3) { pouchFullAt = t; float(k.x, k.y - 40, 'Pouch full · sell some at the Treat box', '#ffb3c0'); }
-        continue;
-      }
+      if (pouchFull()) continue;
       const info = TRINKETS[k.type];
-      k.taken = true; k.got = 1; trinketRun.push(k.type);
+      k.taken = true; k.got = 1; trinketRun.push(k.type); if (k.id) (trinketIds || (trinketIds = [])).push(k.id);
       burst(k.x, k.y, info.c, k.type === 'goldbutton' ? 22 : 12);
       tone(k.type === 'goldbutton' ? 1175 : 880, .12, 'sine', .04);
       float(k.x, k.y - 40, `${info.name} · pouch ${pouch.length + trinketRun.length}/${POUCH_SIZE}`, info.c);
@@ -1398,7 +1408,8 @@
   function drawTrinkets() {
     const x0 = camX - 60, x1 = camX + VW + 60;
     for (const k of trinkets) {
-      if (k.x < x0 || k.x > x1 || (k.taken && k.got <= 0)) continue;
+      // a full pouch hides the trinkets that are left: they stay for a later night once there is room
+      if (k.x < x0 || k.x > x1 || (k.taken && k.got <= 0) || (!k.taken && pouchFull())) continue;
       const y = k.y + Math.sin(t * 2.6 + k.bob) * 2.5 - (k.taken ? (1 - k.got) * 30 : 0);
       ctx.globalAlpha = k.taken ? k.got : 1;
       if (k.type === 'goldbutton') ctx.drawImage(glowImg(TRINKETS.goldbutton.c), k.x - 26, y - 26, 52, 52);
@@ -1978,7 +1989,9 @@
     let landed = false, landedOn = null;
     const floorY = terrainY(c.x);
     const pit = pitAt(c.x);
-    if (!pit && c.vy >= 0 && py <= floorY + 4 && c.y >= floorY) { c.y = floorY; landed = true; }
+    // the ground is solid everywhere except the pits; a step up of up to 40px (a steep stone step) is climbed
+    // instead of letting Shwe slip under it and fall through the map
+    if (!pit && c.vy >= 0 && py <= floorY + (wasOn ? 40 : 4) && c.y >= floorY) { c.y = floorY; landed = true; }
     else if (c.vy >= 0) {
       for (const p of activePlats) {
         if (!p.active || p.type === 'swinging') continue;
@@ -2008,8 +2021,8 @@
     if (Math.abs(c.vx) > 0 && (currentLevel.pits || []).some(([a, b]) => c.x >= a - 52 && c.x <= b + 52) && t >= edgeSoundAt) { edgeSoundAt = t + 1.2; sfx('ui', 'edge'); }
     if (c.y > VH + OY - 10) beginFall();
     if (c.on && Math.abs(c.vx) > 90) {
-      c.walk += dt * Math.abs(c.vx) / 30;
-      const stepBeat = Math.floor(c.walk / 1.7);
+      c.walk += dt * Math.abs(c.vx) / 17;
+      const stepBeat = Math.floor(c.walk / Math.PI);
       if (stepBeat !== c.stepBeat) { c.stepBeat = stepBeat; sfx('ui', 'step'); }
     }
   }
@@ -2841,8 +2854,10 @@
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
       const x = p[0], y = platformDrawY(p), w = p[2];
+      if (p.type !== 'moving') {
       ctx.fillStyle = '#2a1a20'; ctx.fillRect(x + 10, y + 8, 7, GROUND - y - 8); ctx.fillRect(x + w - 17, y + 8, 7, GROUND - y - 8);
       ctx.strokeStyle = 'rgba(42,26,32,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 14, y + 12); ctx.lineTo(x + w - 14, GROUND - 20); ctx.stroke();
+      }
       const wood = ctx.createLinearGradient(0, y - 2, 0, y + 11);
       wood.addColorStop(0, '#a77a5a'); wood.addColorStop(.4, '#74503e'); wood.addColorStop(1, '#3e2832');
       ctx.fillStyle = wood; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 12, 3); ctx.fill();
@@ -2851,10 +2866,7 @@
     for (const spot of scratchSpots) { if (spot.x < x0 - 60 || spot.x > x1 + 60) continue; drawScratchSpot(spot.x, spot.y, spot.moodType, spot); }
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
-  function drawSchoolWall(alpha = 1, mirrorY = false) {
-    return window.TCSchoolHallways?.draw(ctx, {level:storyNight,cam:camX,width:VW,ground:GROUND,alpha,mirror:mirrorY,parallax:SCHOOL_PARALLAX}) || false;
-  }
-  // Draws a hallway/park picture that repeats along the level, mirrored every other time (no seams).
+  function drawSchoolWall(alpha = 1, mirrorY = false) { return drawPictureLayer(SCHOOL_WALL, SCHOOL_WALL_W, SCHOOL_WALL_H, SCHOOL_PARALLAX, alpha, mirrorY); }
   function drawPictureLayer(IMG, W, H, parallax, alpha = 1, mirrorY = false) {
     if (!IMG.complete || !IMG.naturalWidth) return false;
     const off = camX * parallax;
@@ -2901,9 +2913,17 @@
     const PARK_DECKS = ['#2fa69a', '#8b6fe0', '#3fb98a'];
     for (const p of activePlats) {
       if (!p.active || p[0] + p[2] < x0 || p[0] > x1) continue;
-      const x = p[0], y = platformDrawY(p), w = p[2], c = PARK_DECKS[Math.abs(Math.round(x / 97)) % PARK_DECKS.length];
-      ctx.fillStyle = '#6f6aa0'; ctx.fillRect(x + 10, y + 8, 6, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 6, GROUND - y - 8);
-      ctx.fillStyle = 'rgba(200,196,240,.35)'; ctx.fillRect(x + 10, y + 8, 2, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 2, GROUND - y - 8);
+      // colour comes from where the deck starts, so a moving deck keeps one colour while it glides
+      const home = p.type === 'moving' && p.path?.length ? p.path[0][0] : p[0];
+      const x = p[0], y = platformDrawY(p), w = p[2], c = PARK_DECKS[Math.abs(Math.round(home / 97)) % PARK_DECKS.length];
+      if (p.type === 'moving') {
+        // a gliding deck floats on its own: soft glow underneath instead of legs that would slide along the grass
+        ctx.fillStyle = 'rgba(255,233,165,.16)'; ctx.beginPath(); ctx.ellipse(x + w / 2, y + 16, w * .42, 7, 0, 0, 7); ctx.fill();
+        ctx.fillStyle = 'rgba(8,6,18,.3)'; ctx.beginPath(); ctx.ellipse(x + w / 2, terrainY(x + w / 2) - 2, w * .4, 5, 0, 0, 7); ctx.fill();
+      } else {
+        ctx.fillStyle = '#6f6aa0'; ctx.fillRect(x + 10, y + 8, 6, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 6, GROUND - y - 8);
+        ctx.fillStyle = 'rgba(200,196,240,.35)'; ctx.fillRect(x + 10, y + 8, 2, GROUND - y - 8); ctx.fillRect(x + w - 16, y + 8, 2, GROUND - y - 8);
+      }
       ctx.fillStyle = c; ctx.beginPath(); canvasRoundRect(ctx, x - 3, y - 2, w + 6, 13, 5); ctx.fill();
       ctx.strokeStyle = 'rgba(10,8,30,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 3, y + 1); ctx.lineTo(x + w - 3, y + 1); ctx.stroke();
@@ -2968,34 +2988,77 @@
     for(const p of activePlats){
       if(!p.active||p[0]+p[2]<x0||p[0]>x1)continue;
       const x=p[0],y=platformDrawY(p),w=p[2];
-      ctx.fillStyle='#2b2636';ctx.fillRect(x+12,y+8,7,GROUND-y-8);ctx.fillRect(x+w-19,y+8,7,GROUND-y-8);
+      if(p.type!=='moving'){ctx.fillStyle='#2b2636';ctx.fillRect(x+12,y+8,7,GROUND-y-8);ctx.fillRect(x+w-19,y+8,7,GROUND-y-8);}
       ctx.fillStyle='#6d6170';ctx.beginPath();canvasRoundRect(ctx,x-3,y-3,w+6,14,3);ctx.fill();
       ctx.fillStyle='#bba9a3';ctx.fillRect(x+3,y-3,w-6,3);
     }
     for(const spot of scratchSpots){if(spot.x<x0-60||spot.x>x1+60)continue;drawScratchSpot(spot.x,spot.y,spot.moodType,spot);}
     for(const rock of rocks){if(rock.x<x0-80||rock.x>x1+80)continue;drawRockFormation(rock.x,rock.y,rock,rockHoldsFeeling(rock));}
   }
+  const SCHOOL_STRINGS = [[10, 838, 168, 34], [872, 1292, 168, 26], [1328, 1868, 168, 34], [1904, 2440, 168, 30]];   // [x0, x1, y, sag] in picture units
+  const SCHOOL_BULBS = ['#ffb3d1', '#b8f0d8', '#fff0a8', '#d9c4ff', '#a8dcff'];
+  function drawSchoolCute(x0, x1) {
+    const W = SCHOOL_WALL_W, off = camX * SCHOOL_PARALLAX;
+    ctx.save();
+    for (let k = Math.floor(off / W); k * W - off < VW; k++) {
+      const sx = camX + k * W - off, X = px => k % 2 ? sx + W - px : sx + px;
+      SCHOOL_STRINGS.forEach(([a, b, y, sag], si) => {
+        const n = Math.round((b - a) / 26), pts = [];
+        for (let i = 0; i <= n; i++) { const u = i / n; pts.push([X(a + (b - a) * u), y + sag * Math.sin(Math.PI * u)]); }
+        ctx.strokeStyle = 'rgba(40,28,60,.75)'; ctx.lineWidth = 1.6; ctx.beginPath(); pts.forEach(([x, yy], i) => i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy)); ctx.stroke();
+        pts.forEach(([x, yy], i) => {
+          if (i === 0 || i === n || x < x0 - 30 || x > x1 + 30) return;
+          const c = SCHOOL_BULBS[(i + si * 2) % SCHOOL_BULBS.length], tw = .55 + .45 * Math.sin(t * (1.1 + (i % 4) * .35) + i * 1.7 + si);
+          ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .2 * tw;
+          ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, yy + 6, 9, 0, 7); ctx.fill();
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = .6 + .4 * tw;
+          ctx.beginPath(); ctx.ellipse(x, yy + 6, 3.6, 5, 0, 0, 7); ctx.fill();
+          ctx.globalAlpha = 1;
+          // a little paper star hanging from some of the bulbs
+          if ((i + si) % 5 === 2) {
+            const sw = Math.sin(t * 1.3 + i) * .12, hx = x + Math.sin(sw) * 26, hy = yy + 6 + Math.cos(sw) * 26;
+            ctx.strokeStyle = 'rgba(243,236,255,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, yy + 8); ctx.lineTo(hx, hy); ctx.stroke();
+            ctx.fillStyle = (i + si) % 2 ? '#ffd6e8' : '#fff3b8'; star(hx, hy + 5, 5, 7, 3, sw); ctx.fill();
+          }
+        });
+      });
+    }
+    // rainbow paper bunting lower on the wall
+    const FLAGS = ['#ff8fb8', '#ffb877', '#ffe27a', '#8fe0a8', '#7cc6ff', '#b99bff'];
+    for (let k = Math.floor(off / W); k * W - off < VW; k++) {
+      const sx = camX + k * W - off, X = px => k % 2 ? sx + W - px : sx + px;
+      [[18, 820, 236, 22], [1340, 1860, 236, 18]].forEach(([a, b, y, sag]) => {
+        const n = Math.round((b - a) / 30);
+        ctx.strokeStyle = 'rgba(255,240,250,.55)'; ctx.lineWidth = 1.2; ctx.beginPath();
+        for (let i = 0; i <= n; i++) { const u = i / n, x = X(a + (b - a) * u), yy = y + sag * Math.sin(Math.PI * u); i ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); }
+        ctx.stroke();
+        for (let i = 0; i < n; i++) {
+          const u = (i + .5) / n, x = X(a + (b - a) * u), yy = y + sag * Math.sin(Math.PI * u);
+          if (x < x0 - 20 || x > x1 + 20) continue;
+          const sway = Math.sin(t * 1.2 + i * .9) * 1.5;
+          ctx.fillStyle = FLAGS[i % FLAGS.length]; ctx.globalAlpha = .9;
+          ctx.beginPath(); ctx.moveTo(x - 10, yy); ctx.lineTo(x + 10, yy); ctx.lineTo(x + sway, yy + 18); ctx.closePath(); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      });
+    }
+    // slow floating sparkles in the air
+    for (let i = 0; i < 26; i++) {
+      const wx = ((i * 397) % 1600) + Math.floor((camX - 300) / 1600) * 1600 + (i % 2 ? 800 : 0), x = wx + Math.sin(t * .4 + i) * 20;
+      if (x < x0 - 20 || x > x1 + 20) continue;
+      const y = 140 + ((i * 131 + t * 9) % 300), a = .35 + .35 * Math.sin(t * 1.6 + i * 2.3);
+      ctx.fillStyle = `rgba(255,240,250,${Math.max(0, a)})`; star(x, y, 4, 3.2, 1.1, t * .5 + i); ctx.fill();
+    }
+    ctx.restore();
+  }
   function drawSchoolWorld(x0, x1) {
     ctx.fillStyle = '#16122a'; ctx.fillRect(x0, -OY - 10, x1 - x0, SCHOOL_WALL_H + OY + 12);
     if (!drawSchoolWall()) { ctx.fillStyle = '#2b2546'; ctx.fillRect(x0, 0, x1 - x0, GROUND); }
+    else drawSchoolCute(x0, x1);
     // glossy hallway floor with a faint reflection of the wall
     const floor = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
     floor.addColorStop(0, '#4a3c63'); floor.addColorStop(.18, '#30284a'); floor.addColorStop(1, '#130f22');
     ctx.fillStyle = floor; ctx.fillRect(x0, GROUND, x1 - x0, VH + OY + 60 - GROUND);
-    // Outdoor passages have stone paving while indoor sections keep the glossy floor.
-    const schoolOffset = camX * SCHOOL_PARALLAX;
-    for (let k = Math.floor(schoolOffset / SCHOOL_TILE_W); k * SCHOOL_TILE_W - schoolOffset < VW; k++) {
-      if (!window.TCSchoolHallways?.outdoorFor(storyNight, k)) continue;
-      const left = camX + k * SCHOOL_TILE_W - schoolOffset + 72;
-      const width = SCHOOL_TILE_W - 144;
-      const paving = ctx.createLinearGradient(0, GROUND, 0, VH + OY + 60);
-      paving.addColorStop(0, '#58616a'); paving.addColorStop(.25, '#3d4552'); paving.addColorStop(1, '#1d2031');
-      ctx.fillStyle = paving; ctx.fillRect(left, GROUND, width, VH + OY + 60 - GROUND);
-      ctx.strokeStyle = 'rgba(199,207,195,.17)'; ctx.lineWidth = 1;
-      for (let x = left + 90; x < left + width; x += 145) {
-        ctx.beginPath(); ctx.moveTo(x, GROUND); ctx.lineTo(x - 28, VH + OY + 60); ctx.stroke();
-      }
-    }
     ctx.save(); ctx.beginPath(); ctx.rect(x0, GROUND, x1 - x0, 110); ctx.clip(); drawSchoolWall(.32, true);
     const fade = ctx.createLinearGradient(0, GROUND, 0, GROUND + 110); fade.addColorStop(0, 'rgba(19,15,34,0)'); fade.addColorStop(1, 'rgba(19,15,34,.95)');
     ctx.fillStyle = fade; ctx.fillRect(x0, GROUND, x1 - x0, 110); ctx.restore();
@@ -3431,11 +3494,11 @@
   // Comfort items packed for this hour are worn by the cat: scarf + bell on the neck, jar + hourglass on the back.
   // Positions are fractions of each cat picture: n = [neck x, neck y, neck half-width], b = [back x, back y].
   const GEAR_POS = {
-    ginger: { n: [.73, .54, .13], b: [.40, .44] }, mainecoon: { n: [.73, .54, .13], b: [.40, .44] },
-    burmese: { n: [.69, .53, .11], b: [.38, .52] }, siamese: { n: [.69, .54, .11], b: [.40, .56] },
-    persian: { n: [.67, .60, .14], b: [.36, .48] }, ragdoll: { n: [.63, .60, .14], b: [.34, .50] },
-    british: { n: [.68, .59, .14], b: [.36, .50] }, bengal: { n: [.73, .53, .11], b: [.42, .52] },
-    sphynx: { n: [.73, .53, .10], b: [.40, .56] }
+    ginger: { n: [.73, 0.57, .13], b: [.40, 0.45] }, mainecoon: { n: [.73, 0.56, .13], b: [.40, 0.44] },
+    burmese: { n: [.69, 0.56, .11], b: [.38, 0.53] }, siamese: { n: [.69, 0.60, .11], b: [.40, 0.60] },
+    persian: { n: [.67, 0.64, .14], b: [.36, 0.49] }, ragdoll: { n: [.63, 0.65, .14], b: [.34, 0.52] },
+    british: { n: [.68, 0.62, .14], b: [.36, 0.51] }, bengal: { n: [.73, 0.58, .11], b: [.42, 0.55] },
+    sphynx: { n: [.73, 0.56, .10], b: [.40, 0.57] }
   };
   // Draws the packed comfort items on the cat. Everything is designed on a 70px-tall cat and scaled with it
   // (k = hh / 70), with dark outlines like the cat sprites so it reads clearly at game size.
@@ -3545,19 +3608,36 @@
     const spr = mkGetSprite(MK_PROFILE.coat);
     if (!spr || !spr.complete || !spr.naturalWidth) return false;
     const hh = 70, ww = hh * spr.naturalWidth / spr.naturalHeight;
-    const speed = Math.abs(c.vx), moving = c.on && speed > 10, running = moving && speed > 285, ph = c.walk;
-    const amp = c.sneak ? .14 : running ? .52 : .34;
-    let back = 0, front = 0, tail, breath = 0, bob = 0;
-    if (scratchAnim > 0 && c.on) { front = Math.sin(t * 20) * .58; back = -.08; tail = .28 + Math.sin(t * 8) * .12; breath = .01; bob = 1.3; }
-    else if (c.pounce > 0) { back = -.62; front = .72; tail = -.42; }
-    else if (!c.on) { const rising = c.vy < 0; back = rising ? -.38 : .25; front = rising ? .32 : -.24; tail = rising ? -.32 : .3; }
-    else if (moving) { back = Math.sin(ph) * amp; front = -Math.sin(ph + .18) * amp * .92; tail = Math.sin(ph * .48 + 1.1) * (running ? .28 : .18); bob = -Math.abs(Math.sin(ph)) * (c.sneak ? .55 : running ? 2.8 : 1.6); }
+    const speed = Math.abs(c.vx), moving = c.on && speed > 10, ph = c.walk;
+    // Stride grows smoothly with speed (no jump between walk and run), and the body rises and
+    // falls on a soft wave instead of a sharp bounce at every step.
+    // Gait: each leg pair swings forward with its paw lifted, then pushes back with the paw on the
+    // ground. Only the body bobs; the standing paws never leave the floor.
+    const pace = clamp((speed - 10) / 280, 0, 1), amp = c.sneak ? .2 : .28 + .2 * pace;
+    let back = 0, front = 0, tail, breath = 0, bodyY = 0, backLift = 0, frontLift = 0;
+    if (scratchAnim > 0 && c.on) { front = Math.sin(t * 20) * .58; frontLift = Math.max(0, Math.sin(t * 20)) * .25; back = -.08; tail = .28 + Math.sin(t * 8) * .12; breath = .01; bodyY = 1.3; }
+    else if (c.pounce > 0) { back = -.62; front = .72; tail = -.42; backLift = .12; frontLift = .2; }
+    else if (!c.on) { const rising = c.vy < 0; back = rising ? -.38 : .25; front = rising ? .32 : -.24; tail = rising ? -.32 : .3; backLift = rising ? .1 : .2; frontLift = rising ? .22 : .08; }
+    else if (moving) {
+      const lift = c.sneak ? .12 : .2 + .1 * pace;
+      back = Math.sin(ph) * amp; backLift = Math.max(0, Math.cos(ph)) ** 1.5 * lift;
+      front = -Math.sin(ph + 1.2) * amp * .95; frontLift = Math.max(0, -Math.cos(ph + 1.2)) ** 1.5 * lift;
+      tail = Math.sin(ph * .5 + 1.1) * (.12 + .12 * pace);
+      bodyY = -(1 - Math.cos(ph * 2)) * .5 * (c.sneak ? .4 : .6 + .8 * pace);
+    }
     else { tail = Math.sin(t * 1.7) * .12 + Math.pow(Math.max(0, Math.sin(t * .83 + .7)), 8) * .28; breath = Math.sin(t * 2.2) * .016; }
+    // ease every pose change (start, stop, jump, land) over a few frames instead of snapping
+    const P = c.rigPose || (c.rigPose = { back, front, tail, bodyY, backLift, frontLift, at: t });
+    const k = scratchAnim > 0 ? 1 : 1 - Math.exp(-Math.max(0, Math.min(.1, t - P.at)) * (moving ? 30 : 16));
+    for (const [key, v] of [['back', back], ['front', front], ['tail', tail], ['bodyY', bodyY], ['backLift', backLift], ['frontLift', frontLift]]) P[key] += (v - P[key]) * k;
+    P.at = t;
+    back = P.back; front = P.front; tail = P.tail; bodyY = P.bodyY; backLift = P.backLift; frontLift = P.frontLift;
+    const bob = 0;
     if (c.on) { ctx.fillStyle = 'rgba(8,10,24,.35)'; ctx.beginPath(); ctx.ellipse(-2, 2, ww * .36, 4.5, 0, 0, 7); ctx.fill(); }
     if (eyesT > 0) { ctx.shadowColor = '#c8ff8a'; ctx.shadowBlur = 16; }
     // cat.y is the paw baseline; keep the sprite's bottom edge on that line.
     const spriteY = -hh + bob;
-    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, { back, front, tail, breath });
+    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, { back, front, tail, breath, bodyY, backLift, frontLift });
     if (!ok) ctx.drawImage(spr, -ww / 2 - 2, spriteY, ww, hh);
     ctx.shadowBlur = 0;
     drawCatGear(c, -ww / 2 - 2, spriteY, ww, hh, moving);
@@ -3611,14 +3691,15 @@
   }
 
   function drawTrail() {
-    if (trail.length > 1) {
+    if (trail.length > 0) {   // the string shows as soon as the first light follows Shwe
       if (TRAILS[trailPick].rainbow) {
         // each piece of the trail gets the next colour of the rainbow, slowly shifting
         ctx.lineWidth = 5; ctx.lineCap = 'round';
         let px = cat.x, py = cat.y - 34;
-        trail.forEach((l, i) => { ctx.strokeStyle = `hsla(${(i * 40 + t * 90) % 360},90%,65%,.85)`; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(l.x, l.y); ctx.stroke(); px = l.x; py = l.y; });
+        trail.forEach((l, i) => { ctx.strokeStyle = `hsla(${(i * 40 + t * 90) % 360},90%,70%,.9)`; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(l.x, l.y); ctx.stroke(); px = l.x; py = l.y; });
       } else {
-        ctx.strokeStyle = `rgba(${TRAILS[trailPick].c},${trailPick === 'honey' ? .18 : .45})`; ctx.lineWidth = trailPick === 'honey' ? 2 : 3; ctx.beginPath();
+        // the original thin string, just a little lighter so it reads on dark maps
+        ctx.strokeStyle = `rgba(${TRAILS[trailPick].c},${trailPick === 'honey' ? .32 : .6})`; ctx.lineWidth = trailPick === 'honey' ? 2.5 : 3; ctx.lineCap = 'round'; ctx.beginPath();
         ctx.moveTo(cat.x, cat.y - 34); trail.forEach(l => ctx.lineTo(l.x, l.y)); ctx.stroke();
       }
     }
@@ -3690,8 +3771,9 @@
   function drawItemsFound(yTop) {
     if (!showItemsHud) return;
     const parts = [];
-    if (trinkets.length) parts.push({ kind: 't', text: `${trinkets.filter(k => k.taken).length}/${trinkets.length}` });
-    if (mode === 'story' && keepsakeTotal(storyNight)) parts.push({ kind: 'k', text: `${keepsakesFound(storyNight)}/${keepsakeTotal(storyNight)}` });
+    // only list a kind of item while some of it is still out on this map to find
+    if (trinkets.some(k => !k.taken) && !pouchFull()) parts.push({ kind: 't', text: `${trinkets.filter(k => k.taken).length}/${trinkets.length}` });
+    if (mode === 'story' && keepsakesFound(storyNight) < keepsakeTotal(storyNight)) parts.push({ kind: 'k', text: `${keepsakesFound(storyNight)}/${keepsakeTotal(storyNight)}` });
     if (!parts.length) return;
     ctx.save();
     ctx.font = `700 12px ${BODY}`; const lw = ctx.measureText('FOUND').width + 10;
@@ -3751,7 +3833,7 @@
     }
     if (skyEnabled && skySpawned > 0) {
       const perfectY = top + (combo > 1 ? (compactSky ? 160 : 128) : (compactSky ? 104 : 92));
-      ctx.textAlign = 'left'; ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText(`Perfect skys: ${skyPerfect}`, 22, perfectY);
+      ctx.textAlign = 'left'; ctx.font = `600 12px ${BODY}`; ctx.fillStyle = MUTED; ctx.fillText(`Perfect skies: ${skyPerfect}`, 22, perfectY);
     }
     {
       let ay = skyEnabled ? top + (combo > 1 ? (compactSky ? 186 : 153) : (compactSky ? 128 : 116)) : top + (combo > 1 ? 132 : 92);
@@ -3805,6 +3887,12 @@
       ctx.font = `600 13px ${BODY}`; ctx.fillStyle = VIOLET;
       ctx.fillText(`FREE MODE · LEVEL ${level + 1}`, VW - 22, top + 58);
       drawItemsFound(top + 66);
+    }
+    if (atPortal()) {
+      const bob = Math.sin(t * 4) * 2;
+      ctx.textAlign='center';ctx.font=`800 20px ${DISP}`;ctx.lineWidth=5;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#fff3c4';
+      const msg = touchUI && !touchUI.hidden ? 'Tap  Go home  to go through the moon door' : 'H  Go home through the moon door';
+      ctx.strokeText(msg,VW/2,VH - 104 + bob);ctx.fillText(msg,VW/2,VH - 104 + bob);
     }
     if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
@@ -3866,9 +3954,9 @@
     if (state === 'over' || state === 'home') return;
     if (won || mode === 'free') window.TCHeart?.bank(workshopRun);
     // trinkets carried this run are only safe once the night ends well
-    if (won || mode === 'free') { const kept = trinketRun.slice(0, Math.max(0, POUCH_SIZE - pouch.length)); pouch.push(...kept); savePouch(); lastTrinkets = { kept: kept.length, lost: 0 }; }
+    if (won || mode === 'free') { const kept = trinketRun.slice(0, Math.max(0, POUCH_SIZE - pouch.length)); pouch.push(...kept); savePouch(); lastTrinkets = { kept: kept.length, lost: 0 }; trinketIds.slice(0, kept.length).forEach(id => foundTrinkets.add(id)); saveFoundTrinkets(); }
     else lastTrinkets = { kept: 0, lost: trinketRun.length };
-    trinketRun = [];
+    trinketRun = []; trinketIds = [];
     workshopRun = [];
     state = 'over'; pauseBtn.hidden = true; pauseScreen.hidden = true; touchUI.hidden = true; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     if (runN >= 3 && startles === 0) bump('quietN');
@@ -3942,11 +4030,19 @@
   }
   if (typeof ResizeObserver === 'function') new ResizeObserver(sizeHubCat).observe(heroArt);
   addEventListener('resize', sizeHubCat);
-  function refreshHubStats(found = BOOK_GOAL_KEYS.filter(key => book[key]).length) {
+  // Every page in the Mood Book: the night Moodlings plus the feelings made in the Heart Workshop.
+  function bookTotals() {
+    const HD = window.TCHeartData; let made = [], mixed = [];
+    if (HD) { mixed = HD.feelings.filter(f => f.tier > 0); try { const d = HD.create(localStorage).snapshot().discovered; made = mixed.filter(f => d.includes(f.id)); } catch (e) {} }
+    return { found: BOOK_ORDER.filter(k => book[k]).length + made.length, total: BOOK_ORDER.length + mixed.length };
+  }
+  function refreshHubStats() {
+    const { found, total } = bookTotals();
     animateHubNumber($('#hubGlowValue'), glow);
-    animateHubNumber($('#hubBookValue'), found, n => `${n} / 17`);
+    animateHubNumber($('#hubBookValue'), found, n => `${n} / ${total}`);
     $('#shopBtnValue').textContent = `${glow} Glow`;
-    $('#bookBtnValue').textContent = `${found} / 17 found`;
+    $('#bookBtnValue').textContent = `${found} / ${total} found`;
+    { const tv = $('#roomTownValue'); if (tv && window.TCHeartData) { let lit = 0; try { lit = window.TCHeartData.create(localStorage).snapshot().lit.length; } catch (e) {} tv.textContent = `${lit} / ${window.TCHeartData.places.length} lit`; } }
     { const sc = $('#shelfCount'); if (sc) { const s2 = shelfTotals(); sc.textContent = `${s2.have} / ${s2.all} keepsakes`; } }
     sizeHubCat();
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
@@ -4063,17 +4159,41 @@
   });
   function renderBook() {
     const found = BOOK_ORDER.filter(k => book[k]).length;
-    $('#bookCount').textContent = `${found} / ${BOOK_ORDER.length} found`; refreshHubStats();
-    $('#bookList').innerHTML = BOOK_ORDER.map(k => {
+    { const T = bookTotals(); $('#bookCount').textContent = `${T.found} / ${T.total} found`; } refreshHubStats();
+    $('#bookList').innerHTML = `<h2 class="book-section">Night Moodlings <small>${found} / ${BOOK_ORDER.length}</small></h2>` + BOOK_ORDER.map(k => {
       const ty = k[0], v = +k[1], info = vinfo(ty, v), n = book[k] || 0, known = n > 0;
       const tag = `<span class="tag${info.r === 'Rare' || info.r === 'Special' ? ' rare' : ''}">${info.r}${known ? ` · caught ×${n}` : ''}</span>`;
       if (known) return `<div class="entry" data-feeling="${ty}">${iconSVG(ty, v, true)}<h3>${info.n}</h3>${tag}<p>${info.d}</p><p class="line">${info.line}</p></div>`;
       const hint = info.lock || (info.r === 'Rare' ? `A rare form of ${vinfo(ty, 0).n}. Look for sparkles.` : 'Catch one to fill this page.');
       return `<div class="entry unknown">${iconSVG(ty, v, false)}<h3>???</h3>${tag}<p>${hint}</p></div>`;
+    }).join('') + heartBookPages();
+  }
+  // Feelings made in the Heart Workshop get their own pages after the night Moodlings.
+  function heartBookPages() {
+    const HD = window.TCHeartData, art = window.TCMoodArt; if (!HD || !art) return '';
+    let made = [];
+    try { made = HD.create(localStorage).snapshot().discovered; } catch (e) {}
+    const mixed = HD.feelings.filter(f => f.tier > 0), have = mixed.filter(f => made.includes(f.id)).length;
+    const layer = ['', 'Layer 1', 'Layer 2', 'Deep feeling', 'The final feeling'];
+    return `<h2 class="book-section">Made in the Heart Workshop <small>${have} / ${mixed.length}</small></h2>` + mixed.map(f => {
+      const tag = `<span class="tag${f.tier >= 3 ? ' rare' : ''}">${layer[f.tier]}</span>`;
+      if (made.includes(f.id)) return `<div class="entry heart-page">${art.svg(f.id, 'book-mood')}<h3>${f.name}</h3>${tag}<p>${HD.byId[f.ingredients[0]].name} + ${HD.byId[f.ingredients[1]].name}</p><p class="line">${f.line}</p></div>`;
+      return `<div class="entry unknown heart-page"><span class="heart-secret">${art.svg(f.id, 'book-mood')}</span><h3>???</h3>${tag}<p>Mix two feelings in the Heart Workshop to find this one.</p></div>`;
     }).join('');
   }
   $('#bookBtn').addEventListener('click', () => { music('play', 'menu'); music('ambience', 'menu'); $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
   $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; showMainMenu(true); });
+  // Heart Workshop jar and Lantern Town model in Thiri's room
+  $('#roomHeartBtn')?.addEventListener('click', () => window.TCHeart?.open('workshop'));
+  $('#roomTownBtn')?.addEventListener('click', () => window.TCHeart?.open('town'));
+  // The Glow and Mood Book counters at the top of the room open the Treat box and the Mood Book too.
+  [['#hubBookValue', '#bookBtn', 'Open the Mood Book'], ['#hubGlowValue', '#shopBtn', 'Open the Treat box']].forEach(([val, target, label]) => {
+    const pill = $(val)?.closest('.hub-currency-pill'); if (!pill) return;
+    pill.classList.add('is-link'); pill.setAttribute('role', 'button'); pill.tabIndex = 0; pill.setAttribute('aria-label', label); pill.title = label;
+    const go = () => $(target)?.click();
+    pill.addEventListener('click', go);
+    pill.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
   let shopFrom = null;
   let shopTab = 'upgrades';
   (function () {
@@ -4205,15 +4325,23 @@
     $('#endEyebrow').textContent = `${hourOf(night)} · ${chapter.name} · done`;
     $('#endTitle').textContent = night === 50 ? 'All 50 routes are home' : R.unlocked ? `${hourOf(night)} done. ${hourOf(next)} is open!` : night === 7 ? 'The lake is quiet' : 'A little more of Thiri returns';
     $('#endMsg').textContent = `You brought all ${R.total} feelings home. ${R.unlocked ? `${hourOf(next)} is now playable from the map.` : 'Your story progress is saved.'}`;
-    $('#againBtn').textContent = night < 50 ? `Continue → ${hourOf(night + 1)}` : `Replay ${hourOf(50)}`;
   }
 
+  // The three choices after a night: play it again, continue to the next hour, or go back to the levels.
+  function canContinue() { return !!R && !R.free && R.night < 50 && unlockedLevel > R.night; }
+  function setEndButtons() {
+    const again = $('#againBtn'), cont = $('#endContinueBtn');
+    again.textContent = R.free ? 'Play again' : R.won ? 'Play again' : `Try ${hourOf(R.night)} again`;
+    again.classList.toggle('ghost', canContinue());
+    cont.hidden = !canContinue();
+    if (!cont.hidden) cont.textContent = `Continue → ${hourOf(R.night + 1)}`;
+    $('#menuBtn').textContent = R.free ? 'Pick a place' : 'Levels';
+  }
   function showEnd() {
     music('play', 'results'); music('ambience', null); sfx('ui', R.won ? 'reward' : 'result');
     if (R.final > 0 && R.final >= R.best) setTimeout(() => sfx('ui', 'sparkle'), 420);
     state = 'over'; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     $('#sGlow').textContent = '+' + lastGlow;
-    $('#endReplayBtn').hidden = !R.won || R.free;
     $('#newBestSticker').hidden = !(R.final > 0 && R.final >= R.best);
     const extra = [];
     if (runDone.length) extra.push(`Mission complete: ${runDone.join('; ')}. Claim the reward on the main menu.`);
@@ -4239,6 +4367,7 @@
       $('#sCombo').textContent = '×' + R.combo;
       $('#sHome').textContent = String(R.home);
       $('#endTip').textContent = R.tip;
+      setEndButtons();
       setTimeout(() => { $('#endScreen').hidden = false; $('#againBtn').focus(); }, 280);
       return;
     }
@@ -4254,11 +4383,10 @@
     $('#sBest').textContent = R.best.toLocaleString();
     $('#sCombo').textContent = '×' + R.combo;
     $('#sHome').textContent = `${R.home}/${R.total}`;
-    $('#againBtn').textContent = R.won ? (R.night < 50 ? `Continue → ${hourOf(R.night + 1)}` : `Replay ${hourOf(50)}`) : `Retry ${hourOf(R.night)}`;
-    $('#menuBtn').textContent = R.failReason === 'fall' ? 'Back to map' : 'Main menu';
     $('#endTip').textContent = R.tip;
     if (R.won) playNightComplete(R.night);
-    setTimeout(() => { $('#endScreen').hidden = false; $('#againBtn').focus(); }, 280);
+    setEndButtons();
+    setTimeout(() => { $('#endScreen').hidden = false; (canContinue() ? $('#endContinueBtn') : $('#againBtn')).focus(); }, 280);
   }
 
   // ---------- Thiri's bedroom (painted room for the coming-home scene) ----------
@@ -5524,7 +5652,7 @@
     $('#levelBriefingEyebrow').textContent = `${hourOf(briefingNight).toUpperCase()} · THE NIGHT SIDE`;
     $('#levelBriefingTitle').textContent = chapter.name;
     const visualChapter = window.TCVisualChapters?.forLevel(briefingNight);
-    const hallway = window.TC_LEVELS?.[briefingNight]?.map === 'school' ? window.TCSchoolHallways?.forLevel(briefingNight) : null;
+    const hallway = null;
     $('#levelBriefingSub').textContent = visualChapter ? `${hallway ? hallway.name + ' · ' : ''}${visualChapter.name} · Levels ${visualChapter.first}–${visualChapter.last}. ${visualChapter.description}` : chapter.sub;
     const goal = Object.entries(chapter.feelingsNeeded || {}).map(([type, count]) => `${BRIEFING_FEELING_NAMES[type] || type} ×${count}`).join(' · ');
     $('#levelBriefingGoal').textContent = goal ? `Bring home: ${goal}` : 'Find the little lights that are ready to come home.';
@@ -5771,26 +5899,23 @@
     setTimeout(() => (grid.querySelector('.chosen:not([disabled])') || grid.querySelector('button:not([disabled])'))?.focus(), 30);
   }
   $('#freeBtn').addEventListener('click', () => openFreeMapPicker($('#freeBtn')));
-  $('#againBtn').addEventListener('click', () => {
-    if (R && R.won && !R.free && R.night < 50) startGame('story', R.night + 1);
-    else startGame(mode, storyNight);
-  });
-  $('#endReplayBtn').addEventListener('click', () => startGame(mode, storyNight));
+  $('#againBtn').addEventListener('click', () => startGame(mode, storyNight));
+  $('#endContinueBtn').addEventListener('click', () => { if (canContinue()) startGame('story', R.night + 1); });
   $('#menuBtn').addEventListener('click', () => {
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns();
-    if (R?.failReason === 'fall' && mode === 'story') { $('#endScreen').hidden = true; showStoryMap(true); }
-    else showMainMenu(true);
+    if (mode === 'story') { $('#endScreen').hidden = true; showStoryMap(true); }
+    else { showMainMenu(true); openFreeMapPicker($('#freeBtn')); }
   });
 
   const goHomeBtn = document.getElementById('goHomeBtn');
-  goHomeBtn?.addEventListener('click', goHome);
+  goHomeBtn?.addEventListener('click', enterPortal);
   let last = performance.now();
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(.033, (now - last) / 1000); last = now;
     if (document.hidden) return;
     pauseBtn.hidden = state !== 'play';
-    if (goHomeBtn) goHomeBtn.hidden = true;   // going home is now done by walking into the moon door
+    if (goHomeBtn) goHomeBtn.hidden = !atPortal();   // only while Shwe is standing at the moon door
     if (mobileLandscapeRequired && !orientationGate.hidden) return;
     if (state === 'intro' || state === 'awakening') { t += dt; return; }
     if (state === 'play' || state === 'ending') {

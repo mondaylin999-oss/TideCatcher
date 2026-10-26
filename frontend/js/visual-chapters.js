@@ -29,7 +29,10 @@
     const hill=ground-95;
     const start=Math.floor(cam*.24/640)-1;
     // Sparse, distant landmarks stay above the playable floor.
-    for(let k=start;map!=='school' && map!=='rooftop' && k<(cam*.24+width)/640+1;k++){
+    // Off: these silhouettes sat at one fixed height and slid with parallax, so they looked like they floated
+    // above the painted ground. The painted maps already have their own lamps and trees.
+    const landmarks=false;
+    for(let k=start;landmarks && map!=='school' && map!=='rooftop' && k<(cam*.24+width)/640+1;k++){
       const x=cam+k*640-cam*.24+220, y=hill-12+(k%2)*12;
       g.save();g.globalAlpha=map==='school'?.32:.6;
       if(c.index>0){g.translate(x,y);g.scale(1.25,1.25);g.translate(-x,-y);}
