@@ -462,3 +462,18 @@
   #roomHelpBtn .rh-tag,#roomBedBtn .rh-tag{display:none}
 }
 @media (prefers-reduced-motion:reduce){ .rh-thiri,.rh-zzz i,.rh-spot::after{animation:none} .rh-zzz i{opacity:.6} }
+/* the team's Heart Workshop / Lantern Town buttons (heart-ui.js) are the ones shown on the home page */
+.hub-content-heading:has(.heart-home-links) .as-doors{display:none!important}
+#startScreen .heart-home-links{display:flex; flex-wrap:wrap; gap:10px; margin-top:8px}
+#startScreen .heart-home-links button{min-height:44px; padding:6px 16px; border:0; border-radius:2px; background:#fffdf6; color:#2b2547; cursor:pointer;
+  font-family:var(--sb-hand); font-weight:700; font-size:21px; letter-spacing:-.3px; box-shadow:0 8px 16px rgba(8,5,25,.45); transform:rotate(-1.2deg); text-shadow:none}
+#startScreen .heart-home-links button:nth-child(2){background:#fff3d6; transform:rotate(1.4deg)}
+#startScreen .heart-home-links button:hover{transform:rotate(0) translateY(-2px)}
+#startScreen .heart-home-links button:focus-visible{outline:3px solid #8fc3ff; outline-offset:3px}
+@media (max-height:520px){ #startScreen .heart-home-links button{min-height:38px; font-size:17px; padding:4px 12px} }
+/* name setup, step 1: her photo and her name instead of the cat */
+#setupScreen .sb-girl-photo,#setupScreen .sb-girl-cap{display:none}
+#setupScreen .setup-preview.sb-step-girl canvas,#setupScreen .setup-preview.sb-step-girl .setup-tag{display:none!important}
+#setupScreen .setup-preview.sb-step-girl .sb-girl-photo{display:block; width:100%; aspect-ratio:10/7; object-fit:cover; border-radius:2px}
+#setupScreen .setup-preview.sb-step-girl .sb-girl-cap{display:block; margin-top:8px; text-align:center; color:var(--sb-ink); font-family:var(--sb-hand); font-weight:700; font-size:24px; line-height:1}
+#setupScreen .setup-preview{margin-top:12px}
