@@ -76,7 +76,7 @@
   });
   // Keep back navigation outside panel layout and scrolling containers.
   ['settingsCloseBtn', 'levelBriefingBack', 'shopBack', 'bookBack',
-    'setupBackBtn', 'setupPrevious', 'helpDoneBtn', 'pauseChaptersBtn', 'menuBtn'].forEach(id => {
+    'setupBackBtn', 'setupPrevious', 'helpDoneBtn', 'pauseChaptersBtn'].forEach(id => {
     const button = $(id), screen = button?.closest('.overlay');
     if (!screen) return;
     button.classList.add('screen-back');

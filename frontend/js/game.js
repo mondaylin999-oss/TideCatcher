@@ -4276,15 +4276,23 @@
     $('#endEyebrow').textContent = `${hourOf(night)} · ${chapter.name} · done`;
     $('#endTitle').textContent = night === 50 ? 'All 50 routes are home' : R.unlocked ? `${hourOf(night)} done. ${hourOf(next)} is open!` : night === 7 ? 'The lake is quiet' : 'A little more of Thiri returns';
     $('#endMsg').textContent = `You brought all ${R.total} feelings home. ${R.unlocked ? `${hourOf(next)} is now playable from the map.` : 'Your story progress is saved.'}`;
-    $('#againBtn').textContent = night < 50 ? `Continue → ${hourOf(night + 1)}` : `Replay ${hourOf(50)}`;
   }
 
+  // The three choices after a night: play it again, continue to the next hour, or go back to the levels.
+  function canContinue() { return !!R && !R.free && R.night < 50 && unlockedLevel > R.night; }
+  function setEndButtons() {
+    const again = $('#againBtn'), cont = $('#endContinueBtn');
+    again.textContent = R.free ? 'Play again' : R.won ? 'Play again' : `Try ${hourOf(R.night)} again`;
+    again.classList.toggle('ghost', canContinue());
+    cont.hidden = !canContinue();
+    if (!cont.hidden) cont.textContent = `Continue → ${hourOf(R.night + 1)}`;
+    $('#menuBtn').textContent = R.free ? 'Pick a place' : 'Levels';
+  }
   function showEnd() {
     music('play', 'results'); music('ambience', null); sfx('ui', R.won ? 'reward' : 'result');
     if (R.final > 0 && R.final >= R.best) setTimeout(() => sfx('ui', 'sparkle'), 420);
     state = 'over'; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null;
     $('#sGlow').textContent = '+' + lastGlow;
-    $('#endReplayBtn').hidden = !R.won || R.free;
     $('#newBestSticker').hidden = !(R.final > 0 && R.final >= R.best);
     const extra = [];
     if (runDone.length) extra.push(`Mission complete: ${runDone.join('; ')}. Claim the reward on the main menu.`);
@@ -4310,6 +4318,7 @@
       $('#sCombo').textContent = '×' + R.combo;
       $('#sHome').textContent = String(R.home);
       $('#endTip').textContent = R.tip;
+      setEndButtons();
       setTimeout(() => { $('#endScreen').hidden = false; $('#againBtn').focus(); }, 280);
       return;
     }
@@ -4325,11 +4334,10 @@
     $('#sBest').textContent = R.best.toLocaleString();
     $('#sCombo').textContent = '×' + R.combo;
     $('#sHome').textContent = `${R.home}/${R.total}`;
-    $('#againBtn').textContent = R.won ? (R.night < 50 ? `Continue → ${hourOf(R.night + 1)}` : `Replay ${hourOf(50)}`) : `Retry ${hourOf(R.night)}`;
-    $('#menuBtn').textContent = R.failReason === 'fall' ? 'Back to map' : 'Main menu';
     $('#endTip').textContent = R.tip;
     if (R.won) playNightComplete(R.night);
-    setTimeout(() => { $('#endScreen').hidden = false; $('#againBtn').focus(); }, 280);
+    setEndButtons();
+    setTimeout(() => { $('#endScreen').hidden = false; (canContinue() ? $('#endContinueBtn') : $('#againBtn')).focus(); }, 280);
   }
 
   // ---------- Thiri's bedroom (painted room for the coming-home scene) ----------
@@ -5842,15 +5850,12 @@
     setTimeout(() => (grid.querySelector('.chosen:not([disabled])') || grid.querySelector('button:not([disabled])'))?.focus(), 30);
   }
   $('#freeBtn').addEventListener('click', () => openFreeMapPicker($('#freeBtn')));
-  $('#againBtn').addEventListener('click', () => {
-    if (R && R.won && !R.free && R.night < 50) startGame('story', R.night + 1);
-    else startGame(mode, storyNight);
-  });
-  $('#endReplayBtn').addEventListener('click', () => startGame(mode, storyNight));
+  $('#againBtn').addEventListener('click', () => startGame(mode, storyNight));
+  $('#endContinueBtn').addEventListener('click', () => { if (canContinue()) startGame('story', R.night + 1); });
   $('#menuBtn').addEventListener('click', () => {
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns();
-    if (R?.failReason === 'fall' && mode === 'story') { $('#endScreen').hidden = true; showStoryMap(true); }
-    else showMainMenu(true);
+    if (mode === 'story') { $('#endScreen').hidden = true; showStoryMap(true); }
+    else { showMainMenu(true); openFreeMapPicker($('#freeBtn')); }
   });
 
   const goHomeBtn = document.getElementById('goHomeBtn');
