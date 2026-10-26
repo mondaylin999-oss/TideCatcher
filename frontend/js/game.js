@@ -4013,11 +4013,18 @@
   }
   if (typeof ResizeObserver === 'function') new ResizeObserver(sizeHubCat).observe(heroArt);
   addEventListener('resize', sizeHubCat);
-  function refreshHubStats(found = BOOK_GOAL_KEYS.filter(key => book[key]).length) {
+  // Every page in the Mood Book: the night Moodlings plus the feelings made in the Heart Workshop.
+  function bookTotals() {
+    const HD = window.TCHeartData; let made = [], mixed = [];
+    if (HD) { mixed = HD.feelings.filter(f => f.tier > 0); try { const d = HD.create(localStorage).snapshot().discovered; made = mixed.filter(f => d.includes(f.id)); } catch (e) {} }
+    return { found: BOOK_ORDER.filter(k => book[k]).length + made.length, total: BOOK_ORDER.length + mixed.length };
+  }
+  function refreshHubStats() {
+    const { found, total } = bookTotals();
     animateHubNumber($('#hubGlowValue'), glow);
-    animateHubNumber($('#hubBookValue'), found, n => `${n} / 17`);
+    animateHubNumber($('#hubBookValue'), found, n => `${n} / ${total}`);
     $('#shopBtnValue').textContent = `${glow} Glow`;
-    $('#bookBtnValue').textContent = `${found} / 17 found`;
+    $('#bookBtnValue').textContent = `${found} / ${total} found`;
     { const sc = $('#shelfCount'); if (sc) { const s2 = shelfTotals(); sc.textContent = `${s2.have} / ${s2.all} keepsakes`; } }
     sizeHubCat();
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
@@ -4134,8 +4141,8 @@
   });
   function renderBook() {
     const found = BOOK_ORDER.filter(k => book[k]).length;
-    $('#bookCount').textContent = `${found} / ${BOOK_ORDER.length} found`; refreshHubStats();
-    $('#bookList').innerHTML = BOOK_ORDER.map(k => {
+    { const T = bookTotals(); $('#bookCount').textContent = `${T.found} / ${T.total} found`; } refreshHubStats();
+    $('#bookList').innerHTML = `<h2 class="book-section">Night Moodlings <small>${found} / ${BOOK_ORDER.length}</small></h2>` + BOOK_ORDER.map(k => {
       const ty = k[0], v = +k[1], info = vinfo(ty, v), n = book[k] || 0, known = n > 0;
       const tag = `<span class="tag${info.r === 'Rare' || info.r === 'Special' ? ' rare' : ''}">${info.r}${known ? ` · caught ×${n}` : ''}</span>`;
       if (known) return `<div class="entry" data-feeling="${ty}">${iconSVG(ty, v, true)}<h3>${info.n}</h3>${tag}<p>${info.d}</p><p class="line">${info.line}</p></div>`;
@@ -4150,7 +4157,6 @@
     try { made = HD.create(localStorage).snapshot().discovered; } catch (e) {}
     const mixed = HD.feelings.filter(f => f.tier > 0), have = mixed.filter(f => made.includes(f.id)).length;
     const layer = ['', 'Layer 1', 'Layer 2', 'Deep feeling', 'The final feeling'];
-    $('#bookCount').textContent += ` · ${have} / ${mixed.length} made`;
     return `<h2 class="book-section">Made in the Heart Workshop <small>${have} / ${mixed.length}</small></h2>` + mixed.map(f => {
       const tag = `<span class="tag${f.tier >= 3 ? ' rare' : ''}">${layer[f.tier]}</span>`;
       if (made.includes(f.id)) return `<div class="entry heart-page">${art.svg(f.id, 'book-mood')}<h3>${f.name}</h3>${tag}<p>${HD.byId[f.ingredients[0]].name} + ${HD.byId[f.ingredients[1]].name}</p><p class="line">${f.line}</p></div>`;
@@ -4159,6 +4165,14 @@
   }
   $('#bookBtn').addEventListener('click', () => { music('play', 'menu'); music('ambience', 'menu'); $('#startScreen').hidden = true; renderBook(); $('#bookScreen').hidden = false; $('#bookScreen').scrollTop = 0; $('#bookBack').focus({ preventScroll: true }); });
   $('#bookBack').addEventListener('click', () => { $('#bookScreen').hidden = true; showMainMenu(true); });
+  // The Glow and Mood Book counters at the top of the room open the Treat box and the Mood Book too.
+  [['#hubBookValue', '#bookBtn', 'Open the Mood Book'], ['#hubGlowValue', '#shopBtn', 'Open the Treat box']].forEach(([val, target, label]) => {
+    const pill = $(val)?.closest('.hub-currency-pill'); if (!pill) return;
+    pill.classList.add('is-link'); pill.setAttribute('role', 'button'); pill.tabIndex = 0; pill.setAttribute('aria-label', label); pill.title = label;
+    const go = () => $(target)?.click();
+    pill.addEventListener('click', go);
+    pill.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
   let shopFrom = null;
   let shopTab = 'upgrades';
   (function () {
