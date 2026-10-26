@@ -3665,27 +3665,49 @@
   function drawTrail() {
     if (!trail.length) return;
     const T0 = TRAILS[trailPick] || TRAILS.honey, rainbow = !!T0.rainbow;
-    const colAt = (i, a) => rainbow ? `hsla(${(i * 40 + t * 90) % 360},95%,68%,${a})` : `rgba(${T0.c},${a})`;
-    const pts = [[cat.x, cat.y - 34], ...trail.map(l => [l.x, l.y])];
-    const seg = (i, w, style) => { ctx.strokeStyle = style; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(pts[i][0], pts[i][1]); ctx.lineTo(pts[i + 1][0], pts[i + 1][1]); ctx.stroke(); };
+    const colAt = (u, a) => rainbow ? `hsla(${(u * 300 + t * 90) % 360},100%,70%,${a})` : `rgba(${T0.c},${a})`;
+    // A soft string: a smooth curve through Shwe and every light, sagging between them and gently swaying.
+    const P = [[cat.x - (cat.face || 1) * 10, cat.y - 30], ...trail.map(l => [l.x, l.y])];
+    const S = [];
+    for (let i = 0; i < P.length - 1; i++) {
+      const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
+      const len = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]), n = Math.max(6, Math.ceil(len / 6));
+      for (let k = 0; k < n; k++) {
+        const u = k / n, u2 = u * u, u3 = u2 * u;
+        let x = .5 * (2 * p1[0] + (-p0[0] + p2[0]) * u + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * u2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * u3);
+        let y = .5 * (2 * p1[1] + (-p0[1] + p2[1]) * u + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * u2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * u3);
+        const bell = Math.sin(Math.PI * u);
+        y += bell * (10 + Math.min(14, len * .12)) + bell * Math.sin(t * 3.2 + i * 1.7 + u * 6) * 5;   // sag + sway
+        S.push([x, y, (i + u) / Math.max(1, P.length - 1)]);
+      }
+    }
+    S.push([...P[P.length - 1], 1]);
+    const stroke = (w, style, from = 0) => {
+      ctx.lineWidth = w;
+      for (let j = 0; j < S.length - 1; j += 3) {
+        const e = Math.min(S.length - 1, j + 3);
+        ctx.strokeStyle = typeof style === 'function' ? style(S[j][2]) : style;
+        ctx.beginPath(); ctx.moveTo(S[j][0], S[j][1]); for (let q = j + 1; q <= e; q++) ctx.lineTo(S[q][0], S[q][1]); ctx.stroke();
+      }
+    };
     ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    // 1) wide soft glow, 2) bright coloured ribbon, 3) thin white shine on top
     ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < pts.length - 1; i++) seg(i, 16, colAt(i, .16));
-    for (let i = 0; i < pts.length - 1; i++) seg(i, 9, colAt(i, .3));
+    stroke(22, u => colAt(u, .14));
+    stroke(12, u => colAt(u, .32));
     ctx.globalCompositeOperation = 'source-over';
-    for (let i = 0; i < pts.length - 1; i++) seg(i, 5, colAt(i, .95));
-    for (let i = 0; i < pts.length - 1; i++) seg(i, 1.6, 'rgba(255,255,255,.75)');
-    // halo behind every light, and little sparkles that drift along the ribbon
+    stroke(5, u => colAt(u, 1));
     ctx.globalCompositeOperation = 'lighter';
+    stroke(2, 'rgba(255,255,255,.9)');
+    // halos behind the lights
     trail.forEach((l, i) => {
-      const pulse = .75 + .25 * Math.sin(t * 4 + i * 1.3);
-      ctx.globalAlpha = .55 * pulse; ctx.drawImage(glowImg(rainbow ? `hsl(${(i * 40 + t * 90) % 360},95%,68%)` : col(l.type)), l.x - 40, l.y - 40, 80, 80);
+      const pulse = .8 + .2 * Math.sin(t * 4 + i * 1.3);
+      ctx.globalAlpha = .9 * pulse; ctx.drawImage(glowImg(rainbow ? `hsl(${((i + 1) / trail.length * 300 + t * 90) % 360},100%,70%)` : col(l.type)), l.x - 48, l.y - 48, 96, 96);
     });
-    ctx.globalAlpha = 1;
-    for (let i = 0; i < pts.length - 1; i++) for (let k = 0; k < 2; k++) {
-      const u = ((t * .9 + k * .5 + i * .37) % 1), x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, y = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u + Math.sin(t * 5 + i + k) * 5;
-      ctx.globalAlpha = .5 + .5 * Math.sin(t * 6 + i * 2 + k * 3); ctx.fillStyle = k ? '#fff' : colAt(i, 1); star(x, y, 4, 4.2, 1.5, t + i); ctx.fill();
+    // sparkles running along the string
+    for (let k = 0; k < Math.min(40, S.length / 4); k++) {
+      const idx = Math.floor(((k * 9.7 + t * 18) % S.length + S.length) % S.length), [x, y, u] = S[idx];
+      ctx.globalAlpha = .55 + .45 * Math.sin(t * 7 + k * 2.1); ctx.fillStyle = k % 2 ? '#fff' : colAt(u, 1);
+      star(x, y + Math.sin(t * 5 + k) * 3, 4, k % 3 ? 3.4 : 5, 1.3, t * 2 + k); ctx.fill();
     }
     ctx.restore();
     trail.forEach(l => lightShape(l.type, l.x, l.y, 1.12, l.v));
