@@ -2032,7 +2032,7 @@
     if (Math.abs(c.vx) > 0 && (currentLevel.pits || []).some(([a, b]) => c.x >= a - 52 && c.x <= b + 52) && t >= edgeSoundAt) { edgeSoundAt = t + 1.2; sfx('ui', 'edge'); }
     if (c.y > VH + OY - 10) beginFall();
     if (c.on && Math.abs(c.vx) > 90) {
-      c.walk += dt * Math.abs(c.vx) / 17;
+      c.walk += dt * Math.min(Math.abs(c.vx), 300) / 27;   // calm steps: about 1.7 strides a second at full speed, so the legs never flutter
       const stepBeat = Math.floor(c.walk / Math.PI);
       if (stepBeat !== c.stepBeat) { c.stepBeat = stepBeat; sfx('ui', 'step'); }
     }
@@ -3621,7 +3621,7 @@
     // falls on a soft wave instead of a sharp bounce at every step.
     // Gait: each leg pair swings forward with its paw lifted, then pushes back with the paw on the
     // ground. Only the body bobs; the standing paws never leave the floor.
-    const pace = clamp((speed - 10) / 280, 0, 1), amp = c.sneak ? .2 : .28 + .2 * pace;
+    const pace = clamp((speed - 10) / 280, 0, 1), amp = c.sneak ? .22 : .32 + .22 * pace;
     let back = 0, front = 0, tail, breath = 0, bodyY = 0, backLift = 0, frontLift = 0;
     if (scratchAnim > 0 && c.on) { front = Math.sin(t * 20) * .58; frontLift = Math.max(0, Math.sin(t * 20)) * .25; back = -.08; tail = .28 + Math.sin(t * 8) * .12; breath = .01; bodyY = 1.3; }
     else if (c.pounce > 0) { back = -.62; front = .72; tail = -.42; backLift = .12; frontLift = .2; }
@@ -3660,10 +3660,10 @@
     const c = cat; if (c.respawning) return; ctx.save();
     if (c.falling) ctx.globalAlpha = clamp(1 - c.fallTime / .38, 0, 1);
     if (c.inv > 0 && Math.floor(c.inv * 12) % 2) ctx.globalAlpha = .45;
-    ctx.translate(c.x, c.y); ctx.scale(c.face, 1);
+    { const px = dpr * S; ctx.translate(Math.round(c.x * px) / px, Math.round(c.y * px) / px); } ctx.scale(c.face, 1);
     let sxs = 1, sys = 1;
     if (c.pounce > 0) { sxs = 1.12; sys = .9; } else if (scratchAnim > 0 && c.on) { sxs = 1.03; sys = .92; } else if (c.squash > 0) { sxs = 1.04; sys = .95; } else if (c.sneak) { sys = .91; sxs = .98; } else if (!c.on) { sxs = .96; sys = 1.06; }
-    if (c.on && Math.abs(c.vx) > 285) ctx.rotate(.035);
+    // (removed: a lean that switched on and off right at top speed and made the cat flicker)
     ctx.scale(sxs, sys);
     if (!mkDrawSprite(c)) {
     const body = COAT.body, dark = COAT.dark, belly = COAT.belly;
@@ -3948,7 +3948,9 @@
     ctx.setTransform(dpr * S, 0, 0, dpr * S, 0, dpr * S * OY);
     if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
-    ctx.save(); ctx.translate(-camX, 0);
+    // snap the camera to whole screen pixels: a camera between pixels makes posts, trunks and the cat's
+    // stripes shimmer (like 'lllll') as the town scrolls, especially on screens scaled to 125% or 150%
+    { const px = dpr * S; ctx.save(); ctx.translate(-Math.round(camX * px) / px, 0); }
     drawWorld(); drawHazards(); drawTrinkets(); drawPortal(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); drawLevelDebug();
     ctx.restore();
@@ -4335,8 +4337,11 @@
 
   function playNightComplete(night) {
     const chapter = chapterFor(night), next = Math.min(50, night + 1);
-    $('#nightStoryline').hidden = true;
+    $('#nightStoryline').hidden = false;
     $('#endThiriArt').dataset.stage = String(Math.min(7, thiriSleepStage));
+    { const st = Math.min(7, thiriSleepStage), mood = st <= 1 ? 1 : st <= 3 ? 2 : st <= 5 ? 3 : 4, art = $('#endThiriArt');
+      let img = art.querySelector('img.thiri-mood'); if (!img) { img = document.createElement('img'); img.className = 'thiri-mood'; img.alt = ''; art.appendChild(img); }
+      img.src = `assets/thiri-moods/m${mood}.webp`; art.classList.add('has-mood'); }
     $('#endDiaryLine').textContent = `“${chapter.diary}”`;
     $('#endStageLine').textContent = `Thiri’s room is changing · sleep stage ${thiriSleepStage} of 7`;
     $('#endUnlockBadge').hidden = !R.unlocked;
@@ -4840,6 +4845,11 @@
   }
   function markMode() { document.body.dataset.playMode = mode; }
   function startGame(m, night = storyNight) {
+    // the first step past the seventh night plays the team's Endless Nights film, once
+    if ((typeof m === 'string' ? m : mode) === 'story' && +night >= 8 && window.TCEndlessFilm && !TCEndlessFilm.seen()) {
+      $('#levelBriefingScreen').hidden = true; $('#startScreen').hidden = true; $('#endScreen').hidden = true;
+      music('duck', .25); TCEndlessFilm.play(() => { music('duck', 1); startGame(m, night); }); return;
+    }
     document.body.classList.remove('learning-with-shwe'); $('#tipCoach').classList.remove('shwe-lesson');
     if (typeof m === 'string') mode = m;
     markMode();

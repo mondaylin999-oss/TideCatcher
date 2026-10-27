@@ -739,3 +739,54 @@
 #touch #stick{width:96px; height:96px; opacity:.6}
 #touch #knob{width:40px; height:40px}
 #heartScreen .lt-cost{font-weight:400; color:#a0835a}
+/* end of a night: Thiri's sleeping face, painted by the team, changes as she heals */
+#endScreen .night-storyline{display:grid; grid-template-columns:minmax(150px,38%) 1fr; gap:14px; align-items:center; margin:4px 0 8px}
+#endScreen .night-storyline[hidden]{display:none}
+#endScreen .thiri-mini.has-mood{position:relative; aspect-ratio:16/9; border-radius:2px; background:#1a1430; padding:6px 6px 22px; background:#fff; box-shadow:0 6px 14px rgba(30,20,60,.3); transform:rotate(-2deg)}
+#endScreen .thiri-mini.has-mood svg{display:none}
+#endScreen .thiri-mini.has-mood img{display:block; width:100%; height:100%; object-fit:cover; object-position:30% 45%}
+#endScreen .night-story-copy p{margin:0 0 4px; font:700 19px/1.2 var(--sb-hand); color:#5a3f8a}
+#endScreen .night-story-copy span{font:15px var(--sb-hand); color:var(--sb-pencil)}
+#endScreen .night-story-copy strong{display:inline-block; margin-bottom:4px; padding:2px 10px; background:#ffe08a; color:var(--sb-ink); font:700 15px var(--sb-hand); transform:rotate(-1deg)}
+@media (max-height:520px){#endScreen .night-storyline{grid-template-columns:120px 1fr; gap:8px}#endScreen .night-story-copy p{font-size:15px}}
+
+/* ---------- Endless Nights film ---------- */
+#endlessFilm{position:fixed; inset:0; z-index:200; background:#04050f; color:#fff; cursor:pointer; outline:none; animation:ef-in .6s ease}
+#endlessFilm[hidden]{display:none}
+#endlessFilm.ef-out{animation:ef-fade .45s ease forwards}
+#endlessFilm .ef-stage{position:absolute; inset:0; overflow:hidden}
+#endlessFilm .ef-frame{position:absolute; inset:0; opacity:0; transition:opacity 1.4s ease}
+#endlessFilm .ef-frame.on{opacity:1}
+#endlessFilm .ef-frame img{width:100%; height:100%; object-fit:cover; transform-origin:center; will-change:transform}
+#endlessFilm img.lt-zoom-in{animation:ef-zin 9s ease-out forwards}
+#endlessFilm img.lt-zoom-out{animation:ef-zout 9s ease-out forwards}
+#endlessFilm img.lt-pan-right{animation:ef-pr 9s ease-out forwards}
+#endlessFilm img.lt-pan-left{animation:ef-pl 9s ease-out forwards}
+#endlessFilm .ef-bars::before,#endlessFilm .ef-bars::after{content:""; position:absolute; left:0; right:0; height:7vh; background:#04050f; z-index:3}
+#endlessFilm .ef-bars::before{top:0}#endlessFilm .ef-bars::after{bottom:0}
+#endlessFilm .ef-stage::after{content:""; position:absolute; inset:0; background:linear-gradient(transparent 55%,rgba(4,5,15,.75)); z-index:2; pointer-events:none}
+#endlessFilm .ef-sparks{position:absolute; inset:0; z-index:2; pointer-events:none}
+#endlessFilm .ef-sparks i{position:absolute; bottom:-10px; width:5px; height:5px; border-radius:50%; background:#ffe6a0; box-shadow:0 0 8px #ffcf5a; animation:ef-rise linear infinite; opacity:0}
+#endlessFilm .ef-caption{position:absolute; left:50%; bottom:calc(7vh + 18px); transform:translateX(-50%); z-index:4; margin:0; width:min(900px,88vw); text-align:center;
+  font:700 clamp(20px,3vw,34px)/1.25 var(--sb-hand); color:#fff6dc; text-shadow:0 2px 12px #000,0 0 2px #000; opacity:0}
+#endlessFilm .ef-caption.in{animation:ef-cap 1.2s ease .5s forwards}
+#endlessFilm.ef-last .ef-caption{color:#ffe08a}
+#endlessFilm .ef-dots{position:absolute; top:calc(7vh + 14px); left:50%; transform:translateX(-50%); z-index:4; display:flex; gap:8px}
+#endlessFilm .ef-dots i{width:22px; height:4px; border-radius:2px; background:rgba(255,255,255,.25); transition:background .4s}
+#endlessFilm .ef-dots i.on{background:#ffe08a}
+#endlessFilm .ef-skip,#endlessFilm .ef-next{position:absolute; z-index:5; border:0; cursor:pointer; font:700 18px var(--sb-hand); color:var(--sb-ink); background:var(--sb-paper-2); padding:6px 16px; clip-path:var(--sb-ticket); box-shadow:0 4px 12px rgba(0,0,0,.5)}
+#endlessFilm .ef-skip{top:calc(7vh + 8px); right:16px; transform:rotate(2deg)}
+#endlessFilm .ef-next{bottom:calc(7vh + 16px); right:16px; font-size:26px; padding:4px 18px}
+#endlessFilm.ef-last .ef-next{background:linear-gradient(#ffe08a,#ffc94a); font-size:20px; padding:8px 18px}
+@keyframes ef-in{from{opacity:0}}
+@keyframes ef-fade{to{opacity:0}}
+@keyframes ef-zin{from{transform:scale(1.02)}to{transform:scale(1.14)}}
+@keyframes ef-zout{from{transform:scale(1.16)}to{transform:scale(1.03)}}
+@keyframes ef-pr{from{transform:scale(1.12) translateX(-3%)}to{transform:scale(1.12) translateX(3%)}}
+@keyframes ef-pl{from{transform:scale(1.12) translateX(3%)}to{transform:scale(1.12) translateX(-3%)}}
+@keyframes ef-cap{from{opacity:0; transform:translate(-50%,8px)}to{opacity:1; transform:translate(-50%,0)}}
+@keyframes ef-rise{0%{opacity:0; transform:translateY(0)}15%{opacity:.9}100%{opacity:0; transform:translateY(-80vh) translateX(20px)}}
+@media (prefers-reduced-motion:reduce){#endlessFilm img[class]{animation:none}#endlessFilm .ef-sparks{display:none}}
+#endScreen #nightStoryline:not([hidden]){display:grid!important}
+#endScreen .thiri-mini.has-mood{max-height:22vh; width:auto; justify-self:center}
+@media (max-height:520px){#endScreen #nightStoryline{display:none!important}}
