@@ -62,6 +62,7 @@
     const button = $(id);
     button.addEventListener('click', event => {
       if (replayedPauseActions.has(button)) { replayedPauseActions.delete(button); return; }
+      if (document.body.dataset.playMode === 'free') return;   // free play has nothing to lose, so no warning
       event.preventDefault(); event.stopImmediatePropagation();
       const settings = typeof options === 'function' ? options() : options;
       confirmLeave(settings).then(confirmed => { if (!confirmed) return; replayedPauseActions.add(button); button.click(); });

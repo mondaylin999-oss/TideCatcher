@@ -551,3 +551,191 @@
 .rh-book-halo{animation:rh-breathe 3.6s ease-in-out infinite}
 .rh-book-sparks *{animation:rh-twinkle 2.2s ease-in-out infinite}.rh-book-sparks :nth-child(2){animation-delay:-.7s}.rh-book-sparks :nth-child(3){animation-delay:-1.4s}
 @media (prefers-reduced-motion:reduce){.rh-book-halo,.rh-book-sparks *{animation:none}}
+/* ---------- Lantern Town: 50 places gathered into one night town ---------- */
+#heartScreen .lt-scroll{overflow-x:auto; overflow-y:hidden; min-height:260px; background:#0c1230; touch-action:pan-x; scrollbar-width:thin}
+#heartScreen .lt-world{position:relative; height:100%; aspect-ratio:3000/900; min-height:260px}
+#heartScreen .lt-scenery{position:absolute; inset:0; width:100%; height:100%; display:block}
+#heartScreen .lt-place{position:absolute; padding:0; margin:0; border:0; background:none; min-height:0; cursor:pointer; box-shadow:none; border-radius:0}
+#heartScreen .lt-place img{position:relative; display:block; width:100%; height:100%; object-fit:contain; object-position:50% 100%; pointer-events:none;
+  filter:grayscale(.5) brightness(.48) saturate(.75); transition:filter .5s ease, transform .2s ease}
+#heartScreen .lt-place:hover img,#heartScreen .lt-place:focus-visible img{filter:grayscale(.35) brightness(.7) saturate(.85); transform:translateY(-2%)}
+#heartScreen .lt-place.lit img{filter:drop-shadow(0 0 .35vw rgba(255,214,140,.55))}
+#heartScreen .lt-place.lit:hover img{filter:drop-shadow(0 0 .5vw rgba(255,214,140,.8)) brightness(1.06)}
+#heartScreen .lt-glow{position:absolute; left:-25%; right:-25%; bottom:-12%; height:70%; border-radius:50%; pointer-events:none; opacity:0; transition:opacity .6s;
+  background:radial-gradient(ellipse at 50% 70%,rgba(255,206,120,.42),rgba(255,206,120,.12) 45%,transparent 70%)}
+#heartScreen .lt-place.lit .lt-glow{opacity:1; animation:lt-breathe 4s ease-in-out infinite}
+#heartScreen .lt-place.selected img{filter:drop-shadow(0 0 2px #ffe28a) drop-shadow(0 0 2px #ffe28a) grayscale(.35) brightness(.72)}
+#heartScreen .lt-place.selected.lit img{filter:drop-shadow(0 0 2px #ffe28a) drop-shadow(0 0 2px #ffe28a) drop-shadow(0 0 .4vw rgba(255,214,140,.6))}
+#heartScreen .lt-name{position:absolute; left:50%; bottom:100%; transform:translate(-50%,-4px) rotate(-2deg); white-space:nowrap; padding:2px 9px; border-radius:2px;
+  background:#fffdf6; color:#2b2547; font:700 13px/1.3 var(--sb-hand,cursive); box-shadow:0 3px 8px rgba(5,3,20,.45); opacity:0; pointer-events:none; transition:opacity .2s; z-index:5}
+#heartScreen .lt-place:hover .lt-name,#heartScreen .lt-place:focus-visible .lt-name,#heartScreen .lt-place.selected .lt-name{opacity:1}
+#heartScreen .lt-ready{position:absolute; right:4%; top:-4%; color:#ffe28a; font-size:clamp(12px,1.4vw,20px); text-shadow:0 0 6px #ffcf5a; animation:lt-twinkle 1.6s ease-in-out infinite; pointer-events:none}
+#heartScreen .lt-readycount{color:#ffe28a; font-weight:800}
+#heartScreen .lt-preview{display:block; max-width:62%; max-height:120px; margin:2px auto 0; object-fit:contain; filter:grayscale(.5) brightness(.6)}
+#heartScreen .lt-preview.lit{filter:drop-shadow(0 0 8px rgba(255,214,140,.6))}
+#heartScreen .lt-ending-view{height:min(52vh,420px); border-radius:18px}
+@keyframes lt-breathe{50%{opacity:.65}}
+@keyframes lt-twinkle{50%{opacity:.45; transform:scale(.85)}}
+@media (prefers-reduced-motion:reduce){#heartScreen .lt-place.lit .lt-glow,#heartScreen .lt-ready{animation:none}}
+#heartScreen .lt-place.lt-r .lt-name{left:auto; right:0; transform:translate(0,-4px) rotate(-2deg)}
+#heartScreen .lt-place.lt-l .lt-name{left:0; transform:translate(0,-4px) rotate(-2deg)}
+/* darker night town: unlit buildings sink further into the dark */
+#heartScreen .lt-scroll{background:#05081a}
+#heartScreen .lt-place img{filter:grayscale(.55) brightness(.32) saturate(.7)}
+#heartScreen .lt-place:hover img,#heartScreen .lt-place:focus-visible img{filter:grayscale(.4) brightness(.55) saturate(.8)}
+#heartScreen .lt-place.selected img{filter:drop-shadow(0 0 2px #ffe28a) drop-shadow(0 0 2px #ffe28a) grayscale(.4) brightness(.55)}
+#heartScreen .lt-place.lit .lt-glow{background:radial-gradient(ellipse at 50% 70%,rgba(255,200,110,.5),rgba(255,200,110,.14) 45%,transparent 70%)}
+/* ---------- Heart Workshop & Lantern Town: pages of Thiri's sketchbook, open on her desk at night ---------- */
+#heartScreen{background:linear-gradient(180deg,rgba(14,10,30,.86),rgba(14,10,30,.7) 45%,rgba(14,10,30,.9)),url("../assets/home/room-grey.webp") 30% 55%/cover no-repeat}
+#heartScreen .heart-header{position:relative; z-index:2}
+#heartScreen .heart-header button{font-family:var(--sb-hand); font-size:20px; font-weight:700; border:0; border-radius:2px; color:var(--sb-ink); background:var(--sb-paper-2);
+  box-shadow:0 4px 10px rgba(5,3,20,.4); transform:rotate(-1.5deg); clip-path:var(--sb-ticket); padding:6px 16px}
+#heartScreen .heart-header nav button{background:var(--sb-paper); transform:rotate(1deg)}
+#heartScreen .heart-header nav button[aria-pressed=true]{background:#ffe08a!important; color:var(--sb-ink)!important; transform:rotate(-1deg) translateY(-2px)}
+#heartScreen .heart-header button:hover:not(:disabled){background:#fff6c9; transform:rotate(0) translateY(-2px)}
+#heartScreen #heartGlow{font-family:var(--sb-hand); font-weight:700; font-size:20px; color:var(--sb-ink); background:#ffe08a; padding:4px 14px; transform:rotate(2deg); box-shadow:0 4px 10px rgba(5,3,20,.4)}
+#heartScreen #heartNotice{font-family:var(--sb-hand); font-size:19px; color:#ffe9b0}
+
+/* the town page: a taped sketchbook sheet */
+#heartScreen .lt-page{gap:22px}
+#heartScreen .lt-sheet{position:relative; background:var(--sb-paper); border-radius:3px; padding:14px 16px 10px; box-shadow:var(--sb-shadow); transform:rotate(-.35deg);
+  background-image:repeating-linear-gradient(0deg,transparent 0 27px,var(--sb-rule) 27px 28px)}
+#heartScreen .lt-sheet::before,#heartScreen .lt-sheet::after{content:""; position:absolute; top:-11px; width:96px; height:24px; background:var(--sb-tape); z-index:3}
+#heartScreen .lt-sheet::before{left:40px; transform:rotate(-4deg)}
+#heartScreen .lt-sheet::after{right:46px; transform:rotate(3deg); background:var(--sb-tape-2)}
+#heartScreen .lt-head{align-items:flex-end; flex-wrap:wrap; gap:6px 18px; margin-bottom:2px}
+#heartScreen .lt-title h1{margin:0; font-family:var(--sb-hand); font-weight:700; font-size:clamp(28px,3.2vw,44px); line-height:1; color:var(--sb-ink); text-shadow:none}
+#heartScreen .lt-title p{margin:2px 0 0; font-family:var(--sb-hand); font-size:18px; color:#7a5aa8}
+#heartScreen .lt-progress{display:grid; justify-items:end; gap:3px; color:var(--sb-ink-2)}
+#heartScreen .lt-progress span{font-family:var(--sb-hand); font-size:18px; color:var(--sb-ink-2)}
+#heartScreen .lt-progress b{font-size:24px; color:var(--sb-ink)}
+#heartScreen .lt-progress em{font-style:normal; color:#c0730f; font-weight:700}
+#heartScreen .lt-pips{display:grid; grid-template-columns:repeat(25,9px); gap:3px 4px}
+#heartScreen .lt-pips i{width:9px; height:11px; border-radius:4px 4px 5px 5px; background:#cfc3ad; box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+#heartScreen .lt-pips i.on{background:#ffc94a; box-shadow:0 0 6px #ffcf5a,inset 0 -2px 0 rgba(160,90,0,.25)}
+#heartScreen .lt-pips i.ready{background:#ffe9b0; outline:1.5px dashed #c0730f; outline-offset:0}
+#heartScreen .lt-sheet .lt-scroll{border:0; border-radius:2px; box-shadow:0 0 0 4px #fffdf6,0 0 0 5px rgba(43,37,71,.25),0 8px 18px rgba(8,5,25,.35); margin:6px 4px 4px}
+#heartScreen .lt-pencil{margin:6px 4px 0; font-family:var(--sb-hand); font-size:18px; color:var(--sb-pencil)}
+
+/* the side panel: a lined note pinned next to the drawing */
+#heartScreen .lt-note{background:var(--sb-paper-2); color:var(--sb-ink); border:0; border-radius:2px; box-shadow:var(--sb-shadow); transform:rotate(.6deg);
+  background-image:linear-gradient(90deg,transparent 30px,rgba(255,120,150,.35) 30px 31.5px,transparent 31.5px),repeating-linear-gradient(0deg,transparent 0 25px,var(--sb-rule) 25px 26px);
+  padding:22px 16px 14px 42px; gap:8px; position:relative; overflow:auto}
+#heartScreen .lt-note::before{content:""; position:sticky; top:-22px; align-self:center; display:block; width:90px; height:22px; margin:-30px 0 2px; background:var(--sb-tape-3); transform:rotate(-3deg); flex-shrink:0}
+#heartScreen .lt-kicker{margin:0; font-family:var(--sb-hand); font-size:17px; font-weight:700; letter-spacing:0; text-transform:none; color:#c0566f}
+#heartScreen .lt-note h2{margin:0; font-family:var(--sb-hand); font-weight:700; font-size:30px; line-height:1; color:var(--sb-ink)}
+#heartScreen .lt-polaroid{margin:4px auto 0; padding:8px 8px 4px; background:#fff; box-shadow:0 4px 10px rgba(30,20,60,.22); transform:rotate(-2deg); width:min(170px,80%); text-align:center}
+#heartScreen .lt-polaroid img{display:block; width:100%; height:96px; object-fit:contain; background:#1a1730; padding:6px; box-sizing:border-box; filter:grayscale(.5) brightness(.5)}
+#heartScreen .lt-polaroid.lit img{filter:drop-shadow(0 0 6px rgba(255,214,140,.7)); background:radial-gradient(ellipse at 50% 80%,#5a4a3a,#1a1730 70%)}
+#heartScreen .lt-polaroid figcaption{font-family:var(--sb-hand); font-size:16px; color:var(--sb-pencil); padding-top:2px}
+#heartScreen .lt-memory{margin:2px 0; font-family:var(--sb-hand); font-size:19px; line-height:1.15; color:#5a3f8a}
+#heartScreen .lt-subhead{margin:4px 0 0; font-family:var(--sb-hand); font-size:17px; font-weight:700; color:var(--sb-pencil)}
+#heartScreen .lt-needs{display:grid; gap:6px}
+#heartScreen .lt-needs li{display:flex; align-items:center; gap:8px; padding:4px 8px 4px 4px; border-radius:30px; background:#f3ead6; border:2px dashed #cfc3ad; color:var(--sb-ink); font-size:14px; font-weight:700}
+#heartScreen .lt-needs li.ok{border-style:solid; border-color:#7cc89a; background:#e6f6ea}
+#heartScreen .lt-needs li.ok::after{content:"✓"; margin-left:auto; color:#2f8a55; font-weight:900}
+#heartScreen .lt-needs li b{color:#c0730f}
+#heartScreen .lt-needs li small{display:block; color:var(--sb-pencil); font-weight:600; font-size:12px}
+#heartScreen .lt-needs .feeling-face{width:36px; height:36px; flex-shrink:0}
+#heartScreen .lt-light{font-family:var(--sb-hand)!important; font-size:24px!important; font-weight:700; min-height:50px!important; border:0!important; border-radius:2px!important; color:#3b2405!important;
+  background:linear-gradient(#ffe08a,#ffc94a)!important; clip-path:var(--sb-ticket); box-shadow:inset 0 -4px 0 rgba(150,80,0,.25)}
+#heartScreen .lt-light:not(:disabled){animation:lt-call 2.2s ease-in-out infinite}
+#heartScreen .lt-light:disabled{background:#e9dfc8!important; color:var(--sb-pencil)!important; opacity:1}
+#heartScreen .lt-reward{margin:0; font-family:var(--sb-hand); font-size:17px; color:#8a6a2a}
+#heartScreen .lt-links{display:grid; gap:6px}
+#heartScreen .lt-links button{background:transparent!important; border:2px solid rgba(43,37,71,.25)!important; color:var(--sb-ink)!important; border-radius:2px!important; font-family:var(--sb-hand); font-size:18px!important; font-weight:700}
+#heartScreen .lt-links button:hover:not(:disabled){background:#fff3c4!important}
+#heartScreen .lt-links button:disabled{opacity:.45}
+#heartScreen .lt-foot{font-family:var(--sb-hand); font-size:15px; color:var(--sb-pencil); line-height:1.15}
+@keyframes lt-call{50%{filter:brightness(1.1) drop-shadow(0 0 6px rgba(255,201,74,.8))}}
+@media (prefers-reduced-motion:reduce){#heartScreen .lt-light{animation:none}}
+@media (max-height:600px){#heartScreen .lt-title h1{font-size:26px}#heartScreen .lt-title p,#heartScreen .lt-pencil{display:none}#heartScreen .lt-sheet{padding:8px 10px 6px}#heartScreen .lt-pips{grid-template-columns:repeat(25,6px);gap:2px 3px}#heartScreen .lt-pips i{width:6px;height:8px}#heartScreen .heart-header button{font-size:16px}}
+@media (max-height:600px){
+  #heartScreen .lt-sheet{display:flex; flex-direction:column; min-height:0; overflow:hidden}
+  #heartScreen .lt-sheet .lt-scroll,#heartScreen .lt-world{min-height:0}
+  #heartScreen .lt-sheet .lt-scroll{flex:1}
+  #heartScreen .lt-note{padding:16px 10px 10px 34px; gap:5px}
+  #heartScreen .lt-note h2{font-size:22px}
+  #heartScreen .lt-kicker{font-size:14px}
+  #heartScreen .lt-polaroid{width:min(120px,70%); padding:5px 5px 2px}
+  #heartScreen .lt-polaroid img{height:56px}
+  #heartScreen .lt-polaroid figcaption{font-size:13px}
+  #heartScreen .lt-memory{font-size:15px}
+  #heartScreen .lt-light{font-size:19px!important; min-height:40px!important}
+  #heartScreen .lt-links button{font-size:15px!important; min-height:32px!important}
+  #heartScreen .lt-needs .feeling-face{width:28px; height:28px}
+}
+/* Lantern Town in two pages: each page fits whole, no sideways scrolling */
+#heartScreen .lt-frame{flex:1; min-height:0; container-type:size; display:grid; place-items:center; margin:6px 4px 2px}
+#heartScreen .lt-window{position:relative; overflow:hidden; width:min(100cqw,100cqh*var(--ar,2.09)); max-height:100cqh; background:#05081a; border-radius:2px;
+  box-shadow:0 0 0 4px #fffdf6,0 0 0 5px rgba(43,37,71,.25),0 8px 18px rgba(8,5,25,.35)}
+#heartScreen .lt-pan{position:absolute; animation:lt-slide .35s ease}
+#heartScreen .lt-pan .lt-world{height:100%; width:100%; min-height:0}
+#heartScreen .lt-turn{position:absolute; top:12px; z-index:200; width:44px; height:64px; min-height:0!important; padding:0!important; border:0!important;
+  border-radius:2px!important; background:var(--sb-paper-2)!important; color:var(--sb-ink)!important; font:700 40px/1 var(--sb-hand)!important; box-shadow:0 4px 12px rgba(5,3,20,.5); clip-path:var(--sb-ticket)}
+#heartScreen .lt-turn.prev{left:8px}#heartScreen .lt-turn.next{right:8px}
+#heartScreen .lt-turn:hover{background:#ffe08a!important}
+#heartScreen .lt-pages{display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:4px}
+#heartScreen .lt-pages button{min-height:30px!important; padding:3px 12px!important; border:2px solid rgba(43,37,71,.25)!important; border-radius:2px!important; background:transparent!important; color:var(--sb-pencil)!important; font:700 16px var(--sb-hand)!important}
+#heartScreen .lt-pages button[aria-pressed=true]{background:#ffe08a!important; color:var(--sb-ink)!important; border-color:#e0b04a!important}
+@keyframes lt-slide{from{opacity:.4}}
+@media (max-height:600px){#heartScreen .lt-pages button{font-size:13px!important; min-height:24px!important}#heartScreen .lt-turn{width:34px;height:48px;font-size:30px!important}}
+/* ---------- Lantern Town v3: the town fills the screen like a place you walk into; details pop up on a note ---------- */
+#heartScreen[data-page=town]{background:radial-gradient(ellipse at 50% 120%,#1b1838,#05081a 70%)}
+#heartScreen .lt-stage{height:100%; min-height:0; display:flex; flex-direction:column; gap:6px}
+#heartScreen .lt-stage .lt-frame{flex:1; min-height:0; margin:0; container-type:size; display:grid; place-items:center}
+#heartScreen .lt-stage .lt-window{box-shadow:none; border-radius:0; background:transparent;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent); mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+#heartScreen .lt-chips{position:absolute; inset:0; pointer-events:none; z-index:150}
+#heartScreen .lt-chip{position:absolute; transform:translateX(-50%); display:flex; gap:1px; padding:1px 4px; border-radius:20px; background:rgba(255,253,246,.88); box-shadow:0 2px 5px rgba(5,3,20,.5); white-space:nowrap}
+#heartScreen .lt-chip.ready{background:#ffe9a8; box-shadow:0 0 0 2px #ffc94a,0 0 10px rgba(255,201,74,.7)}
+#heartScreen .lt-chipface{position:relative; display:inline-flex; opacity:.6}
+#heartScreen .lt-chipface.have{opacity:1}
+#heartScreen .lt-chipface .feeling-face{width:clamp(13px,1.45vw,22px); height:clamp(13px,1.45vw,22px)}
+#heartScreen .lt-chipface b{position:absolute; right:-3px; bottom:-3px; font:800 9px/1 var(--body); color:#fff; background:#c0730f; border-radius:6px; padding:1px 3px}
+#heartScreen .lt-hud{position:absolute; inset:10px 10px auto 10px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; pointer-events:none; z-index:200}
+#heartScreen .lt-sign{pointer-events:auto; background:var(--sb-paper-2); padding:6px 16px 6px; transform:rotate(-1.5deg); box-shadow:0 5px 14px rgba(5,3,20,.55); position:relative}
+#heartScreen .lt-sign::before{content:""; position:absolute; top:-9px; left:50%; width:70px; height:18px; margin-left:-35px; background:var(--sb-tape); transform:rotate(3deg)}
+#heartScreen .lt-sign h1{margin:0; font:700 clamp(22px,2.6vw,36px)/1 var(--sb-hand); color:var(--sb-ink)}
+#heartScreen .lt-sign small{display:block; font:700 clamp(12px,1.2vw,16px)/1.2 var(--sb-hand); color:#7a5aa8}
+#heartScreen .lt-hud .lt-progress{background:rgba(255,253,246,.92); padding:6px 10px; transform:rotate(1deg); box-shadow:0 5px 14px rgba(5,3,20,.55); margin-right:54px}
+#heartScreen .lt-stage .lt-turn{top:auto; bottom:42%; z-index:210}
+#heartScreen .lt-rise{position:absolute; left:50%; bottom:12px; transform:translateX(-50%) rotate(-1deg); z-index:220; font:700 22px var(--sb-hand)!important; color:#3b2405!important; background:linear-gradient(#ffe08a,#ffc94a)!important; border:0!important; border-radius:2px!important; clip-path:var(--sb-ticket); padding:8px 20px!important; box-shadow:0 0 18px rgba(255,201,74,.6)}
+#heartScreen .lt-popback{position:absolute; inset:0; z-index:290; min-height:0!important; padding:0!important; border:0!important; border-radius:0!important; background:rgba(5,3,20,.45)!important; cursor:default}
+#heartScreen .lt-pop{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) rotate(.6deg); z-index:300; width:min(520px,92%); max-height:94%; overflow:auto; animation:lt-pop .22s ease}
+#heartScreen .lt-pop .lt-popbody{display:grid; grid-template-columns:auto 1fr; gap:4px 12px; align-items:start}
+#heartScreen .lt-pop .lt-polaroid{margin:4px 0 0; width:130px}
+#heartScreen .lt-pop .lt-polaroid img{height:84px}
+#heartScreen .lt-x{position:absolute; right:8px; top:6px; width:34px; min-height:34px!important; padding:0!important; border:0!important; background:transparent!important; color:var(--sb-ink)!important; font:700 28px/1 var(--sb-hand)!important}
+#heartScreen .lt-link{background:transparent!important; border:2px solid rgba(43,37,71,.25)!important; color:var(--sb-ink)!important; border-radius:2px!important; font:700 17px var(--sb-hand)!important}
+#heartScreen .lt-reward{margin:0; font:17px var(--sb-hand); color:#8a6a2a}
+#heartScreen .lt-stage .lt-pages{align-items:center; margin:0}
+#heartScreen .lt-stage .lt-pages button{background:rgba(255,253,246,.9)!important; color:var(--sb-ink)!important}
+#heartScreen .lt-stage .lt-pages button[aria-pressed=true]{background:#ffe08a!important}
+#heartScreen .lt-hint{font:16px var(--sb-hand); color:#cfc3e8}
+@keyframes lt-pop{from{opacity:0; transform:translate(-50%,-46%) rotate(.6deg)}}
+@media (max-height:600px){
+  #heartScreen .lt-hud{inset:6px 6px auto 6px}
+  #heartScreen .lt-sign{padding:3px 10px}
+  #heartScreen .lt-hud .lt-progress{padding:3px 6px; margin-right:40px}
+  #heartScreen .lt-hint{display:none}
+  #heartScreen .lt-pop{width:min(560px,96%)}
+  #heartScreen .lt-pop .lt-polaroid{width:96px}
+  #heartScreen .lt-pop .lt-polaroid img{height:56px}
+  #heartScreen .lt-pop .lt-needs li{padding:2px 6px 2px 2px; font-size:12px}
+}
+#heartScreen .lt-pop ul.lt-needs{padding:0; margin:0; list-style:none}
+
+/* ---------- phone controls: smaller, see-through, tucked into the corner so the night stays visible ---------- */
+#touch #hint{display:none}
+#touch .tbtn{background:rgba(20,16,40,.28)!important; border-width:2px!important; backdrop-filter:none; opacity:.72; color:#fff; text-shadow:0 1px 3px #000;
+  font-size:12px!important; transition:opacity .15s, transform .1s}
+#touch .tbtn:active,#touch .tbtn.is-touch-pressed{opacity:1}
+#touch #bPounce{width:clamp(54px,15vh,70px); height:clamp(54px,15vh,70px); right:calc(12px + env(safe-area-inset-right,0px)); bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+#touch #bJump{width:clamp(46px,13vh,58px); height:clamp(46px,13vh,58px); right:calc(12px + clamp(54px,15vh,70px) + 10px + env(safe-area-inset-right,0px)); bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+#touch #bEyes{width:clamp(38px,11vh,48px); height:clamp(38px,11vh,48px); right:calc(22px + env(safe-area-inset-right,0px)); bottom:calc(12px + clamp(54px,15vh,70px) + 10px + env(safe-area-inset-bottom,0px))}
+#touch #bScratch{width:clamp(44px,12vh,54px); height:clamp(44px,12vh,54px); right:calc(12px + clamp(54px,15vh,70px) + 14px + env(safe-area-inset-right,0px)); bottom:calc(8px + clamp(46px,13vh,58px) + 12px + env(safe-area-inset-bottom,0px)); opacity:.9}
+#touch #bPurr{width:clamp(38px,11vh,48px); height:clamp(38px,11vh,48px); right:calc(22px + clamp(38px,11vh,48px) + 40px + env(safe-area-inset-right,0px)); bottom:calc(12px + clamp(54px,15vh,70px) + 10px + env(safe-area-inset-bottom,0px))}
+#touch #stick{width:96px; height:96px; opacity:.6}
+#touch #knob{width:40px; height:40px}
+#heartScreen .lt-cost{font-weight:400; color:#a0835a}

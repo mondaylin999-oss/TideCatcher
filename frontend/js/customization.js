@@ -32,10 +32,30 @@ var MK_RIGS = {
   bengal: { hip: 0.762, split: .457, tailW: .284, tailH: 0.646, tailAmp: 1, low: 0.534 },
   sphynx: { hip: 0.732, split: .488, tailW: .285, tailH: 0.687, tailAmp: 1, low: 0.580 }
 };
+// The big painted sprite (about 500px) is drawn only ~70px tall in game. Shrinking it that much in one step
+// every frame makes the fur shimmer and blur as the cat moves, so a smooth copy at the on-screen size is
+// made once (halving step by step, which keeps the picture clean) and the rig draws from that.
+var MK_SMALL = {};
+function mkSmallSprite(key, spr, px) {
+  var bucket = Math.max(24, Math.round(px / 6) * 6), id = key + ':' + bucket;
+  if (MK_SMALL[id]) return MK_SMALL[id];
+  var cur = spr, w = spr.naturalWidth, h = spr.naturalHeight;
+  var tw = Math.round(w * bucket / h), th = bucket;
+  while (h / 2 > th) {
+    var c = document.createElement('canvas'); c.width = Math.round(w / 2); c.height = Math.round(h / 2);
+    var cg = c.getContext('2d'); cg.imageSmoothingQuality = 'high'; cg.drawImage(cur, 0, 0, c.width, c.height);
+    cur = c; w = c.width; h = c.height;
+  }
+  var out = document.createElement('canvas'); out.width = tw; out.height = th;
+  var og = out.getContext('2d'); og.imageSmoothingQuality = 'high'; og.drawImage(cur, 0, 0, tw, th);
+  return (MK_SMALL[id] = out);
+}
 function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
-  var spr = mkGetSprite(key), r = MK_RIGS[key];
-  if (!spr || !spr.complete || !spr.naturalWidth || !r) return false;
-  var sw = spr.naturalWidth, sh = spr.naturalHeight, kx = dw / sw, ky = dh / sh;
+  var big = mkGetSprite(key), r = MK_RIGS[key];
+  if (!big || !big.complete || !big.naturalWidth || !r) return false;
+  var m = g.getTransform ? g.getTransform() : null, scl = m ? Math.hypot(m.c, m.d) || 1 : 1;
+  var spr = mkSmallSprite(key, big, Math.min(big.naturalHeight, dh * scl * 1.5));
+  var sw = spr.width, sh = spr.height, kx = dw / sw, ky = dh / sh;
   var hipS = Math.round(sh * r.hip), splitS = Math.round(sw * r.split);
   var tW = Math.round(sw * r.tailW), tH = Math.round(sh * r.tailH);
   var legS = sh - hipS, dHip = hipS * ky, legD = legS * ky;
@@ -57,9 +77,9 @@ function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
     g.drawImage(spr, x0, sy, x1 - x0, sH, 0, (sy - hipS) * ky, (x1 - x0) * kx, sH * ky); g.restore();
   }
   // the lower parts start a few pixels higher, so no hairline shows where the two cuts meet
-  var bl = pose.backLift || 0, fl = pose.frontLift || 0;
-  legPart(0, splitS, hipS, footS - hipS, pose.back || 0, bl); legPart(0, lowS, footS - 4, sh - footS + 4, pose.back || 0, bl);
-  legPart(splitS, sw, hipS, footS - hipS, pose.front || 0, fl); legPart(lowS, sw, footS - 4, sh - footS + 4, pose.front || 0, fl);
+  var bl = pose.backLift || 0, fl = pose.frontLift || 0, ov = Math.max(2, Math.round(sh * .008));
+  legPart(0, splitS, hipS, footS - hipS, pose.back || 0, bl); legPart(0, lowS, footS - ov, sh - footS + ov, pose.back || 0, bl);
+  legPart(splitS, sw, hipS, footS - hipS, pose.front || 0, fl); legPart(lowS, sw, footS - ov, sh - footS + ov, pose.front || 0, fl);
   // upper body (breathes from the hip line), then the tail swaying from its base
   g.save(); g.translate(0, dy + dHip + bodyY); g.scale(1, 1 + (pose.breath || 0)); g.translate(0, -(dy + dHip + bodyY));
   piece(tW, 0, sw - tW, hipS + 1);

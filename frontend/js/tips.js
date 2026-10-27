@@ -48,7 +48,7 @@
         buried: 'Use Night Eyes; scratch the marked place to reveal it.',
         calm: 'Gather three fireflies slowly, then bring their light to Calm.',
         combo: 'Catch within four seconds; chains grow up to ×5.',
-        free: 'Every catch adds two seconds; hits cost three seconds.',
+        free: 'No clock, no score. Wander, catch for fun, and pause when you want to go home.',
         struggleHits: 'You’re doing fine. Wait for charges; pounce only when dizzy.',
         struggleQuiet: 'Try moving slowly; each feeling has its own way home.'
       },
@@ -128,7 +128,7 @@
         buried: 'Night Eyes ဖြင့်ရှာပြီး အမှတ်အသားရှိရာကို ကုတ်ဖော်ပါ။',
         calm: 'ပိုးစုန်းကြူး သုံးကောင်ကို ဖြည်းဖြည်းစု၍ Calm ထံ အလင်းပို့ပါ။',
         combo: 'လေးစက္ကန့်အတွင်း ထပ်ဖမ်းပါ။ ဆက်တိုက်ဖမ်းမှုသည် ×5 အထိ တိုးသည်။',
-        free: 'တစ်ခါဖမ်းတိုင်း နှစ်စက္ကန့်တိုးသည်။ ထိမိလျှင် သုံးစက္ကန့်လျော့သည်။',
+        free: 'နာရီမရှိ၊ အမှတ်မရှိပါ။ Shwe နဲ့ လမ်းလျှောက်ရင်း ပျော်ပျော်ဖမ်းပါ၊ အိမ်ပြန်ချင်ရင် ခဏရပ်ပါ။',
         struggleHits: 'စိတ်မပူပါနှင့်။ ပြေးဝင်မှုကို စောင့်ပြီး မူးဝေချိန်မှ ခုန်တိုက်ပါ။',
         struggleQuiet: 'ဖြည်းဖြည်းရွေ့ကြည့်ပါ။ ခံစားချက်တိုင်းတွင် အိမ်ပြန်နည်း မတူပါ။'
       },
