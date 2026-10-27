@@ -1,41 +1,30 @@
 # TideCatcher
 
-TideCatcher is a static browser Canvas game by **NextCrown** for Digit7 Jam 2026. Vercel should keep the repository root as its project root.
+TideCatcher is a static browser Canvas game by **NextCrown** for Digit7 Jam 2026. Vercel uses the repository root as its project root; Cloudflare Workers serves the `game/` static assets.
 
 ## Project structure
 
 ```text
-frontend/
-  index.html              Game markup and metadata
-  css/styles.css          All page and game interface styles
-  js/customization.js     Cat breeds, chosen-name support, and text customization
-  js/game.js              Canvas game, world, input, progression, and UI logic
-  assets/cats/            The 8 cat breed sprites (PNG)
-  assets/intro/           The 8 opening story pictures (WebP)
-  assets/school/          Night school hallway background (Nights 1–2)
-  assets/park/            Night park background (Night 3)
-  assets/hill/            City view behind the hilltop park (Night 5)
-  assets/festival/        Lighting festival sky and pagoda hill (Night 4)
-docs/
-  design/                 Design roles and instruction pictures for designers
-  proof/                  Proof of how the art was made (cats, Moodlings, intro scenes)
-backend/
-  README.md               Backend status and future guidance
-index.html                Vercel root entry; forwards to the frontend
-TideCatcher.html          Legacy entry URL; forwards to the frontend
-AI-DECLARATION.md         Every AI tool used and what for
-CREDITS.md                Team roles, fonts and other credits
+game/                       Static game site
+  index.html                Game markup and metadata
+  css/                      Game and interface styles
+  js/                       Game, levels, UI and customization
+  assets/                   Cat art, scenes, fonts and audio
+docs/                       Level notes, design briefs and art proof
+tests/                      Game integrity and level layout checks
+.github/workflows/          GitHub Actions checks
+index.html                  Root entry point for Vercel
+TideCatcher.html            Legacy game entry point
+wrangler.jsonc              Cloudflare Workers static asset settings
 ```
+
+The project is a static browser game; gameplay and progress saves run entirely in the browser.
 
 ## Run locally
 
-From the repository root, run `python -m http.server 8000` and open `http://localhost:8000/` or `http://localhost:8000/frontend/`. The root entry and the legacy `/TideCatcher.html` URL both forward to the game.
+From the repository root, run `python -m http.server 8000` and open `http://localhost:8000/` or `http://localhost:8000/game/`. The root entry forwards to the game. Older `/frontend/` links continue to redirect to the current game path.
 
 ## Adding art
 
-- Put game images in `frontend/assets/` and refer to them with a relative path (for example `'assets/cats/bengal.png'`). Do not paste images into JS as base64.
+- Put game images in `game/assets/` and refer to them with a relative path (for example `'assets/cats/bengal.png'`). Do not paste images into JS as base64.
 - For every new piece of art, add its sketches, progress and final version to `docs/proof/`, and update `AI-DECLARATION.md` if AI was used. See [`docs/proof/README.md`](docs/proof/README.md).
-
-## Backend status
-
-There is currently no backend service or API in this project. See [`backend/README.md`](backend/README.md); the game remains deployable as a static Vercel site.

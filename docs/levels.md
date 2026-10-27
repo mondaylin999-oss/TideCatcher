@@ -1,6 +1,6 @@
 # TideCatcher level layouts
 
-Each run loads one `LEVELS` record from `frontend/js/levels.js`. The existing place backgrounds, Moodling behavior, controls, score rules and map-specific rendering remain in `game.js`; the level record supplies world width, ground profile, fall pits, roosts, checkpoints, hide/burial markers, spawn zones, start and scenery props. `F2` draws a development-only geometry overlay when opened on `localhost` or `127.0.0.1` with `?debug=1`.
+Each run loads one `LEVELS` record from `game/js/levels.js`. The existing place backgrounds, Moodling behavior, controls, score rules and map-specific rendering remain in `game.js`; the level record supplies world width, ground profile, fall pits, roosts, checkpoints, hide/burial markers, spawn zones, start and scenery props. `F2` draws a development-only geometry overlay when opened on `localhost` or `127.0.0.1` with `?debug=1`.
 
 Legend: `=` walkable ground, `/` or `\\` slope/step, `v` lethal pit, `P` roost route, `~` water, `H` hide spot, `B` burial spot, `*` destination light. Shwe has three lives per story night; Gentle mode removes the life cost. Free Play falls cost five seconds. Sketches are schematic (not to scale); coordinates and authoritative geometry are in the data file.
 

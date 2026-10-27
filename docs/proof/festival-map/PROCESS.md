@@ -1,6 +1,6 @@
 # Lighting festival map: process
 
-Map for **Night 4 · Lighting Festival** (Thadingyut). In the game: [`frontend/assets/festival/festival-back.webp`](../../../frontend/assets/festival/festival-back.webp), drawn by `drawFestivalSky()` and `drawFestivalWorld()` in `frontend/js/game.js`.
+Map for **Night 4 · Lighting Festival** (Thadingyut). In the game: [`game/assets/festival/festival-back.webp`](../../../game/assets/festival/festival-back.webp), drawn by `drawFestivalSky()` and `drawFestivalWorld()` in `game/js/game.js`.
 
 | File | Step |
 |---|---|

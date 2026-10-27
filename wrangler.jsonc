@@ -2,6 +2,6 @@
   "name": "tidecatcher",
   "compatibility_date": "2026-10-19",
   "assets": {
-    "directory": "./frontend"
+    "directory": "./game"
   }
 }

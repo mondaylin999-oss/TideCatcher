@@ -3,7 +3,7 @@
 The 8 opening pictures, in story order:
 1. Lose the game · 2. Come back home · 3. Tear her drawing · 4. "I don't want to feel anything anymore" · 5. Colours disappear · 6. Cat's eyes glow · 7. Moods go away · 8. Cat goes after them
 
-- **In the game:** compressed copies (1600 × 900 WebP, about 800 KB together) are in [`frontend/assets/intro/`](../../../frontend/assets/intro/). The cutscene code is `INTRO_SCENES` / `INTRO_LINES` in `frontend/js/game.js`.
+- **In the game:** compressed copies (1600 × 900 WebP, about 800 KB together) are in [`game/assets/intro/`](../../../game/assets/intro/). The cutscene code is `INTRO_SCENES` / `INTRO_LINES` in `game/js/game.js`.
 - **Full-size originals** (about 16 MB) are not stored in git. **Link:** _TEAM TO FILL — Google Drive folder with `TideCatcher-intro.zip`_
 
 ## Base images

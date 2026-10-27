@@ -1,6 +1,6 @@
 # TideCatcher Sound Audit
 
-Audit date: 2026-10-19. Scope: `frontend/` HTML/CSS/JS and `frontend/assets/audio/` before adding sound coverage.
+Audit date: 2026-10-19. Scope: `game/` HTML/CSS/JS and `game/assets/audio/` before adding sound coverage.
 
 | Event / screen | Current sound | Audit result |
 |---|---|---|
@@ -36,7 +36,7 @@ Audit date: 2026-10-19. Scope: `frontend/` HTML/CSS/JS and `frontend/assets/audi
 
 ## Asset inventory
 
-Real effect clips are available under `frontend/assets/audio/{mp3,ogg}/` for Moodling voices, cat sounds, and the catch chime. Five real night-music tracks and five piano arrangements are available under `frontend/assets/audio/music/{mp3,ogg}/` for school, park, festival, hilltop, and lakeside. No separate menu, intro, results, or ambience tracks were found in the audio asset tree. New missing cues should therefore use original Web Audio code placeholders, not borrowed game audio.
+Real effect clips are available under `game/assets/audio/{mp3,ogg}/` for Moodling voices, cat sounds, and the catch chime. Five real night-music tracks and five piano arrangements are available under `game/assets/audio/music/{mp3,ogg}/` for school, park, festival, hilltop, and lakeside. No separate menu, intro, results, or ambience tracks were found in the audio asset tree. New missing cues should therefore use original Web Audio code placeholders, not borrowed game audio.
 
 
 ## After-change event-to-sound map
