@@ -8,7 +8,6 @@
   const caption = document.getElementById('catchClipCaption');
   const tag = document.getElementById('catchClipTag');
   const back = document.getElementById('catchClipPrev'), next = document.getElementById('catchClipNext');
-  const replay = document.getElementById('catchClipReplay');
   const touchControls = document.getElementById('touch');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const W = 800, H = 450;
@@ -127,9 +126,9 @@
     requestAnimationFrame(()=>canvases.forEach((c,i)=>drawPicture(c,i,0)));
   }
   function redraw(){canvases.forEach((c,i)=>drawPicture(c,i,0));}
-  function open(options){close();data={...options};current=0;replay.textContent=data.copy.catchClipReplay||'Start again';const mood=new Image();data.mood=mood;mood.onload=()=>{if(data?.mood===mood)redraw();};mood.src=data.moodSrc;makeCards();syncLayout();if(animation)cancelAnimationFrame(animation);startedAt=performance.now();if(shouldAnimate())animation=requestAnimationFrame(motionFrame);}
+  function open(options){close();data={...options};current=0;const mood=new Image();data.mood=mood;mood.onload=()=>{if(data?.mood===mood)redraw();};mood.src=data.moodSrc;makeCards();syncLayout();if(animation)cancelAnimationFrame(animation);startedAt=performance.now();if(shouldAnimate())animation=requestAnimationFrame(motionFrame);}
   function close(){if(animation)cancelAnimationFrame(animation);animation=0;if(observer)observer.disconnect();observer=null;data=null;canvases=[];}
-  back.addEventListener('click',()=>updateCurrent(current-1));next.addEventListener('click',()=>updateCurrent(current+1));replay.addEventListener('click',()=>{if(!data)return;updateCurrent(0);startedAt=performance.now();if(animation)cancelAnimationFrame(animation);if(shouldAnimate())animation=requestAnimationFrame(motionFrame);});
+  back.addEventListener('click',()=>updateCurrent(current-1));next.addEventListener('click',()=>updateCurrent(current+1));
   addEventListener('resize',()=>{if(data)syncLayout();});
   function syncMotionPreference(){if(animation)cancelAnimationFrame(animation);animation=0;if(reducedMotion.matches)redraw();else if(data&&shouldAnimate()){startedAt=performance.now();animation=requestAnimationFrame(motionFrame);}}
   reducedMotion.addEventListener?.('change',syncMotionPreference);

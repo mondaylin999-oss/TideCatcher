@@ -4,6 +4,7 @@
 - Cards use the live game cat rig and Moodling portraits, plus movement arrows, action cues, catch effects, translated captions and keyboard/touch control badges.
 - Desktop shows all three pictures together. Phones show one swipeable picture with previous/next buttons and step dots; arrow keys navigate on every screen. Start again returns to step one.
 - Removed the redundant progress strip and numeric step counter to keep attention on the picture cards.
+- Removed the extra Start again footer button for a cleaner guide panel.
 - Timing-sensitive artwork uses a subtle one-second loop and becomes fully still with reduced motion enabled. Captions, close behavior, Escape and focus trapping remain accessible.
 - The integrity check verifies all Moodling types, both caption languages and three-picture coverage. Game scoring and catch rules are unchanged.
 

@@ -4190,12 +4190,11 @@
     $('#catchClipClose').setAttribute('aria-label', copy.catchClipClose || 'Close clip');
     const buttonText = document.getElementById('bJump')?.textContent?.trim();
     const playerCopy = {
-      catchClipReplay: copy.catchClipReplay || 'Start again', catchClipNoButton: copy.catchClipNoButton || 'No button — watch Shwe',
+      catchClipNoButton: copy.catchClipNoButton || 'No button — watch Shwe',
       catchClipGalleryLabel: copy.catchClipGalleryLabel || 'Three catch guide pictures', catchClipControlsLabel: copy.catchClipControlsLabel || 'Control for this step',
       catchClipActionLabels: copy.catchClipActionLabels || {}, catchClipGlow: copy.catchClipGlow || '+Glow', catchClipOr: copy.catchClipOr || 'or',
       catchClipStages: copy.catchClipStages || ['NOTICE', 'TRY IT', 'BRING IT HOME']
     };
-    $('#catchClipReplay').textContent = playerCopy.catchClipReplay;
     $('#catchClipPrev').setAttribute('aria-label', copy.catchClipPrev || 'Previous picture');
     $('#catchClipNext').setAttribute('aria-label', copy.catchClipNext || 'Next picture');
     window.TCCatchClipPlayer?.open({
