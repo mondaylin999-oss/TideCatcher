@@ -37,5 +37,11 @@ for (const type of [...Object.keys(moods), 'C1']) {
   }
 }
 if (/setInterval\s*\(/.test(clips)) throw new Error('Catch guides must not use a timed auto-advance');
+if (!game.includes("c.vy = -Math.max(jumpSpeed * 1.32, 1050)")) throw new Error('Wall jump impulse is missing');
+if (!game.includes("timer: .2")) throw new Error('Ledge grab auto-climb timing is missing');
+if ([...tips.matchAll(/mechanics: \{[\s\S]*?wallJump:/g)].length !== 2
+  || [...tips.matchAll(/mechanicTitles: \{[^\n]*wallJump:/g)].length !== 2) {
+  throw new Error('English and Burmese wall-jump guidance and titles are required');
+}
 
 console.log(`Game source integrity passed (${files.length} files).`);

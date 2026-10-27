@@ -99,10 +99,20 @@
       if (i === 0) spawnZones.push([120, a - 70]);
       spawnZones.push([b + 70, nextA - (i + 1 < pitCount ? 70 : 100)]);
     }
+    // Wall-jump routes are collision scenery rather than roost platforms, so
+    // they do not alter the rule that only pit nights contain roosts.
+    const wallRoutes = {
+      12: [{ x: 420, w: 54, h: 166 }, { x: 520, w: 58, h: 184 }],
+      23: [{ x: 400, w: 58, h: 174 }, { x: 508, w: 62, h: 194 }],
+      34: [{ x: 416, w: 62, h: 182 }, { x: 528, w: 66, h: 202 }],
+      45: [{ x: 398, w: 66, h: 190 }, { x: 514, w: 70, h: 210 }],
+      50: [{ x: 410, w: 70, h: 198 }, { x: 532, w: 74, h: 216 }]
+    };
     return {
       night, map, width, pits, checkpoints, ground: ground(width, groundPoints), platforms,
       restSpots: map === 'rooftop' ? [220, ...checkpoints] : [],
-      hideSpots, burySpots, spawnZones, catStart: 150, homeLight: [width - 150, 390], props: [], pitToBridgeRatio: 5
+      hideSpots, burySpots, spawnZones, catStart: 150, homeLight: [width - 150, 390], props: [], pitToBridgeRatio: 5,
+      wallJumps: wallRoutes[night] || []
     };
   };
   const levels = {

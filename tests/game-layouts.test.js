@@ -5,6 +5,7 @@ const LEVELS = require('../game/js/levels.js');
 // These are the matching player settings in NIGHT_CHAPTERS (game.js).
 const JUMP_SPEED = 830, GRAVITY = 2300, BASE_RUN_SPEED = 6 * 48, CAT_HALF_WIDTH = 16;
 const MAX_JUMP_HEIGHT = JUMP_SPEED * JUMP_SPEED / (2 * GRAVITY);
+const WALL_JUMP_HEIGHT = (JUMP_SPEED * 1.32) ** 2 / (2 * GRAVITY);
 const MAX_FLAT_JUMP = BASE_RUN_SPEED * (2 * JUMP_SPEED / GRAVITY) + CAT_HALF_WIDTH * 2;
 
 function groundY(level, x) {
@@ -76,6 +77,13 @@ function check(level) {
       assert.ok(groundY(level, extra.anchor[0]) - extra.anchor[1] <= MAX_JUMP_HEIGHT, `${level.night}: swing anchor reachable with configured jump`);
     }
   }
+  for (const wall of level.wallJumps || []) {
+    assert.ok(wall.x >= 0 && wall.x + wall.w <= level.width, `${level.night}: wall route inside level`);
+    assert.ok(wall.h > MAX_JUMP_HEIGHT && wall.h <= WALL_JUMP_HEIGHT, `${level.night}: wall route needs and permits a wall jump`);
+    assert.ok(wall.x > level.catStart + 100, `${level.night}: wall route leaves a safe approach from spawn`);
+    assert.ok(!(level.pits || []).some(([a, b]) => wall.x < b && wall.x + wall.w > a), `${level.night}: wall route does not overlap a pit`);
+    assert.equal(level.platforms.some(p => p[0] < wall.x + wall.w && p[0] + p[2] > wall.x), false, `${level.night}: wall route does not add duplicate roosts`);
+  }
   for (const [a, b] of level.pits || []) {
     const movingBridge = level.platforms.some(p => p[3] === 'moving' && p[4]?.path?.length > 1
       && Math.min(...p[4].path.map(([x]) => x)) <= a
@@ -100,6 +108,10 @@ for (let night = 1; night <= 50; night++) {
   assert.ok(level.platforms.every(p => p[3] === 'moving'), `Night ${night} crossings use moving roosts only`);
   assert.ok(level.platforms.every(p => p[2] * 5 <= level.pits[level.platforms.indexOf(p)][1] - level.pits[level.platforms.indexOf(p)][0]), `Night ${night} gaps are at least five roost-widths`);
 }
+const wallRouteNights = [12, 23, 34, 45, 50];
+assert.deepEqual([...Array(50)].map((_, i) => i + 1).filter(night => LEVELS[night].wallJumps?.length), wallRouteNights,
+  'Wall-jump routes are limited to selected later nights');
+assert.ok(wallRouteNights.every(night => LEVELS[night].wallJumps.length === 2), 'Each selected route has two climbable walls');
 assert.equal(LEVELS[5].pitToBridgeRatio, 5, 'Night 5 gaps use the five-to-one bridge ratio');
 assert.ok(LEVELS.free.variants.every(level => level.pits?.length), 'Every Free Play trail includes a fall-risk crossing');
 assert.deepEqual(LEVELS.free.variants.map(level => level.pitToBridgeRatio), [5,5,5], 'Free Play pits also require moving roost crossings');

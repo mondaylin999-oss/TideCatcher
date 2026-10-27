@@ -226,6 +226,7 @@
   // ---------- world ----------
   let currentLevel = window.TC_LEVELS?.[1] || { width: 4200, ground: { points: [[0, GROUND], [4200, GROUND]] }, pits: [], platforms: [], hideSpots: [], burySpots: [], spawnZones: [[120, 4080]], catStart: 200, props: [] };
   let activePlats = [];
+  let activeWalls = [];
   let currentProps = [];
   const levelGroundY = x => {
     const pts = currentLevel.ground.points, px = clamp(x, 0, currentLevel.width);
@@ -246,6 +247,10 @@
       const info = spec[4] || {}, p = [spec[0], spec[1], spec[2]];
       Object.assign(p, { type: spec[3] || 'static', path: info.path || null, speed: info.speed || 0, skin: info.skin || '', anchor: info.anchor || null, baseX: spec[0], baseY: spec[1], active: true, crumbleRemaining: 0, restRemaining: 0, movingPhase: 0 });
       return p;
+    });
+    activeWalls = (currentLevel.wallJumps || []).map(spec => {
+      const bottom = terrainY(spec.x + spec.w / 2);
+      return { ...spec, bottom, y: bottom - spec.h };
     });
   }
   function updateLevelPlatforms(dt) {
@@ -1481,7 +1486,7 @@
     free: { kind: 'classic stones', label: 'rock', labelMarked: 'marked rock', xs: [], draw: drawClassicRockBase, debris: [{ shape: 'chip', color: '#77736f' }, { shape: 'chip', color: '#a29b8d' }, { shape: 'chip', color: '#5f6260' }], glow: '#c8baff' }
   };
 
-  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, alpha: 1 }; }
+  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, wallTouch: null, ledgeGrab: null, alpha: 1 }; }
   function pickX() { let x, n = 0; do { x = levelSpawnX(); n++; } while ((Math.abs(x - cat.x) < 380 || (mode === 'story' && rocks.some(spot => Math.abs(x - spot.x) < 100))) && n < 40); return x; }
   function pickCaveX() {
     const occupied = new Set(mood.filter(m => !m.dead && m.caveX != null).map(m => m.caveX));
@@ -1748,7 +1753,7 @@
   function beginFall() {
     if (cat.falling || cat.respawning || state !== 'play') return;
     cat.y = Math.min(cat.y, VH + OY - 10);
-    cat.falling = true; cat.fallTime = 0; cat.fallFromX = cat.x; cat.vx = 0; cat.platform = null; cat.swinging = null;
+    cat.falling = true; cat.fallTime = 0; cat.fallFromX = cat.x; cat.vx = 0; cat.platform = null; cat.swinging = null; cat.wallTouch = null; cat.ledgeGrab = null; cat.wallSurface = null;
     jumpHeld = false; jumpQ = false; burst(cat.x, cat.y - 18, GOLD, 24); burst(cat.x, cat.y - 24, CALM, 14);
     sfx('cat', 'sad'); sfx('ui', 'fall'); sfx('ui', 'poof');
   }
@@ -1938,6 +1943,13 @@
     }
   }
 
+  function startWallJump(c, side, jumpSpeed) {
+    c.ledgeGrab = null; c.wallTouch = null; c.on = false; c.platform = null;
+    c.vx = -side * Math.max(330, uv('swift') * T * .9); c.vy = -Math.max(jumpSpeed * 1.32, 1050);
+    c.face = -side; c.coyote = 0; c.jumpBuffer = 0; c.squash = .08;
+    queueJitTip('wallJump', c, guideCopy().mechanicTitles?.wallJump || 'Wall jump & ledge grab');
+    sfx('ui', 'jump');
+  }
   function updCat(dt) {
     const c = cat;
     if (c.falling) {
@@ -1959,7 +1971,7 @@
       respawnT -= dt; fallDimT = Math.max(0, fallDimT - dt);
       if (respawnT <= 0) {
         if (pendingFallFail) { pendingFallFail = false; finish(false, 'fall'); return; }
-        c.x = checkpointX; c.y = terrainY(checkpointX); c.vx = 0; c.vy = 0; c.on = true;
+        c.x = checkpointX; c.y = terrainY(checkpointX); c.vx = 0; c.vy = 0; c.on = true; c.wallTouch = null; c.ledgeGrab = null; c.wallSurface = null;
         c.inv = 1.5; c.respawning = false; c.coyote = 0; c.jumpBuffer = 0;
         hist = []; sfx('ui', 'respawn'); burst(c.x, c.y - 20, CALM, 16); announce('Back at the lantern!', CALM, 1.2);
       }
@@ -1977,6 +1989,21 @@
     else { const slick = c.on && onSlick(c.x), acc = slick ? (Math.abs(target) > Math.abs(c.vx) && Math.sign(target) === Math.sign(c.vx || target) ? 700 : 220) : c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     const jumpSpeed = chapter?.jumpSpeed || 830, gravity = chapter?.jumpGravity || 2300;
+    if (c.ledgeGrab) {
+      const grab = c.ledgeGrab;
+      if (grab.platform && !grab.platform.active) c.ledgeGrab = null;
+      else if (c.jumpBuffer > 0) { startWallJump(c, grab.side, jumpSpeed); jumpQ = false; }
+      else {
+        grab.timer -= dt; c.x = grab.side < 0 ? grab.x - 19 : grab.x + grab.w + 19;
+        c.y = grab.y + 32; c.vx = 0; c.vy = 0; c.on = false; c.platform = null;
+        jumpQ = false;
+        if (grab.timer <= 0) {
+          c.x = grab.side < 0 ? grab.x + 25 : grab.x + grab.w - 25;
+          c.y = grab.y; c.on = true; c.platform = grab.platform || null; c.wallSurface = grab.wall || null;
+          c.ledgeGrab = null; c.squash = .08; c.coyote = .1; sfx('ui', 'land');
+        } else return;
+      }
+    }
     if (c.swinging) {
       if (jumpHeld) {
         const p = c.swinging, anchor = p.anchor || [p[0] + p[2] / 2, p[1] - 60];
@@ -1985,8 +2012,10 @@
       }
       c.swinging = null; c.vx = c.face * 360; c.vy = -720; c.on = false; c.jumpBuffer = 0; sfx('ui', 'jump');
     }
-    const wasOn = c.on, py = c.y;
-    if (c.jumpBuffer > 0 && (c.on || c.coyote > 0) && c.pounce <= 0) {
+    const wasOn = c.on, py = c.y, oldX = c.x;
+    if (c.jumpBuffer > 0 && c.wallTouch && c.pounce <= 0) {
+      startWallJump(c, c.wallTouch.side, jumpSpeed);
+    } else if (c.jumpBuffer > 0 && (c.on || c.coyote > 0) && c.pounce <= 0) {
       c.vy = -jumpSpeed; c.on = false; c.coyote = 0; c.jumpBuffer = 0;
       onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240);
     }
@@ -1996,6 +2025,18 @@
     c.pcd -= dt; c.inv -= dt; c.squash = Math.max(0, c.squash - dt);
     if (c.platform && !c.platform.active) c.platform = null;
     c.vy += gravity * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.x = clamp(c.x, 30, WORLD - 30);
+    c.wallTouch = null;
+    for (const wall of activeWalls) {
+      const bodyOverlapsWall = c.y > wall.y + 8 && c.y - 54 < wall.bottom;
+      if (!bodyOverlapsWall || c.x + 18 < wall.x || c.x - 18 > wall.x + wall.w) continue;
+      if (c.vx > 0 && oldX + 18 <= wall.x + 2) {
+        c.x = wall.x - 18; c.vx = 0; c.wallTouch = { wall, side: -1 };
+      } else if (c.vx < 0 && oldX - 18 >= wall.x + wall.w - 2) {
+        c.x = wall.x + wall.w + 18; c.vx = 0; c.wallTouch = { wall, side: 1 };
+      } else if (c.x < wall.x + wall.w / 2) { c.x = wall.x - 18; c.wallTouch = { wall, side: -1 }; }
+      else { c.x = wall.x + wall.w + 18; c.wallTouch = { wall, side: 1 }; }
+    }
+    if (!c.on && !c.wallTouch && c.vy > 260) c.vy = Math.min(c.vy, 260);
     let landed = false, landedOn = null;
     const floorY = terrainY(c.x);
     const pit = pitAt(c.x);
@@ -2007,6 +2048,27 @@
         if (!p.active || p.type === 'swinging') continue;
         const pad = p.type === 'moving' ? 16 : 6;
         if (c.x > p[0] - pad && c.x < p[0] + p[2] + pad && py <= p[1] + .5 && c.y >= p[1]) { c.y = p[1]; landed = true; landedOn = p; break; }
+      }
+      if (!landed) for (const wall of activeWalls) {
+        if (c.x > wall.x - 12 && c.x < wall.x + wall.w + 12 && py <= wall.y + .5 && c.y >= wall.y) {
+          c.y = wall.y; landed = true; c.wallSurface = wall; break;
+        }
+      }
+    }
+    if (!landed && !c.on && c.vy < 0) {
+      const ledges = [
+        ...activeWalls.map(wall => ({ x: wall.x, w: wall.w, y: wall.y, wall })),
+        ...activePlats.filter(p => p.active && p.type === 'static').map(platform => ({ x: platform[0], w: platform[2], y: platform[1], platform }))
+      ];
+      for (const ledge of ledges) {
+        const side = ledge.wall && c.wallTouch?.wall === ledge.wall ? c.wallTouch.side : c.vx > 0 ? -1 : c.vx < 0 ? 1 : 0;
+        const edge = side < 0 ? ledge.x : ledge.x + ledge.w;
+        const reachedEdge = side && Math.abs(c.x - edge) <= 24 && (side < 0 ? oldX <= edge + 4 : oldX >= edge - 4);
+        if (!reachedEdge || c.y < ledge.y + 4 || c.y > ledge.y + 78) continue;
+        c.ledgeGrab = { x: ledge.x, w: ledge.w, y: ledge.y, side, timer: .2, wall: ledge.wall || null, platform: ledge.platform || null };
+        c.wallTouch = ledge.wall ? { wall: ledge.wall, side } : null; c.vx = 0; c.vy = 0; c.on = false; c.platform = null;
+        queueJitTip('wallJump', c, guideCopy().mechanicTitles?.wallJump || 'Wall jump & ledge grab');
+        break;
       }
     }
     if (jumpHeld && !landed) {
@@ -3136,6 +3198,23 @@
       for (const edge of [a + 15, b - 15]) for (let n = 0; n < 3; n++) { const sx = edge + n * (edge === a + 15 ? 12 : -12), sy = top - 9 - Math.sin(t * 3 + n) * 2; ctx.fillStyle = edgeColor; ctx.beginPath(); ctx.arc(sx, sy, 1.8, 0, Math.PI * 2); ctx.fill(); }
       ctx.fillStyle = 'rgba(24,17,42,.92)'; ctx.strokeStyle = edgeColor; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc((a+b)/2, top - 22, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.font = `800 13px ${DISP}`; ctx.textAlign = 'center'; ctx.fillStyle = INK; ctx.fillText('!', (a+b)/2, top - 17);
+    }
+    // Wall-jump routes are separate collision scenery, never roost platforms.
+    for (const wall of activeWalls) {
+      if (wall.x + wall.w < x0 || wall.x > x1) continue;
+      const wallFill = ctx.createLinearGradient(wall.x, 0, wall.x + wall.w, 0);
+      wallFill.addColorStop(0, dark); wallFill.addColorStop(.5, mid); wallFill.addColorStop(1, dark);
+      ctx.fillStyle = wallFill; ctx.beginPath(); canvasRoundRect(ctx, wall.x, wall.y, wall.w, wall.bottom - wall.y + 5, 7); ctx.fill();
+      ctx.strokeStyle = map === 'lake' ? 'rgba(159,232,255,.68)' : map === 'park' ? 'rgba(142,215,161,.7)' : 'rgba(255,220,164,.66)';
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(wall.x + 2, wall.y + 3); ctx.lineTo(wall.x + wall.w - 2, wall.y + 3); ctx.stroke();
+      ctx.strokeStyle = 'rgba(18,13,30,.42)'; ctx.lineWidth = 1;
+      for (let row = 1; wall.y + row * 22 < wall.bottom; row++) {
+        const yy = wall.y + row * 22, offset = row % 2 ? wall.w * .42 : wall.w * .58;
+        ctx.beginPath(); ctx.moveTo(wall.x + 4, yy); ctx.lineTo(wall.x + wall.w - 4, yy); ctx.moveTo(wall.x + offset, yy - 20); ctx.lineTo(wall.x + offset, yy); ctx.stroke();
+      }
+      const glow = ctx.createRadialGradient(wall.x + wall.w / 2, wall.y, 2, wall.x + wall.w / 2, wall.y, 28);
+      glow.addColorStop(0, 'rgba(255,225,154,.18)'); glow.addColorStop(1, 'rgba(255,225,154,0)');
+      ctx.fillStyle = glow; ctx.fillRect(wall.x - 20, wall.y - 24, wall.w + 40, 35);
     }
     for (const mark of currentLevel.checkpoints || []) {
       if (mark < x0 - 30 || mark > x1 + 30) continue;

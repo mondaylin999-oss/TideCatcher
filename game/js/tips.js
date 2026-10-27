@@ -21,7 +21,7 @@
       catchClipHint: 'Replay its short clip in How to play.',
       struggleLabel: 'A gentle hint',
       struggleTitle: 'Take your time',
-      mechanicTitles: { nervous: 'Nervous', jealous: 'Jealous', lonely: 'Lonely', shy: 'Shy', excited: 'Excited', buried: 'Buried', calm: 'Calm', combo: 'Combo', free: 'Free Play' },
+      mechanicTitles: { nervous: 'Nervous', jealous: 'Jealous', lonely: 'Lonely', shy: 'Shy', excited: 'Excited', buried: 'Buried', calm: 'Calm', combo: 'Combo', free: 'Free Play', wallJump: 'Wall jump & ledge grab' },
       next: 'Next',
       finishWelcome: 'Choose your cat →',
       skipWelcome: 'Skip',
@@ -50,6 +50,7 @@
         calm: 'Gather three fireflies slowly, then bring their light to Calm.',
         combo: 'Catch within four seconds; chains grow up to ×5.',
         free: 'Every catch adds two seconds; hits cost three seconds.',
+        wallJump: 'Press Jump as you touch a wall to spring away. Reach a shelf edge and Shwe will grab it, then climb up after a moment.',
         struggleHits: 'You’re doing fine. Wait for charges; pounce only when dizzy.',
         struggleQuiet: 'Try moving slowly; each feeling has its own way home.'
       },
@@ -137,7 +138,7 @@
       catchClipHint: 'ဖမ်းနည်းကလစ်ကို How to play တွင် ပြန်ကြည့်နိုင်သည်။',
       struggleLabel: 'ညင်သာသော အကူအညီ',
       struggleTitle: 'အချိန်ယူပါ',
-      mechanicTitles: { nervous: 'Nervous', jealous: 'Jealous', lonely: 'Lonely', shy: 'Shy', excited: 'Excited', buried: 'Buried', calm: 'Calm', combo: 'Combo', free: 'Free Play' },
+      mechanicTitles: { nervous: 'Nervous', jealous: 'Jealous', lonely: 'Lonely', shy: 'Shy', excited: 'Excited', buried: 'Buried', calm: 'Calm', combo: 'Combo', free: 'Free Play', wallJump: 'နံရံခုန်နှင့် အနားကိုင်တက်ခြင်း' },
       next: 'ရှေ့သို့',
       finishWelcome: 'ကြောင်ကို ရွေးပါ →',
       skipWelcome: 'ကျော်မည်',
@@ -166,6 +167,7 @@
         calm: 'ပိုးစုန်းကြူး သုံးကောင်ကို ဖြည်းဖြည်းစု၍ Calm ထံ အလင်းပို့ပါ။',
         combo: 'လေးစက္ကန့်အတွင်း ထပ်ဖမ်းပါ။ ဆက်တိုက်ဖမ်းမှုသည် ×5 အထိ တိုးသည်။',
         free: 'တစ်ခါဖမ်းတိုင်း နှစ်စက္ကန့်တိုးသည်။ ထိမိလျှင် သုံးစက္ကန့်လျော့သည်။',
+        wallJump: 'နံရံနားရောက်ချိန် Jump ကိုနှိပ်ပြီး ပြန်ခုန်ပါ။ စင်အနားကိုရောက်လျှင် Shwe ကကိုင်ထားပြီး ခဏအကြာ အပေါ်တက်မည်။',
         struggleHits: 'စိတ်မပူပါနှင့်။ ပြေးဝင်မှုကို စောင့်ပြီး မူးဝေချိန်မှ ခုန်တိုက်ပါ။',
         struggleQuiet: 'ဖြည်းဖြည်းရွေ့ကြည့်ပါ။ ခံစားချက်တိုင်းတွင် အိမ်ပြန်နည်း မတူပါ။'
       },

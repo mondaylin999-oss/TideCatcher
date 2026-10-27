@@ -8,6 +8,13 @@
 - Timing-sensitive artwork uses a subtle one-second loop and becomes fully still with reduced motion enabled. Captions, close behavior, Escape and focus trapping remain accessible.
 - The integrity check verifies all Moodling types, both caption languages and three-picture coverage. Game scoring and catch rules are unchanged.
 
+# Wall jumps and ledge grabs
+
+- Added wall-jump routes on Nights 12, 23, 34, 45 and 50, with the walls becoming taller as the challenge advances. Their themed stone surfaces are separate collision scenery, so non-pit nights still have no roost platforms.
+- Shwe can spring away from a wall with Jump, catch the edge of a wall or static shelf, and automatically climb onto it after 0.2 seconds. Moving, crumbling, bouncy and swinging platforms keep their existing behavior.
+- Added a first-use wall-jump tip in English and Burmese. It uses the existing tips-seen save, sound cues and reduced-motion-compatible game rendering; no save format, scoring or Moodling rules changed.
+- Added layout checks for route placement, reachability, selected nights and separation from pits/roosts; the existing integrity test also checks the mechanic and translations.
+
 # Voices, bedroom Thiri and Persian tail
 
 ## Moving roosts only on pit nights
