@@ -3614,10 +3614,7 @@
       drawCatGear(null, x0, y0, ww, hh, false, items);
     } finally { ctx = main; }
   }
-  function mkDrawSprite(c) {
-    const spr = mkGetSprite(MK_PROFILE.coat);
-    if (!spr || !spr.complete || !spr.naturalWidth) return false;
-    const hh = 70, ww = hh * spr.naturalWidth / spr.naturalHeight;
+  function gameCatRigPose(c, now = t) {
     const speed = Math.abs(c.vx), moving = c.on && speed > 10, ph = c.walk;
     // Stride grows smoothly with speed (no jump between walk and run), and the body rises and
     // falls on a soft wave instead of a sharp bounce at every step.
@@ -3625,7 +3622,8 @@
     // ground. Only the body bobs; the standing paws never leave the floor.
     const pace = clamp((speed - 10) / 280, 0, 1), amp = c.sneak ? .2 : .28 + .2 * pace;
     let back = 0, front = 0, tail, breath = 0, bodyY = 0, backLift = 0, frontLift = 0;
-    if (scratchAnim > 0 && c.on) { front = Math.sin(t * 20) * .58; frontLift = Math.max(0, Math.sin(t * 20)) * .25; back = -.08; tail = .28 + Math.sin(t * 8) * .12; breath = .01; bodyY = 1.3; }
+    const scratching = (c.scratchAnim ?? scratchAnim) > 0;
+    if (scratching && c.on) { front = Math.sin(now * 20) * .58; frontLift = Math.max(0, Math.sin(now * 20)) * .25; back = -.08; tail = .28 + Math.sin(now * 8) * .12; breath = .01; bodyY = 1.3; }
     else if (c.pounce > 0) { back = -.62; front = .72; tail = -.42; backLift = .12; frontLift = .2; }
     else if (!c.on) { const rising = c.vy < 0; back = rising ? -.38 : .25; front = rising ? .32 : -.24; tail = rising ? -.32 : .3; backLift = rising ? .1 : .2; frontLift = rising ? .22 : .08; }
     else if (moving) {
@@ -3635,24 +3633,53 @@
       tail = Math.sin(ph * .5 + 1.1) * (.12 + .12 * pace);
       bodyY = -(1 - Math.cos(ph * 2)) * .5 * (c.sneak ? .4 : .6 + .8 * pace);
     }
-    else { tail = Math.sin(t * 1.7) * .12 + Math.pow(Math.max(0, Math.sin(t * .83 + .7)), 8) * .28; breath = Math.sin(t * 2.2) * .016; }
+    else { tail = Math.sin(now * 1.7) * .12 + Math.pow(Math.max(0, Math.sin(now * .83 + .7)), 8) * .28; breath = Math.sin(now * 2.2) * .016; }
     // ease every pose change (start, stop, jump, land) over a few frames instead of snapping
-    const P = c.rigPose || (c.rigPose = { back, front, tail, bodyY, backLift, frontLift, at: t });
-    const k = scratchAnim > 0 ? 1 : 1 - Math.exp(-Math.max(0, Math.min(.1, t - P.at)) * (moving ? 30 : 16));
+    const P = c.rigPose || (c.rigPose = { back, front, tail, bodyY, backLift, frontLift, at: now });
+    const k = scratching ? 1 : 1 - Math.exp(-Math.max(0, Math.min(.1, now - P.at)) * (moving ? 30 : 16));
     for (const [key, v] of [['back', back], ['front', front], ['tail', tail], ['bodyY', bodyY], ['backLift', backLift], ['frontLift', frontLift]]) P[key] += (v - P[key]) * k;
-    P.at = t;
-    back = P.back; front = P.front; tail = P.tail; bodyY = P.bodyY; backLift = P.backLift; frontLift = P.frontLift;
+    P.at = now;
+    return { back: P.back, front: P.front, tail: P.tail, breath, bodyY: P.bodyY, backLift: P.backLift, frontLift: P.frontLift };
+  }
+  function mkDrawSprite(c) {
+    const spr = mkGetSprite(MK_PROFILE.coat);
+    if (!spr || !spr.complete || !spr.naturalWidth) return false;
+    const hh = 70, ww = hh * spr.naturalWidth / spr.naturalHeight;
+    const speed = Math.abs(c.vx), moving = c.on && speed > 10;
+    const pose = gameCatRigPose(c);
     const bob = 0;
     if (c.on) { ctx.fillStyle = 'rgba(8,10,24,.35)'; ctx.beginPath(); ctx.ellipse(-2, 2, ww * .36, 4.5, 0, 0, 7); ctx.fill(); }
     if (eyesT > 0) { ctx.shadowColor = '#c8ff8a'; ctx.shadowBlur = 16; }
     // cat.y is the paw baseline; keep the sprite's bottom edge on that line.
     const spriteY = -hh + bob;
-    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, { back, front, tail, breath, bodyY, backLift, frontLift });
+    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, pose);
     if (!ok) ctx.drawImage(spr, -ww / 2 - 2, spriteY, ww, hh);
     ctx.shadowBlur = 0;
     drawCatGear(c, -ww / 2 - 2, spriteY, ww, hh, moving);
     return true;
   }
+  // Catch-guide clips call the same rig and pose function as live gameplay.
+  window.TCCatchClipArt = {
+    drawCat(g, { x, y, height = 188, action = 'idle', time = 0, facing = 1, rigPose } = {}) {
+      const key = MK_PROFILE.coat, spr = mkGetSprite(key);
+      if (!spr || !spr.complete || !spr.naturalWidth) return false;
+      const width = height * spr.naturalWidth / spr.naturalHeight;
+      const airborne = action === 'jump' || action === 'pounce';
+      const catPose = { vx: action === 'walk' ? 145 : action === 'sneak' ? 62 : 0, walk: time * (action === 'sneak' ? 8 : 12),
+        on: !airborne, sneak: action === 'sneak', pounce: action === 'pounce' ? .2 : 0,
+        vy: action === 'jump' || action === 'pounce' ? -120 : 0, scratchAnim: action === 'scratch' ? 1 : 0, rigPose };
+      const pose = gameCatRigPose(catPose, time);
+      g.save(); g.translate(x, y); g.scale(facing < 0 ? -1 : 1, 1);
+      if (action === 'jump') g.scale(.98, 1.04);
+      if (action === 'pounce') g.scale(1.12, .9);
+      if (action === 'land') g.scale(1.07, .9);
+      if (action === 'sit') g.scale(1.02, .9);
+      const drawn = mkDrawRig(g, key, -width / 2, -height, width, height, pose);
+      if (!drawn) g.drawImage(spr, -width / 2, -height, width, height);
+      g.restore();
+      return catPose.rigPose;
+    }
+  };
   function drawCat() {
     const c = cat; if (c.respawning) return; ctx.save();
     if (c.falling) ctx.globalAlpha = clamp(1 - c.fallTime / .38, 0, 1);
@@ -4153,37 +4180,28 @@
       item.appendChild(details); moods.appendChild(item);
     }
   }
-  let catchClipTimer = 0, catchClipReturnFocus = null;
+  let catchClipReturnFocus = null;
   function runCatchClip(type, variant) {
     const stage = $('#catchClipStage'), copy = guideCopy().help || {}, key = `${type}${variant}`, steps = copy.catchClipSteps?.[key] || copy.catchClipSteps?.[type] || [copy.catchGuides?.[key] || copy.catchGuides?.[type] || vinfo(type, variant).d];
     const captions = steps.length ? steps : [vinfo(type, variant).d];
-    if (catchClipTimer) { clearInterval(catchClipTimer); catchClipTimer = 0; }
-    stage.classList.remove('is-playing'); stage.dataset.type = type; stage.dataset.variant = String(variant);
-    stage.style.setProperty('--clip-mood-color', vcol(type, variant));
-    $('#catchClipMoodling').src = bookPortrait(type, variant, true);
-    $('#catchClipCat').src = COAT.img;
-    $('#catchClipCue').textContent = type === 'C' && variant === 1 ? '◯' : ({ F: '⚡', N: '…', L: 'EYES', B: 'EYES', E: '↑', S: '…', J: '✦', C: '✧', G: '✦' })[type] || '✦';
+    stage.dataset.type = type; stage.dataset.variant = String(variant);
+    stage.style.setProperty('--clip-accent', vcol(type, variant));
     $('#catchClipTitle').textContent = `${guideCopy().help?.catchClipLabel || 'Short guided clip'} · ${vinfo(type, variant).n}`;
     $('#catchClipClose').setAttribute('aria-label', copy.catchClipClose || 'Close clip');
-    $('#catchClipReplay').textContent = copy.catchClipReplay || 'Replay clip';
-    const tagLabels = copy.catchClipStages || ['NOTICE', 'TRY IT', 'BRING IT HOME'];
-    const showStep = index => {
-      const at = Math.min(index, captions.length - 1);
-      $('#catchClipCaption').textContent = captions[at];
-      $('#catchClipTag').textContent = `${at + 1} / ${captions.length} · ${tagLabels[Math.min(at, tagLabels.length - 1)] || ''}`;
-      $('#catchClipProgress').textContent = `${copy.catchClipStep || 'Step'} ${at + 1} / ${captions.length}`;
+    const buttonText = document.getElementById('bJump')?.textContent?.trim();
+    const playerCopy = {
+      catchClipStepText: `${copy.catchClipStep || 'Step'} {n} / 3`, catchClipFinished: copy.catchClipProgress || 'Clip finished · replay any time',
+      catchClipPause: copy.catchClipPause || 'Pause', catchClipPlay: copy.catchClipPlay || 'Play', catchClipReplay: copy.catchClipReplay || 'Replay clip',
+      catchClipPrev: copy.catchClipPrev || '◀ Beat', catchClipNext: copy.catchClipNext || 'Beat ▶', catchClipSpeed: copy.catchClipSpeed || 'Speed',
+      catchClipActionLabels: copy.catchClipActionLabels || {}, catchClipGlow: copy.catchClipGlow || '+Glow', catchClipOr: copy.catchClipOr || 'or',
+      catchClipStages: copy.catchClipStages || ['NOTICE', 'TRY IT', 'BRING IT HOME']
     };
-    showStep(0); $('#catchClipProgress').textContent = copy.catchClipPlaying || `${copy.catchClipStep || 'Step'} 1 / ${captions.length}`;
-    void stage.offsetWidth; stage.classList.add('is-playing');
-    let index = 0;
-    catchClipTimer = setInterval(() => {
-      index++;
-      if (index < captions.length) showStep(index);
-      else {
-        clearInterval(catchClipTimer); catchClipTimer = 0;
-        $('#catchClipProgress').textContent = copy.catchClipProgress || 'Clip finished · replay any time';
-      }
-    }, 2000);
+    $('#catchClipReplay').textContent = playerCopy.catchClipReplay;
+    window.TCCatchClipPlayer?.open({
+      type, variant, steps: captions, stages: playerCopy.catchClipStages,
+      moodSrc: bookPortrait(type, variant, true), color: vcol(type, variant), copy: playerCopy,
+      touchLabels: { ...(copy.catchClipTouchLabels || {}), move: copy.catchClipTouchLabels?.move || 'MOVE', sneak: copy.catchClipTouchLabels?.sneak || 'SNEAK', jump: buttonText || copy.catchClipTouchLabels?.jump || 'JUMP', pounce: $('#bPounce')?.textContent.trim() || copy.catchClipTouchLabels?.pounce || 'POUNCE', eyes: $('#bEyes')?.textContent.trim() || copy.catchClipTouchLabels?.eyes || 'EYES', scratch: $('#bScratch')?.textContent.trim() || copy.catchClipTouchLabels?.scratch || 'SCRATCH', hold: copy.catchClipTouchLabels?.hold || 'HOLD', release: copy.catchClipTouchLabels?.release || 'LET GO' }
+    });
   }
   function openCatchClip(type, variant, trigger) {
     catchClipReturnFocus = trigger || document.activeElement;
@@ -4193,8 +4211,8 @@
     $('#catchClipClose').focus({ preventScroll: true });
   }
   function closeCatchClip(restoreFocus = true) {
-    if (catchClipTimer) { clearInterval(catchClipTimer); catchClipTimer = 0; }
-    $('#catchClipView').hidden = true; $('#catchClipStage').classList.remove('is-playing');
+    window.TCCatchClipPlayer?.close();
+    $('#catchClipView').hidden = true;
     $('#helpPanel').removeAttribute('aria-hidden');
     if (restoreFocus && catchClipReturnFocus?.isConnected) catchClipReturnFocus.focus({ preventScroll: true });
   }
@@ -4203,16 +4221,16 @@
     const key = button.dataset.catchClip, type = key[0], variant = Number(key.slice(1));
     if (VARS[type]?.[variant]) openCatchClip(type, variant, button);
   });
-  $('#catchClipReplay').addEventListener('click', () => runCatchClip($('#catchClipStage').dataset.type, Number($('#catchClipStage').dataset.variant) || 0));
   $('#catchClipClose').addEventListener('click', () => closeCatchClip());
   $('#catchClipView').addEventListener('click', e => { if (e.target.id === 'catchClipView') closeCatchClip(); });
   $('#catchClipView').addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeCatchClip(); }
     if (e.key === 'Tab') {
       e.stopPropagation();
-      const close = $('#catchClipClose'), replay = $('#catchClipReplay');
-      if (e.shiftKey && document.activeElement === close) { e.preventDefault(); replay.focus({ preventScroll: true }); }
-      else if (!e.shiftKey && document.activeElement === replay) { e.preventDefault(); close.focus({ preventScroll: true }); }
+      const focusables = [...$('#catchClipView').querySelectorAll('button:not([hidden]):not(:disabled)')];
+      const first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus({ preventScroll: true }); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus({ preventScroll: true }); }
     }
   });
   function openHelp(source = 'hub') {

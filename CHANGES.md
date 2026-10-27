@@ -207,3 +207,10 @@
 ## Pit frequency
 
 - Story pits now appear only on levels 5, 10, 15, 20, 25, 30, 35, 40, 45 and 50. Other story levels have solid ground beneath their existing roosts. Free Play layouts are unchanged.
+## Smooth Moodling catch guides
+
+- Rebuilt the catch guide as a canvas mini-player using the game's live cat rig and Moodling portraits, with eased movement, facing, gait, jump/landing effects, scene highlights and a catch-to-trail Glow ending.
+- Added three timed caption beats, synchronized input badges for keyboard or touch, segmented progress, pause/play, beat stepping, replay, playback speed and one automatic replay. Closing or hiding the tab pauses playback; reduced-motion users get still frames with manual beat navigation.
+- Added illustrated storyboards for Frustrated, Nervous, Lonely, Buried, Excited, Shy, Jealous, Calm, breathing Calm and Golden. Kept existing catch rules, scoring and Moodling behavior unchanged.
+- Localized clip controls and catch captions in English and Burmese. Removed the former CSS slide keyframes and kept the stage at 16:9 on mobile and desktop.
+- Verified JavaScript syntax and game-source integrity. Browser-checked the Frustrated clip at 375px and 1280px, including its Space-or-A/D badge, final catch and Glow animation, exact 16:9 scene, and Burmese captions/controls.
