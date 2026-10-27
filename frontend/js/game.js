@@ -4183,7 +4183,7 @@
         clearInterval(catchClipTimer); catchClipTimer = 0;
         $('#catchClipProgress').textContent = copy.catchClipProgress || 'Clip finished · replay any time';
       }
-    }, 1800);
+    }, 2000);
   }
   function openCatchClip(type, variant, trigger) {
     catchClipReturnFocus = trigger || document.activeElement;
