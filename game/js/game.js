@@ -4190,16 +4190,18 @@
     $('#catchClipClose').setAttribute('aria-label', copy.catchClipClose || 'Close clip');
     const buttonText = document.getElementById('bJump')?.textContent?.trim();
     const playerCopy = {
-      catchClipStepText: `${copy.catchClipStep || 'Step'} {n} / 3`, catchClipFinished: copy.catchClipProgress || 'Clip finished · replay any time',
-      catchClipPause: copy.catchClipPause || 'Pause', catchClipPlay: copy.catchClipPlay || 'Play', catchClipReplay: copy.catchClipReplay || 'Replay clip',
-      catchClipPrev: copy.catchClipPrev || '◀ Beat', catchClipNext: copy.catchClipNext || 'Beat ▶', catchClipSpeed: copy.catchClipSpeed || 'Speed',
+      catchClipStepText: `${copy.catchClipStep || 'Step'} {n} / 3`,
+      catchClipReplay: copy.catchClipReplay || 'Start again', catchClipNoButton: copy.catchClipNoButton || 'No button — watch Shwe',
+      catchClipGalleryLabel: copy.catchClipGalleryLabel || 'Three catch guide pictures', catchClipControlsLabel: copy.catchClipControlsLabel || 'Control for this step',
       catchClipActionLabels: copy.catchClipActionLabels || {}, catchClipGlow: copy.catchClipGlow || '+Glow', catchClipOr: copy.catchClipOr || 'or',
       catchClipStages: copy.catchClipStages || ['NOTICE', 'TRY IT', 'BRING IT HOME']
     };
     $('#catchClipReplay').textContent = playerCopy.catchClipReplay;
+    $('#catchClipPrev').setAttribute('aria-label', copy.catchClipPrev || 'Previous picture');
+    $('#catchClipNext').setAttribute('aria-label', copy.catchClipNext || 'Next picture');
     window.TCCatchClipPlayer?.open({
       type, variant, steps: captions, stages: playerCopy.catchClipStages,
-      moodSrc: bookPortrait(type, variant, true), color: vcol(type, variant), copy: playerCopy,
+      moodSrc: bookPortrait(type, variant, true), moodName: vinfo(type, variant).n, color: vcol(type, variant), copy: playerCopy,
       touchLabels: { ...(copy.catchClipTouchLabels || {}), move: copy.catchClipTouchLabels?.move || 'MOVE', sneak: copy.catchClipTouchLabels?.sneak || 'SNEAK', jump: buttonText || copy.catchClipTouchLabels?.jump || 'JUMP', pounce: $('#bPounce')?.textContent.trim() || copy.catchClipTouchLabels?.pounce || 'POUNCE', eyes: $('#bEyes')?.textContent.trim() || copy.catchClipTouchLabels?.eyes || 'EYES', scratch: $('#bScratch')?.textContent.trim() || copy.catchClipTouchLabels?.scratch || 'SCRATCH', hold: copy.catchClipTouchLabels?.hold || 'HOLD', release: copy.catchClipTouchLabels?.release || 'LET GO' }
     });
   }
