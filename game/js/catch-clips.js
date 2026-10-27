@@ -1,7 +1,8 @@
 /* Canvas based, pauseable catch-guide mini scenes. */
 (function (root) {
   'use strict';
-  const W = 1280, H = 720, BEAT = 3.25, DURATION = BEAT * 3, ease = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
+  const W = 1280, H = 720, DURATION = 2, BEAT = DURATION / 3, STORY_DURATION = 9.75, TIME_SCALE = STORY_DURATION / DURATION;
+  const ease = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
   const lerp = (a, b, t) => a + (b - a) * t;
   const between = (t, a, b) => ease((t - a) / Math.max(.001, b - a));
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -13,8 +14,8 @@
   const badge = document.getElementById('catchClipInput'), back = document.getElementById('catchClipPrev');
   const next = document.getElementById('catchClipNext'), toggle = document.getElementById('catchClipPause');
   const replay = document.getElementById('catchClipReplay'), speed = document.getElementById('catchClipSpeed');
-  let resizeObserver, frame = 0, lastFrame = 0, elapsed = 0, speedMul = 1, phase = 'stopped', resumePhase = 'playing';
-  let restUntil = 0, autoReplays = 0, beatShown = -1, cameraX = 0, cycleEvents = new Set(), settings = null;
+  let resizeObserver, frame = 0, lastFrame = 0, elapsed = 0, speedMul = 1, phase = 'stopped';
+  let beatShown = -1, cameraX = 0, cycleEvents = new Set(), settings = null;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const getTouch = () => document.getElementById('touch') && !document.getElementById('touch').hidden;
 
@@ -118,7 +119,7 @@
         state.fireflies = t < 5 ? between(t, .6, 1.6) : 1; state.ring = t > 6.5 ? between(t, 6.5, 9.1) : 0;
       }
     } else if (type === 'G') {
-      const u = t / DURATION; state.moodX = 690 + Math.sin(u * Math.PI * 2) * 230; state.moodY = 430 - Math.sin(u * Math.PI * 3) * 155;
+      const u = t / STORY_DURATION; state.moodX = 690 + Math.sin(u * Math.PI * 2) * 230; state.moodY = 430 - Math.sin(u * Math.PI * 3) * 155;
       state.moodRotation = Math.cos(u * Math.PI * 2) * .12; state.moodFace = 'sparkly';
       if (t >= 3.65) { state.catX = move(300, 650, 3.65, 5.6); state.catFacing = 1; state.catAction = t < 5.8 ? 'jump' : 'idle'; state.catY = 590 - Math.sin(between(t, 3.65, 5.8) * Math.PI) * 150; }
       if (t >= 7.1) { state.catX = move(650, 730, 7.1, 8.5); state.catAction = t < 8.65 ? 'pounce' : 'idle'; state.catY = 590 - Math.sin(between(t, 7.1, 8.65) * Math.PI) * 120; }
@@ -166,16 +167,16 @@
   }
   function paint(time) {
     if (!settings) return;
-    const sceneTime = sceneClock(settings.type, time);
+    const sceneTime = sceneClock(settings.type, time * TIME_SCALE);
     const state = actionFor(settings.type, sceneTime), input = inputFor(settings.type, settings.variant, sceneTime);
     ctx.save(); ctx.clearRect(0, 0, W, H); background(ctx, sceneTime);
     const target = clamp(state.catX - 475, 0, 260); cameraX += (target - cameraX) * .09;
     ctx.translate(-cameraX, 0);
     if (settings.type === 'C' && settings.variant === 0) {
-      for (let i = 0; i < 3; i++) { const x = 420 + i * 115, y = 545 + Math.sin(time * 2 + i) * 22; ctx.fillStyle = '#fff3aa'; ctx.shadowColor = '#fff3aa'; ctx.shadowBlur = 20; ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }
+      for (let i = 0; i < 3; i++) { const x = 420 + i * 115, y = 545 + Math.sin(sceneTime * 2 + i) * 22; ctx.fillStyle = '#fff3aa'; ctx.shadowColor = '#fff3aa'; ctx.shadowBlur = 20; ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }
     }
     if (input && ['jump', 'pounce', 'release'].includes(input.touch)) {
-      ctx.strokeStyle = `${settings.color}9c`; ctx.globalAlpha = .72 + .18 * Math.sin(time * 15); ctx.lineWidth = 5;
+      ctx.strokeStyle = `${settings.color}9c`; ctx.globalAlpha = .72 + .18 * Math.sin(sceneTime * 15); ctx.lineWidth = 5;
       ctx.beginPath(); ctx.arc(state.catX, state.catY - 85, 96, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
       ctx.fillStyle = '#fff6d6'; ctx.font = '800 18px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('0.6×', state.catX, state.catY - 205);
     }
@@ -184,8 +185,8 @@
     for (let i = 1; i <= 3; i++) { ctx.fillStyle = `rgba(255,239,173,${.28 + i * .14})`; ctx.beginPath(); ctx.arc(state.catX - state.catFacing * i * 35, 555 - i % 2 * 7, 4, 0, Math.PI * 2); ctx.fill(); }
     if (settings.type === 'C' && settings.variant === 1) drawRing(ctx, state.catX, 456, state.ring, settings.color);
     else if (state.ring) drawRing(ctx, state.moodX, state.moodY, state.ring, settings.color);
-    if (settings.type === 'B' && time > 3.5 && time < 5.6) {
-      for (let i = 0; i < 9; i++) { const p = (time * 1.8 + i * .31) % 1; ctx.globalAlpha = 1 - p; ctx.fillStyle = i % 2 ? '#d5b48a' : '#fff0a0'; ctx.beginPath(); ctx.arc(850 + Math.sin(i * 8) * (18 + p * 28), 550 - p * 80, 3 + (i % 3), 0, Math.PI * 2); ctx.fill(); }
+    if (settings.type === 'B' && sceneTime > 3.5 && sceneTime < 5.6) {
+      for (let i = 0; i < 9; i++) { const p = (sceneTime * 1.8 + i * .31) % 1; ctx.globalAlpha = 1 - p; ctx.fillStyle = i % 2 ? '#d5b48a' : '#fff0a0'; ctx.beginPath(); ctx.arc(850 + Math.sin(i * 8) * (18 + p * 28), 550 - p * 80, 3 + (i % 3), 0, Math.PI * 2); ctx.fill(); }
       ctx.globalAlpha = 1;
     }
     moodFace(ctx, settings.mood, state, sceneTime);
@@ -195,14 +196,14 @@
     const art = root.TCCatchClipArt;
     const pose = art?.drawCat(ctx, { x: state.catX, y: state.catY, height: 188, action: state.catAction, facing: state.catFacing, time: sceneTime, rigPose: settings.rigPose });
     if (pose) settings.rigPose = pose;
-    if (state.landing) for (let i = 0; i < 6; i++) { const side = i % 2 ? 1 : -1, p = between(time, 0, .4); ctx.globalAlpha = state.landing * (1 - p); ctx.fillStyle = '#d9dec2'; ctx.beginPath(); ctx.arc(state.catX + side * (50 + p * 40) + Math.sin(time * 12 + i) * 5, 575 - p * (15 + i * 3), 3 + (i % 3), 0, Math.PI * 2); ctx.fill(); } ctx.globalAlpha = 1;
-    if (time > 9 && time < 10.1) {
-      const p = between(time, 9, 9.55), x = lerp(state.moodX, state.catX - state.catFacing * 50, p), y = lerp(state.moodY, state.catY - 50, p);
+    if (state.landing) for (let i = 0; i < 6; i++) { const side = i % 2 ? 1 : -1, p = between(sceneTime, 0, .4); ctx.globalAlpha = state.landing * (1 - p); ctx.fillStyle = '#d9dec2'; ctx.beginPath(); ctx.arc(state.catX + side * (50 + p * 40) + Math.sin(sceneTime * 12 + i) * 5, 575 - p * (15 + i * 3), 3 + (i % 3), 0, Math.PI * 2); ctx.fill(); } ctx.globalAlpha = 1;
+    if (time > DURATION * .84) {
+      const p = between(time, DURATION * .84, DURATION * .98), x = lerp(state.moodX, state.catX - state.catFacing * 50, p), y = lerp(state.moodY, state.catY - 50, p);
       ctx.fillStyle = '#fff0a0'; ctx.shadowColor = '#fff0a0'; ctx.shadowBlur = 24; ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
-      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + time * 2.7, r = 32 + p * 28; ctx.fillStyle = '#fff0ae'; ctx.fillRect(x + Math.cos(a) * r, y + Math.sin(a) * r, 4, 4); }
-      ctx.globalAlpha = 1 - between(time, 9.5, 10.05); ctx.font = '900 34px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe58b'; ctx.fillText(settings.copy.catchClipGlow || '+Glow', state.catX, state.catY - 220 - between(time, 9, 9.8) * 45); ctx.globalAlpha = 1;
+      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + sceneTime * 2.7, r = 32 + p * 28; ctx.fillStyle = '#fff0ae'; ctx.fillRect(x + Math.cos(a) * r, y + Math.sin(a) * r, 4, 4); }
+      ctx.globalAlpha = 1; ctx.font = '900 34px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe58b'; ctx.fillText(settings.copy.catchClipGlow || '+Glow', state.catX, state.catY - 220 - between(time, DURATION * .84, DURATION * .98) * 45); ctx.globalAlpha = 1;
     }
-    if (state.fireflies) for (let i = 0; i < 3; i++) { const a = time * 1.4 + i * 2.1, x = 700 + Math.cos(a) * 75, y = 440 + Math.sin(a) * 45; ctx.fillStyle = '#fff2a6'; ctx.shadowColor = '#fff2a6'; ctx.shadowBlur = 18; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }
+    if (state.fireflies) for (let i = 0; i < 3; i++) { const a = sceneTime * 1.4 + i * 2.1, x = 700 + Math.cos(a) * 75, y = 440 + Math.sin(a) * 45; ctx.fillStyle = '#fff2a6'; ctx.shadowColor = '#fff2a6'; ctx.shadowBlur = 18; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill(); ctx.shadowBlur = 0; }
     ctx.restore(); drawBadge(input);
   }
   function updateBeat(index) {
@@ -217,34 +218,28 @@
   const soundMarks = { F: [[2.05, 'appear'], [3.4, 'jump'], [7.2, 'pounce']], N: [[1, 'error'], [3.7, 'step'], [7.4, 'pounce']], L: [[.7, 'eyes'], [4.2, 'scratch']], B: [[.7, 'eyes'], [4.15, 'scratch'], [7.4, 'pounce']], E: [[3.9, 'jump'], [7.2, 'pounce']], S: [[6.35, 'step'], [7.4, 'pounce']], J: [[.8, 'appear'], [3.5, 'step'], [7.2, 'pounce']], C: [[.3, 'step']], G: [[3.65, 'jump'], [7.15, 'pounce']] };
   function fireSounds(from, to) { for (const [at, sound] of soundMarks[settings.type] || []) { const key = `${settings.type}:${settings.cycle}:${at}`; if (at > from && at <= to && !cycleEvents.has(key)) { cycleEvents.add(key); sfx(sound, sound === 'step' ? .24 : .4); } }
     if (from < 9 && to >= 9) { const key = `catch:${settings.cycle}`; if (!cycleEvents.has(key)) { cycleEvents.add(key); sfx('sparkle', .5); } } }
-  function finishCycle(now) { phase = 'rest'; restUntil = now + 1500; }
+  function finishCycle() { phase = 'finished'; drawBadge(null); progress.textContent = settings.copy.catchClipFinished; toggle.textContent = settings.copy.catchClipReplay; }
   function tick(now) {
     frame = 0;
     if (document.hidden) { pause(); return; }
     if (phase === 'playing') {
       const dt = lastFrame ? Math.min(.05, Math.max(0, (now - lastFrame) / 1000)) : 0; lastFrame = now;
       const old = elapsed; elapsed = Math.min(DURATION, elapsed + dt * speedMul);
-      fireSounds(old, elapsed);
+      fireSounds(old * TIME_SCALE, elapsed * TIME_SCALE);
       updateBeat(Math.min(2, Math.floor(elapsed / BEAT))); paint(elapsed);
-      if (elapsed >= DURATION) finishCycle(now);
-    } else if (phase === 'rest') {
-      paint(elapsed);
-      if (now >= restUntil) {
-        if (autoReplays < 1) { autoReplays++; settings.cycle++; cycleEvents = new Set(); elapsed = 0; lastFrame = now; phase = 'playing'; updateBeat(0); sfx('start', .25); }
-        else { phase = 'finished'; drawBadge(null); progress.textContent = settings.copy.catchClipFinished; toggle.textContent = settings.copy.catchClipReplay; }
-      }
+      if (elapsed >= DURATION) finishCycle();
     }
-    if (phase === 'playing' || phase === 'rest') frame = requestAnimationFrame(tick);
+    if (phase === 'playing') frame = requestAnimationFrame(tick);
   }
-  function schedule() { if (!frame && (phase === 'playing' || phase === 'rest')) frame = requestAnimationFrame(tick); }
-  function pause() { if (phase === 'playing' || phase === 'rest') { resumePhase = phase; phase = 'paused'; } if (frame) cancelAnimationFrame(frame); frame = 0; toggle.textContent = settings?.copy.catchClipPlay || 'Play'; }
-  function play() { if (!settings || reduced.matches) return; if (phase === 'finished' || phase === 'stopped') { elapsed = 0; autoReplays = 0; settings.cycle = 0; cycleEvents = new Set(); updateBeat(0); }
-    phase = resumePhase === 'rest' && phase === 'paused' ? 'rest' : 'playing'; resumePhase = 'playing'; lastFrame = 0; toggle.textContent = settings.copy.catchClipPause; schedule(); }
+  function schedule() { if (!frame && phase === 'playing') frame = requestAnimationFrame(tick); }
+  function pause() { if (phase === 'playing') phase = 'paused'; if (frame) cancelAnimationFrame(frame); frame = 0; toggle.textContent = settings?.copy.catchClipPlay || 'Play'; }
+  function play() { if (!settings || reduced.matches) return; if (phase === 'finished' || phase === 'stopped') { elapsed = 0; settings.cycle = 0; cycleEvents = new Set(); updateBeat(0); }
+    phase = 'playing'; lastFrame = 0; toggle.textContent = settings.copy.catchClipPause; schedule(); }
   function seekBeat(delta) { if (!settings) return; if (reduced.matches) { elapsed = clamp((Math.floor(elapsed / BEAT) + delta) * BEAT + .02, 0, DURATION - .01); updateBeat(Math.min(2, Math.floor(elapsed / BEAT))); paint(elapsed); return; }
     elapsed = clamp((Math.floor(elapsed / BEAT) + delta) * BEAT + .02, 0, DURATION - .01); updateBeat(Math.min(2, Math.floor(elapsed / BEAT))); paint(elapsed); if (phase !== 'playing') { phase = 'paused'; toggle.textContent = settings.copy.catchClipPlay; } }
-  function replayClip() { if (!settings) return; phase = 'stopped'; if (frame) cancelAnimationFrame(frame); frame = 0; elapsed = 0; autoReplays = 0; settings.cycle = 0; settings.rigPose = null; cameraX = 0; cycleEvents = new Set(); beatShown = -1; updateBeat(0); paint(0);
+  function replayClip() { if (!settings) return; phase = 'stopped'; if (frame) cancelAnimationFrame(frame); frame = 0; elapsed = 0; settings.cycle = 0; settings.rigPose = null; cameraX = 0; cycleEvents = new Set(); beatShown = -1; updateBeat(0); paint(0);
     if (reduced.matches) { phase = 'paused'; toggle.disabled = true; toggle.textContent = settings.copy.catchClipStill || 'Still frames'; } else { phase = 'playing'; toggle.disabled = false; toggle.textContent = settings.copy.catchClipPause; lastFrame = 0; schedule(); } }
-  toggle.addEventListener('click', () => phase === 'playing' || phase === 'rest' ? pause() : play());
+  toggle.addEventListener('click', () => phase === 'playing' ? pause() : play());
   back.addEventListener('click', () => seekBeat(-1)); next.addEventListener('click', () => seekBeat(1)); replay.addEventListener('click', replayClip);
   speed.addEventListener('click', () => { speedMul = speedMul === 1 ? .5 : 1; speed.textContent = `${settings?.copy.catchClipSpeed || 'Speed'} ${speedMul}×`; });
   addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
@@ -254,7 +249,7 @@
   }
   root.TCCatchClipPlayer = {
     open(options) {
-      if (frame) cancelAnimationFrame(frame); frame = 0; phase = 'stopped'; elapsed = 0; autoReplays = 0; cameraX = 0; beatShown = -1; cycleEvents = new Set();
+      if (frame) cancelAnimationFrame(frame); frame = 0; phase = 'stopped'; elapsed = 0; cameraX = 0; beatShown = -1; cycleEvents = new Set();
       settings = { ...options, cycle: 0, rigPose: null, copy: { ...options.copy } }; stage.dataset.type = options.type; stage.dataset.variant = String(options.variant || 0);
       const mood = new Image(); settings.mood = mood; mood.src = options.moodSrc; mood.onload = () => paint(elapsed);
       elapsed = 0; setupCopy(settings.copy); updateBeat(0); resize();
