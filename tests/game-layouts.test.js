@@ -87,24 +87,23 @@ function check(level) {
 
 assert.equal(layouts().length, 53, '50 story levels plus three Free Play trails');
 for (const level of layouts()) check(level);
-assert.equal((LEVELS[1].pits || []).length, 0, 'Night 1 is the no-pit learning night');
-assert.equal(LEVELS[2].pits.length, 1, 'Night 2 introduces one pit');
-assert.ok(LEVELS[2].platforms.some(p => p[3] === 'moving' && LEVELS[2].pits.some(([a,b]) => p[4]?.path?.length > 1 && Math.min(...p[4].path.map(([x]) => x)) <= a && Math.max(...p[4].path.map(([x]) => x)) + p[2] >= b)), 'Night 2 has a moving bridge crossing');
-assert.equal(LEVELS[3].pits.length, 2, 'Night 3 has two pits');
-assert.ok(LEVELS[3].platforms.some(p => p[3] === 'moving' && LEVELS[3].pits.some(([a,b]) => p[0] < b && p[0] + p[2] > a)), 'Night 3 has a moving pit crossing');
-const parkPit = LEVELS[3].pits[1];
-const parkPitCrossers = LEVELS[3].platforms.filter(p => p[0] < parkPit[1] && p[0] + p[2] > parkPit[0]);
-assert.equal(parkPit[1] - parkPit[0], 385, 'Night 3 second pit is 3.5 times wider than its moving bridge');
-assert.equal(parkPitCrossers.length, 1, 'Night 3 second pit has no overlapping duplicate platforms');
-assert.equal(parkPitCrossers[0][3], 'moving', 'Night 3 second pit can only be crossed by its moving bridge');
-assert.ok(LEVELS[4].platforms.filter(p => p[4]?.skin === 'boat').length >= 3, 'Night 4 has moving boats');
-assert.ok(LEVELS[5].platforms.some(p => p[3] === 'crumbling'), 'Night 5 has crumbling steps');
-assert.ok(LEVELS[6].platforms.some(p => p[4]?.skin === 'log') && LEVELS[6].platforms.some(p => p[3] === 'swinging'), 'Night 6 has moving logs and a swing');
-assert.ok(LEVELS[7].checkpoints.length > LEVELS[6].checkpoints.length, 'Night 7 adds more checkpoints');
+for (let night = 1; night <= 50; night++) {
+  const level = LEVELS[night];
+  if (night % 5 !== 0) {
+    assert.equal(level.pits.length, 0, `Night ${night} has no pit`);
+    assert.equal(level.platforms.length, 0, `Night ${night} has no roost platforms`);
+    continue;
+  }
+  assert.ok(level.pits.length > 0, `Night ${night} includes a pit section`);
+  assert.equal(level.platforms.length, level.pits.length, `Night ${night} has exactly one roost per pit`);
+  assert.ok(level.pits.every(([a, b]) => b - a > MAX_FLAT_JUMP), `Night ${night} gaps cannot be jumped across`);
+  assert.ok(level.platforms.every(p => p[3] === 'moving'), `Night ${night} crossings use moving roosts only`);
+  assert.ok(level.platforms.every(p => p[2] * 5 <= level.pits[level.platforms.indexOf(p)][1] - level.pits[level.platforms.indexOf(p)][0]), `Night ${night} gaps are at least five roost-widths`);
+}
+assert.equal(LEVELS[5].pitToBridgeRatio, 5, 'Night 5 gaps use the five-to-one bridge ratio');
 assert.ok(LEVELS.free.variants.every(level => level.pits?.length), 'Every Free Play trail includes a fall-risk crossing');
-assert.deepEqual([2,3,4,5,6,7].map(night => LEVELS[night].pitToBridgeRatio), [3.25,3.5,3.75,4,4.5,5], 'Story pit ratios ramp up through Night 7');
-assert.deepEqual(LEVELS.free.variants.map(level => level.pitToBridgeRatio), [3.25,4,5], 'Free Play pit ratios follow trail difficulty');
+assert.deepEqual(LEVELS.free.variants.map(level => level.pitToBridgeRatio), [5,5,5], 'Free Play pits also require moving roost crossings');
 assert.ok([...Array(43)].every((_, i) => LEVELS[i + 8].pitToBridgeRatio === 5), 'Challenge levels keep the maximum five-to-one pit ratio');
-assert.ok([...Array(42)].every((_, i) => LEVELS[i + 9].pits.length >= LEVELS[i + 8].pits.length), 'Pit count never drops as challenge levels advance');
-assert.ok([...Array(42)].every((_, i) => LEVELS[i + 9].platforms.find(p => p[3] === 'moving')[4].speed > LEVELS[i + 8].platforms.find(p => p[3] === 'moving')[4].speed), 'Bridge speed rises every challenge level');
+assert.ok([...Array(8)].every((_, i) => LEVELS[15 + i * 5].pits.length > LEVELS[10 + i * 5].pits.length), 'Pit count grows between challenge pit nights');
+assert.ok([...Array(8)].every((_, i) => LEVELS[15 + i * 5].platforms[0][4].speed > LEVELS[10 + i * 5].platforms[0][4].speed), 'Bridge speed rises between challenge pit nights');
 console.log(`Validated ${layouts().length} level layouts; ${MAX_JUMP_HEIGHT.toFixed(1)}px jump rise and ${MAX_FLAT_JUMP.toFixed(1)}px safe jump span.`);

@@ -158,8 +158,10 @@
       ]
     }
   };
-  for (const [night, ratio] of [[2,3.25],[3,3.5],[4,3.75],[5,4],[6,4.5],[7,5]]) sizePitsByDifficulty(levels[night], ratio);
-  for (const [variant, ratio] of levels.free.variants.map((level, i) => [level, [3.25,4,5][i]])) sizePitsByDifficulty(variant, ratio);
+  // Story pits appear once every five nights. Each is wider than Shwe's
+  // unaided jump and has one moving roost bridge sized to the full gap.
+  sizePitsByDifficulty(levels[5], 5);
+  for (const variant of levels.free.variants) sizePitsByDifficulty(variant, 5);
   // Themed traps and Thiri's hidden keepsakes, in final coordinates (after the pits are sized).
   //   squeak {x,w}: creaky floorboard (sneak across) · sprinkler {x} · lantern {x,w}: drops on its shadow
   //   wind {a,b,dir}: gusts push Shwe toward a (dir -1) or b (dir 1); zones end well before any pit
@@ -178,10 +180,20 @@
   // Hilltop: every hill's middle stone pillar crumbles, not just the first one
   for (const p of levels[5].platforms) if (p[2] === 90 && p[1] === 420) p[3] = 'crumbling';
   for (let night = 8; night <= 50; night++) levels[night] = makeChallengeLevel(night);
-  // One pit-bearing story level per five levels. The ground profile already
-  // spans the entire route; clearing gaps restores solid ground beneath roosts.
+  // Keep roosts exclusive to pit nights: every gap has exactly one moving
+  // bridge, while non-pit nights use continuous ground and no roost platforms.
   for (let night = 1; night <= 50; night++) {
-    if (night % 5 !== 0) levels[night].pits = [];
+    const level = levels[night];
+    if (night % 5 !== 0) {
+      level.pits = [];
+      level.platforms = [];
+      continue;
+    }
+    level.platforms = (level.pits || []).map(([a, b]) => level.platforms.find(p =>
+      p[3] === 'moving' && p[4]?.path?.length > 1
+      && Math.min(...p[4].path.map(([x]) => x)) <= a
+      && Math.max(...p[4].path.map(([x]) => x)) + p[2] >= b
+    )).filter(Boolean);
   }
   root.TC_LEVELS = levels;
   if (typeof module !== 'undefined' && module.exports) module.exports = levels;

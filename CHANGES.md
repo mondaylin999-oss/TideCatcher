@@ -1,5 +1,11 @@
 # Voices, bedroom Thiri and Persian tail
 
+## Moving roosts only on pit nights
+
+- Story pits and their moving roost bridges now appear every fifth level only. Other story levels use continuous ground and have no roost platforms.
+- Each pit is at least five bridge-widths and wider than Shwe's unaided jump; each pit has exactly one moving bridge and no overlapping duplicate roosts.
+- Free Play pit routes use the same five-to-one bridge width. Updated the level-layout regression test and map notes to enforce the schedule.
+
 ## Quiet Rooftops
 
 - The eight "Quiet Rooftops" challenge nights now use a rooftop map instead of hill scenery. Distant houses, chimneys, laundry lines and tiled roofs form a readable moonlit route.
