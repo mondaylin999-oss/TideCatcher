@@ -4190,7 +4190,6 @@
     $('#catchClipClose').setAttribute('aria-label', copy.catchClipClose || 'Close clip');
     const buttonText = document.getElementById('bJump')?.textContent?.trim();
     const playerCopy = {
-      catchClipStepText: `${copy.catchClipStep || 'Step'} {n} / 3`,
       catchClipReplay: copy.catchClipReplay || 'Start again', catchClipNoButton: copy.catchClipNoButton || 'No button — watch Shwe',
       catchClipGalleryLabel: copy.catchClipGalleryLabel || 'Three catch guide pictures', catchClipControlsLabel: copy.catchClipControlsLabel || 'Control for this step',
       catchClipActionLabels: copy.catchClipActionLabels || {}, catchClipGlow: copy.catchClipGlow || '+Glow', catchClipOr: copy.catchClipOr || 'or',

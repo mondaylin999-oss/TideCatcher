@@ -7,8 +7,6 @@
   const dots = document.getElementById('catchClipDots');
   const caption = document.getElementById('catchClipCaption');
   const tag = document.getElementById('catchClipTag');
-  const progress = document.getElementById('catchClipProgress');
-  const segments = [...document.querySelectorAll('.catch-clip-segment')];
   const back = document.getElementById('catchClipPrev'), next = document.getElementById('catchClipNext');
   const replay = document.getElementById('catchClipReplay');
   const touchControls = document.getElementById('touch');
@@ -115,7 +113,7 @@
   function syncLayout(){const mobile=layout()==='mobile';stage.classList.toggle('is-mobile',mobile);gallery.setAttribute('aria-label',data?.copy.catchClipGalleryLabel||'Three catch guide pictures');updateCurrent(current);}
   function updateCurrent(index){if(!data)return;current=clamp(index,0,2);const mobile=layout()==='mobile';gallery.style.setProperty('--active-card',String(current));gallery.querySelectorAll('.catch-clip-card').forEach((card,i)=>{card.classList.toggle('is-active',i===current);card.setAttribute('aria-current',i===current?'step': 'false');});dots.replaceChildren();for(let i=0;i<3;i++){const b=document.createElement('button');b.type='button';b.className='catch-clip-dot';b.setAttribute('aria-label',`${data.copy.catchClipStep||'Step'} ${i+1}`);b.setAttribute('aria-current',i===current?'step':'false');b.addEventListener('click',()=>updateCurrent(i));dots.appendChild(b);}
     back.disabled=current===0;next.disabled=current===2;back.hidden=!mobile;next.hidden=!mobile;dots.hidden=!mobile;dots.querySelectorAll('button').forEach(b=>{b.hidden=!mobile;});
-    caption.textContent=data.steps[current]||data.steps[0]||'';tag.textContent=`${current+1} / 3 · ${data.stages[current]||''}`;progress.textContent=(data.copy.catchClipStepText||'Step {n} / 3').replace('{n}',String(current+1));segments.forEach((s,i)=>{s.classList.toggle('is-current',i===current);s.classList.toggle('is-complete',i<current);});
+    caption.textContent=data.steps[current]||data.steps[0]||'';tag.textContent=`${current+1} · ${data.stages[current]||''}`;
   }
   function makeCards(){gallery.replaceChildren();canvases=[];const story=data.type==='C'&&data.variant===1?'C1':data.type,steps=storyboard[story]||storyboard.F;steps.forEach((step,i)=>{
     const card=document.createElement('article');card.className='catch-clip-card';card.setAttribute('aria-label',`${data.copy.catchClipStep||'Step'} ${i+1}: ${data.stages[i]||''}`);
