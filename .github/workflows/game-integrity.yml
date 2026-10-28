@@ -13,3 +13,6 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/game-integrity.test.js
+      - run: node tests/boss-moodling.test.js
+      - run: node tests/jump-upgrade.test.js
+      - run: node tests/game-layouts.test.js

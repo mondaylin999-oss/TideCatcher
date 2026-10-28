@@ -15,6 +15,7 @@
         { title: 'Bring a light home', text: 'See our glowing practice friend? Move close and press Pounce to catch it. It cannot hurt us.', action: 'catch' }
       ],
       tutorialComplete: 'You did it! Now let’s bring the feelings home.',
+      bossIntro: { title: 'Storm Frustrated', text: 'Dodge each charge. When the storm gets dizzy, pounce. Three good pounces open the moon door.', dodge: '↔ Dodge or jump', pounce: '✦ Pounce when dizzy', ready: 'Face the storm', warning: 'Storm Frustrated is winding up!', dizzy: 'It is dizzy! Pounce now!', hit: 'A stormy bump · {lives} lives left', defeated: 'The storm is calm. The moon door is open!', fail: 'Shwe ran out of lives in the storm challenge. The lights already safe in the Mood Book remain yours.' },
       success: 'Purrfect! You learned it by doing it.',
       skipTutorial: 'Skip tutorial',
       jitLabel: 'A little tip',
@@ -132,6 +133,7 @@
         { title: 'အလင်းလေးကိုဖမ်းမယ်', text: 'တောက်ပတဲ့ လေ့ကျင့်ဖော်လေးအနားကိုသွားပြီး Pounce ကိုနှိပ်ပါ။ သူက အန္တရာယ်မပေးပါဘူး။', action: 'catch' }
       ],
       tutorialComplete: 'တတ်သွားပြီ! ခံစားချက်လေးတွေကို အိမ်ပြန်ပို့ကြမယ်။',
+      bossIntro: { title: 'မုန်တိုင်း Frustrated', text: 'ပြေးဝင်တိုက်လာချိန်မှာ ရှောင်ပါ။ မူးဝေသွားတဲ့အခါ Pounce လုပ်ပါ။ သုံးကြိမ်ထိမှန်ရင် လမင်းတံခါး ပွင့်လာမယ်။', dodge: '↔ ရှောင်ပါ သို့မဟုတ် ခုန်ပါ', pounce: '✦ မူးဝေချိန် Pounce လုပ်ပါ', ready: 'မုန်တိုင်းကို ရင်ဆိုင်မယ်', warning: 'မုန်တိုင်း Frustrated က အားယူနေသည်။', dizzy: 'မူးဝေနေပြီ! Pounce လုပ်ပါ။', hit: 'မုန်တိုင်းနဲ့ တိုက်မိသည် · အသက် {lives} ခု', defeated: 'မုန်တိုင်း ငြိမ်သက်သွားပြီ။ လမင်းတံခါး ပွင့်လာပြီ။', fail: 'မုန်တိုင်းတိုက်ပွဲတွင် Shwe အသက်ကုန်သွားသည်။ Mood Book ထဲ သိမ်းထားပြီးသား အလင်းများက သင့်အတွက် ကျန်ရှိနေမည်။' },
       success: 'ကောင်းလိုက်တာ! ကိုယ်တိုင်လုပ်ပြီး သင်ယူတတ်မြောက်သွားပြီ။',
       skipTutorial: 'သင်ခန်းစာ ကျော်မည်',
       jitLabel: 'အကြံပြုချက်လေး',

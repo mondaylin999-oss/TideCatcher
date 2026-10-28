@@ -156,6 +156,12 @@
   const keyIs = (code, a) => window.TCControls ? TCControls.is(code, a) : (CK[a] || []).includes(code);
   const keyHeld = a => window.TCControls ? TCControls.held(keys, a) : (CK[a] || []).some(c => keys[c]);
   addEventListener('keydown', e => {
+    if (bossEncounter?.introOpen) {
+      if (['Enter', 'Space'].includes(e.code)) { e.preventDefault(); e.stopPropagation(); startBossFight(); }
+      else if (e.code === 'Escape' || keyIs(e.code, 'pause')) { e.preventDefault(); e.stopPropagation(); $('#bossIntroScreen').hidden = true; pauseGame(); }
+      else if (e.code !== 'Tab') { e.preventDefault(); }
+      keys[e.code] = false; return;
+    }
     if ((['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code) || (window.TCControls ? TCControls.isGameKey(e.code) : false)) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
     if (e.code === 'F2' && DEBUG_ALLOWED) { e.preventDefault(); debugLayout = !debugLayout; return; }
@@ -704,16 +710,17 @@
     { id: 'swift', name: 'Swift paws', desc: 'Run faster across the Night Side.', costs: [50, 90, 140, 210, 300, 410, 550], vals: [6, 6.3, 6.6, 6.9, 7.2, 7.5, 7.8, 8.1], fmt: v => `${v} tiles per second` },
     { id: 'paws', name: 'Soft paws', desc: 'Nervous Moodlings hear you from less far away.', costs: [70, 120, 180, 260, 360, 480, 620], vals: [5, 4.5, 4, 3.6, 3.2, 2.85, 2.5, 2.2], fmt: v => `heard from ${v} tiles` },
     { id: 'eyes', name: 'Night eyes', desc: 'Press E (or the Eyes button) to highlight nearby scratch spots. Upgrades let Shwe find them from further away.', costs: [60, 100, 160, 240, 340, 460, 600], vals: [4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5], fmt: v => `see ${v} tiles` },
-    { id: 'purr', name: 'Purr', desc: 'Press K (or the Purr button) to slow nearby Moodlings for 3 seconds.', costs: [100, 150, 220, 300, 400, 520, 660], vals: [0, 16, 15, 12, 10, 8, 6, 5], fmt: v => v ? `${v}s cooldown` : 'not unlocked' }
+    { id: 'purr', name: 'Purr', desc: 'Press K (or the Purr button) to slow nearby Moodlings for 3 seconds.', costs: [100, 150, 220, 300, 400, 520, 660], vals: [0, 16, 15, 12, 10, 8, 6, 5], fmt: v => v ? `${v}s cooldown` : 'not unlocked' },
+    { id: 'secondLeap', name: 'Second Leap', desc: 'Unlock one small extra jump while Shwe is in the air. Optional; all nights remain beatable without it.', costs: [220], max: 1, vals: [0, 1], fmt: v => v ? 'unlocked' : 'off' }
   ];
-  let upg = { pounce: 0, swift: 0, paws: 0, eyes: 0, purr: 0 }, glow = 0, glowRun = 0, lastGlow = 0;
+  let upg = { pounce: 0, swift: 0, paws: 0, eyes: 0, purr: 0, secondLeap: 0 }, glow = 0, glowRun = 0, lastGlow = 0;
   try {
     const s = JSON.parse(localStorage.getItem('mk-upg') || '{}');
-    const v7 = localStorage.getItem('mk-upg-v') === '7';
-    for (const k in upg) if (Number.isInteger(s[k])) upg[k] = clamp(v7 ? s[k] : s[k] * 2, 0, UPG_MAX);
+    const version = localStorage.getItem('mk-upg-v'), currentVersion = version === '7' || version === '8';
+    for (const k in upg) if (Number.isInteger(s[k])) upg[k] = clamp(currentVersion ? s[k] : s[k] * 2, 0, UPG.find(u => u.id === k)?.max ?? UPG_MAX);
     glow = Math.max(0, +localStorage.getItem('mk-glow') || 0);
   } catch (e) {}
-  function saveUpg() { try { localStorage.setItem('mk-upg-v', '7'); localStorage.setItem('mk-upg', JSON.stringify(upg)); localStorage.setItem('mk-glow', String(glow)); } catch (e) {} }
+  function saveUpg() { try { localStorage.setItem('mk-upg-v', '8'); localStorage.setItem('mk-upg', JSON.stringify(upg)); localStorage.setItem('mk-glow', String(glow)); } catch (e) {} }
   // Cats: everyone starts with the story cat (Ginger Tabby, as in the intro). The others are bought with Glow; each has one small perk.
   const CAT_SHOP = {
     ginger: { cost: 0, perk: 'Shwe from the story. Good at everything, best at nothing.' },
@@ -961,11 +968,102 @@
   // When every feeling is home the night no longer ends by itself: a moon door opens near Shwe.
   // The player can keep exploring (trinkets, keepsakes, score) and stand at the door and press H to go home;
   // if the timer runs out first, the night still ends safely.
-  let allHome = false, portal = null;
+  let allHome = false, portal = null, bossEncounter = null, bossTouchWasHidden = true;
+  const stormBossCopy = () => guideCopy().bossIntro || {};
+  function showBossIntro() {
+    const copy = stormBossCopy(), screen = $('#bossIntroScreen');
+    $('#bossIntroTitle').textContent = copy.title || 'Storm Frustrated';
+    $('#bossIntroText').textContent = copy.text || 'Dodge each charge, then pounce while the storm is dizzy.';
+    $('#bossIntroDodge').textContent = copy.dodge || '↔ Dodge or jump';
+    $('#bossIntroPounce').textContent = copy.pounce || '✦ Pounce when dizzy';
+    $('#bossIntroReady').textContent = copy.ready || 'Face the storm';
+    screen.hidden = false; bossTouchWasHidden = touchUI.hidden; touchUI.hidden = true; pauseBtn.hidden = true;
+    $('#bossIntroReady').focus({ preventScroll: true });
+  }
+  function startBossFight() {
+    if (!bossEncounter?.introOpen) return;
+    bossEncounter.introOpen = false; bossEncounter.mode = 'windup'; bossEncounter.timer = 1.25;
+    $('#bossIntroScreen').hidden = true; touchUI.hidden = bossTouchWasHidden; pauseBtn.hidden = false;
+    cv.focus?.(); announce(stormBossCopy().warning || 'Storm Frustrated is winding up!', RED, 2.4);
+  }
+  function beginBossEncounter() {
+    const config = currentLevel?.boss; if (!config || mode !== 'story') return false;
+    const face = cat.face || 1, x = safeLevelX(clamp(cat.x + face * 250, 120, WORLD - 120));
+    bossEncounter = { ...config, x, y: terrainY(x), homeX: x, health: config.phases || 3, phase: 0, mode: 'intro', timer: 0, dir: -face, introOpen: true, defeated: false, warningAt: -1 };
+    showBossIntro(); return true;
+  }
+  function bossContact() {
+    if (!bossEncounter || cat.inv > 0 || cat.respawning || cat.falling) return;
+    const copy = stormBossCopy();
+    if (!gentleMode) { lives = Math.max(0, lives - 1); sfx('ui', 'lifeLost'); }
+    cat.pounce = 0; cat.vx = 0; cat.vy = 0; cat.on = false; cat.platform = null; cat.swinging = null;
+    cat.respawning = true; respawnT = .75; fallDimT = .5; bossEncounter.mode = 'recover'; bossEncounter.timer = 1.05; bossEncounter.x = bossEncounter.homeX; bossEncounter.y = terrainY(bossEncounter.x);
+    sfx('cat', 'sad'); sfx('ui', 'hit'); sfx('ui', 'poof'); burst(cat.x, cat.y - 24, GOLD, 26); burst(cat.x, cat.y - 36, CALM, 18);
+    shake = Math.max(shake, 8);
+    if (lives <= 0 && !gentleMode) { bossEncounter = null; finish(false, 'boss'); return; }
+    const message = (copy.hit || 'A stormy bump · {lives} lives left').replace('{lives}', String(lives));
+    announce(message, gentleMode ? CALM : RED, 1.8);
+  }
+  function updateBossEncounter(dt) {
+    const b = bossEncounter; if (!b || b.introOpen || b.defeated || cat.falling || cat.respawning) return;
+    b.timer -= dt;
+    if (b.mode === 'windup' && b.timer <= 0) {
+      b.mode = 'charge'; b.dir = Math.sign(cat.x - b.x) || -1; b.startX = b.x; b.travelled = 0; b.speed = 500 + b.phase * 75;
+      b.aimX = clamp(cat.x + b.dir * 175, 50, WORLD - 50); b.timer = 3.5;
+    } else if (b.mode === 'charge') {
+      const step = b.speed * dt; b.x = clamp(b.x + b.dir * step, 50, WORLD - 50); b.y = terrainY(b.x); b.travelled += step;
+      if (Math.abs(cat.x - b.x) < 70 && cat.y > terrainY(cat.x) - 48) { bossContact(); return; }
+      if (b.dir * (b.x - b.aimX) >= 0 || b.travelled > 620 || b.timer <= 0) {
+        b.mode = 'dizzy'; b.timer = 2.35; b.x = clamp(b.x, 50, WORLD - 50); b.y = terrainY(b.x);
+        announce(stormBossCopy().dizzy || 'It is dizzy! Pounce now!', GOLD, 1.7); sfx('moodling', 'F');
+      }
+    } else if (b.mode === 'dizzy' && b.timer <= 0) { b.mode = 'windup'; b.timer = .9; b.x = b.homeX; b.y = terrainY(b.x); }
+    else if (b.mode === 'recover' && b.timer <= 0) { b.mode = 'windup'; b.timer = .9; }
+    if (b.mode === 'windup' && t - b.warningAt > 1.1) {
+      b.warningAt = t; announce(stormBossCopy().warning || 'Storm Frustrated is winding up!', RED, 1.1); sfx('moodling', 'F');
+    }
+  }
+  function tryBossPounce() {
+    const b = bossEncounter; if (!b || cat.pounce <= 0) return false;
+    const close = Math.hypot(cat.x + cat.face * 16 - b.x, cat.y - 24 - (b.y - 10)) <= uv('pounce') * 1.35;
+    if (!close) return false;
+    cat.pounce = 0;
+    if (b.mode !== 'dizzy') {
+      if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 260; cat.vy = -150; cat.on = false; float(cat.x, cat.y - 72, 'Wait until the storm is dizzy', RED); sfx('cat', 'hiss'); }
+      return true;
+    }
+    b.health = Math.max(0, b.health - 1); b.phase = (b.phases || 3) - b.health;
+    cat.bounced = true; cat.vx = -cat.face * 220; cat.vy = -190; cat.on = false;
+    burst(b.x, b.y - 42, '#ffcf5c', 34); sfx('caught', 'F'); float(b.x, b.y - 100, `${b.health} left`, GOLD);
+    if (!b.health) {
+      const copy = stormBossCopy(); bossEncounter = null; openPortal();
+      announce(copy.defeated || 'The storm is calm. The moon door is open!', CALM, 3.2); sfx('ui', 'unlock'); burst(cat.x, cat.y - 60, GOLD, 35);
+    } else { b.mode = 'windup'; b.timer = .9; b.x = b.homeX; b.y = terrainY(b.x); announce(stormBossCopy().warning || 'The storm gathers again!', RED, 1.5); }
+    return true;
+  }
+  function drawBossEncounter() {
+    const b = bossEncounter; if (!b || b.defeated) return;
+    const x = b.x, y = b.y, color = b.mode === 'dizzy' ? '#ffd37a' : '#ff737b', pulse = .7 + .3 * Math.sin(t * 8);
+    if (b.mode === 'charge') {
+      ctx.save(); ctx.globalAlpha = .32 + .18 * pulse; ctx.strokeStyle = '#ff737b'; ctx.lineWidth = 16; ctx.setLineDash([20, 14]); ctx.beginPath(); ctx.moveTo(x - b.dir * 25, y - 14); ctx.lineTo(x - b.dir * 210, y - 14); ctx.stroke(); ctx.restore();
+    } else if (b.mode === 'windup') {
+      ctx.save(); ctx.globalAlpha = .28 + .25 * pulse; ctx.strokeStyle = '#ff737b'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.beginPath(); ctx.moveTo(x, y + 4); ctx.lineTo(x + b.dir * 270, y + 4); ctx.stroke(); ctx.restore();
+    }
+    ctx.save(); ctx.globalAlpha = .16 + .08 * pulse; ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y - 18, 76 + pulse * 8, 68 + pulse * 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    drawCuteMood('F', x, y, 1.18 + .035 * Math.sin(t * 5), { color: '#ff5a68', glow: '#ff778c', look: clamp((cat.x - x) / 110, -1.5, 1.5), dizzy: b.mode === 'dizzy', flash: b.mode === 'windup' ? .2 + .18 * pulse : 0, t, cy: 70 });
+    for (let i = 0; i < 3; i++) {
+      const a = -Math.PI * .84 + i * Math.PI * .34;
+      const hx = x + Math.cos(a) * 56, hy = y - 84 + Math.sin(a) * 28;
+      ctx.beginPath(); ctx.arc(hx, hy, 8, 0, Math.PI * 2); ctx.fillStyle = i < b.health ? '#ffcf5c' : 'rgba(210,198,230,.25)'; ctx.fill();
+      ctx.strokeStyle = '#fff6e6'; ctx.lineWidth = 2; ctx.stroke();
+    }
+    ctx.font = `700 18px ${HAND}`; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,12,40,.9)'; ctx.fillStyle = color; ctx.strokeText(b.name, x, y - 112); ctx.fillText(b.name, x, y - 112);
+  }
   function reachAllHome() {
     if (allHome || state !== 'play') return;
-    allHome = true; sfx('ui', 'reward'); openPortal();
-    announce('All feelings found! A moon door opened. Stand in it and press H to go home.', GOLD, 3.6);
+    allHome = true; sfx('ui', 'reward');
+    if (beginBossEncounter()) announce('All feelings found! A storm guards the moon door.', RED, 3.6);
+    else { openPortal(); announce('All feelings found! A moon door opened. Stand in it and press H to go home.', GOLD, 3.6); }
     float(cat.x, cat.y - 90, 'Time left still adds +20 points a second', GOLD);
   }
   function openPortal() {
@@ -981,7 +1079,7 @@
   }
   // Shwe has to stand at the moon door and press H (or tap the Go home button) to go through it.
   function atPortal() { return !!portal && state === 'play' && portal.open >= 1 && !cat.falling && Math.abs(cat.x - portal.x) < 60 && Math.abs(cat.y - portal.y) < 90; }
-  function enterPortal() { if (!atPortal()) return; burst(portal.x, portal.y - 60, '#fff3c4', 36); goHome(); }
+  function enterPortal() { if (!atPortal() || (currentLevel?.boss && mode === 'story' && bossEncounter)) return; burst(portal.x, portal.y - 60, '#fff3c4', 36); goHome(); }
   function drawPortal() {
     if (!portal) return;
     const k = portal.open, e = 1 - Math.pow(1 - k, 3), x = portal.x, y = portal.y, w = 34 * e, h = 62 * e, cy = y - 66;
@@ -1566,7 +1664,7 @@
     free: { kind: 'classic stones', label: 'rock', labelMarked: 'marked rock', xs: [], draw: drawClassicRockBase, debris: [{ shape: 'chip', color: '#77736f' }, { shape: 'chip', color: '#a29b8d' }, { shape: 'chip', color: '#5f6260' }], glow: '#c8baff' }
   };
 
-  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, wallTouch: null, ledgeGrab: null, alpha: 1 }; }
+  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, extraJumpAvailable: false, leapSparkle: 0, leapSparkleCd: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, wallTouch: null, ledgeGrab: null, alpha: 1 }; }
   function pickX() { let x, n = 0; do { x = levelSpawnX(); n++; } while ((Math.abs(x - cat.x) < 380 || (mode === 'story' && rocks.some(spot => Math.abs(x - spot.x) < 100))) && n < 40); return x; }
   function pickCaveX() {
     const occupied = new Set(mood.filter(m => !m.dead && m.caveX != null).map(m => m.caveX));
@@ -1785,7 +1883,7 @@
     lives = 3; checkpointX = currentLevel.catStart ?? 200; fallDimT = 0; respawnT = 0; pitTipShown = false; edgeSoundAt = 0; pendingFallFail = false; jumpHeld = false;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
-    workshopRun = []; allHome = false; portal = null;
+    workshopRun = []; allHome = false; portal = null; bossEncounter = null; $('#bossIntroScreen').hidden = true;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
     scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false; breathTipShown = false;
     const buryStyle = BURY_SPOTS[currentMapKey()];
@@ -2063,7 +2161,7 @@
       if (c.fallTime >= .38) {
         c.falling = false; c.respawning = true; c.swinging = null; c.platform = null;
         if (mode === 'story' && !gentleMode) { lives = Math.max(0, lives - 1); sfx('ui', 'lifeLost'); }
-        if (mode === 'story' && !gentleMode && lives <= 0 && allHome) { lives = 1; c.respawning = true; respawnT = .5; fallDimT = .5; beginStoryEnding(); return; }
+        if (mode === 'story' && !gentleMode && lives <= 0 && allHome && !bossEncounter) { lives = 1; c.respawning = true; respawnT = .5; fallDimT = .5; beginStoryEnding(); return; }
         if (mode === 'story' && !gentleMode && lives <= 0) {
           // Catches already recorded in the Mood Book remain banked; this run's carried lights do not.
           trail = []; got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); glowRun = 0; pendingFallFail = true;
@@ -2076,7 +2174,7 @@
     if (c.respawning) {
       respawnT -= dt; fallDimT = Math.max(0, fallDimT - dt);
       if (respawnT <= 0) {
-        if (pendingFallFail) { pendingFallFail = false; finish(false, 'fall'); return; }
+        if (pendingFallFail) { pendingFallFail = false; finish(false, bossEncounter ? 'boss' : 'fall'); return; }
         c.x = checkpointX; c.y = terrainY(checkpointX); c.vx = 0; c.vy = 0; c.on = true; c.wallTouch = null; c.ledgeGrab = null; c.wallSurface = null;
         c.inv = 1.5; c.respawning = false; c.coyote = 0; c.jumpBuffer = 0;
         hist = []; sfx('ui', 'respawn'); burst(c.x, c.y - 20, CALM, 16); announce('Back at the lantern!', CALM, 1.2);
@@ -2085,6 +2183,11 @@
     }
     c.justLanded = false;
     if (jumpQ) c.jumpBuffer = .12; else c.jumpBuffer = Math.max(0, c.jumpBuffer - dt);
+    c.leapSparkle = Math.max(0, c.leapSparkle - dt); c.leapSparkleCd -= dt;
+    if (c.leapSparkle > 0 && c.leapSparkleCd <= 0 && !reduce) {
+      c.leapSparkleCd = .075;
+      for (let i = 0; i < 2; i++) parts.push({ x: c.x - c.face * (14 + Math.random() * 13), y: c.y - 18 + Math.random() * 12, vx: -c.face * 24 + (Math.random() - .5) * 26, vy: -18 - Math.random() * 34, life: .24 + Math.random() * .12, max: .36, c: i ? '#ffe9a6' : '#c8adff', r: 2 + Math.random() * 2, g: -4 });
+    }
     const a = axisNow(), sneaking = a !== 0 && Math.abs(a) < .55;
     if (a !== 0) onTutorialAction('move', c);
     if (sneaking) onTutorialAction('sneak', c);
@@ -2122,8 +2225,11 @@
     if (c.jumpBuffer > 0 && c.wallTouch && c.pounce <= 0) {
       startWallJump(c, c.wallTouch.side, jumpSpeed);
     } else if (c.jumpBuffer > 0 && (c.on || c.coyote > 0) && c.pounce <= 0) {
-      c.vy = -jumpSpeed; c.on = false; c.coyote = 0; c.jumpBuffer = 0;
+      c.vy = -jumpSpeed; c.on = false; c.coyote = 0; c.jumpBuffer = 0; window.TCJumpUpgrade?.prime(c, upg.secondLeap > 0);
       onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240);
+    } else if (c.jumpBuffer > 0 && !c.on && c.coyote <= 0 && !c.wallTouch && !c.ledgeGrab && !c.swinging && c.pounce <= 0 && window.TCJumpUpgrade?.canUse(c, upg.secondLeap > 0)) {
+      c.vy = -jumpSpeed * .78; c.on = false; c.coyote = 0; c.jumpBuffer = 0; window.TCJumpUpgrade.consume(c); c.leapSparkle = reduce ? 0 : .48; c.leapSparkleCd = 0; c.squash = reduce ? 0 : .09;
+      if (!reduce) burst(c.x, c.y - 22, '#c8adff', 9); sfx('ui', 'jump');
     }
     jumpQ = false;
     if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) { sfx('ui', 'pounce'); catVoice('trill', .25); } else tone(240, .1, 'square', .035, 320); }
@@ -2182,11 +2288,12 @@
       if (rope) { c.swinging = rope; c.on = false; c.vy = 0; jumpQ = false; return; }
     }
     if (landed) {
+      if (!wasOn) window.TCJumpUpgrade?.land(c);
       if (!wasOn) { c.justLanded = true; if (c.vy > 500) { c.squash = .16; sfx('ui', 'land'); } }
       c.vy = 0; c.platform = landedOn;
       if (landedOn?.type === 'crumbling' && landedOn.crumbleRemaining <= 0) { landedOn.crumbleRemaining = .6; sfx('ui', 'crumble'); }
       if (landedOn?.type === 'moving' && !wasOn) sfx('ui', 'platformHum');
-      if (landedOn?.type === 'bouncy' && !wasOn) { c.vy = -960; c.on = false; c.bounced = true; sfx('ui', 'jump'); }
+      if (landedOn?.type === 'bouncy' && !wasOn) { c.vy = -960; c.on = false; c.bounced = true; window.TCJumpUpgrade?.prime(c, upg.secondLeap > 0); sfx('ui', 'jump'); }
     } else c.platform = null;
     c.on = landed && !(landedOn?.type === 'bouncy' && !wasOn);
     c.coyote = c.on ? .1 : Math.max(0, c.coyote - dt);
@@ -2390,6 +2497,7 @@
   }
   function checkCatches() {
     if (cat.pounce <= 0) return;
+    if (tryBossPounce()) return;
     const cx = cat.x + cat.face * 16, cy = cat.y - 24;
     for (const m of mood) {
       if (m.dead) continue;
@@ -2474,8 +2582,10 @@
   }
   function update(dt) {
     t += dt;
+    if (bossEncounter?.introOpen) return;
     shake = Math.max(0, shake - dt * 24);
     updateLevelPlatforms(dt);
+    updateBossEncounter(dt);
     updCat(dt);
     if (cat.falling || cat.respawning) {
       for (const p of parts) { p.life -= dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .98; }
@@ -2513,7 +2623,7 @@
     updateGuidance(dt);
     if (state === 'play') {
       if (mode === 'story') warmup = Math.max(0, warmup - dt);
-      if (warmup <= 0 && !guidanceTimerPaused() && mode !== 'free') timeLeft -= dt;
+      if (warmup <= 0 && !guidanceTimerPaused() && mode !== 'free' && !bossEncounter) timeLeft -= dt;
       if (mode === 'free') freeTick(dt);
       if (endlessOn() && warmup <= 0) endlessTick(dt);
       const chapter = mode === 'story' ? chapterFor(storyNight) : null;
@@ -2530,7 +2640,7 @@
       }
       const sec = Math.ceil(timeLeft);
       if (sec <= 10 && sec < lastTick) { lastTick = sec; if (window.TCSfx) sfx('ui', sec <= 3 ? 'urgent' : 'countdown'); else tone(sec <= 3 ? 1200 : 880, .06, 'square', .03); }
-      if (mode !== 'free' && timeLeft <= 0 && !pendingFallFail) { timeLeft = 0; if (allHome) beginStoryEnding(); else { sfx('ui', 'timeup'); finish(false); } }
+      if (mode !== 'free' && timeLeft <= 0 && !pendingFallFail && !bossEncounter) { timeLeft = 0; if (allHome) beginStoryEnding(); else { sfx('ui', 'timeup'); finish(false); } }
     } else if (state === 'ending') {
       endT -= dt; if (endT <= 0) finish(true);
     }
@@ -4205,7 +4315,7 @@
     // snap the camera to whole screen pixels: a camera between pixels makes posts, trunks and the cat's
     // stripes shimmer (like 'lllll') as the town scrolls, especially on screens scaled to 125% or 150%
     { const px = dpr * S; ctx.save(); ctx.translate(-Math.round(camX * px) / px, 0); }
-    drawWorld(); drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
+    drawWorld(); drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawBossEncounter(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.front(ctx, endlessFxOpts()); drawLevelDebug();
     ctx.restore();
     if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.screen(ctx, endlessFxOpts({ catX: cat.x - camX, catY: cat.y - 30, eyes: eyesT > 0, eyesR: uv('eyes') * T, dt }));
@@ -4604,11 +4714,11 @@
       return;
     }
     $('#shopList').innerHTML = UPG.map(u => {
-      const lv = upg[u.id], max = lv >= UPG_MAX, cost = u.costs[lv];
+      const maxLevel = u.max ?? UPG_MAX, lv = upg[u.id], max = lv >= maxLevel, cost = u.costs[lv];
       const now = u.fmt(u.vals[lv]), next = max ? '' : ` · next: ${u.fmt(u.vals[lv + 1])}`;
       const btn = max ? '<button class="buy" disabled>Maxed</button>'
         : `<button class="buy" data-id="${u.id}" ${glow < cost ? 'disabled' : ''}>${glow < cost ? '🔒 Can’t afford' : lv === 0 && u.id === 'purr' ? 'Unlock' : 'Buy'} · ${cost} Glow</button>`;
-      return `<div class="item" data-upgrade="${u.id}"><h3>${u.name}</h3><div class="side"><div class="pips" aria-label="Level ${lv} of ${UPG_MAX}">${Array.from({ length: UPG_MAX }, (_, i) => i).map(i => `<span class="pip${i < lv ? ' on' : ''}"></span>`).join('')}</div>${btn}</div><p>${u.desc}</p><p>Now: ${now}${next}</p></div>`;
+      return `<div class="item" data-upgrade="${u.id}"><h3>${u.name}</h3><div class="side"><div class="pips" aria-label="Level ${lv} of ${maxLevel}">${Array.from({ length: maxLevel }, (_, i) => `<span class="pip${i < lv ? ' on' : ''}"></span>`).join('')}</div>${btn}</div><p>${u.desc}</p><p>Now: ${now}${next}</p></div>`;
     }).join('');
   }
   // selling trinkets from the pouch, and claiming a full shelf set
@@ -4689,7 +4799,7 @@
     }
     const b = e.target.closest('button[data-id]'); if (!b) return;
     const u = UPG.find(x => x.id === b.dataset.id), lv = upg[u.id];
-    if (lv >= UPG_MAX || glow < u.costs[lv]) return;
+    if (lv >= (u.max ?? UPG_MAX) || glow < u.costs[lv]) return;
     initAudio(); glow -= u.costs[lv]; upg[u.id]++; saveUpg();
     sfx('ui', 'buy');
     renderShop(); refreshShopBtns();
@@ -4773,13 +4883,15 @@
       return;
     }
     $('#nightStoryline').hidden = true;
-    $('#endEyebrow').textContent = R.won ? `${hourOf(R.night)} · done` : R.failReason === 'fall' ? `${hourOf(R.night)} · night failed` : `${hourOf(R.night)} · time's up`;
-    $('#endTitle').textContent = R.won ? 'A little more of Thiri returns' : R.failReason === 'fall' ? 'Night failed' : 'Some feelings need more time';
+    $('#endEyebrow').textContent = R.won ? `${hourOf(R.night)} · done` : ['fall', 'boss'].includes(R.failReason) ? `${hourOf(R.night)} · night failed` : `${hourOf(R.night)} · time's up`;
+    $('#endTitle').textContent = R.won ? 'A little more of Thiri returns' : ['fall', 'boss'].includes(R.failReason) ? 'Night failed' : 'Some feelings need more time';
     $('#endStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < R.starsN ? '' : 'off'}">★</span>`).join('');
     $('#endStars').hidden = !R.won;
     $('#endMsg').textContent = R.won
       ? `You brought all ${R.total} feelings home with ${Math.round(R.left)} seconds to spare. Time bonus: +${Math.round(R.left) * 20}. Score ${R.goals[1].toLocaleString()} for ★★ and ${R.goals[2].toLocaleString()} for ★★★.`
-      : R.failReason === 'fall' ? 'Shwe ran out of lives. The lights from this run were lost, but anything already in the Mood Book is safe.' : "That's okay. Let's try again.";
+      : R.failReason === 'fall' ? 'Shwe ran out of lives. The lights from this run were lost, but anything already in the Mood Book is safe.'
+        : R.failReason === 'boss' ? (stormBossCopy().fail || 'Shwe ran out of lives in the storm challenge. The Mood Book remains safe.')
+          : "That's okay. Let's try again.";
     $('#sScore').textContent = R.final.toLocaleString();
     $('#sBest').textContent = R.best.toLocaleString();
     $('#sCombo').textContent = '×' + R.combo;
@@ -5536,6 +5648,7 @@
   }
   function pauseGame() {
     if (state !== 'play') return;
+    if (bossEncounter?.introOpen) $('#bossIntroScreen').hidden = true;
     $('#pauseChaptersBtn').textContent = mode === 'story' ? 'Back to chapters' : 'Back to menu';    pauseTouchWasHidden = touchUI.hidden; pauseCoachWasHidden = $('#tipCoach').hidden; $('#tipCoach').hidden = true;
     state = 'paused'; pauseBtn.hidden = true; touchUI.hidden = true;
     for (const key in keys) keys[key] = false;
@@ -5548,6 +5661,7 @@
     if (state !== 'paused') return;
     pauseScreen.hidden = true; state = 'play'; touchUI.hidden = pauseTouchWasHidden; music('duck', 1);
     pauseBtn.hidden = false; pauseBtn.focus({ preventScroll: true });
+    if (bossEncounter?.introOpen) { $('#bossIntroScreen').hidden = false; touchUI.hidden = true; pauseBtn.hidden = true; $('#bossIntroReady').focus({ preventScroll: true }); }
     if (!pauseCoachWasHidden && (nightGuide.active || activeJitTip)) $('#tipCoach').hidden = false;
   }
   function quitPausedRun() {
@@ -6394,6 +6508,11 @@
     setTimeout(() => { bootScreen.hidden = true; }, 260);
   });
   pauseBtn.addEventListener('click', pauseGame);
+  $('#bossIntroReady').addEventListener('click', startBossFight);
+  $('#bossIntroScreen').addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    e.preventDefault(); $('#bossIntroReady').focus();
+  });
   pauseContinueBtn.addEventListener('click', resumeGame);
   pauseHelpBtn.addEventListener('click', () => openHelp('pause'));
   $('#pauseRestartBtn').addEventListener('click', () => startGame(mode, storyNight));

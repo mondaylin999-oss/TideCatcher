@@ -239,3 +239,16 @@
 - Added illustrated storyboards for Frustrated, Nervous, Lonely, Buried, Excited, Shy, Jealous, Calm, breathing Calm and Golden. Kept existing catch rules, scoring and Moodling behavior unchanged.
 - Localized clip controls and catch captions in English and Burmese. Removed the former CSS slide keyframes and kept the stage at 16:9 on mobile and desktop.
 - Verified JavaScript syntax and game-source integrity. Browser-checked the Frustrated clip at 375px and 1280px, including its Space-or-A/D badge, final catch and Glow animation, exact 16:9 scene, and Burmese captions/controls.
+
+## Storm Moodling encounters
+
+- Added a three-pounce Storm Frustrated encounter after all required feelings are home on Nights 3, 5 and 7. The encounter is separate from normal Moodling catches, so it grants no catch score or collection progress.
+- Added a short translated intro, visible attack wind-up and charge lane, dizzy pounce windows, a three-mark health ring, checkpoint respawn, life loss, Gentle mode support, and the existing Night failed results flow. The night timer pauses for the encounter and the moon door opens after the boss is defeated.
+- Verified JavaScript syntax, source integrity and all 53 authored layouts. Automated browser gameplay smoke testing could not run in this turn because the computer-use tool stopped on the unsupported Firefox URL policy.
+
+## Second Leap upgrade
+
+- Added the optional, one-purchase Second Leap upgrade to the Treat box Shop. It starts off, costs 220 Glow, and lets Shwe jump once more in mid-air after a normal jump; the second leap is shorter and leaves a brief cozy sparkle trail.
+- Reuses the existing Jump input on keyboard and touch. Wall jumps, ledge grabs, and rope releases keep their own movement behavior; landing clears the extra jump. Reduced-motion mode omits the added sparkle trail and squash effect.
+- Kept old upgrade saves compatible while adding the new save field. The upgrade does not alter any level layout or its required jump settings.
+- Added focused boss-night and Second Leap regression tests and wired them into GitHub Actions. JavaScript syntax, game integrity, both new tests, and all 53 level-layout checks pass.

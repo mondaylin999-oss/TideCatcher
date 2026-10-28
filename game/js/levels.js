@@ -130,6 +130,7 @@
       props: [{kind:'desk',x:740,w:130},{kind:'chairs',x:1500,w:70},{kind:'desk',x:2010,w:130},{kind:'chairs',x:2690,w:70}]
     },
     3: {
+      boss: { type: 'F', name: 'Storm Frustrated', phases: 3 },
       night: 3, map: 'park', width: 3600, pits: [[900,1200],[2380,2710]], checkpoints: [790,2280], ground: ground(3600, [[0,470],[300,448],[520,430],[760,454],[900,454],[1200,478],[1430,462],[1680,430],[1930,442],[2190,478],[2220,490],[2380,462],[2710,462],[2780,432],[3040,448],[3310,478],[3600,458]]),
       platforms: [platform(250,395,130),platform(520,360,125,'bouncy'),platform(750,398,120),platform(900,420,100,'moving',{path:[[900,420],[1100,410]],speed:.52}),platform(1220,375,130),platform(1430,350,132),platform(1740,390,128),platform(2050,420,132,'bouncy'),platform(2380,438,110,'moving',{path:[[2380,438],[2600,438]],speed:.52}),platform(2730,348,132),platform(2970,385,130),platform(3280,410,140)],
       hideSpots: [400,1300,1590,2180,2810,3400], burySpots: [160,830,1280,1540,1930,3160,3480], spawnZones: zones(3600, [[900,1200],[2380,2710]]), catStart: 145, homeLight: [3500,380],
@@ -142,6 +143,7 @@
       props: [{kind:'stall',x:500,w:150},{kind:'lanterns',x:1340,w:250},{kind:'stall',x:2420,w:150},{kind:'lanterns',x:3380,w:260}]
     },
     5: {
+      boss: { type: 'F', name: 'Storm Frustrated', phases: 3 },
       night: 5, map: 'hill', width: 4200, pits: [[920,1205],[2700,3000]], checkpoints: [820,2580], ground: ground(4200, hillProfile),
       platforms: [platform(165,330,120),platform(655,420,90,'crumbling'),platform(920,430,95,'moving',{path:[[920,430],[1110,430]],speed:.56,skin:'stone'}),platform(1225,348,120),platform(1565,330,120),platform(2055,420,90),platform(2580,348,120),platform(2700,430,100,'moving',{path:[[2700,430],[2900,430]],speed:.6,skin:'stone'}),platform(3025,330,120),platform(3455,420,90),platform(3985,348,120)],
       hideSpots: [1345,3100,4145], burySpots: [80,350,850,1450,1600,2500,3150,3750,4050],
@@ -155,6 +157,7 @@
       props: [{kind:'jetty',x:420,w:130},{kind:'stones',x:3500,w:90}]
     },
     7: {
+      boss: { type: 'F', name: 'Storm Frustrated', phases: 3 },
       night: 7, map: 'lake', width: 5400, pits: [[940,1210],[2110,2440],[3380,3650],[4440,4710]], checkpoints: [850,1980,3250,4310,4750], ground: ground(5400, [[0,470],[380,448],[760,430],[940,470],[1210,470],[1410,470],[1480,462],[1760,440],[2110,470],[2440,470],[2560,470],[2640,455],[3030,430],[3380,470],[3650,470],[3840,470],[3910,458],[4180,438],[4440,470],[4710,470],[4860,470],[4940,462],[5400,450]]),
       platforms: [platform(260,396,128),platform(540,360,130),platform(790,400,130),platform(940,438,90,'moving',{path:[[940,438],[1120,438]],speed:.6,skin:'log'}),platform(1230,406,130),platform(1410,390,130,'moving',{path:[[1410,390],[1500,380]],speed:.75}),platform(1630,392,132),platform(1920,350,132),platform(2110,438,110,'moving',{path:[[2110,438],[2330,438]],speed:.64,skin:'log'}),platform(2460,412,138),platform(2630,380,132,'bouncy'),platform(2820,337,132),platform(3120,390,136),platform(3380,438,90,'moving',{path:[[3380,438],[3560,438]],speed:.66,skin:'log'}),platform(3670,410,135),platform(3825,378,136,'crumbling'),platform(4100,340,138),platform(4395,420,42,'swinging',{anchor:[4485,350],speed:.82}),platform(4440,438,90,'moving',{path:[[4440,438],[4620,438]],speed:.7,skin:'log'}),platform(4730,400,135),platform(4900,365,140,'moving',{path:[[4900,365],[5000,340]],speed:.7}),platform(5200,400,140)],
       hideSpots: [420,1240,1840,2600,3120,3700,4270,5050], burySpots: [150,550,1380,1550,1870,2485,2700,3220,3970,4150,4850,5220], spawnZones: zones(5400, [[940,1210],[2110,2440],[3380,3650],[4440,4710]]), catStart: 135, homeLight: [5250,385],
