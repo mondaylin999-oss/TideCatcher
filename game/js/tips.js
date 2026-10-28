@@ -103,6 +103,21 @@
           C1: ['Hold S as the breathing ring grows.', 'Release S as the ring gently shrinks.', 'Match three slow breaths, then catch Calm.'],
           G: ['Watch Golden swoop in a quick arc.', 'Press Space to jump and meet it in the air.', 'Press J or X to pounce mid-air and catch it.']
         },
+        paperStars: {
+          label: 'Paper stars', progress: 'Paper stars · {count} / 3', diaryUnlocked: 'bonus diary page unlocked',
+          diaryTitle: 'Paper-star diary', diaryPrompt: 'Find all 3 hidden paper stars in a night to unlock its bonus page.', diaryCount: '{count} / 50 pages', diaryEmpty: 'Your first page is waiting among the stars.',
+          found: 'Paper star · {count}/3', allFound: 'All 3 paper stars found · bonus diary page unlocked!', pageFound: 'Bonus diary page!',
+          pages: {
+            1: 'I tucked three little stars away where the classroom moonlight could find them. Shwe waited beside me until my hands stopped shaking.',
+            2: 'The wall felt taller at night. Shwe found the stars up high, and I remembered that being brave can be quiet.',
+            3: 'Three paper stars rested near the park path. Shwe sat with Lonely until even the shadows felt friendly.',
+            4: 'The festival lights looked like a sky brought down to earth. I folded three stars so Shwe could carry a little of it home.',
+            5: 'On the hill, Shwe found stars caught between the stones. I think the wind had been saving them for us.',
+            6: 'The lake held the moon in pieces. Shwe brought me three stars, and the water looked less lonely after that.',
+            7: 'Morning came softly. Shwe placed the last three stars beside my drawing, where they can keep shining.'
+          },
+          endlessPage: 'On {chapter}, Shwe found three paper stars hidden around {place}. I pressed them into my diary so this little adventure would always have a place to rest.'
+        },
         catchGuides: {
           F: 'Let it charge, dodge the rush, then pounce while it is dizzy.',
           N: 'Sneak or walk slowly within range. Avoid running and jumping; pounce while it wanders calmly.',
@@ -224,6 +239,21 @@
           C: ['ကျူပင်များကြား ပိုးစုန်းကြူးများနှင့်အတူ ဖြည်းဖြည်းလျှောက်ပါ။', 'Calm ဘေးတွင် ရပ်ပြီး ငြိမ်ငြိမ်ထိုင်ပါ။', 'ဖမ်းယူကွင်းပြည့်သည်အထိ အတူတူငြိမ်နေပါ။'],
           C1: ['အသက်ရှူကွင်းကြီးလာချိန် S ကိုဖိထားပါ။', 'ကွင်းကျုံ့လာချိန် S ကိုလွှတ်ပါ။', 'ဖြည်းဖြည်းအသက်ရှူမှု သုံးကြိမ်လိုက်လုပ်ပြီး ဖမ်းပါ။'],
           G: ['Golden ပျံဝဲသည့် အကွေးလမ်းကြောင်းကို ကြည့်ပါ။', 'Space နှိပ်၍ ခုန်ပြီး လေထဲတွင် ဆုံပါ။', 'လေထဲတွင် J သို့မဟုတ် X နှိပ်၍ ခုန်တိုက်ဖမ်းပါ။']
+        },
+        paperStars: {
+          label: 'စက္ကူကြယ်များ', progress: 'စက္ကူကြယ်များ · {count} / 3', diaryUnlocked: 'အပိုဒိုင်ယာရီ စာမျက်နှာ ဖွင့်ပြီး',
+          diaryTitle: 'စက္ကူကြယ် ဒိုင်ယာရီ', diaryPrompt: 'အပိုစာမျက်နှာဖွင့်ရန် ညတစ်ညတွင် ဝှက်ထားသော စက္ကူကြယ် ၃ ပွင့်လုံးကို ရှာပါ။', diaryCount: '{count} / ၅၀ စာမျက်နှာ', diaryEmpty: 'ပထမစာမျက်နှာလေးက ကြယ်တွေကြားမှာ စောင့်နေပါတယ်။',
+          found: 'စက္ကူကြယ် · {count}/၃', allFound: 'စက္ကူကြယ် ၃ ပွင့်လုံး ရပြီ · အပိုဒိုင်ယာရီစာမျက်နှာ ဖွင့်ပြီး!', pageFound: 'အပိုဒိုင်ယာရီစာမျက်နှာ!',
+          pages: {
+            1: 'စာသင်ခန်းထဲက လရောင်အောက်မှာ ကြယ်လေးသုံးပွင့်ကို ကျွန်မ သိမ်းထားလိုက်တယ်။ ကျွန်မလက်တွေ တုန်မနေတော့တဲ့အထိ Shwe က ဘေးမှာ စောင့်ပေးခဲ့တယ်။',
+            2: 'ညဘက်မှာ နံရံက ပိုမြင့်သလိုပဲ။ Shwe က အပေါ်ကကြယ်တွေကို ရှာတွေ့ခဲ့ပြီး ရဲရင့်ခြင်းဆိုတာ တိတ်ဆိတ်နေလည်း ဖြစ်နိုင်တယ်လို့ ကျွန်မ သတိရလာတယ်။',
+            3: 'ပန်းခြံလမ်းဘေးမှာ စက္ကူကြယ်သုံးပွင့် ရှိနေတယ်။ အရိပ်တွေတောင် မကြောက်စရာ မဟုတ်တော့တဲ့အထိ Shwe က Lonely ဘေးမှာ ထိုင်နေခဲ့တယ်။',
+            4: 'ပွဲတော်မီးရောင်တွေက ကောင်းကင်ကို မြေပြင်ပေါ် ချထားသလိုပဲ။ Shwe အိမ်ပြန်သယ်သွားနိုင်အောင် ကြယ်သုံးပွင့်ကို ကျွန်မ ခေါက်ပေးခဲ့တယ်။',
+            5: 'တောင်ကုန်းပေါ်က ကျောက်တုံးတွေကြားမှာ Shwe ကြယ်တွေကို ရှာတွေ့ခဲ့တယ်။ လေက ကျွန်မတို့အတွက် သိမ်းထားပေးတာ ဖြစ်မယ်။',
+            6: 'ရေကန်ထဲမှာ လရောင်က အပိုင်းပိုင်းဖြစ်နေတယ်။ Shwe က ကြယ်သုံးပွင့် ယူလာပေးပြီးနောက် ရေကန်ကြီးက အထီးကျန်မှု နည်းသွားသလိုပဲ။',
+            7: 'မနက်ခင်းက နူးညံ့စွာ ရောက်လာတယ်။ Shwe က နောက်ဆုံးကြယ်သုံးပွင့်ကို ကျွန်မပုံဘေးမှာ ချထားခဲ့ပြီး အဲဒီမှာ ဆက်လက်တောက်ပနေတော့မယ်။'
+          },
+          endlessPage: '{chapter} မှာ Shwe က {place} အနီးက ဝှက်ထားတဲ့ စက္ကူကြယ်သုံးပွင့်ကို ရှာတွေ့ခဲ့တယ်။ ဒီစွန့်စားခန်းလေးမှာ အနားယူစရာနေရာ ရှိနေစေဖို့ ဒိုင်ယာရီထဲမှာ ထည့်သိမ်းလိုက်တယ်။'
         },
         catchGuides: {
           F: 'အနားသို့ ချဉ်းကပ်ပြီး တိုက်ခိုက်လာစေပါ။ ရှောင်ထွက်ပြီး မူးဝေနေချိန်တွင် ခုန်တိုက်ပါ။',

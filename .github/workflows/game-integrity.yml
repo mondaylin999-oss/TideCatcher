@@ -16,3 +16,4 @@ jobs:
       - run: node tests/boss-moodling.test.js
       - run: node tests/jump-upgrade.test.js
       - run: node tests/game-layouts.test.js
+      - run: node tests/paper-stars.test.js

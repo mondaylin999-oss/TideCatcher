@@ -1278,16 +1278,35 @@
     { kind: 'wind', icon: '〰', title: 'Soft wind' },
     { kind: 'fog', icon: '☾', title: 'Moon fog' }
   ];
-  let weather = WEATHER[0], hazards = [], keepsakes = [], hazSeen = {}, buriedHintShown = false;
+  let weather = WEATHER[0], hazards = [], keepsakes = [], paperStars = [], hazSeen = {}, buriedHintShown = false;
   let foundKeeps = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-keepsakes') || '[]')); } catch (e) { return new Set(); } })();
+  let foundPaperStars = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-paper-stars') || '[]')); } catch (e) { return new Set(); } })();
   function saveKeeps() { try { localStorage.setItem('mk-keepsakes', JSON.stringify([...foundKeeps])); } catch (e) {} }
+  function savePaperStars() { try { localStorage.setItem('mk-paper-stars', JSON.stringify([...foundPaperStars])); } catch (e) {} }
+  function paperStarId(night, index) { return `n${night}-paper-${index}`; }
+  function paperStarsFound(night) { let count = 0; for (let i = 0; i < 3; i++) if (foundPaperStars.has(paperStarId(night, i))) count++; return count; }
+  function paperDiaryUnlocked(night) { return paperStarsFound(night) === 3; }
+  function paperStarCopy() { return guideCopy().help?.paperStars || {}; }
+  function paperDiaryText(night) {
+    const copy = paperStarCopy();
+    if (copy.pages?.[night]) return copy.pages[night];
+    const special = window.TCEndless?.SPECIALS?.[night];
+    const chapterName = special?.name || window.TCVisualChapters?.forLevel(night)?.name || 'the Night Side';
+    const map = window.TC_LEVELS?.[night]?.map || 'night';
+    const places = { school: 'the quiet school', rooftop: 'the rooftops', park: 'the moonlit park', festival: 'the lantern festival', hill: 'the hilltop', lake: 'the lakeshore', free: 'the Night Side' };
+    const my = { school: 'တိတ်ဆိတ်သော စာသင်ကျောင်း', rooftop: 'အိမ်ခေါင်မိုးများ', park: 'လရောင်အောက်က ပန်းခြံ', festival: 'မီးထွန်းပွဲတော်', hill: 'တောင်ကုန်း', lake: 'ရေကန်ကမ်းစပ်' };
+    const place = MK_PROFILE.tipLanguage === 'my' ? (my[map] || 'ညဘက်ကမ္ဘာ') : (places[map] || 'the Night Side');
+    return (copy.endlessPage || 'On {chapter}, Shwe found three paper stars around {place}.').replaceAll('{chapter}', chapterName).replaceAll('{place}', place);
+  }
   function keepsakeTotal(night) { const L = window.TC_LEVELS?.[night]; return L ? (L.keepsakes || []).length + ((chapterFor(night)?.feelingsNeeded?.B || 0) ? 0 : 1) : 0; }
   function keepsakesFound(night) { let n = 0; for (const id of foundKeeps) if (id.startsWith(`n${night}-`)) n++; return n; }
   function initHazards() {
-    hazards = []; keepsakes = []; hazSeen = {}; buriedHintShown = false;
+    hazards = []; keepsakes = []; paperStars = []; hazSeen = {}; buriedHintShown = false;
     if (mode !== 'story') return;
     hazards = (currentLevel.hazards || []).map((h, i) => ({ ...h, i, cd: 0, tt: 0, phase: 'idle', off: (i * 2.3) % 5, drops: [], squeakT: 0, sneakShown: false, splashShown: false }));
     keepsakes = (currentLevel.keepsakes || []).map(([x, y], i) => ({ x, y, id: `n${storyNight}-${i}`, found: foundKeeps.has(`n${storyNight}-${i}`), bob: Math.random() * 6, got: 0 }));
+    const paperPositions = window.TCPaperStars?.positionsFor(currentLevel) || [];
+    paperStars = paperPositions.map(p => ({ ...p, key: paperStarId(storyNight, p.id), found: foundPaperStars.has(paperStarId(storyNight, p.id)), bob: p.id * 1.7 }));
     // nights without Buried hide one keepsake under a dig spot instead (other spots still rumble)
     if (!need.B && rocks.length && !foundKeeps.has(`n${storyNight}-dig`)) rocks[Math.floor(Math.random() * rocks.length)].keepsake = true;
   }
@@ -1300,6 +1319,15 @@
     tone(988, .14, 'sine', .05); setTimeout(() => tone(1319, .22, 'sine', .045), 90);
     float(x, y - 40, `+${KEEPSAKE_GLOW} Glow`, GOLD);
     announce(`Found Thiri’s ${name}! Keepsakes ${keepsakesFound(storyNight)}/${keepsakeTotal(storyNight)}`, c, 2.4);
+  }
+  function collectPaperStar(star) {
+    if (!star || foundPaperStars.has(star.key)) return;
+    foundPaperStars.add(star.key); savePaperStars();
+    burst(star.x, star.y, '#ffe39a', 18); sfx('ui', 'sparkle'); tone(1046, .16, 'sine', .045);
+    const count = paperStarsFound(storyNight);
+    const copy = paperStarCopy(), msg = (count === 3 ? copy.pageFound : copy.found) || (count === 3 ? 'Bonus diary page!' : `Paper star · ${count}/3`);
+    float(star.x, star.y - 28, msg.replaceAll('{count}', String(count)), '#ffe39a');
+    announce(count === 3 ? (copy.allFound || 'All 3 paper stars found · bonus diary page unlocked!') : msg.replaceAll('{count}', String(count)), '#ffe39a', 2.8);
   }
   function knockCat(dir, msg) {
     if (cat.inv > 0) return;
@@ -1387,6 +1415,16 @@
       if (k.found) continue;
       if (Math.abs(cat.x - k.x) < 34 && Math.abs(cat.y - 28 - k.y) < 48) { k.found = true; k.got = 1; collectKeepsake(k.id, k.x, k.y); }
     }
+    for (const star of paperStars) {
+      if (star.platformIndex != null) {
+        const platform = activePlats[star.platformIndex];
+        if (platform) { star.x = platform[0] + star.offsetX; star.y = platform[1] - 30; }
+      }
+      star.got = Math.max(0, (star.got || 0) - dt);
+      if (!star.found && Math.abs(cat.x - star.x) < 34 && Math.abs(cat.y - 28 - star.y) < 48) {
+        star.found = true; star.got = 1; collectPaperStar(star);
+      }
+    }
     // Buried: one nudge if it has not been dug up after a while
     if (!buriedHintShown && need.B && !got.B && t > 40 && mood.some(m => m.type === 'B' && m.state === 'buried')) {
       buriedHintShown = true; announce('Listen: the chime gets faster near the buried feeling. Night Eyes show the spot.', '#c0b1ff', 3.4);
@@ -1460,6 +1498,20 @@
       ctx.globalAlpha = a; ctx.drawImage(glowImg(kc), k.x - 30, y - 30, 60, 60);
       drawKeepsake(currentMapKey(), k.x, y, kc);
       ctx.globalAlpha = 1;
+    }
+    for (const star of paperStars) {
+      if (star.x < x0 || star.x > x1 || (star.found && star.got <= 0)) continue;
+      const rise = (reduce ? 0 : Math.sin(t * 2.5 + star.bob) * 3) - (star.found ? (1 - star.got) * 24 : 0);
+      const x = star.x, y = star.y + rise, pulse = reduce ? .9 : .78 + .22 * Math.sin(t * 3 + star.bob);
+      ctx.save(); ctx.globalAlpha = star.found ? star.got : 1;
+      const halo = ctx.createRadialGradient(x, y, 2, x, y, 24); halo.addColorStop(0, `rgba(255,235,166,${.34 * pulse})`); halo.addColorStop(1, 'rgba(255,220,130,0)');
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(x, y, 24, 0, Math.PI * 2); ctx.fill();
+      ctx.translate(x, y); ctx.rotate(reduce ? 0 : Math.sin(t * 1.3 + star.bob) * .12);
+      ctx.fillStyle = '#fff0ad'; ctx.strokeStyle = '#9b6934'; ctx.lineWidth = 2;
+      ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 6 : 13; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-2, -7); ctx.lineTo(1, -1); ctx.lineTo(-1, 6); ctx.stroke();
+      ctx.restore();
     }
     ctx.restore();
   }
@@ -1658,6 +1710,13 @@
     let eh = 0, ea = 0;
     for (let n = 8; n <= 50; n++) { const ids = keepsakeIds(n); ea += ids.length; eh += ids.filter(id => foundKeeps.has(id)).length; }
     if (ea) rows.push(`<div class="item shelf-row"><h3>Endless Nights</h3><div class="side"><span class="shelf-count">${eh} / ${ea}</span></div><p>Keepsakes found on the Endless routes.</p></div>`);
+    const diaryNights = Array.from({ length: 50 }, (_, i) => i + 1).filter(paperDiaryUnlocked);
+    const diaryPages = diaryNights.map(n => {
+      const ch = LEVEL_MAP_CHAPTERS.get(n), label = n >= 8 ? (window.TCEndless?.SPECIALS?.[n]?.name || window.TCVisualChapters?.forLevel(n)?.name || 'Endless Night') : ch?.name || chapterFor(n).name;
+      return `<article class="paper-diary-page"><h4>${hourOf(n)} · ${label}</h4><p>“${paperDiaryText(n)}”</p></article>`;
+    }).join('');
+    const diaryCopy = paperStarCopy(), diaryCount = (diaryCopy.diaryCount || '{count} / 50 pages').replace('{count}', String(diaryNights.length));
+    rows.push(`<section class="item shelf-row"><h3>${diaryCopy.diaryTitle || 'Paper-star diary'}</h3><div class="side"><span class="shelf-count">${diaryCount}</span></div><p>${diaryCopy.diaryPrompt || 'Find all 3 hidden paper stars in a night to unlock its bonus page.'}</p>${diaryPages ? `<div class="paper-diary-pages">${diaryPages}</div>` : `<p class="muted">${diaryCopy.diaryEmpty || 'Your first page is waiting among the stars.'}</p>`}</section>`);
     $('#shelfList').innerHTML = rows.join('');
     document.querySelectorAll('#shelfList canvas.keep-ico').forEach(drawKeepIcon);
   }
@@ -5648,13 +5707,17 @@
         caption.appendChild(name); caption.appendChild(sub);
         if (unlock) { const u = document.createElement('span'); u.className = 'level-unlock'; u.textContent = `${unlock.icon} unlocks ${unlock.label}`; caption.appendChild(u); }
         if (level === 50) { const u = document.createElement('span'); u.className = 'level-unlock level-teaser'; u.textContent = 'To be continued… more nights are coming'; caption.appendChild(u); }
-        const bestScore = getBest(`mk-best-n${level}`), st = nightStars[level] || 0;
+        const bestScore = getBest(`mk-best-n${level}`), st = nightStars[level] || 0, paperFound = paperStarsFound(level);
         if (playable && (bestScore || st)) {
           const rec = document.createElement('span'); rec.className = 'level-best';
           rec.innerHTML = [1, 2, 3].map(i => `<b style="color:${i <= st ? '#e0a12a' : 'rgba(59,53,80,.25)'}">★</b>`).join('') + (bestScore ? ` Best ${bestScore.toLocaleString()}` : '');
           rec.setAttribute('aria-label', `${st} of 3 stars${bestScore ? `, best score ${bestScore}` : ''}`);
           caption.appendChild(rec);
         }
+        const paperProgress = document.createElement('span'); paperProgress.className = 'level-paper-stars';
+        const paperCopy = paperStarCopy();
+        paperProgress.textContent = `✦ ${paperCopy.label || 'Paper stars'} ${paperFound}/3${paperFound === 3 ? ` · ${paperCopy.diaryUnlocked || 'diary page unlocked'}` : ''}`;
+        caption.appendChild(paperProgress);
         entry.appendChild(caption);
       }
       track.appendChild(entry);
@@ -6349,7 +6412,8 @@
     const p = E.plan(night, enCards[enPick], [...enChosen]), total = Object.values(p.need).reduce((a, b) => a + b, 0);
     const g = (() => { const keep = NIGHT_CHAPTERS[night - 1].feelingsNeeded; NIGHT_CHAPTERS[night - 1].feelingsNeeded = p.need; const r = starGoals(night); NIGHT_CHAPTERS[night - 1].feelingsNeeded = keep; return r; })();
     const mult = p.glowMult !== 1 ? ` · ×${p.glowMult.toFixed(1).replace('.0', '')} Glow` : '';
-    $('#ncMeta').textContent = `⏱ ${Math.floor(p.time / 60)}:${String(p.time % 60).padStart(2, '0')} · ${total} Moodlings · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}${mult}${p.extraStar ? ' · +1 star' : ''}${(nightStars[night] || 0) ? ` · best ${'★'.repeat(nightStars[night])}` : ''}`;
+    const paperCopy = paperStarCopy();
+    $('#ncMeta').textContent = `⏱ ${Math.floor(p.time / 60)}:${String(p.time % 60).padStart(2, '0')} · ${total} Moodlings · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}${mult}${p.extraStar ? ' · +1 star' : ''} · ✦ ${paperCopy.label || 'Paper stars'} ${paperStarsFound(night)}/3${paperDiaryUnlocked(night) ? ` · ${paperCopy.diaryUnlocked || 'bonus diary page unlocked'}` : ''}${(nightStars[night] || 0) ? ` · best ${'★'.repeat(nightStars[night])}` : ''}`;
   }
   function closeNightCards() {
     const scr = $('#nightCardsScreen'); if (scr) scr.hidden = true;
@@ -6421,6 +6485,8 @@
     if (window.TC_LEVELS?.[briefingNight]?.map === 'rooftop') $('#levelBriefingTip').textContent = 'Cross the rooftops past chimneys and laundry. Warm roof cushions mark clear places to pause.';
     const seconds = Math.max(0, Math.floor(chapter.timeLimit || 0));
     { const g = starGoals(briefingNight); $('#levelBriefingTime').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} before sunrise · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}`; }
+    const paperCopy = paperStarCopy();
+    $('#levelBriefingPaperStars').textContent = `✦ ${(paperCopy.progress || 'Paper stars · {count} / 3').replace('{count}', String(paperStarsFound(briefingNight)))}${paperDiaryUnlocked(briefingNight) ? ` · ${paperCopy.diaryUnlocked || 'bonus diary page unlocked'}` : ''}`;
     $('#levelBriefingScreen').hidden = false; $('#levelBriefingStart').focus({ preventScroll: true });
   }
   function closeLevelBriefing() {

@@ -1,3 +1,10 @@
+# Hidden paper stars and bonus diary pages
+
+- Added three fixed paper-star collectibles to every story night. They sit on raised ledges or require a timed jump; stars placed on moving ledges travel with them.
+- Paper-star progress saves independently per night in `mk-paper-stars`, without changing score stars, Glow, Moodling catches, or existing save keys.
+- Night-map entries and the night briefing/endless selection cards show the `0–3` paper-star count. Finding all three unlocks a bonus diary page on Thiri’s shelf.
+- Added a placement check for all 50 nights and included it in the game-integrity workflow.
+
 ## Swaying lights and a brief recovery window
 
 - Caught lights now sway gently along Shwe’s tail-tied trail as she moves.
