@@ -1,3 +1,11 @@
+# Gameplay catch clips and a trail that follows Shwe
+
+- The catch guide in How to play now shows a short real gameplay clip of Shwe catching each Moodling (recorded from the game itself in Free Play), with the three translated steps and their keyboard/touch controls beside it. Rare variants share their family's clip; Calm and Breathing Calm have their own.
+- Clips live in `game/assets/clips` as WebM (VP9) with an MP4 fallback and a poster frame (about 2.5 MB for all ten). They load only when a guide is opened, loop silently, pause when the tab is hidden, and start paused with a play button when reduced motion is on.
+- Clips are recorded at double resolution and 60 fps and encoded at 1280×720, so they stay sharp on high-DPI screens (about 0.3–1.3 MB per clip). Clip URLs carry a version tag so browsers fetch new recordings.
+- `catch-clips.js` keeps the same `open`/`close` API and the three-step storyboard, so the integrity test and the How to play buttons are unchanged.
+- The light trail is now tied at the base of Shwe's tail and trails behind her: a jump makes it sweep up in a soft curve instead of a vertical column, and on landing the lights settle on the ground (or her platform or wall top) instead of floating.
+
 # Picture-based Moodling catch guides
 
 - Replaced the timed catch-clip animation with three illustrated, step-by-step cards for each Moodling, including rare variants.

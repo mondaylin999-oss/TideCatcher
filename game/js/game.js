@@ -151,27 +151,32 @@
   const DEBUG_ALLOWED = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).get('debug') === '1';
   let debugLayout = false;
   let jumpQ = false, jumpHeld = false, pounceQ = false, scratchQ = false, scratchHeld = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
+  // keys come from the player's own control settings (controls.js); the old defaults are the fallback
+  const CK = { left: ['ArrowLeft', 'KeyA'], right: ['ArrowRight', 'KeyD'], jump: ['Space', 'ArrowUp', 'KeyW'], sneak: ['ShiftLeft', 'ShiftRight'], pounce: ['KeyJ', 'KeyX'], eyes: ['KeyE', 'KeyL'], scratch: ['KeyS'], purr: ['KeyK'], home: ['KeyH'], notes: ['KeyN'], pause: ['KeyP'] };
+  const keyIs = (code, a) => window.TCControls ? TCControls.is(code, a) : (CK[a] || []).includes(code);
+  const keyHeld = a => window.TCControls ? TCControls.held(keys, a) : (CK[a] || []).some(c => keys[c]);
   addEventListener('keydown', e => {
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS'].includes(e.code) && (state === 'play' || state === 'home')) e.preventDefault();
+    if ((['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code) || (window.TCControls ? TCControls.isGameKey(e.code) : false)) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
     if (e.code === 'F2' && DEBUG_ALLOWED) { e.preventDefault(); debugLayout = !debugLayout; return; }
     if (e.repeat) return;
-    if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'play') { e.preventDefault(); pauseGame(); return; }
-    if ((e.code === 'Escape' || e.code === 'KeyP') && state === 'paused') { e.preventDefault(); sfx('ui', 'resume'); resumeGame(); return; }
+    if ((e.code === 'Escape' || keyIs(e.code, 'pause')) && state === 'play') { e.preventDefault(); pauseGame(); return; }
+    if ((e.code === 'Escape' || keyIs(e.code, 'pause')) && state === 'paused') { if ($('#controlsScreen') && !$('#controlsScreen').hidden) return; e.preventDefault(); sfx('ui', 'resume'); resumeGame(); return; }
     if ($('#nightWakeScreen') && !$('#nightWakeScreen').hidden) { if (['Space','Enter','Escape'].includes(e.code)) { e.preventDefault(); closeNightWake(); } return; }
-    if (state === 'home' && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); homeKey(); return; }
-    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { jumpQ = true; jumpHeld = true; }
-    if (e.code === 'KeyJ' || e.code === 'KeyX') pounceQ = true;
-    if (e.code === 'KeyK') purrQ = true;
-    if (e.code === 'KeyE' || e.code === 'KeyL') eyesQ = true;
-    if (e.code === 'KeyS') scratchQ = true;
-    if (e.code === 'KeyH' && state === 'play') { e.preventDefault(); enterPortal(); }
+    if (state === 'home' && (e.code === 'Space' || e.code === 'Enter' || keyIs(e.code, 'jump') || keyIs(e.code, 'pounce'))) { e.preventDefault(); homeKey(); return; }
+    if (keyIs(e.code, 'jump')) { jumpQ = true; jumpHeld = true; }
+    if (keyIs(e.code, 'pounce')) pounceQ = true;
+    if (keyIs(e.code, 'purr')) purrQ = true;
+    if (keyIs(e.code, 'eyes')) eyesQ = true;
+    if (keyIs(e.code, 'notes') && !e.repeat && state === 'play') setNotes(!showNotes, true);
+    if (keyIs(e.code, 'scratch')) scratchQ = true;
+    if (keyIs(e.code, 'home') && state === 'play') { e.preventDefault(); enterPortal(); }
   });
-  addEventListener('keyup', e => { keys[e.code] = false; if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) jumpHeld = false; });
+  addEventListener('keyup', e => { keys[e.code] = false; if (keyIs(e.code, 'jump')) jumpHeld = false; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; scratchHeld = false; jumpHeld = false; mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; });
   function axisNow() {
-    const kb = ((keys.ArrowRight || keys.KeyD) ? 1 : 0) - ((keys.ArrowLeft || keys.KeyA) ? 1 : 0);
-    const scale = (keys.ShiftLeft || keys.ShiftRight || mouseSneakHeld) ? .4 : 1;
+    const kb = (keyHeld('right') ? 1 : 0) - (keyHeld('left') ? 1 : 0);
+    const scale = (keyHeld('sneak') || mouseSneakHeld) ? .4 : 1;
     if (kb) return kb * scale;
     return touchAxis * scale;
   }
@@ -331,7 +336,22 @@
   const FRUST_SLEEP = 5; // Frustrated sleeps for the first 5 seconds of the night clock
   const FRUST_WARN = 3;  // a Frustrated that appears later shows a 3-second warning before it can charge
   let frustWakeAt = FRUST_SLEEP + 1.5;
+  // Notes during play (the paper messages and the tip cards) can be switched off: Settings, pause menu, or N
+  let showNotes = true;
+  try { showNotes = localStorage.getItem('mk-show-notes') !== '0'; } catch (e) {}
+  function tipsOn() { return MK_PROFILE.showTips !== false && showNotes; }
+  function setNotes(on, fromKey = false) {
+    showNotes = !!on;
+    try { localStorage.setItem('mk-show-notes', showNotes ? '1' : '0'); } catch (e) {}
+    if (!showNotes) { banner = null; activeJitTip = null; jitTipQueue = []; hideCoachTip(); }
+    const tg = document.getElementById('showNotesToggle'); if (tg) tg.checked = showNotes;
+    const pb = document.getElementById('pauseNotesBtn'); if (pb) { pb.textContent = `Notes: ${showNotes ? 'On' : 'Off'}`; pb.setAttribute('aria-pressed', String(showNotes)); }
+    if (fromKey && cat && state === 'play') float(cat.x, cat.y - 96, `Notes ${showNotes ? 'on' : 'off'} (${window.TCControls ? TCControls.short('notes') : 'N'})`, '#e8e2ff');
+  }
   let mode = 'story', storyNight = 1, freeT = 0, level = 0, nextGold = 18, caughtN = 0;
+  // Endless Nights (8–50): the plan built from the night card the player picked (see endless.js)
+  let enNoEyesShown = false, EN = null, enPiece = null, enGoldT = 0, enCatches = 0, enExtraGlow = 0, enPieceRun = null, enCardsReturn = null;
+  function endlessOn() { return mode === 'story' && !!EN && EN.night === storyNight && storyNight >= 8; }
   // School hallways use cached architectural variants; playable shelves stay separate.
   const SCHOOL_NIGHTS = [1, 2];
   const SCHOOL_WALL = new Image();
@@ -637,6 +657,7 @@
   // layout regression verify that every pit and roost remains reachable at its night's gravity.
   NIGHT_CHAPTERS.forEach(chapter => { chapter.jumpSpeed = 830; chapter.jumpGravity = 2300; });
   const chapterFor = night => NIGHT_CHAPTERS[clamp(night - 1, 0, NIGHT_CHAPTERS.length - 1)];
+  const CHAPTER_BASE = NIGHT_CHAPTERS.map(c => JSON.parse(JSON.stringify(c)));
   // The whole story is one night: each level is one hour, from 11 PM to sunrise.
   const NIGHT_HOURS = ['11 PM', 'Midnight', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM'];
   const hourOf = night => Math.floor(night) <= NIGHT_HOURS.length
@@ -768,7 +789,7 @@
   // Free mode is for practice: it brings home at most a few lights for the Heart Workshop per run, so the story stays the way to grow Lantern Town
   const FREE_LIGHT_CAP = 6;
   const purrDur = () => catPerk() === 'siamese' ? 4 : 3;
-  const eyesDur = () => catPerk() === 'sphynx' ? 5.5 : 4;
+  const eyesDur = () => (catPerk() === 'sphynx' ? 5.5 : 4) * (endlessOn() ? EN.eyesMul : 1);
   const sitNeed = () => catPerk() === 'ragdoll' ? 1.4 : 2;
   let purrT = 0, purrCd = 0, purrQ = false, eyesT = 0, eyesCd = 0, eyesQ = false;
 
@@ -818,7 +839,7 @@
   const vinfo = (ty, v = 0) => VARS[ty][v] || VARS[ty][0];
   const vcol = (ty, v = 0) => vinfo(ty, v).c;
   const BOOK_GOAL_KEYS = BOOK_ORDER.filter(key => key !== 'G0');
-  const guideCopy = () => { const bank = window.TC_TIPS || {}; return bank[MK_PROFILE.tipLanguage] || bank.en || {}; };
+  const guideCopy = () => { const bank = window.TC_TIPS || {}, c = bank[MK_PROFILE.tipLanguage] || bank.en || {}; return window.TCControls ? TCControls.patchCopy(c) : c; };
   function persistGuidanceProgress() {
     const data = { welcomeSeen: !!MK_PROFILE.welcomeSeen, tutorialDone: !!MK_PROFILE.tutorialDone, tipsSeen: Array.isArray(MK_PROFILE.tipsSeen) ? MK_PROFILE.tipsSeen.slice(-100) : [], showTips: MK_PROFILE.showTips !== false, tipLanguage: MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en' };
     try { localStorage.setItem('mk-onboarding', JSON.stringify(data)); if (MK_HAS_PROFILE) localStorage.setItem('mk-profile', JSON.stringify(MK_PROFILE)); } catch (e) {}
@@ -910,7 +931,7 @@
     return activeJitTip?.target || null;
   }
   function drawGuidanceMarker() {
-    if ((!nightGuide.active && !activeJitTip) || !MK_PROFILE.showTips) return;
+    if ((!nightGuide.active && !activeJitTip) || !tipsOn()) return;
     const target = tutorialTarget(); if (!target) return;
     const pulse = reduce ? 1 : .94 + Math.sin(performance.now() / 230) * .06;
     const x = target.x, y = target.y;
@@ -1026,7 +1047,7 @@
   }
   function guidanceTimerPaused() { return nightGuide.active || !!activeJitTip; }
   function queueJitTip(key, target = null, title = null, text = null, seenId = null) {
-    if (!MK_PROFILE.showTips || nightGuide.active || guidanceSeen(seenId || `mechanic:${key}`)) return;
+    if (!tipsOn() || nightGuide.active || guidanceSeen(seenId || `mechanic:${key}`)) return;
     const id = seenId || `mechanic:${key}`;
     if (activeJitTip?.id === id || jitTipQueue.some(item => item.id === id)) return;
     jitTipQueue.push({ id, key, text, target: target && Number.isFinite(target.x) ? { x: target.x, y: target.y } : null, title });
@@ -1046,14 +1067,14 @@
     const variant = Math.min(VARS[m.type].length - 1, Math.max(0, Math.floor(m.v || 0)));
     const key = `${m.type}${variant}`;
     rememberMoodlingEncounter(m.type, variant);
-    if (!MK_PROFILE.showTips || nightGuide.active) return;
+    if (!tipsOn() || nightGuide.active) return;
     const info = vinfo(m.type, variant), id = `moodling:${key}`, guides = guideCopy().help?.catchGuides || {};
     const text = [guides[key] || guides[m.type] || info.d, guideCopy().catchClipHint].filter(Boolean).join(' ');
     queueJitTip(`moodling-${key}`, m, info.n, text, id);
   }
   let struggleTipShownThisRun = false;
   function maybeStruggleTip(kind, target = null) {
-    if (!MK_PROFILE.showTips || nightGuide.active || activeJitTip || jitTipQueue.length) return;
+    if (!tipsOn() || nightGuide.active || activeJitTip || jitTipQueue.length) return;
     if (struggleTipShownThisRun) return;
     struggleTipShownThisRun = true;
     const suffix = mode === 'free' ? 'free' : `night-${storyNight}`, id = `struggle:${suffix}`;
@@ -1088,7 +1109,7 @@
       activeJitTip.time -= dt;
       if (activeJitTip.time <= 0) { activeJitTip = null; hideCoachTip(); showNextJitTip(); }
     } else if (jitTipQueue.length) showNextJitTip();
-    if (state === 'play' && !nightGuide.active && !activeJitTip && MK_PROFILE.showTips) {
+    if (state === 'play' && !nightGuide.active && !activeJitTip && tipsOn()) {
       if (guidanceCaught !== caughtN) { guidanceCaught = caughtN; struggleTimer = 0; }
       else { struggleTimer += dt; if (struggleTimer >= 30) { struggleTimer = 0; maybeStruggleTip('quiet'); } }
     }
@@ -1423,6 +1444,62 @@
     }
     g.restore();
   }
+  // ---------- Endless Nights: per-frame rules and the hidden drawing piece ----------
+  function paperRustle() {
+    if (!ac) return;
+    try {
+      const len = .32, buf = ac.createBuffer(1, ac.sampleRate * len, ac.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) { const k = i / d.length; d[i] = (Math.random() * 2 - 1) * Math.pow(Math.sin(Math.PI * k), 2) * (.5 + .5 * Math.sin(k * 60)); }
+      const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = .7; g.gain.value = .09 * (window.TCSfx?.level ? TCSfx.level() : .8);
+      src.buffer = buf; src.connect(f).connect(g).connect(ac.destination); src.start();
+    } catch (e) {}
+  }
+  function endlessTick(dt) {
+    if (EN.golden) {
+      enGoldT -= dt;
+      if (enGoldT <= 0) { enGoldT = 6 + Math.random() * 2; if (mood.filter(m => !m.dead && m.type === 'G').length < 2) spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * (260 + Math.random() * 260), 120, WORLD - 120)); }
+    }
+    const p = enPiece;
+    if (p && !p.found) {
+      const d = Math.hypot(cat.x - p.x, cat.y - 30 - p.y);
+      if (d < 5 * T && !p.rustle) { p.rustle = true; paperRustle(); float(cat.x, cat.y - 92, '…a paper rustle nearby', '#f4e7c4'); }
+      if (d > 7 * T) p.rustle = false;
+      if (d < 52) collectPiece(p);
+    }
+    if (p && p.found) p.got = Math.max(0, p.got - dt);
+  }
+  function collectPiece(p) {
+    p.found = true; p.got = 1;
+    const res = window.TCEndless.addPiece(p.place, p.idx);
+    burst(p.x, p.y, '#fff3c9', 26); sfx('ui', 'sparkle'); tone(784, .12, 'sine', .05); setTimeout(() => tone(1175, .2, 'sine', .045), 110);
+    const title = (window.TCDrawings?.LIST.find(d => d.id === p.place) || {}).title || 'a drawing';
+    if (!res) return;
+    enPieceRun = res;
+    announce(res.complete ? `The drawing is whole again! “${title}” 6/6` : `A torn piece of “${title}” · ${res.count}/${res.of}`, '#f4c86a', 2.6);
+    glowRun += 20; float(p.x, p.y - 34, '+20 Glow', GOLD);
+  }
+  function drawEndlessPiece() {
+    const p = enPiece; if (!p) return;
+    if (p.found && p.got <= 0) return;
+    const eyes = eyesT > 0 && Math.abs(cat.x - p.x) <= uv('eyes') * T, d = Math.hypot(cat.x - p.x, cat.y - 30 - p.y);
+    const rev = window.TCEndlessFX?.revealing?.() || 0;
+    let a = p.found ? p.got : Math.max(eyes ? 1 : 0, rev, clamp(1 - (d - 2.5 * T) / (2 * T), 0, 1) * .9);
+    const y = p.y + Math.sin(t * 2.2 + p.bob) * 3 - (p.found ? (1 - p.got) * 34 : 0);
+    if (a <= .02) { if (Math.sin(t * 2.1 + p.bob) > .97) { ctx.fillStyle = 'rgba(255,248,220,.7)'; ctx.font = `700 12px ${DISP}`; ctx.textAlign = 'center'; ctx.fillText('✦', p.x, y); } return; }
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.drawImage(glowImg('#fff1c2'), p.x - 34, y - 34, 68, 68);
+    ctx.translate(p.x, y); ctx.rotate(Math.sin(t * 1.6 + p.bob) * .12 - .1);
+    ctx.fillStyle = '#fbf3dd'; ctx.strokeStyle = 'rgba(120,90,60,.55)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(-15, -11); ctx.lineTo(-3, -13); ctx.lineTo(4, -9); ctx.lineTo(14, -12); ctx.lineTo(16, 2); ctx.lineTo(12, 11); ctx.lineTo(2, 9); ctx.lineTo(-6, 13); ctx.lineTo(-14, 9); ctx.lineTo(-12, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.lineCap = 'round'; ctx.lineWidth = 2.4;
+    [['#ff6b9a', -9, -3, -1, 3], ['#4dabf7', 0, -6, 9, -2], ['#ffd23f', -6, 5, 6, 4], ['#4caf50', 3, 2, 11, 6]].forEach(([c, x1, y1, x2, y2]) => { ctx.strokeStyle = c; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo((x1 + x2) / 2, y1 - 4, x2, y2); ctx.stroke(); });
+    ctx.restore();
+    if (!p.found && a > .3) { ctx.save(); ctx.globalAlpha = a * (.6 + .4 * Math.sin(t * 5)); ctx.fillStyle = '#fff6d0'; ctx.font = `700 13px ${DISP}`; ctx.textAlign = 'center'; ctx.fillText('✦', p.x + 16, y - 16); ctx.restore(); }
+  }
+  function endlessFxOpts(extra = {}) {
+    return { fx: EN.fx, map: EN.map, cam: camX, W: VW, H: VH, ground: GROUND, t, OY, reduced: reduce, terrainY, ...extra };
+  }
   function drawTrinkets() {
     const x0 = camX - 60, x1 = camX + VW + 60;
     for (const k of trinkets) {
@@ -1552,7 +1629,7 @@
     if (!breathTipShown && state === 'play' && Math.abs(cat.x - m.x) < 5 * T) {
       breathTipShown = true; announce('A rare Calm! Hold S as its bubble grows, let go as it shrinks', CALM, 3.2);
     }
-    const held = !!(keys.KeyS || scratchHeld);
+    const held = !!(keyHeld('scratch') || scratchHeld);
     if (!nearBreath(m) || cat.pounce > 0) { if (m.watch && m.breaths) float(m.x, m.y - 80, 'Stay close and breathe slowly', MUTED); if (m.watch) resetBreath(m); return; }
     if (prev > m.bphase) {   // one full breath just finished
       if (m.watch) {
@@ -1719,6 +1796,19 @@
     buriedHome = null;
     if (need.B > 0) { buriedHome = rocks[Math.floor(Math.random() * rocks.length)]; buriedHome.marked = true; }
     initHazards(); initTrinkets();
+    enPiece = null; enGoldT = 5; enCatches = 0; enExtraGlow = 0; enPieceRun = null; enNoEyesShown = false;
+    if (endlessOn()) {
+      if (EN.oneBump) lives = 1;
+      window.TCEndlessFX?.reset();
+      const idx = EN.piece ? window.TCEndless.nextPiece(EN.piece) : -1;
+      if (idx >= 0) {
+        // a torn drawing piece hides somewhere past the start, sometimes up where Shwe has to jump
+        const zones = (currentLevel.spawnZones || [[600, WORLD - 300]]).map(([a, b]) => [Math.max(a, 800), Math.min(b, WORLD - 260)]).filter(([a, b]) => b - a > 80);
+        const [a, b] = zones.length ? zones[Math.floor(Math.random() * zones.length)] : [WORLD * .5, WORLD * .6];
+        const x = safeLevelX(a + Math.random() * (b - a));
+        enPiece = { place: EN.piece, idx, x, y: terrainY(x) - 46 - Math.random() * 74, found: false, got: 0, rustle: false, bob: Math.random() * 6 };
+      }
+    }
     if (mode === 'free') {
       goldDone = { a: true, b: true }; chaos = true;
       const zones = currentLevel.spawnZones || [[120, WORLD - 120]];
@@ -1739,13 +1829,13 @@
   reset();
 
   // ---------- effects ----------
-  function float(x, y, text, c) { floats.push({ x, y, text, c, life: 1.2 }); }
+  function float(x, y, text, c) { if (!showNotes && String(text).length > 14 && !/^[+−\-×★]/.test(String(text))) return; floats.push({ x, y, text, c, life: 1.2 }); }
   function burst(x, y, c, n) {
     for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, s = 80 + Math.random() * 260; parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: .7 + Math.random() * .4, max: 1.1, c, r: 2 + Math.random() * 3, g: 300 }); }
   }
   function puff(m) { parts.push({ x: m.x + (Math.random() - .5) * 20, y: m.y - 18, vx: (Math.random() - .5) * 30, vy: -60 - Math.random() * 40, life: .6, max: .6, c: 'rgba(240,230,255,.55)', r: 4 + Math.random() * 4, g: -20 }); }
   function dust(m) { parts.push({ x: m.x - m.dir * 18, y: terrainY(m.x) - 4, vx: -m.dir * 60, vy: -30 * Math.random(), life: .4, max: .4, c: 'rgba(255,97,104,.5)', r: 3 + Math.random() * 3, g: 0 }); }
-  function announce(text, c = INK, life = 1.8) { banner = { text, c, life, max: life }; }
+  function announce(text, c = INK, life = 1.8) { if (!showNotes) return; banner = { text, c, life, max: life }; }
 
   // ---------- gameplay ----------
   function panic(m, dx) {
@@ -1790,6 +1880,7 @@
       else { perkShield--; float(cat.x, cat.y - 72, 'Big and sturdy! No light lost', GOLD); }
     } else if (trail.length) detachTrail(1);
     else float(cat.x, cat.y - 64, 'Ouch!', RED);
+    if (endlessOn() && EN.oneBump && state === 'play') { announce('💔 One bump. This night ends here.', RED, 2); setTimeout(() => { if (state === 'play' && endlessOn()) finish(false, 'bump'); }, 900); }
   }
   function buriedAmbushSize(night) { return night < 5 ? 0 : clamp(night - 3, 1, 4); }
   function triggerBuriedAmbush(sizeOverride = null, message = null, options = null) {
@@ -1928,6 +2019,10 @@
     glowRun += glowGain; bump('glow', glowGain);
     caughtN++;
     onGuidanceCatch(m);
+    if (endlessOn() && m.type !== 'G') {
+      if (EN.catchBonus) { timeLeft += EN.catchBonus; float(m.x, m.y - 58, `+${EN.catchBonus}s · sunrise`, '#ffcf8a'); }
+      if (EN.extraLights && ++enCatches % 2 === 0) { workshopRun.push(m.type); float(m.x, m.y - 76, '🌧️ +1 light', '#9fd0ff'); }
+    }
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
     else if (mode === 'free') { timeLeft += 2; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 12) trail.shift(); }
     else { const chapter = chapterFor(storyNight); if (Object.prototype.hasOwnProperty.call(got, m.type)) { got[m.type]++; if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay + Math.random() * .8 }); } trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } }
@@ -2399,6 +2494,7 @@
       float(cat.x, cat.y - 70, 'Purrr…', '#c8ff8a'); sfx('cat', 'purr');
     }
     purrQ = false; purrT = Math.max(0, purrT - dt); purrCd = Math.max(0, purrCd - dt);
+    if (eyesQ && endlessOn() && EN.noEyes) { eyesQ = false; if (!enNoEyesShown) { enNoEyesShown = true; float(cat.x, cat.y - 80, '🙈 No Night Eyes tonight', '#cfc4ff'); } }
     if (eyesQ && eyesCd <= 0) { eyesT = eyesDur(); eyesCd = 9; onTutorialAction('eyes', cat); if (window.TCSfx) sfx('ui', 'eyes'); else tone(740, .25, 'sine', .05, 300); }
     eyesQ = false; eyesT = Math.max(0, eyesT - dt); eyesCd = Math.max(0, eyesCd - dt);
     scratchAnim = Math.max(0, scratchAnim - dt);
@@ -2419,6 +2515,7 @@
       if (mode === 'story') warmup = Math.max(0, warmup - dt);
       if (warmup <= 0 && !guidanceTimerPaused() && mode !== 'free') timeLeft -= dt;
       if (mode === 'free') freeTick(dt);
+      if (endlessOn() && warmup <= 0) endlessTick(dt);
       const chapter = mode === 'story' ? chapterFor(storyNight) : null;
       if (mode === 'story') maybeSpawnSky();
       if (mode !== 'free' && chapter.goldensAllowed > 0) {
@@ -2437,12 +2534,30 @@
     } else if (state === 'ending') {
       endT -= dt; if (endT <= 0) finish(true);
     }
-    // trail follow
-    trail.forEach((l, i) => {
-      const idx = Math.max(0, hist.length - 1 - (i + 1) * 9), h = hist[idx] || cat;
-      const tx = h.x, ty = h.y - 34 - Math.sin(t * 4 + i) * 4;
-      l.x += (tx - l.x) * Math.min(1, dt * 8); l.y += (ty - l.y) * Math.min(1, dt * 8);
-    });
+    // trail follow: the lights trail behind Shwe on a short string tied at her tail. Each light
+    // aims for a spot one bead-length behind the light before it; lights further down the string
+    // react a little later, so a jump makes the trail sweep up behind her in a soft curve (never a
+    // straight vertical column). When she is on solid footing the lights settle onto the ground or
+    // the surface beneath them; over a pit they just hang from the string.
+    {
+      const a = trailAnchor(), SEG = 24, MAXD = SEG * 1.15, LIFT = 10, face = cat.face || 1;
+      let px = a.x, py = a.y;
+      trail.forEach((l, i) => {
+        const floor = trailFloorY(l.x, l.y) - LIFT;
+        const tx = px - face * SEG * .92;
+        const ty = cat.on ? floor : py + 7;           // grounded: rest on the floor; airborne: trail just below the bead before
+        const kx = Math.min(1, dt * 16), ky = Math.min(1, dt * Math.max(5, (cat.on ? 16 : 11) - i * 1.1));
+        let x = l.x + (tx - l.x) * kx, y = l.y + (Math.min(ty, floor) - l.y) * ky;
+        let dx = x - px, dy = y - py, d = Math.hypot(dx, dy);
+        if (d < 1) { dx = -face; dy = 0; d = 1; }
+        if (d > MAXD) { x = px + dx / d * MAXD; y = py + dy / d * MAXD; }
+        const f2 = trailFloorY(x, l.y) - LIFT; if (y > f2) y = f2;
+        l.join = Math.min(1, (l.join || 0) + dt * 2.5);
+        if (l.join < 1) { const k = Math.min(1, dt * 10); l.x += (x - l.x) * k; l.y += (y - l.y) * k; }
+        else { l.x = x; l.y = y; }
+        px = l.x; py = l.y;
+      });
+    }
     for (const p of parts) { p.life -= dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .98; }
     parts = parts.filter(p => p.life > 0);
     for (const f of floats) { f.life -= dt; f.y -= 40 * dt; }
@@ -3168,13 +3283,14 @@
     const [dark, mid, light] = palette;
     if (map !== 'hill') {
       const bottom = VH + OY + 60, floor = ctx.createLinearGradient(0, GROUND - 28, 0, bottom);
-      floor.addColorStop(0, map === 'festival' ? '#76513e' : map === 'lake' ? '#694a57' : map === 'park' ? '#3c705f' : map === 'school' ? '#58475c' : '#47514d');
-      floor.addColorStop(.22, map === 'festival' ? '#46313a' : map === 'lake' ? '#493247' : map === 'park' ? '#2a4550' : map === 'school' ? '#342b43' : '#303a38'); floor.addColorStop(1, '#151421');
+      const tcFloor = window.TCPlaces?.FLOOR?.[map];
+      floor.addColorStop(0, tcFloor ? tcFloor[0] : map === 'festival' ? '#76513e' : map === 'lake' ? '#694a57' : map === 'park' ? '#3c705f' : map === 'school' ? '#58475c' : '#47514d');
+      floor.addColorStop(.22, tcFloor ? tcFloor[1] : map === 'festival' ? '#46313a' : map === 'lake' ? '#493247' : map === 'park' ? '#2a4550' : map === 'school' ? '#342b43' : '#303a38'); floor.addColorStop(1, '#151421');
       const left = Math.max(0, Math.floor(x0 / 8) * 8), right = Math.min(WORLD, x1 + 8);
       ctx.fillStyle = floor; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
       for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x));
       ctx.lineTo(right, bottom); ctx.lineTo(left, bottom); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = map === 'festival' ? 'rgba(218,174,120,.65)' : map === 'lake' ? 'rgba(170,232,244,.48)' : map === 'park' ? 'rgba(133,210,157,.52)' : 'rgba(255,226,180,.36)';
+      ctx.strokeStyle = tcFloor ? tcFloor[2] : map === 'festival' ? 'rgba(218,174,120,.65)' : map === 'lake' ? 'rgba(170,232,244,.48)' : map === 'park' ? 'rgba(133,210,157,.52)' : 'rgba(255,226,180,.36)';
       ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
       for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x)); ctx.stroke();
     }
@@ -3297,6 +3413,9 @@
     else if (inLake()) drawLakeWorld(x0, x1);
     else if (inHill()) drawHillWorld(x0, x1);
     else {
+    const tcPlace = window.TCPlaces?.has(currentLevel?.map) ? currentLevel.map : null;
+    if (tcPlace) window.TCPlaces.draw(ctx, tcPlace, { cam: camX, W: VW, H: VH, ground: GROUND, t, OY });
+    else {
     drawParallaxLayer(0,.10);drawParallaxLayer(1,.38);drawParallaxLayer(2,.78);
     const ground=ctx.createLinearGradient(0,410,0,VH+OY+60);ground.addColorStop(0,'#394440');ground.addColorStop(.18,'#303a38');ground.addColorStop(1,'#151f27');
     const rockEdge=x=>{const seed=Math.sin(x*12.9898+7.31)*43758.5453;return terrainY(x)+(seed-Math.floor(seed)-.5)*4;};
@@ -3310,6 +3429,7 @@
     ctx.strokeStyle='rgba(143,159,151,.18)';ctx.lineWidth=1;for(let x=Math.floor(x0/175)*175;x<x1;x+=175){const y=terrainY(x)+50;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+24,y-5);ctx.lineTo(x+42,y+1);ctx.moveTo(x+90,y+34);ctx.lineTo(x+108,y+24);ctx.lineTo(x+126,y+29);ctx.stroke();}
     for(const [hx,off,rx,ry] of [[390,31,42,23],[1045,38,52,28],[1710,47,45,24],[2075,34,49,26]]){const hy=terrainY(hx)+off;ctx.fillStyle='rgba(5,13,20,.83)';ctx.beginPath();ctx.moveTo(hx-rx,hy+ry);ctx.quadraticCurveTo(hx-rx*.88,hy-ry*.2,hx-rx*.3,hy-ry*.65);ctx.quadraticCurveTo(hx,hy-ry*1.05,hx+rx*.32,hy-ry*.55);ctx.quadraticCurveTo(hx+rx*.9,hy-.1*ry,hx+rx,hy+ry);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(134,151,144,.34)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(hx-rx*.82,hy+ry*.1);ctx.quadraticCurveTo(hx,hy-ry*.9,hx+rx*.8,hy+ry*.05);ctx.stroke();}
     drawMoonHollowWorld(x0,x1);
+    }
     for(const spot of scratchSpots){if(spot.x<x0-60||spot.x>x1+60)continue;drawScratchSpot(spot.x,spot.y,spot.moodType,spot);}
     for(const rock of rocks){if(rock.x<x0-80||rock.x>x1+80)continue;drawRockFormation(rock.x,rock.y,rock,rockHoldsFeeling(rock));}
     for(const p of activePlats){if(!p.active||p[0]+p[2]<x0||p[0]>x1)continue;
@@ -3320,10 +3440,13 @@
       ctx.fillStyle='rgba(48,85,57,.82)';for(let k=0;k<4;k++){const gx=x+12+k*31,gy=y+5+(k%2)*2;ctx.beginPath();ctx.ellipse(gx,gy,5,1.5,-.15,0,Math.PI*2);ctx.fill();}
     }
     // Small fern silhouettes frame the near trail.
+    if (!tcPlace) {
     for(let x=Math.floor(x0/190)*190;x<x1;x+=190){const y=terrainY(x)+6;ctx.strokeStyle='rgba(90,129,82,.65)';ctx.lineWidth=1.5;for(let k=0;k<5;k++){const side=k%2?1:-1,yy=y-k*4;ctx.beginPath();ctx.moveTo(x,yy);ctx.quadraticCurveTo(x+side*9,yy-8,x+side*17,yy-12);ctx.stroke();}}
     for(let x=Math.floor((x0+95)/330)*330;x<x1;x+=330){const y=terrainY(x)+3;ctx.strokeStyle='rgba(91,135,91,.68)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x,y+6);ctx.quadraticCurveTo(x+1,y,x,y-5);ctx.stroke();for(let k=0;k<5;k++){const a=k*Math.PI*2/5;ctx.fillStyle=k%2?'#e5c28b':'#e7d5bc';ctx.beginPath();ctx.arc(x+Math.cos(a)*3,y-5+Math.sin(a)*3,1.7,0,Math.PI*2);ctx.fill();}ctx.fillStyle='#d4a84f';ctx.beginPath();ctx.arc(x,y-5,1.5,0,Math.PI*2);ctx.fill();}
     }
-    if (mode === 'story') window.TCVisualChapters?.draw(ctx, { level: storyNight, cam: camX, width: VW, height: VH, ground: GROUND, time: t, reduced: reduce, map: currentMapKey() });
+    }
+    if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.back(ctx, endlessFxOpts());
+    else if (mode === 'story') window.TCVisualChapters?.draw(ctx, { level: storyNight, cam: camX, width: VW, height: VH, ground: GROUND, time: t, reduced: reduce, map: currentMapKey() });
     drawLevelDecor(x0, x1);
   }
   // ---------- cute Moodling art (from the character sheet; drawn with SVG paths) ----------
@@ -3820,17 +3943,31 @@
     if (c.sneak && c.on) { ctx.fillStyle = 'rgba(246,196,83,.25)'; for (let k = 1; k <= 3; k++) { const h = hist[Math.max(0, hist.length - 1 - k * 6)]; if (h) { ctx.beginPath(); ctx.arc(h.x, h.y - 3, 3, 0, 7); ctx.fill(); } } }
   }
 
+  // where the light string is tied: the base of Shwe's tail, on whichever side is behind her
+  function trailAnchor() { return { x: cat.x - (cat.face || 1) * 22, y: cat.y - 28 }; }
+  // where a trail light comes to rest: the ground (none over a pit), the platform Shwe is standing on,
+  // or, right behind her, whatever she is standing on (a wall top). Other ledges are ignored so the
+  // lights never snag on one she has jumped past.
+  function trailFloorY(x, y) {
+    let best = pitAt(x) ? Infinity : terrainY(x);
+    if (!Number.isFinite(best)) best = Infinity;
+    const p = cat.on && cat.platform;
+    if (p && p.active && x >= p[0] && x <= p[0] + p[2] && p[1] >= y - 4 && p[1] < best) best = p[1];
+    if (cat.on && !p && Math.abs(x - cat.x) < 30 && cat.y < best) best = cat.y;
+    return best;
+  }
   function drawTrail() {
     if (trail.length > 0) {   // the string shows as soon as the first light follows Shwe
       if (TRAILS[trailPick].rainbow) {
         // each piece of the trail gets the next colour of the rainbow, slowly shifting
         ctx.lineWidth = 5; ctx.lineCap = 'round';
-        let px = cat.x, py = cat.y - 34;
-        trail.forEach((l, i) => { ctx.strokeStyle = `hsla(${(i * 40 + t * 90) % 360},90%,70%,.9)`; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(l.x, l.y); ctx.stroke(); px = l.x; py = l.y; });
+        const a = trailAnchor(); let px = a.x, py = a.y;
+        trail.forEach((l, i) => { ctx.strokeStyle = `hsla(${(i * 40 + t * 90) % 360},90%,70%,.9)`; ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo((px + l.x) / 2, (py + l.y) / 2 + 5, l.x, l.y); ctx.stroke(); px = l.x; py = l.y; });
       } else {
-        // the original thin string, just a little lighter so it reads on dark maps
-        ctx.strokeStyle = `rgba(${TRAILS[trailPick].c},${trailPick === 'honey' ? .32 : .6})`; ctx.lineWidth = trailPick === 'honey' ? 2.5 : 3; ctx.lineCap = 'round'; ctx.beginPath();
-        ctx.moveTo(cat.x, cat.y - 34); trail.forEach(l => ctx.lineTo(l.x, l.y)); ctx.stroke();
+        // the thin string, tied at Shwe's tail and sagging a little between lights
+        ctx.strokeStyle = `rgba(${TRAILS[trailPick].c},${trailPick === 'honey' ? .45 : .65})`; ctx.lineWidth = trailPick === 'honey' ? 2.5 : 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
+        const a = trailAnchor(); let px = a.x, py = a.y; ctx.moveTo(px, py);
+        trail.forEach(l => { ctx.quadraticCurveTo((px + l.x) / 2, (py + l.y) / 2 + 5, l.x, l.y); px = l.x; py = l.y; }); ctx.stroke();
       }
     }
     trail.forEach(l => lightShape(l.type, l.x, l.y, 1, l.v));
@@ -3974,7 +4111,7 @@
     {
       let ay = skyEnabled ? top + (combo > 1 ? (compactSky ? 186 : 153) : (compactSky ? 128 : 116)) : top + (combo > 1 ? 132 : 92);
       const sr = 19, sy0 = ay + 8;
-      sbSticker(22 + sr, sy0, sr, eyesT > 0 ? 1 : eyesCd > 0 ? 1 - eyesCd / 9 : 1, eyesCd <= 0, eyesT > 0, 'E', (x, y) => {
+      sbSticker(22 + sr, sy0, sr, eyesT > 0 ? 1 : eyesCd > 0 ? 1 - eyesCd / 9 : 1, eyesCd <= 0, eyesT > 0, window.TCControls ? TCControls.short('eyes') : 'E', (x, y) => {
         ctx.fillStyle = '#cfe6ff'; ctx.strokeStyle = SB_INK; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(x - 11, y); ctx.quadraticCurveTo(x, y - 10, x + 11, y); ctx.quadraticCurveTo(x, y + 10, x - 11, y); ctx.closePath(); ctx.fill(); ctx.stroke();
         ctx.fillStyle = SB_INK; ctx.beginPath(); ctx.arc(x, y, 3.6, 0, Math.PI * 2); ctx.fill();
@@ -3982,7 +4119,7 @@
       let nx = 22 + sr * 2 + 16;
       if (upg.purr > 0) {
         const full = uv('purr') || 1;
-        sbSticker(nx + sr, sy0, sr, purrCd > 0 ? 1 - purrCd / full : 1, purrCd <= 0, purrT > 0, 'K', (x, y) => {
+        sbSticker(nx + sr, sy0, sr, purrCd > 0 ? 1 - purrCd / full : 1, purrCd <= 0, purrT > 0, window.TCControls ? TCControls.short('purr') : 'K', (x, y) => {
           ctx.fillStyle = '#ffd3e3'; ctx.strokeStyle = SB_INK; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.moveTo(x, y + 8); ctx.bezierCurveTo(x - 12, y, x - 9, y - 9, x, y - 4); ctx.bezierCurveTo(x + 9, y - 9, x + 12, y, x, y + 8); ctx.closePath(); ctx.fill(); ctx.stroke();
         });
@@ -4030,7 +4167,7 @@
     }
     if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
-      const prompt = scratchTarget.type === 'breath' ? (scratchTarget.mood.bphase < .5 ? 'Hold S · breathe in…' : 'Let go · breathe out…') : scratchTarget.type === 'sky' ? 'Scratch it! (S)' : scratchTarget.kind === 'rock' ? `S  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? scratchTarget.rock.labelMarked : scratchTarget.rock.label}` : `S  Scratch ${scratchTarget.caveX != null ? CAVE_LABELS[currentMapKey()] : 'hiding spot'}`, py=VH-74;
+      const SK = window.TCControls ? TCControls.short('scratch') : 'S', prompt = scratchTarget.type === 'breath' ? (scratchTarget.mood.bphase < .5 ? `Hold ${SK} · breathe in…` : 'Let go · breathe out…') : scratchTarget.type === 'sky' ? `Scratch it! (${SK})` : scratchTarget.kind === 'rock' ? `${SK}  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? scratchTarget.rock.labelMarked : scratchTarget.rock.label}` : `${SK}  Scratch ${scratchTarget.caveX != null ? CAVE_LABELS[currentMapKey()] : 'hiding spot'}`, py=VH-74;
       ctx.strokeText(prompt,VW/2,py);ctx.fillText(prompt,VW/2,py);
     } else if (scratchAnim>0) {
       ctx.textAlign='center';ctx.font=`800 16px ${DISP}`;ctx.fillStyle='#f4e8c7';ctx.fillText('Scratching…',VW/2,VH-74);
@@ -4068,9 +4205,10 @@
     // snap the camera to whole screen pixels: a camera between pixels makes posts, trunks and the cat's
     // stripes shimmer (like 'lllll') as the town scrolls, especially on screens scaled to 125% or 150%
     { const px = dpr * S; ctx.save(); ctx.translate(-Math.round(camX * px) / px, 0); }
-    drawWorld(); drawHazards(); drawTrinkets(); drawPortal(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
-    drawCat(); drawParts(); drawLevelDebug();
+    drawWorld(); drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
+    drawCat(); drawParts(); if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.front(ctx, endlessFxOpts()); drawLevelDebug();
     ctx.restore();
+    if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.screen(ctx, endlessFxOpts({ catX: cat.x - camX, catY: cat.y - 30, eyes: eyesT > 0, eyesR: uv('eyes') * T, dt }));
     if (eyesT > 0) {
       const sx = cat.x - camX, sy = cat.y - 24, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (eyesDur() - eyesT) / .25);
       const g = ctx.createRadialGradient(sx, sy, r * .75, sx, sy, r * 1.15);
@@ -4088,7 +4226,8 @@
   let R = null;
   function finish(won, failReason = null) {
     if (state === 'over' || state === 'home') return;
-    if (won || mode === 'free') window.TCHeart?.bank(workshopRun);
+    // Fail? Keep your lights: every light caught tonight still goes to the Heart Workshop
+    if (won || mode === 'free' || mode === 'story') window.TCHeart?.bank(workshopRun);
     // trinkets carried this run are only safe once the night ends well
     if (won || mode === 'free') { const kept = trinketRun.slice(0, Math.max(0, POUCH_SIZE - pouch.length)); pouch.push(...kept); savePouch(); lastTrinkets = { kept: kept.length, lost: 0 }; trinketIds.slice(0, kept.length).forEach(id => foundTrinkets.add(id)); saveFoundTrinkets(); }
     else lastTrinkets = { kept: 0, lost: trinketRun.length };
@@ -4103,6 +4242,21 @@
       unlockedLevel = clamp(Math.max(unlockedLevel, storyNight + 1), 1, 50);
       thiriSleepStage = clamp(Math.max(thiriSleepStage, storyNight), 0, 7);
       unlockedNow = unlockedLevel > before; saveStoryProgress();
+    }
+    let enReward = null;
+    if (endlessOn()) {
+      enReward = { title: EN.title, piece: enPieceRun, mult: EN.glowMult, extra: 0, chest: null, badge: false, challenges: EN.challenges.slice() };
+      if (won && EN.glowMult !== 1) { enReward.extra = Math.round(glowRun * (EN.glowMult - 1)); glowRun += enReward.extra; }
+      if (won) {
+        const c = window.TCEndless.chest(storyNight);
+        if (c) {
+          window.TCEndless.claimChest(storyNight); glowRun += c.glow;
+          const base = ['F', 'N', 'L', 'S', 'E', 'J', 'B', 'C'], gift = [];
+          for (let i = 0; i < c.lights; i++) gift.push(base[(storyNight + i * 3) % base.length]);
+          window.TCHeart?.bank(gift); enReward.chest = { ...c, gift };
+        }
+        if (EN.special?.id === 'finale') enReward.badge = window.TCEndless.giveBadge() || 'again';
+      }
     }
     lastGlow = glowRun; glow += glowRun; glowRun = 0; saveUpg(); refreshShopBtns();
     if (mode === 'free') {
@@ -4121,14 +4275,14 @@
     if (won) final += Math.round(left) * 20;
     setBest(bestKey, Math.max(getBest(bestKey), final));
     const best = Math.max(getBest(`mk-best-n${storyNight}`), final); setBest(`mk-best-n${storyNight}`, best);
-    const starsN = starsFor(storyNight, final, won), prevStars = nightStars[storyNight] || 0;
+    const starsN = Math.min(3, starsFor(storyNight, final, won) + (won && enReward && EN.extraStar ? 1 : 0)), prevStars = nightStars[storyNight] || 0;
     let starGlow = 0;
     if (starsN > prevStars) { for (let s = prevStars + 1; s <= starsN; s++) starGlow += STAR_GLOW[s]; nightStars[storyNight] = starsN; saveStars(); }
     const newTrails = grantStarTrails();
     if (starGlow || newTrails.length) { glow += starGlow; lastGlow += starGlow; saveUpg(); refreshShopBtns(); }
     R = {
       won, night: storyNight, total: requiredTotal(), left, final, best, combo: bestCombo, home: caughtTotal(), unlocked: unlockedNow, stage: thiriSleepStage, failReason,
-      starsN, prevStars, starGlow, goals: starGoals(storyNight), newTrails,
+      starsN, prevStars, starGlow, goals: starGoals(storyNight), newTrails, endless: enReward,
       tip: chapterFor(storyNight).tutorialHints
         ? `Tip: ${chapterFor(storyNight).tutorialHint}`
         : hits > 0
@@ -4183,6 +4337,7 @@
     $('#bookBtnValue').textContent = `${found} / ${total} found`;
     { const tv = $('#roomTownValue'); if (tv && window.TCHeartData) { let lit = 0; try { lit = window.TCHeartData.create(localStorage).snapshot().lit.length; } catch (e) {} tv.textContent = `${lit} / ${window.TCHeartData.places.length} lit`; } }
     { const sc = $('#shelfCount'); if (sc) { const s2 = shelfTotals(); sc.textContent = `${s2.have} / ${s2.all} keepsakes`; } }
+    refreshSketchSpot();
     sizeHubCat();
     $('#hubCatName').textContent = MK_PROFILE.cat.toUpperCase();
     $('#profileBtn').setAttribute('aria-label', `Profile and cat settings for ${MK_PROFILE.cat}`);
@@ -4251,6 +4406,11 @@
     $('#helpMoodsNote').textContent = copy.moodsNote || '';
     $('#helpGlowTitle').textContent = copy.glow || 'Glow & upgrades'; $('#helpGlowText').textContent = copy.glowText || '';
     $('#helpCombosTitle').textContent = copy.combos || 'Combos'; $('#helpComboText').textContent = copy.comboText || '';
+    { // Endless Nights, once Shwe has reached them
+      let sec = $('#helpEndless');
+      if (!sec && $('#helpComboText')) { sec = document.createElement('section'); sec.className = 'help-section'; sec.id = 'helpEndless'; $('#helpComboText').closest('.help-extras').appendChild(sec); }
+      if (sec) { sec.hidden = unlockedLevel < 8; sec.innerHTML = `<h3>Endless Nights</h3><p>After the story the path keeps climbing to night 50. Before each night, pick 1 of 3 night cards: the place, its version (rainy, foggy, snowy…), the Moodlings it needs, and whether a torn drawing piece 📄 hides there. Add optional challenges for more Glow. Nights 10, 20, 30, 40 and 50 are special, and every tenth night opens a chest. Find all 30 pieces to rebuild ${enName('Thiri')}’s drawings in her Sketchbook.</p>`; }
+    }
     $('#helpDoneBtn').textContent = copy.close || 'Back'; $('#helpReplayStory').textContent = copy.story || 'Replay the story';
     $('#helpCloseBtn').setAttribute('aria-label', copy.close || 'Close Help');
     const rows = $('#helpControls'); rows.replaceChildren();
@@ -4467,6 +4627,33 @@
     initAudio(); glow += SHELF_BONUS; saveUpg(); sfx('ui', 'reward'); renderShelf(); refreshShopBtns();
   });
   $('#roomShelfBtn')?.addEventListener('click', openShelf);
+  $('#showNotesToggle')?.addEventListener('change', e => setNotes(e.target.checked));
+  $('#pauseNotesBtn')?.addEventListener('click', () => setNotes(!showNotes));
+  setNotes(showNotes);
+  // ---------- Controls (keys + touch buttons) and a quick Notes switch during play ----------
+  {
+    const addBtn = (host, id, text, before = null) => { if (!host || $('#' + id)) return null; const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = id; b.textContent = text; host.insertBefore(b, before); return b; };
+    const pa = $('#pauseNotesBtn')?.parentElement || $('#pauseScreen .pause-actions');
+    addBtn(pa, 'pauseControlsBtn', '🎮 Controls', $('#pauseNotesBtn')?.nextSibling || null)?.addEventListener('click', () => {
+      window.TCControls?.open(coarse || pauseTouchWasHidden === false ? 'touch' : 'keys', () => $('#pauseControlsBtn')?.focus());
+    });
+    const gs = $('#hubSettingsScreen .guidance-settings');
+    if (gs && !$('#settingsControlsBtn')) {
+      const row = document.createElement('div'); row.className = 'guidance-toggle ctl-open-row';
+      row.innerHTML = '<span>Controls · keys, touch buttons, brightness, position</span><button class="btn ghost" id="settingsControlsBtn" type="button">🎮 Edit controls</button>';
+      gs.appendChild(row);
+      $('#settingsControlsBtn').addEventListener('click', () => window.TCControls?.open(null, () => $('#settingsControlsBtn')?.focus()));
+    }
+    // a small Notes button next to Pause, so tips and paper notes can be switched off mid-night with one tap
+    const nb = document.createElement('button'); nb.type = 'button'; nb.className = 'game-notes-btn'; nb.id = 'notesBtn'; nb.hidden = true;
+    document.body.appendChild(nb);
+    const syncNotesBtn = () => { nb.textContent = showNotes ? '🗒️' : '🚫'; nb.title = `Notes ${showNotes ? 'on' : 'off'} · tap to turn ${showNotes ? 'off' : 'on'}${window.TCControls ? ' (' + TCControls.short('notes') + ')' : ''}`; nb.setAttribute('aria-label', nb.title); nb.setAttribute('aria-pressed', String(showNotes)); nb.classList.toggle('off', !showNotes); };
+    nb.addEventListener('click', () => { setNotes(!showNotes, true); syncNotesBtn(); });
+    new MutationObserver(() => { nb.hidden = pauseBtn.hidden; syncNotesBtn(); }).observe(pauseBtn, { attributes: true, attributeFilter: ['hidden'] });
+    const syncKeysUi = () => { syncNotesBtn(); const k = $('#goHomeBtn kbd'); if (k && window.TCControls) k.textContent = TCControls.short('home'); };
+    addEventListener('tc-controls', syncKeysUi); syncKeysUi();
+    $('#showNotesToggle')?.addEventListener('change', syncNotesBtn); $('#pauseNotesBtn')?.addEventListener('click', syncNotesBtn);
+  }
   $('#showItemsToggle')?.addEventListener('change', e => { showItemsHud = e.target.checked; try { localStorage.setItem('mk-show-items', showItemsHud ? '1' : '0'); } catch (err) {} });
   $('#settingsBtn').addEventListener('click', () => { const tg = $('#showItemsToggle'); if (tg) tg.checked = showItemsHud; });
   $('#shelfBack').addEventListener('click', () => { $('#shelfScreen').hidden = true; showMainMenu(true); });
@@ -4554,6 +4741,15 @@
     if (!R.free && R.won) {
       if (R.starGlow) extra.push(`New ${'★'.repeat(R.starsN)} on this hour! +${R.starGlow} Glow.`);
       extra.push(R.starsN < 3 ? `Score ${R.goals[R.starsN].toLocaleString()} for ${'★'.repeat(R.starsN + 1)}.` : 'Top rank on this hour: ★★★');
+    }
+    if (R.endless) {
+      const E = R.endless;
+      if (E.piece) extra.push(E.piece.complete ? `📄 The drawing is complete! It now hangs on Thiri’s wall. Open the Sketchbook in her room.` : `📄 Torn drawing piece found (${E.piece.count}/${E.piece.of}).`);
+      if (E.piece?.all) extra.push('🎨 All five drawings are whole. A sixth one appeared in the Sketchbook: “All of my feelings”.');
+      if (E.extra) extra.push(`Challenges ${E.challenges.length ? '(' + E.challenges.join(', ') + ') ' : ''}×${E.mult.toFixed(1).replace('.0', '')} Glow: +${E.extra}.`);
+      if (E.chest) extra.push(`🎁 Night ${E.chest.night} chest: +${E.chest.glow} Glow and ${E.chest.lights} night lights for the Workshop.`);
+      if (E.badge) extra.push('🏆 Badge earned: Keeper of Dreams.');
+      if (!R.won) extra.push('Your lights from this night are safe in the Heart Workshop. Try again right away.');
     }
     if (!R.free && R.newTrails?.length) extra.push(`★ ${totalStars()} stars! You unlocked the ${R.newTrails.join(' and ')} trail in the shop.`);
     if (!R.free && R.night && keepsakeTotal(R.night)) extra.push(`Thiri’s keepsakes on this night: ${keepsakesFound(R.night)}/${keepsakeTotal(R.night)}.`);
@@ -5034,10 +5230,11 @@
     if (typeof m === 'string') mode = m;
     markMode();
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 50) : 1;
+    if (mode === 'story' && storyNight >= 8 && window.TCEndless && (!EN || EN.night !== storyNight)) applyEndlessPlan(window.TCEndless.plan(storyNight, window.TCEndless.cards(storyNight)[0], []));
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
     const freePick = FREE_MAPS.find(m => m.id === freeMap), mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : (freePick && freePick.level && freeMapOpen(freePick) ? freePick.id : 'free');
-    const sceneTrack = ({ school: 'school', rooftop: 'hilltop', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
+    const sceneTrack = ({ market: 'festival', garden: 'lakeside', school: 'school', rooftop: 'hilltop', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
     music('duck', 1); music('play', sceneTrack);
     music('ambience', sceneTrack);
     cv.hidden = false;
@@ -5054,7 +5251,7 @@
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     const visualTheme = mode === 'story' ? window.TCVisualChapters?.forLevel(storyNight) : null;
-    announce(mode === 'free' ? 'Free play · no clock, no score. Just wander with Shwe.' : `${visualTheme?.name || chapter.name} · ${chapter.sub}`, INK, 2.1);
+    announce(mode === 'free' ? 'Free play · no clock, no score. Just wander with Shwe.' : endlessOn() ? `${EN.title} · ${chapter.sub}` : `${visualTheme?.name || chapter.name} · ${chapter.sub}`, INK, endlessOn() ? 3 : 2.1);
     if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); }
     if (mode === 'free') queueJitTip('free', cat, guideCopy().mechanicTitles?.free || 'Free Play');
     if (!startGuidedTutorial()) showNextJitTip();
@@ -5206,7 +5403,7 @@
     drawSketchMap(width, height, segs, unlockedLevel);
     route.setAttribute('d', d); path.setAttribute('d', d);
     svg.querySelector('.path-halo').setAttribute('d', d);
-    $('#levelMapCount').textContent = `${unlockedLevel} / 50 levels unlocked · ★ ${totalStars()}/21`;
+    { let es = 0; for (let n = 8; n <= 50; n++) es += nightStars[n] || 0; $('#levelMapCount').textContent = `${unlockedLevel} / 50 levels unlocked · ★ ${totalStars()}/21${unlockedLevel >= 8 ? ` · Endless ★ ${es}/129` : ''}${window.TCEndless?.hasBadge() ? ' · 🏆 Keeper of Dreams' : ''}`; }
     $('#roomStatus').textContent = thiriSleepStage >= 7 ? 'Thiri woke up' : thiriSleepStage >= 5 ? 'Thiri is almost awake' : thiriSleepStage >= 3 ? 'Thiri is stirring' : 'Thiri is sleeping';
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const chapter = LEVEL_MAP_CHAPTERS.get(level), point = mapPoint(level);
@@ -5228,9 +5425,14 @@
       if (chapter) {
         const caption = document.createElement('span'); caption.className = 'level-caption';
         const name = document.createElement('strong'); name.textContent = `${hourOf(level)} · ${chapter.name}`;
+        const unlock = level >= 8 && window.TCEndless ? window.TCEndless.UNLOCKS.find(u => u.level === level) : null, special = level >= 8 && window.TCEndless ? window.TCEndless.SPECIALS[level] : null;
+        if (level >= 8 && window.TCEndless) name.textContent = `${hourOf(level)} · ${special ? special.icon + ' ' + special.name : level === 8 ? 'Endless Nights begin' : 'Endless Nights'}`;
         const sub = document.createElement('span'); sub.textContent = level < unlockedLevel ? 'Completed · Play again' : level === unlockedLevel ? 'Your next adventure' : 'Complete the previous chapter';
         if (visualTheme) { sub.textContent = `${visualTheme.name} · ${level < unlockedLevel ? 'Completed' : level === unlockedLevel ? 'Up next' : 'Locked'}`; sub.style.color = visualTheme.accent; }
+        if (level >= 8 && window.TCEndless) sub.textContent = level < unlockedLevel ? 'Completed · pick a night card' : level === unlockedLevel ? 'Up next · pick a night card' : 'Locked';
         caption.appendChild(name); caption.appendChild(sub);
+        if (unlock) { const u = document.createElement('span'); u.className = 'level-unlock'; u.textContent = `${unlock.icon} unlocks ${unlock.label}`; caption.appendChild(u); }
+        if (level === 50) { const u = document.createElement('span'); u.className = 'level-unlock level-teaser'; u.textContent = 'To be continued… more nights are coming'; caption.appendChild(u); }
         const bestScore = getBest(`mk-best-n${level}`), st = nightStars[level] || 0;
         if (playable && (bestScore || st)) {
           const rec = document.createElement('span'); rec.className = 'level-best';
@@ -5855,10 +6057,140 @@
     $('#mapGuide').hidden = true; mapGuidePending = false;
     try { localStorage.setItem('mk-map-guide-seen', '1'); } catch (e) {}
   }
+  // ---------- Endless Nights: night cards, challenges, and turning a card into a playable night ----------
+  const enName = str => String(str).replace(/Shwe/g, MK_PROFILE.cat).replace(/Thiri/g, MK_PROFILE.girl);
+  let enChosen = new Set(), enCards = [], enPick = 0;
+  function applyEndlessPlan(p) {
+    const i = p.night - 1, ch = NIGHT_CHAPTERS[i], base = CHAPTER_BASE[i], E = window.TCEndless;
+    for (const k of Object.keys(ch)) delete ch[k];
+    Object.assign(ch, JSON.parse(JSON.stringify(base)));
+    const g = clamp((p.night - 8) / 42, 0, 1), types = Object.keys(p.need);
+    ch.name = p.title;
+    ch.sub = p.special ? p.special.note : p.variant ? E.TWISTS[p.variant].twist : 'The place as Shwe remembers it.';
+    ch.newMoodling = ch.tutorialHint = ch.sub; ch.tutorialHints = false;
+    ch.timeLimit = p.time; ch.feelingsNeeded = { ...p.need };
+    ch.initialSpawns = Object.fromEntries(types.map(k => [k, ['B', 'C'].includes(k) ? 1 : Math.min(2, p.need[k])]));
+    ch.moodlingSpeed = (1.1 + .25 * g) * p.speed;
+    ch.frustratedChargeSpeed = (1.05 + .25 * g) * p.charge; ch.frustratedWindup = .62 - .12 * g;
+    ch.nervousHearingMul = (1 + .15 * g) * p.hearing;
+    ch.respawnDelay = 2.3 - .6 * g; ch.rareChance = .3; ch.goldensAllowed = 2;
+    ch.chaosWave = p.night >= 12; ch.chaosSize = { F: g > .5 ? 2 : 1, N: 1 };
+    const pick = (pool, fall) => { const own = pool.filter(t => types.includes(t)); return own.length ? own : fall; };
+    ch.sky = { ...base.sky, A: 1 + p.skyBonus + (g > .5 ? 1 : 0), B: 1 + p.skyBonus, C: 1 + p.skyBonus, types: { A: pick(['N', 'L', 'S'], ['N', 'L']), B: pick(['E', 'J'], ['E']), C: pick(['F'], ['F']) }, hintShown: false };
+    window.TC_LEVELS[p.night] = window.TC_ENDLESS_LEVEL(p.night, p.map, p.twists);
+    EN = p; E.current = p; E.markPlayed(p);
+  }
+  function nightCardsScreen() {
+    let scr = $('#nightCardsScreen');
+    if (scr) return scr;
+    scr = document.createElement('div'); scr.className = 'overlay night-cards-screen'; scr.id = 'nightCardsScreen'; scr.hidden = true;
+    scr.setAttribute('role', 'dialog'); scr.setAttribute('aria-modal', 'true'); scr.setAttribute('aria-labelledby', 'ncTitle');
+    scr.innerHTML = `<section class="panel nc-panel"><header class="nc-head"><p class="eyebrow" id="ncEyebrow"></p><h2 id="ncTitle">Pick your night</h2>
+        <p class="nc-sub">The three cards change every night. Need a feeling for Lantern Town? Pick the card that has it.</p></header>
+      <p class="nc-special" id="ncSpecial" hidden></p>
+      <div class="nc-cards" id="ncCards" role="radiogroup" aria-label="Night cards"></div>
+      <h3 class="nc-h3">Optional challenges <span>a harder night, a bigger reward</span></h3>
+      <div class="nc-chal" id="ncChal"></div>
+      <p class="nc-meta" id="ncMeta"></p>
+      <div class="actions nc-actions"><button class="btn ghost" id="ncBack" type="button">Back</button><button class="btn" id="ncBegin" type="button">Begin the night →</button></div></section>`;
+    document.body.appendChild(scr);
+    scr.querySelector('#ncCards').addEventListener('click', e => { const b = e.target.closest('[data-card]'); if (!b) return; enPick = +b.dataset.card; sfx('ui', 'select'); renderNightCards(); });
+    scr.querySelector('#ncChal').addEventListener('click', e => { const b = e.target.closest('[data-chal]'); if (!b) return; const id = b.dataset.chal; enChosen.has(id) ? enChosen.delete(id) : enChosen.add(id); sfx('ui', 'toggle'); renderNightCards(); });
+    scr.querySelector('#ncBack').addEventListener('click', closeNightCards);
+    scr.querySelector('#ncBegin').addEventListener('click', () => {
+      const card = enCards[enPick]; if (!card) return;
+      applyEndlessPlan(window.TCEndless.plan(briefingNight, card, [...enChosen]));
+      scr.hidden = true; $('#endScreen').hidden = true; enCardsReturn = null; beginNightSequence();
+    });
+    scr.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { e.preventDefault(); closeNightCards(); }
+      if (['ArrowLeft', 'ArrowRight'].includes(e.key) && e.target.closest('#ncCards')) { e.preventDefault(); enPick = (enPick + (e.key === 'ArrowRight' ? 1 : 2)) % 3; renderNightCards(); scr.querySelector(`[data-card="${enPick}"]`)?.focus(); }
+    });
+    return scr;
+  }
+  function showNightCards(night) {
+    const scr = nightCardsScreen(), E = window.TCEndless;
+    enCards = E.cards(night); enPick = 0;
+    $('#ncEyebrow').textContent = `NIGHT ${String(night).padStart(2, '0')} · ENDLESS NIGHTS`;
+    const sp = E.SPECIALS[night];
+    $('#ncSpecial').hidden = !sp; if (sp) $('#ncSpecial').innerHTML = `<b>${sp.icon} ${sp.name}</b> ${sp.note}`;
+    $('#levelBriefingScreen').hidden = true; $('#endScreen').hidden = true;
+    renderNightCards(); scr.hidden = false;
+    setTimeout(() => scr.querySelector(`[data-card="${enPick}"]`)?.focus({ preventScroll: true }), 30);
+  }
+  function renderNightCards() {
+    const E = window.TCEndless, night = briefingNight, NAMES = E.NAMES;
+    $('#ncCards').innerHTML = enCards.map((c, k) => {
+      const tw = c.variant ? E.TWISTS[c.variant].twist : 'The place as Shwe remembers it.';
+      const needs = Object.entries(c.need).map(([ty, n]) => `<span class="nc-need" title="${NAMES[ty]} ×${n}"><img src="${bookPortrait(ty, 0, true)}" alt="">${NAMES[ty]} <b>×${n}</b></span>`).join('');
+      const piece = c.piece ? '<span class="nc-piece">📄 a drawing piece is hidden here</span>' : c.pieceDone ? '<span class="nc-piece done">✅ drawing complete</span>' : '';
+      return `<button type="button" class="nc-card${k === enPick ? ' on' : ''}" role="radio" aria-checked="${k === enPick}" data-card="${k}" style="--place:${E.PLACES[c.place].color}">
+        ${c.newMap ? '<span class="nc-new">✨ new map!</span>' : ''}<span class="nc-place"><i>${c.icon}</i><b>${enName(c.name)}</b></span>
+        <span class="nc-needs">${needs}</span><span class="nc-twist">${enName(tw)}</span>${piece}</button>`;
+    }).join('');
+    $('#ncChal').innerHTML = E.CHALLENGES.map(ch => `<button type="button" class="nc-ch${enChosen.has(ch.id) ? ' on' : ''}" aria-pressed="${enChosen.has(ch.id)}" data-chal="${ch.id}" title="${ch.note}"><i>${ch.icon}</i>${ch.name} <b>${ch.reward}</b></button>`).join('');
+    const p = E.plan(night, enCards[enPick], [...enChosen]), total = Object.values(p.need).reduce((a, b) => a + b, 0);
+    const g = (() => { const keep = NIGHT_CHAPTERS[night - 1].feelingsNeeded; NIGHT_CHAPTERS[night - 1].feelingsNeeded = p.need; const r = starGoals(night); NIGHT_CHAPTERS[night - 1].feelingsNeeded = keep; return r; })();
+    const mult = p.glowMult !== 1 ? ` · ×${p.glowMult.toFixed(1).replace('.0', '')} Glow` : '';
+    $('#ncMeta').textContent = `⏱ ${Math.floor(p.time / 60)}:${String(p.time % 60).padStart(2, '0')} · ${total} Moodlings · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}${mult}${p.extraStar ? ' · +1 star' : ''}${(nightStars[night] || 0) ? ` · best ${'★'.repeat(nightStars[night])}` : ''}`;
+  }
+  function closeNightCards() {
+    const scr = $('#nightCardsScreen'); if (scr) scr.hidden = true;
+    if (enCardsReturn === 'end' && R) { enCardsReturn = null; $('#endScreen').hidden = false; $('#endContinueBtn')?.focus(); return; }
+    const target = briefingReturnButton || $(`#levelMapTrack button[data-level="${unlockedLevel}"]`);
+    if (target) target.focus({ preventScroll: true });
+  }
+  // ---------- Thiri's Sketchbook (room wall + book) ----------
+  function mountSketchSpot() {
+    const stage = $('#roomStage'); if (!stage || $('#roomSketchBtn') || !window.TCDrawings) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'rh-spot rh-obj rh-sketch'; b.id = 'roomSketchBtn';
+    b.style.cssText = '--x:55.2%;--y:15.6%;--w:13.6%;--h:7.6%;--tx:146%;--ty:112%';
+    b.setAttribute('aria-label', 'Thiri’s Sketchbook: the drawings Shwe has put back together');
+    b.innerHTML = '<span class="rh-glow" aria-hidden="true"></span><span class="rh-wall" id="rhWall" aria-hidden="true"></span><span class="rh-tag"><b>Sketchbook</b><i id="sketchCount">0 / 30 pieces</i></span>';
+    stage.appendChild(b); b.addEventListener('click', openSketchbook);
+  }
+  function refreshSketchSpot() {
+    mountSketchSpot();
+    const b = $('#roomSketchBtn'), E = window.TCEndless, D = window.TCDrawings; if (!b || !E || !D) return;
+    b.hidden = unlockedLevel < 8 && !E.piecesTotal();
+    const done = E.drawingsDone(), all = done.length >= 5;
+    $('#sketchCount').textContent = `${E.piecesTotal()} / 30 pieces`;
+    const key = done.join(',') + (all ? '+all' : '');
+    if (b.dataset.wall === key) return; b.dataset.wall = key;
+    $('#rhWall').innerHTML = D.LIST.map((d, k) => { const ok = d.id === 'all' ? all : done.includes(d.id); return `<span class="rh-pic${ok ? ' ok' : ''}" style="--r:${[-4, 3, -2, 5, -3, 2][k]}deg">${ok ? `<img src="${D.url(d.id)}" alt="">` : ''}</span>`; }).join('');
+  }
+  function openSketchbook() {
+    const E = window.TCEndless, D = window.TCDrawings; if (!E || !D) return;
+    let scr = $('#sketchScreen');
+    if (!scr) {
+      scr = document.createElement('div'); scr.className = 'overlay sketch-screen'; scr.id = 'sketchScreen'; scr.hidden = true;
+      scr.setAttribute('role', 'dialog'); scr.setAttribute('aria-modal', 'true'); scr.setAttribute('aria-labelledby', 'skTitle');
+      document.body.appendChild(scr);
+      scr.addEventListener('click', e => {
+        if (e.target.closest('[data-close]') || e.target === scr) { if (scr.querySelector('.sk-memory:not([hidden])') && !e.target.closest('[data-close="book"]')) { scr.querySelector('.sk-memory').hidden = true; return; } scr.hidden = true; $('#roomSketchBtn')?.focus(); return; }
+        const pg = e.target.closest('[data-draw]'); if (!pg || !pg.classList.contains('whole')) return;
+        const d = D.LIST.find(x => x.id === pg.dataset.draw), m = scr.querySelector('.sk-memory');
+        m.querySelector('img').src = D.url(d.id); m.querySelector('h3').textContent = enName(d.title); m.querySelector('p').textContent = `“${enName(d.memory)}”`; m.hidden = false; sfx('ui', 'sparkle');
+      });
+      scr.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); const m = scr.querySelector('.sk-memory'); if (!m.hidden) m.hidden = true; else { scr.hidden = true; $('#roomSketchBtn')?.focus(); } } });
+    }
+    const done = E.drawingsDone(), all = done.length >= 5;
+    scr.innerHTML = `<section class="panel sk-panel"><header class="sk-head"><div><p class="eyebrow">${E.piecesTotal()} / 30 PIECES${E.hasBadge() ? ' · 🏆 KEEPER OF DREAMS' : ''}</p><h2 id="skTitle">${enName('Thiri')}’s Sketchbook</h2>
+      <p class="muted">Torn pieces hide on Endless Nights. Pick a night card with 📄, listen for a paper rustle, and open Night Eyes to see the ✦.</p></div><button class="btn ghost" data-close="book" type="button" aria-label="Close sketchbook">×</button></header>
+      <div class="sk-grid">${D.LIST.map(d => {
+        const isAll = d.id === 'all', have = isAll ? (all ? [0, 1, 2, 3, 4, 5] : []) : E.piecesOf(d.id), whole = have.length >= 6, place = d.place ? E.PLACES[d.place] : null;
+        const sub = isAll ? (all ? 'Unlocked by all five drawings' : 'Finish all five drawings to see this one') : `${place.icon} ${place.name} · ${have.length}/6 pieces`;
+        return `<figure class="sk-page${whole ? ' whole' : ''}${isAll && !all ? ' locked' : ''}" data-draw="${d.id}" ${whole ? 'tabindex="0" role="button"' : ''}><img src="${D.url(d.id, have)}" alt="${whole ? enName(d.title) : 'An unfinished drawing'}">${isAll && !all ? '<span class="sk-lock">?</span>' : ''}<figcaption><b>${whole || !isAll ? enName(d.title) : '???'}</b><span>${sub}</span></figcaption></figure>`;
+      }).join('')}</div>
+      <div class="sk-memory" hidden><img alt=""><h3></h3><p></p><button class="btn ghost" data-close="memory" type="button">Back to the book</button></div></section>`;
+    scr.hidden = false; setTimeout(() => scr.querySelector('[data-close]')?.focus(), 30);
+  }
   function showLevelBriefing(night, returnButton = null) {
     if (mapGuidePending) dismissMapGuide();
     briefingNight = clamp(Math.floor(+night) || 1, 1, LEVEL_MAP_LIMIT);
     briefingReturnButton = returnButton || $(`#levelMapTrack button[data-level="${briefingNight}"]`);
+    if (briefingNight >= 8 && window.TCEndless) { showNightCards(briefingNight); return; }
+    enCardsReturn = null;
     const chapter = LEVEL_MAP_CHAPTERS.get(briefingNight) || chapterFor(briefingNight);
     if (!chapter) return;
     $('#levelBriefingEyebrow').textContent = `${hourOf(briefingNight).toUpperCase()} · THE NIGHT SIDE`;
@@ -6112,7 +6444,7 @@
   }
   $('#freeBtn').addEventListener('click', () => openFreeMapPicker($('#freeBtn')));
   $('#againBtn').addEventListener('click', () => startGame(mode, storyNight));
-  $('#endContinueBtn').addEventListener('click', () => { if (canContinue()) startGame('story', R.night + 1); });
+  $('#endContinueBtn').addEventListener('click', () => { if (!canContinue()) return; if (R.night + 1 >= 8 && window.TCEndless) { enCardsReturn = 'end'; showLevelBriefing(R.night + 1); } else startGame('story', R.night + 1); });
   $('#menuBtn').addEventListener('click', () => {
     mouseSneakHeld = false; mouseSneakPointerId = null; mouseSneakPress = null; refreshShopBtns();
     if (mode === 'story') { $('#endScreen').hidden = true; showStoryMap(true); }

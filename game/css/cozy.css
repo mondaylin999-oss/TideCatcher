@@ -340,6 +340,18 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .catch-clip-mobile-nav{display:none}.catch-clip-dots{display:flex;align-items:center;justify-content:center;gap:10px}.catch-clip-dot{width:10px;height:10px;padding:0;border:0;border-radius:50%;background:rgba(204,190,240,.4);cursor:pointer}.catch-clip-dot[aria-current="step"]{background:var(--clip-accent,var(--lilac));box-shadow:0 0 9px var(--clip-accent,var(--lilac))}
 @media(max-width:700px){.catch-clip-view{padding:8px}.catch-clip-panel{width:100%;max-height:calc(100dvh - 16px);padding:12px;border-radius:18px}.catch-clip-heading{margin-bottom:8px}.catch-clip-heading h2{font-size:20px}.catch-clip-stage{overflow:hidden}.catch-clip-cards{display:flex;gap:0;overflow:hidden;scroll-snap-type:x mandatory;touch-action:pan-y;transition:transform .22s ease;transform:translateX(calc(var(--active-card,0)*-100%))}.catch-clip-card{flex:0 0 100%;width:100%;padding:8px;scroll-snap-align:start}.catch-clip-card-caption{min-height:2.8em;margin:7px 1px;font-size:13px;line-height:1.4}.catch-clip-mobile-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}.catch-clip-mobile-nav[hidden]{display:none}.catch-clip-mobile-nav .btn{min-width:46px;min-height:42px;padding:5px 10px}.catch-clip-dots{flex:1}}
 @media(prefers-reduced-motion:reduce){.catch-clip-cards{transition:none;scroll-behavior:auto}}
+/* Catch guides as real gameplay clips: the clip on the left, the three steps beside it (stacked on phones) */
+.catch-clip-stage.is-video .catch-clip-cards{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);align-items:start;gap:16px;overflow:visible;transform:none;transition:none}
+.catch-clip-video-wrap{position:relative;min-width:0;aspect-ratio:16/9;overflow:hidden;border:2px solid var(--clip-accent,var(--line));border-radius:14px;background:#120c24;box-shadow:0 8px 22px rgba(8,6,20,.25)}
+.catch-clip-video{display:block;width:100%;height:100%;object-fit:cover;cursor:pointer}
+.catch-clip-toggle{position:absolute;right:8px;bottom:8px;display:grid;place-items:center;width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:50%;background:rgba(18,12,36,.72);color:#fff7d6;font:800 15px/1 var(--body);cursor:pointer}
+.catch-clip-steps{display:grid;gap:10px;margin:0;padding:0;list-style:none;min-width:0}
+.catch-clip-step{display:grid;grid-template-columns:26px minmax(0,1fr);gap:4px 10px;align-items:start;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(27,22,52,.82)}
+.catch-clip-step .catch-clip-step-body{min-width:0}.catch-clip-step .catch-clip-stage-name{display:block;color:var(--cream);font-size:13px;letter-spacing:.04em}
+.catch-clip-step .catch-clip-card-caption{min-height:0;margin:3px 0 0}
+.catch-clip-step .catch-clip-card-control{grid-column:2;justify-content:flex-start;min-height:34px}
+@media(max-width:700px),(max-height:520px){.catch-clip-stage.is-video .catch-clip-cards{grid-template-columns:minmax(0,1fr);gap:10px}.catch-clip-step{padding:8px}}
+@media(max-height:520px) and (min-width:701px){.catch-clip-stage.is-video .catch-clip-cards{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}}
 .help-extras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.help-actions{justify-content:flex-end}.help-actions .btn{min-width:120px}
 .tip-coach{position:fixed;z-index:1100;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;width:min(520px,calc(100vw - 20px));transform:translateX(-50%);pointer-events:none}
 .tip-coach-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--line);border-radius:18px;background:var(--glass);box-shadow:var(--shadow-card),0 0 22px var(--lilac-haze);backdrop-filter:blur(10px);pointer-events:auto}
