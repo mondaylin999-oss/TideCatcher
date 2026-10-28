@@ -333,7 +333,7 @@
     const variants = window.TC_LEVELS.free.variants;
     return variants[Math.floor(Math.random() * variants.length)];
   }
-  let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
+  let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0, sunriseMusicFast = false;
   let lives = 3, checkpointX = 0, fallDimT = 0, respawnT = 0, pitTipShown = false, edgeSoundAt = 0, pendingFallFail = false;
   let gentleMode = false;
   try { gentleMode = localStorage.getItem('mk-gentle-mode') === '1'; } catch (e) {}
@@ -501,9 +501,12 @@
   const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
   const lerpC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(',')})`; };
   function dawnP() {
-    if (storyNight !== 7) return .3;
-    const lim = chapterFor(7).timeLimit || 135;
-    return .42 + .58 * clamp(1 - timeLeft / lim, 0, 1);
+    return mode === 'story' ? .24 + .76 * dawnProgress() : .3;
+  }
+  function dawnProgress() {
+    if (mode !== 'story') return 0;
+    const limit = Math.max(1, chapterFor(storyNight)?.timeLimit || 120);
+    return clamp(1 - timeLeft / limit, 0, 1);
   }
   function drawLakeSky() {
     const p = dawnP(), y0 = -OY, H = 362;
@@ -2824,6 +2827,28 @@
     const mist = ctx.createLinearGradient(0, 300, 0, 460); mist.addColorStop(0, 'rgba(148,183,201,0)'); mist.addColorStop(1, 'rgba(148,183,201,.13)');
     ctx.fillStyle = mist; ctx.fillRect(0, 280, VW, 190);
   }
+  function drawSunrise() {
+    if (mode !== 'story' || inSchool()) return;
+    const day = dawnProgress();
+    if (day > 0) {
+      const sky = ctx.createLinearGradient(0, -OY, 0, GROUND);
+      sky.addColorStop(0, `rgba(150,174,255,${day * .055})`);
+      sky.addColorStop(.55, `rgba(255,180,178,${day * .09})`);
+      sky.addColorStop(1, `rgba(255,202,145,${day * .17})`);
+      ctx.fillStyle = sky; ctx.fillRect(0, -OY, VW, GROUND + OY);
+    }
+    const lastTwenty = clamp((20 - timeLeft) / 20, 0, 1);
+    if (!lastTwenty) return;
+    const x = reduce ? VW - 8 : VW + 28 - lastTwenty * 44, y = GROUND - 10;
+    const radius = 115 + lastTwenty * 72;
+    const halo = ctx.createRadialGradient(x, y, 2, x, y, radius);
+    halo.addColorStop(0, `rgba(255,229,168,${lastTwenty * .4})`);
+    halo.addColorStop(.3, `rgba(255,164,139,${lastTwenty * .24})`);
+    halo.addColorStop(1, 'rgba(255,130,125,0)');
+    ctx.fillStyle = halo; ctx.fillRect(Math.max(0, x - radius), y - radius, Math.min(VW, radius * 2), radius * 2);
+    ctx.fillStyle = `rgba(255,231,175,${lastTwenty * .9})`;
+    ctx.beginPath(); ctx.arc(x, y, 34 + lastTwenty * 8, Math.PI, Math.PI * 2); ctx.fill();
+  }
   function drawParallaxLayer(layerIndex, scrollSpeed) {
     const px = camX * scrollSpeed, left = Math.floor(px / 360) * 360 - 720, right = px + VW + 720;
     ctx.save(); ctx.translate(camX * (1 - scrollSpeed), 0);
@@ -4339,9 +4364,16 @@
 
   function render(dt) {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#120c24'; ctx.fillRect(0, 0, cv.width, cv.height);
+    const fastSunriseMusic = mode === 'story' && state === 'play' && timeLeft > 0 && timeLeft <= 20;
+    if (fastSunriseMusic !== sunriseMusicFast) {
+      sunriseMusicFast = fastSunriseMusic;
+      music('setRate', sunriseMusicFast ? 1.16 : 1);
+    }
+    music('updateRate', dt);
     ctx.setTransform(dpr * S, 0, 0, dpr * S, 0, dpr * S * OY);
     if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
+    drawSunrise();
     // snap the camera to whole screen pixels: a camera between pixels makes posts, trunks and the cat's
     // stripes shimmer (like 'lllll') as the town scrolls, especially on screens scaled to 125% or 150%
     { const px = dpr * S; ctx.save(); ctx.translate(-Math.round(camX * px) / px, 0); }

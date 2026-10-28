@@ -1,3 +1,10 @@
+## Sunrise countdown
+
+- Outdoor story skies now warm and brighten gradually as each night’s timer runs down; school interiors retain their indoor look.
+- During the final 20 seconds, a soft sunrise glow and partial sun rise at the screen edge. The movement is held still when reduced motion is enabled.
+- The current music eases up to 1.16× speed in the final 20 seconds, then returns smoothly to normal when time is added, play is paused, or the run ends.
+- Night 7’s lakeside dawn now follows the same countdown across the night. Scoring, catch rules, and saves are unchanged.
+
 ## Nightly weather
 
 - Each run rolls one steady weather condition: light rain, a gentle wind, or moon fog. Its icon and localized name appear in the HUD, with an accessible canvas label.
