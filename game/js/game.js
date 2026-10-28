@@ -791,6 +791,7 @@
     if (id === 'paws') { if (catPerk() === 'persian') v *= .85; if (activeItems.bell) v *= .8; }
     return v;
   };
+  const eyesRange = () => uv('eyes') * T * (weather.kind === 'fog' ? 1.35 : 1);
   const FREE_GLOW_CAP = 150;
   let freeCapShown = false, freeLightCapShown = false;
   // Free mode is for practice: it brings home at most a few lights for the Heart Workshop per run, so the story stays the way to grow Lantern Town
@@ -1269,7 +1270,12 @@
   const SINK_TIME = 1.6;
   const KEEPSAKE_GLOW = 25;
   const KEEPSAKE_ART = { school: ['paper star', '#ffe39a'], rooftop: ['little bell', '#ffe1a3'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], free: ['star', '#ffe39a'] };
-  let hazards = [], keepsakes = [], hazSeen = {}, buriedHintShown = false;
+  const WEATHER = [
+    { kind: 'rain', icon: '☔', title: 'Light rain' },
+    { kind: 'wind', icon: '〰', title: 'Soft wind' },
+    { kind: 'fog', icon: '☾', title: 'Moon fog' }
+  ];
+  let weather = WEATHER[0], hazards = [], keepsakes = [], hazSeen = {}, buriedHintShown = false;
   let foundKeeps = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-keepsakes') || '[]')); } catch (e) { return new Set(); } })();
   function saveKeeps() { try { localStorage.setItem('mk-keepsakes', JSON.stringify([...foundKeeps])); } catch (e) {} }
   function keepsakeTotal(night) { const L = window.TC_LEVELS?.[night]; return L ? (L.keepsakes || []).length + ((chapterFor(night)?.feelingsNeeded?.B || 0) ? 0 : 1) : 0; }
@@ -1298,7 +1304,7 @@
     timeLeft = Math.max(0, timeLeft - 1); shake = Math.max(shake, 8);
     sfx('ui', 'hit'); sfx('cat', 'sad'); float(cat.x, cat.y - 80, msg + '  −1s', RED);
   }
-  function onSlick(x) { return hazards.some(h => h.kind === 'slick' && x >= h.a && x <= h.b); }
+  function onSlick(x) { return weather.kind === 'rain' || hazards.some(h => h.kind === 'slick' && x >= h.a && x <= h.b); }
   function hazNotice(kind, text, c) { if (hazSeen[kind]) return; hazSeen[kind] = true; announce(text, c, 2.4); }
   function hazPhase(h, period, idle, warn) { const q = ((t + h.off) % period + period) % period; return q < idle ? 'idle' : q < idle + warn ? 'warn' : 'on'; }
   function updHazards(dt) {
@@ -1369,6 +1375,9 @@
           hazNotice('wind', h.dir < 0 ? 'A gust of wind! Hold on, it pushes you back.' : 'A tail wind! It blows you forward.', '#cfe6c4');
         }
       }
+    }
+    if (weather.kind === 'rain' && cat.on && Math.random() < dt * 5) {
+      parts.push({ x: cat.x - Math.sign(cat.vx || cat.face) * 12, y: cat.y - 2, vx: -cat.vx * .12, vy: -40 - Math.random() * 35, life: .35, max: .35, c: 'rgba(176,224,255,.72)', r: 1.5 + Math.random(), g: 380 });
     }
     for (const k of keepsakes) {
       k.got = Math.max(0, k.got - dt);
@@ -1441,7 +1450,7 @@
     for (const k of keepsakes) {
       if (k.x < x0 || k.x > x1) continue;
       if (k.found && k.got <= 0) continue;
-      const d = Math.hypot(cat.x - k.x, cat.y - 28 - k.y), eyes = eyesT > 0 && Math.abs(cat.x - k.x) <= uv('eyes') * T;
+      const d = Math.hypot(cat.x - k.x, cat.y - 28 - k.y), eyes = eyesT > 0 && Math.abs(cat.x - k.x) <= eyesRange();
       const a = k.found ? k.got : eyes ? 1 : clamp(1 - (d - 2.5 * T) / (2 * T), 0, 1) * .9;
       if (a <= .02) { if (Math.sin(t * 2.3 + k.bob) > .985) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.arc(k.x, k.y, 1.6, 0, 7); ctx.fill(); } continue; }
       const y = k.y + Math.sin(t * 2.4 + k.bob) * 3 - (k.found ? (1 - k.got) * 30 : 0);
@@ -1580,7 +1589,7 @@
   function drawEndlessPiece() {
     const p = enPiece; if (!p) return;
     if (p.found && p.got <= 0) return;
-    const eyes = eyesT > 0 && Math.abs(cat.x - p.x) <= uv('eyes') * T, d = Math.hypot(cat.x - p.x, cat.y - 30 - p.y);
+    const eyes = eyesT > 0 && Math.abs(cat.x - p.x) <= eyesRange(), d = Math.hypot(cat.x - p.x, cat.y - 30 - p.y);
     const rev = window.TCEndlessFX?.revealing?.() || 0;
     let a = p.found ? p.got : Math.max(eyes ? 1 : 0, rev, clamp(1 - (d - 2.5 * T) / (2 * T), 0, 1) * .9);
     const y = p.y + Math.sin(t * 2.2 + p.bob) * 3 - (p.found ? (1 - p.got) * 34 : 0);
@@ -1874,6 +1883,8 @@
   }
   function reset() {
     currentLevel = selectLevelForRun();
+    weather = { ...WEATHER[Math.floor(Math.random() * WEATHER.length)] };
+    if (weather.kind === 'wind') weather.wind = Math.random() < .5 ? -1 : 1;
     loadLevelGeometry();
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     t = 0; warmup = mode === 'free' ? 0 : 1.5; frustWakeAt = warmup + FRUST_SLEEP; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0; struggleTipShownThisRun = false;
@@ -1917,7 +1928,7 @@
     }
     for (const type of Object.keys(need)) {
       const base = chapter.initialSpawns?.[type] || 0;
-      const count = ['F', 'N', 'L', 'E', 'S', 'J'].includes(type) ? Math.max(base, Math.min(need[type], 2)) : base;
+      const count = ['F', 'N', 'L', 'E', 'S', 'J'].includes(type) ? Math.max(base, Math.min(need[type], 2)) + (weather.kind === 'rain' && type === 'L' && need[type] > 0 ? 1 : 0) : base;
       for (let i = 0; i < count; i++) {
         if (!need[type]) continue;
         spawn(type);
@@ -2123,7 +2134,7 @@
     }
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
     else if (mode === 'free') { timeLeft += 2; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 12) trail.shift(); }
-    else { const chapter = chapterFor(storyNight); if (Object.prototype.hasOwnProperty.call(got, m.type)) { got[m.type]++; if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay + Math.random() * .8 }); } trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } }
+    else { const chapter = chapterFor(storyNight); if (Object.prototype.hasOwnProperty.call(got, m.type)) { got[m.type]++; if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay * (weather.kind === 'rain' && m.type === 'L' ? .72 : 1) + Math.random() * .8 }); } trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } }
     const key = m.type + (m.v || 0), info = vinfo(m.type, m.v || 0);
     if (!book[key]) {
       const bonus = m.v ? 30 : m.type === 'G' ? 20 : 10;
@@ -2197,7 +2208,7 @@
     if (c.pounce > 0) c.pounce -= dt;
     else { const slick = c.on && onSlick(c.x), acc = slick ? (Math.abs(target) > Math.abs(c.vx) && Math.sign(target) === Math.sign(c.vx || target) ? 700 : 220) : c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
-    const jumpSpeed = chapter?.jumpSpeed || 830, gravity = chapter?.jumpGravity || 2300;
+    const jumpSpeed = (chapter?.jumpSpeed || 830) * (weather.kind === 'wind' ? 1 + weather.wind * .035 : 1), gravity = chapter?.jumpGravity || 2300;
     if (c.ledgeGrab) {
       const grab = c.ledgeGrab;
       if (grab.platform && !grab.platform.active) c.ledgeGrab = null;
@@ -2872,7 +2883,7 @@
   }
   function drawScratchSpot(x, y, type, spot) {
     const kind = spot.kind;
-    const visible = eyesT > 0 && Math.abs(cat.x - x) <= uv('eyes') * T;
+    const visible = eyesT > 0 && Math.abs(cat.x - x) <= eyesRange();
     const near = Math.abs(cat.x - x) <= 5 * T;
     if (spot.used) { const fade = clamp(1 - (t - spot.usedAt) / 1.3, 0, 1); if (!fade) return; ctx.globalAlpha = fade; }
     if (visible) {
@@ -3015,7 +3026,7 @@
   }
   function drawRockFormation(x, y, rock, moodHolding) {
     ctx.save();
-    const pulse = .5 + .5 * Math.sin(t * 4 + rock.phase), markedGlow = eyesT > 0 && (rock.marked || rock.keepsake) && !rock.scratched && Math.abs(cat.x - x) <= uv('eyes') * T;
+    const pulse = .5 + .5 * Math.sin(t * 4 + rock.phase), markedGlow = eyesT > 0 && (rock.marked || rock.keepsake) && !rock.scratched && Math.abs(cat.x - x) <= eyesRange();
     const glow = rock.glow || '#a67646';
     if (markedGlow) { const g = ctx.createRadialGradient(x, y - 24, 3, x, y - 24, 66); g.addColorStop(0, hexRgba(glow,.35)); g.addColorStop(1, hexRgba(glow,0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 24, 66, 0, 7); ctx.fill(); }
     (rock.draw || drawClassicRockBase)(x, y, rock, moodHolding);
@@ -3558,6 +3569,18 @@
     if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.back(ctx, endlessFxOpts());
     else if (mode === 'story') window.TCVisualChapters?.draw(ctx, { level: storyNight, cam: camX, width: VW, height: VH, ground: GROUND, time: t, reduced: reduce, map: currentMapKey() });
     drawLevelDecor(x0, x1);
+  }
+  function drawWeather() {
+    if (weather.kind !== 'rain' || inSchool()) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(190,220,255,.24)'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+    const drift = reduce ? 0 : t * 190;
+    for (let i = 0; i < 36; i++) {
+      const x = ((i * 97 + drift) % VW + VW) % VW;
+      const y = ((i * 61 + drift * 1.65) % (VH + OY * 2)) - OY;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y + 11); ctx.stroke();
+    }
+    ctx.restore();
   }
   // ---------- cute Moodling art (from the character sheet; drawn with SVG paths) ----------
   const MP = s => new Path2D(s);
@@ -4262,11 +4285,18 @@
       }
       ctx.font = `700 12px ${BODY}`; ctx.textAlign = 'right'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(12,8,28,.7)'; ctx.fillStyle = '#f6eedc';
       const hl = `${hourOf(storyNight).toUpperCase()} · ${chapterFor(storyNight).name.toUpperCase()}`, hy = top + (compactNeeds ? 96 : 72);
-      ctx.strokeText(hl, VW - 22, hy); ctx.fillText(hl, VW - 22, hy);
+      const weatherName = guideCopy().weather?.titles?.[weather.kind] || weather.title;
+      ctx.strokeText(hl, VW - 126, hy); ctx.fillText(hl, VW - 126, hy);
+      ctx.fillStyle = 'rgba(43,37,72,.88)'; ctx.strokeStyle = 'rgba(214,195,255,.58)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect ? canvasRoundRect(ctx, VW - 112, hy - 20, 90, 26, 12) : ctx.rect(VW - 112, hy - 20, 90, 26); ctx.fill(); ctx.stroke();
+      ctx.font = `700 11px ${BODY}`; ctx.textAlign = 'center'; ctx.fillStyle = '#f6eedc';
+      ctx.fillText(`${weather.icon} ${weatherName}`, VW - 67, hy - 3);
       drawItemsFound(hy + 8);
     } else {
+      const weatherName = guideCopy().weather?.titles?.[weather.kind] || weather.title;
+      const freeLabel = `Nothing is counted here. Pause to go home. · ${weather.icon} ${weatherName}`;
       ctx.textAlign = 'right'; ctx.font = `700 15px ${BODY}`; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(12,8,28,.7)'; ctx.fillStyle = '#f6eedc';
-      ctx.strokeText('Nothing is counted here. Pause to go home.', VW - 22, top + 30); ctx.fillText('Nothing is counted here. Pause to go home.', VW - 22, top + 30);
+      ctx.strokeText(freeLabel, VW - 22, top + 30); ctx.fillText(freeLabel, VW - 22, top + 30);
       drawItemsFound(top + 66);
     }
     if (atPortal()) {
@@ -4318,9 +4348,10 @@
     drawWorld(); drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawBossEncounter(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.front(ctx, endlessFxOpts()); drawLevelDebug();
     ctx.restore();
-    if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.screen(ctx, endlessFxOpts({ catX: cat.x - camX, catY: cat.y - 30, eyes: eyesT > 0, eyesR: uv('eyes') * T, dt }));
+    drawWeather();
+    if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.screen(ctx, endlessFxOpts({ catX: cat.x - camX, catY: cat.y - 30, eyes: eyesT > 0, eyesR: eyesRange(), dt }));
     if (eyesT > 0) {
-      const sx = cat.x - camX, sy = cat.y - 24, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (eyesDur() - eyesT) / .25);
+      const sx = cat.x - camX, sy = cat.y - 24, r = eyesRange(), fade = Math.min(1, eyesT / .4, (eyesDur() - eyesT) / .25);
       const g = ctx.createRadialGradient(sx, sy, r * .75, sx, sy, r * 1.15);
       g.addColorStop(0, 'rgba(6,12,24,0)'); g.addColorStop(1, `rgba(6,12,24,${.6 * fade})`);
       ctx.fillStyle = g; ctx.fillRect(0, -OY, VW, VH + OY * 2);
@@ -5363,10 +5394,16 @@
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     const visualTheme = mode === 'story' ? window.TCVisualChapters?.forLevel(storyNight) : null;
+    const weatherCopy = guideCopy().weather;
+    const weatherTitle = weatherCopy?.titles?.[weather.kind] || weather.title;
+    cv.setAttribute('aria-label', `TideCatcher game · ${weatherTitle}`);
+    cv.title = weatherTitle;
     announce(mode === 'free' ? 'Free play · no clock, no score. Just wander with Shwe.' : endlessOn() ? `${EN.title} · ${chapter.sub}` : `${visualTheme?.name || chapter.name} · ${chapter.sub}`, INK, endlessOn() ? 3 : 2.1);
     if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); }
     if (mode === 'free') queueJitTip('free', cat, guideCopy().mechanicTitles?.free || 'Free Play');
-    if (!startGuidedTutorial()) showNextJitTip();
+    const startedTutorial = startGuidedTutorial();
+    queueJitTip('weather', null, weatherTitle, weatherCopy?.tips?.[weather.kind], `weather:${weather.kind}`);
+    if (!startedTutorial) showNextJitTip();
     cv.focus?.();
   }
   const LEVEL_MAP_LIMIT = 50, LEVEL_MAP_STEP = 240;

@@ -23,6 +23,10 @@
       struggleLabel: 'A gentle hint',
       struggleTitle: 'Take your time',
       mechanicTitles: { nervous: 'Nervous', jealous: 'Jealous', lonely: 'Lonely', shy: 'Shy', excited: 'Excited', buried: 'Buried', calm: 'Calm', combo: 'Combo', free: 'Free Play', wallJump: 'Wall jump & ledge grab' },
+      weather: {
+        titles: { rain: 'Light rain', wind: 'Soft wind', fog: 'Moon fog' },
+        tips: { rain: 'Light rain makes the ground slippery. Ease off the controls to stop, and listen for Lonely’s chime.', wind: 'A soft wind nudges Shwe’s jumps a little higher or lower. Watch the breeze and adjust your landing.', fog: 'Moon fog hides distant details. Night Eyes now reaches farther, so look around for hidden glows.' }
+      },
       next: 'Next',
       finishWelcome: 'Choose your cat →',
       skipWelcome: 'Skip',
@@ -141,6 +145,10 @@
       struggleLabel: 'ညင်သာသော အကူအညီ',
       struggleTitle: 'အချိန်ယူပါ',
       mechanicTitles: { nervous: 'Nervous', jealous: 'Jealous', lonely: 'Lonely', shy: 'Shy', excited: 'Excited', buried: 'Buried', calm: 'Calm', combo: 'Combo', free: 'Free Play', wallJump: 'နံရံခုန်နှင့် အနားကိုင်တက်ခြင်း' },
+      weather: {
+        titles: { rain: 'မိုးဖွဲဖွဲ', wind: 'လေညင်း', fog: 'လမြူ' },
+        tips: { rain: 'မိုးဖွဲဖွဲကြောင့် မြေပြင်ချော်နိုင်သည်။ ရပ်ရန် ထိန်းချုပ်မှုကို ဖြည်းဖြည်းလျှော့ပြီး Lonely ၏ ခေါင်းလောင်းသံကို နားထောင်ပါ။', wind: 'လေညင်းက Shwe ၏ ခုန်အားကို အနည်းငယ် မြှင့်နိုင်၊ လျှော့နိုင်သည်။ လေကိုကြည့်ပြီး ဆင်းမည့်နေရာကို ချိန်ပါ။', fog: 'လမြူကြောင့် အဝေးကအရာများ မှုန်ဝါးနေသည်။ Night Eyes က ပိုဝေးဝေးထိ မြင်နိုင်သဖြင့် ဝှက်ထားသောအလင်းများကို ရှာပါ။' }
+      },
       next: 'ရှေ့သို့',
       finishWelcome: 'ကြောင်ကို ရွေးပါ →',
       skipWelcome: 'ကျော်မည်',

@@ -1,3 +1,10 @@
+## Nightly weather
+
+- Each run rolls one steady weather condition: light rain, a gentle wind, or moon fog. Its icon and localized name appear in the HUD, with an accessible canvas label.
+- Rain makes Shwe slide more on the ground and brings Lonely back sooner, with an extra early Lonely where the night calls for one. Wind shifts jump height slightly in either direction. Fog extends Night Eyes' reveal radius by 35%.
+- Outdoor rain uses a soft falling-rain effect; school interiors keep their established indoor scenery. Weather tips are localized in English and Burmese and appear once per weather type using the existing saved tip history.
+- Catch, scoring, and existing save data formats are unchanged. Reduced-motion mode keeps rain still.
+
 # Gameplay catch clips and a trail that follows Shwe
 
 - The catch guide in How to play now shows a short real gameplay clip of Shwe catching each Moodling (recorded from the game itself in Free Play), with the three translated steps and their keyboard/touch controls beside it. Rare variants share their family's clip; Calm and Breathing Calm have their own.
