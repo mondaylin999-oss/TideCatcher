@@ -2,10 +2,10 @@
   'use strict';
   const D=window.TCHeartData, store=D.create(localStorage);
   let bridge, page='workshop', slots=[], selectedPlace='lamps', result=null, message='', hint=null, focusReturn;
-  let pendingLights=[];
+  let pendingLights=[], townCentered=false, townPage=null, townPop=false;
   const el=document.createElement('section');
   el.id='heartScreen'; el.hidden=true; el.setAttribute('aria-label','Heart Workshop and Lantern Town');
-  el.innerHTML=`<header class="heart-header"><button type="button" data-heart="back" aria-label="Back to home">← Home</button><nav aria-label="Heart activities"><button type="button" data-heart="workshop">Heart Workshop</button><button type="button" data-heart="town">Lantern Town</button></nav><span id="heartGlow"></span></header><div id="heartBody"></div><p id="heartNotice" role="status" aria-live="polite"></p>`;
+  el.innerHTML=`<header class="heart-header"><button type="button" data-heart="back" aria-label="Back to Thiri’s room">← Thiri’s room</button><nav aria-label="Heart activities"><button type="button" data-heart="workshop">Heart Workshop</button><button type="button" data-heart="town">Lantern Town</button></nav><span id="heartGlow"></span></header><div id="heartBody"></div><p id="heartNotice" role="status" aria-live="polite"></p>`;
   document.body.append(el);
   const body=el.querySelector('#heartBody'), notice=el.querySelector('#heartNotice');
   const face=id=>{
@@ -26,6 +26,7 @@
     const s=store.snapshot();
     el.querySelector('#heartGlow').textContent=`${bridge.glow()} Glow`;
     el.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.heart===page)));
+    el.dataset.page=page;
     if (page==='workshop') workshop(s); else town(s);
     scrolls.forEach(({selector,top,left})=>{const node=body.querySelector(selector);if(node){node.scrollTop=top;node.scrollLeft=left;}});
     if(focusKey){const next=[...body.querySelectorAll(`[${focusKey}]`)].find(n=>n.getAttribute(focusKey)===focusValue && !n.disabled);(next || body.querySelector('button:not(:disabled)'))?.focus({preventScroll:true});}
@@ -79,10 +80,40 @@
       ${ending?'<g transform="translate(455 300)"><rect x="0" y="-6" width="52" height="36" rx="3" fill="#fff0c5"/><path d="m5 20 12-15 13 12 15-8" fill="none" stroke="#b183a9" stroke-width="3"/><circle cx="-20" cy="-20" r="13" fill="#d8ab90"/><path d="M-34-23q3-24 28-6v15" fill="#322035"/><path d="M-21-7v40m0-30L5 10" stroke="#cba0dc" stroke-width="11" stroke-linecap="round"/><ellipse cx="78" cy="24" rx="18" ry="10" fill="#dfab60"/><path d="m87 18-2-15 9 6 9-6-2 17" fill="#dfab60"/><path d="M86 20h14" stroke="#ffde73" stroke-width="4"/></g>':''}
     </svg>`;
   }
+  // how many lights from the nights a place really takes, counting what each mixed feeling is made of
+  const costMemo={};
+  const lightCost=id=>{const f=D.byId[id];if(!f||!f.ingredients)return 1;return costMemo[id]??=f.ingredients.reduce((a,i)=>a+lightCost(i),0);};
+  const trueCost=q=>Object.entries(q.needs).reduce((a,[id,n])=>a+lightCost(id)*n,0);
   function town(s) {
-    const p=D.places.find(p=>p.id===selectedPlace), lit=s.lit.includes(p.id);
-    body.innerHTML=`<div class="heart-town"><section class="town-view"><div class="town-heading"><h1>Lantern Town</h1><span>${s.lit.length} / 10 places lit</span></div><div class="town-scroll"><div class="town-panorama">${townArt(s)}${D.places.map((p,i)=>`<button type="button" data-place="${p.id}" class="town-place ${s.lit.includes(p.id)?'lit':''} ${selectedPlace===p.id?'selected':''}" style="left:${pos[i][0]/10}%;top:${i===8?49:89}%" aria-pressed="${selectedPlace===p.id}">${s.lit.includes(p.id)?'✓':'◇'} ${p.name}</button>`).join('')}</div></div><p class="town-caption">Tap a place to see what it needs. Swipe the town to explore.</p></section>
-      <aside class="town-requirements"><p class="heart-kicker">${lit?'A MEMORY, KEPT WARM':'ONE SMALL LIGHT AT A TIME'}</p><h2>${p.name}</h2><p>${p.memory}</p><ul>${Object.entries(p.needs).map(([id,n])=>`<li>${s.discovered.includes(id)?face(id):`<span class="heart-secret">${face(id)}</span>`}<span>${name(id)} ×${n}<small>${lit?'Brought home':!s.discovered.includes(id)?'Discover in the Workshop':`${s.stock[id]} in your shelf`}</small></span><b>${lit || s.stock[id]>=n?'✓':'·'}</b></li>`).join('')}</ul><button type="button" class="heart-primary" data-heart="light" ${lit||!store.can(p.needs)?'disabled':''}>${lit?'Already glowing':'Light it ✦'}</button><p class="heart-reward">${lit?'Reward received':'Reward'}: 30 Glow + ${bridge.rewardName(p.reward)}</p><button type="button" data-heart="workshop">Mix the feelings I need →</button><button type="button" data-heart="ending" ${store.ready()?'':'disabled'}>${s.ending?'Watch the true ending again':'Let the sky lanterns rise'}</button><small>Light all 10 places and discover Whole Heart.</small></aside></div>`;
+    const p=D.places.find(p=>p.id===selectedPlace)||D.places[0], lit=s.lit.includes(p.id);
+    const canLight=q=>!s.lit.includes(q.id) && store.can(q.needs);
+    const readyN=D.places.filter(canLight).length;
+    const T=window.TCTown, PG=T.PAGES;
+    if(townPage===null) townPage=T.pageOf(D.places,p.id);
+    const [x0,x1,pgTitle]=PG[townPage], span=x1-x0, Y0=190;   // empty top of the sky is cropped so the houses are bigger
+    // little tags under each dark building show the Moodlings it is waiting for
+    const chip=q=>Object.entries(q.needs).map(([id,n])=>`<span class="lt-chipface${s.stock[id]>=n?' have':''}">${s.discovered.includes(id)?face(id):`<span class="heart-secret">${face(id)}</span>`}${n>1?`<b>${n}</b>`:''}</span>`).join('');
+    const pips=D.places.map(q=>`<i class="${s.lit.includes(q.id)?'on':canLight(q)?'ready':''}"></i>`).join('');
+    const need=Object.entries(p.needs), have=([id,n])=>s.stock[id]>=n;
+    const pop=townPop?`<button type="button" class="lt-popback" data-heart="closepop" aria-label="Close"></button>
+      <aside class="lt-note lt-pop" role="dialog" aria-label="${p.name}"><button type="button" class="lt-x" data-heart="closepop" aria-label="Close">×</button>
+        <p class="lt-kicker">${lit?'a memory, kept warm':p.story?'a place from Thiri’s story':'waiting for its light'}</p><h2>${p.name}</h2>
+        <div class="lt-popbody"><figure class="lt-polaroid${lit?' lit':''}"><img src="assets/town/${p.art}.webp" alt=""><figcaption>${lit?'glowing ✦':'still dark'}</figcaption></figure>
+        <div><p class="lt-memory">“${p.memory}”</p>
+        <p class="lt-subhead">${lit?'Lit with':'It needs'} <span class="lt-cost">· about ${trueCost(p)} night lights in all</span></p>
+        <ul class="lt-needs">${need.map(([id,n])=>`<li class="${lit||have([id,n])?'ok':''}">${s.discovered.includes(id)?face(id):`<span class="heart-secret">${face(id)}</span>`}<span>${s.discovered.includes(id)?name(id):'???'} <b>×${n}</b><small>${lit?'brought home':!s.discovered.includes(id)?'mix it in the Workshop':`${s.stock[id]} on your shelf`}</small></span></li>`).join('')}</ul></div></div>
+        <button type="button" class="heart-primary lt-light" data-heart="light" ${lit||!store.can(p.needs)?'disabled':''}>${lit?'Already glowing ✦':'Light it ✦'}</button>
+        <p class="lt-reward">${lit?'Reward received':'Reward'}: ✦ 30 Glow${p.reward?' + '+bridge.rewardName(p.reward):''}</p>
+        ${lit?'':'<button type="button" class="lt-link" data-heart="workshop">Mix the feelings I need →</button>'}</aside>`:'';
+    body.innerHTML=`<div class="lt-stage">
+      <div class="lt-frame"><div class="lt-window" style="aspect-ratio:${span}/${T.H-Y0};--ar:${span/(T.H-Y0)}"><div class="lt-pan" style="width:${T.W/span*100}%;left:${-x0/span*100}%;height:${T.H/(T.H-Y0)*100}%;top:${-Y0/(T.H-Y0)*100}%">${T.render(D.places,s,{selected:townPop?p.id:null,canLight,chip,only:T.onPage(D.places,townPage)})}</div>
+        ${townPage>0?`<button type="button" class="lt-turn prev" data-heart="tpage" data-p="${townPage-1}" aria-label="Previous page of the town">‹</button>`:''}${townPage<PG.length-1?`<button type="button" class="lt-turn next" data-heart="tpage" data-p="${townPage+1}" aria-label="Next page of the town">›</button>`:''}
+        <div class="lt-hud"><div class="lt-sign"><h1>Lantern Town</h1><small>${pgTitle}</small></div>
+          <div class="lt-progress" role="img" aria-label="${s.lit.length} of ${D.places.length} places lit"><div class="lt-pips" aria-hidden="true">${pips}</div><span><b>${s.lit.length}</b> / ${D.places.length} lit${readyN?` · <em>✦ ${readyN} ready</em>`:''}</span></div></div>
+        ${store.ready()||s.ending?`<button type="button" class="lt-rise" data-heart="ending">${s.ending?'Watch the true ending again':'✦ Let the sky lanterns rise'}</button>`:''}
+        ${pop}</div></div>
+      <div class="lt-pages">${PG.map((g,i)=>`<button type="button" data-heart="tpage" data-p="${i}" aria-pressed="${i===townPage}">Page ${i+1} · ${g[2]}</button>`).join('')}<span class="lt-hint">Tap a house to see its memory. The little faces show the Moodlings it needs.</span></div>
+    </div>`;
   }
   function close() {el.hidden=true;bridge.home();focusReturn?.focus({preventScroll:true});}
   function pick(id,index) {
@@ -101,10 +132,12 @@
       else announce(f.tier?`An undiscovered layer ${f.tier} feeling. Try mixing the feelings you know.`:'A night feeling. Keep exploring the chapters.');
       return;
     }
-    if(b.dataset.place) {selectedPlace=b.dataset.place;render();return;}
+    if(b.dataset.place) {selectedPlace=b.dataset.place;townPop=true;render();body.querySelector('.lt-pop .lt-light:not(:disabled), .lt-pop .lt-x')?.focus({preventScroll:true});return;}
+    if(b.dataset.heart==='tpage') {townPage=+b.dataset.p;townPop=false;render();return;}
+    if(b.dataset.heart==='closepop') {townPop=false;render();return;}
     const action=b.dataset.heart;
     if(action==='back')close();
-    else if(action==='workshop'||action==='town'){page=action;message='';render();}
+    else if(action==='workshop'||action==='town'){page=action;message='';townPop=false;render();}
     else if(action==='play'){close();bridge.play();}
     else if(action==='mix') {
       const out=store.mix(...slots);
@@ -122,7 +155,7 @@
     } else if(action==='ending') {
       if(!store.end())return;
       bridge.collar();bridge.chime();
-      body.innerHTML=`<section class="heart-ending"><h1>Every feeling belongs.</h1>${townArt(store.snapshot(),true)}<p>Thiri opens her sketchbook. She draws the town, Hnin, and Shwe with a golden collar.<br>“I do not have to feel happy all the time to have a whole heart.”</p><button type="button" class="heart-primary" data-heart="town">Our glowing town →</button></section>`;
+      body.innerHTML=`<section class="heart-ending"><h1>Every feeling belongs.</h1><div class="town-scroll lt-scroll lt-ending-view">${window.TCTown?window.TCTown.render(D.places,store.snapshot(),{ending:true}):townArt(store.snapshot(),true)}</div><p>Thiri opens her sketchbook. She draws the town, Hnin, and Shwe with a golden collar.<br>“I do not have to feel happy all the time to have a whole heart.”</p><button type="button" class="heart-primary" data-heart="town">Our glowing town →</button></section>`;
       announce('Whole Heart · true ending unlocked. Golden collar awarded to Shwe.');
     }
   });
@@ -131,7 +164,7 @@
   el.addEventListener('drop',e=>{const b=e.target.closest('[data-slot]');if(!b)return;e.preventDefault();const id=e.dataTransfer.getData('text/plain');if(D.byId[id])pick(id,+b.dataset.slot);});
   el.addEventListener('keydown',e=>{
     e.stopPropagation();
-    if(e.key==='Escape'){e.preventDefault();close();}
+    if(e.key==='Escape'){e.preventDefault();if(townPop&&page==='town'){townPop=false;render();}else close();}
     if(e.key==='Tab') {
       const buttons=[...el.querySelectorAll('button:not(:disabled)')].filter(b=>b.getClientRects().length);
       if(e.shiftKey && document.activeElement===buttons[0]){e.preventDefault();buttons.at(-1)?.focus();}
@@ -145,7 +178,7 @@
       document.querySelector('.hub-content-heading').append(links);
       links.children[0].onclick=()=>this.open('workshop');links.children[1].onclick=()=>this.open('town');
     },
-    open(which='workshop'){focusReturn=document.activeElement;page=which;slots=[];message=this.bank([])?'':'Your latest lights could not be saved. Keep this page open, free browser storage, then return here to retry.';bridge.enter();el.hidden=false;render();el.querySelector('[data-heart="back"]').focus();},
+    open(which='workshop'){focusReturn=document.activeElement;page=which;townCentered=false;townPage=null;townPop=false;slots=[];message=this.bank([])?'':'Your latest lights could not be saved. Keep this page open, free browser storage, then return here to retry.';bridge.enter();el.hidden=false;render();el.querySelector('[data-heart="back"]').focus();},
     bank(ids){pendingLights.push(...ids);if(!pendingLights.length)return true;if(!store.bank(pendingLights))return false;pendingLights=[];return true;},
     isOpen:()=>!el.hidden
   };

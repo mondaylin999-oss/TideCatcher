@@ -764,7 +764,9 @@
     return v;
   };
   const FREE_GLOW_CAP = 150;
-  let freeCapShown = false;
+  let freeCapShown = false, freeLightCapShown = false;
+  // Free mode is for practice: it brings home at most a few lights for the Heart Workshop per run, so the story stays the way to grow Lantern Town
+  const FREE_LIGHT_CAP = 6;
   const purrDur = () => catPerk() === 'siamese' ? 4 : 3;
   const eyesDur = () => catPerk() === 'sphynx' ? 5.5 : 4;
   const sitNeed = () => catPerk() === 'ragdoll' ? 1.4 : 2;
@@ -1101,7 +1103,7 @@
     { id: 'combo4', text: 'Reach a ×4 combo', goal: 1, reward: 60 },
     { id: 'quietN', text: 'Catch 3 Nervous in one run without startling any', goal: 1, reward: 80 },
     { id: 'golden', text: 'Catch a Golden Moodling', goal: 1, reward: 50 },
-    { id: 'survive', text: 'Last 90 seconds in Free Mode', goal: 1, reward: 70 },
+    { id: 'catchS', text: 'Catch 4 Shy Moodlings in the story', goal: 4, reward: 60 },
     { id: 'nohit', text: 'Finish the 11 PM hour without being hit', goal: 1, reward: 80 },
     { id: 'rare', text: 'Catch a rare Moodling (look for sparkles)', goal: 1, reward: 70 },
     { id: 'glow', text: 'Earn 150 Glow today', goal: 150, reward: 40 }
@@ -1112,7 +1114,7 @@
   function saveMissions() { try { localStorage.setItem('mk-missions', JSON.stringify(ms)); } catch (e) {} }
   function loadMissions() {
     try { ms = JSON.parse(localStorage.getItem('mk-missions') || 'null'); } catch (e) { ms = null; }
-    if (!ms || ms.date !== today() || !Array.isArray(ms.ids)) {
+    if (!ms || ms.date !== today() || !Array.isArray(ms.ids) || ms.ids.some(id => !mdef(id))) {
       let h = 7; for (const ch of today()) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
       const pool = MISSIONS.map(m => m.id), ids = [];
       while (ids.length < 3) { h = (Math.imul(h, 1103515245) + 12345) >>> 0; ids.push(pool.splice(h % pool.length, 1)[0]); }
@@ -1370,6 +1372,7 @@
   function seededRnd(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let r = Math.imul(a ^ (a >>> 15), 1 | a); r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r; return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
   function initTrinkets() {
     trinkets = []; trinketRun = []; trinketIds = []; pouchFullTold = false;
+    if (mode === 'free') return;
     const story = mode === 'story', rnd = story ? seededRnd(storyNight * 7919 + 17) : Math.random;
     const n = mode === 'free' ? 4 : 5, xs = [];
     const plats = activePlats.filter(p => p.type !== 'crumbling' && p.type !== 'moving' && p[2] >= 60);
@@ -1701,7 +1704,7 @@
     t = 0; warmup = mode === 'free' ? 0 : 1.5; frustWakeAt = warmup + FRUST_SLEEP; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0; struggleTipShownThisRun = false;
     nextGold = 18; caughtN = 0; glowRun = 0; purrT = 0; purrCd = 0; purrQ = false; eyesT = 0; eyesCd = 0; eyesQ = false;
     combo = 0; comboT = 0; bestCombo = 1; hitstop = 0; slowmo = 0; chaos = false; endT = 0;
-    freeCapShown = false; activeItems = {}; perkShield = catPerk() === 'mainecoon' ? 1 : 0;
+    freeCapShown = false; freeLightCapShown = false; activeItems = {}; perkShield = catPerk() === 'mainecoon' ? 1 : 0;
     lives = 3; checkpointX = currentLevel.catStart ?? 200; fallDimT = 0; respawnT = 0; pitTipShown = false; edgeSoundAt = 0; pendingFallFail = false; jumpHeld = false;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
@@ -1776,7 +1779,6 @@
     if (m?.type) { guidanceHits[m.type] = (guidanceHits[m.type] || 0) + 1; if (guidanceHits[m.type] >= 3) maybeStruggleTip('hits', m); }
     combo = 0; comboT = 0; sfx('cat', 'sad'); sfx('ui', 'hit'); sfx('ui', 'comboLost');
     shake = Math.max(shake, m.ambush ? 16 : 10);
-    if (mode === 'free') { timeLeft = Math.max(0, timeLeft - 3); float(cat.x, cat.y - 88, '−3s', RED); }
     if (m.ambush) {
       const n = clamp((storyNight || 1) - 3, 1, 3);
       const dropped = detachTrail(n);
@@ -1879,6 +1881,14 @@
   }
   function catchIt(m) {
     if (m.tutorialOnly) { onTutorialAction('catch', m); m.dead = true; m.alpha = 0; cat.pounce = 0; burst(m.x, m.y, GOLD, 12); sfx('ui', 'catch'); return; }
+    if (mode === 'free') {
+      // free play: catches are only for fun. No score, Glow, Mood Book, missions or Workshop lights.
+      m.dead = true; m.alpha = 0; cat.pounce = 0; hitstop = .05; caughtN++;
+      trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 8) trail.shift();
+      burst(m.x, m.y, col(m.type), 18); float(m.x, m.y - 36, ['Hello!', 'Got you!', 'Hi there', 'Come along'][caughtN % 4], col(m.type));
+      if (window.TCSfx) sfx('caught', m.type); else tone(660, .14, 'triangle', .07);
+      return;
+    }
     // an angry Frustrated from the rocks still counts if Shwe needs more of that feeling tonight
     if (m.ambush && mode === 'story' && Object.prototype.hasOwnProperty.call(got, m.type) && got[m.type] < need[m.type]) m.ambush = false;
     if (m.ambush) {
@@ -1890,7 +1900,8 @@
       tone(660, .18, 'triangle', .08);
       return;
     }
-    workshopRun.push(m.type);
+    if (mode !== 'free' || workshopRun.length < FREE_LIGHT_CAP) workshopRun.push(m.type);
+    else if (!freeLightCapShown) { freeLightCapShown = true; announce(`Workshop lights full for this run (${FREE_LIGHT_CAP}). The story brings more home!`, GOLD, 2.6); }
     if (mode === 'story' && m.type !== 'G' && got[m.type] >= need[m.type]) {
       // an extra catch (this feeling is already home): no penalty, half the usual Glow, and it floats home too
       cat.pounce = 0; cat.bounced = true;
@@ -1927,7 +1938,7 @@
       announce(`New in the Mood Book: ${info.n}  +${bonus} Glow`, info.c, 2.2);
     }
     book[key] = (book[key] || 0) + 1; saveBook(); tcLight(m.type);
-    if (m.type === 'F' || m.type === 'N' || m.type === 'L') bump('catch' + m.type);
+    if (m.type === 'F' || m.type === 'N' || m.type === 'L' || m.type === 'S') bump('catch' + m.type);
     if (m.type === 'N') runN++;
     if (m.type === 'G') bump('golden');
     if (m.v) bump('rare');
@@ -1961,7 +1972,7 @@
         if (mode === 'story' && !gentleMode && lives <= 0) {
           // Catches already recorded in the Mood Book remain banked; this run's carried lights do not.
           trail = []; got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); glowRun = 0; pendingFallFail = true;
-        } else if (mode === 'free') { timeLeft = Math.max(0, timeLeft - 5); float(c.x, c.y - 72, '−5 seconds', RED); }
+        } else if (mode === 'free') { announce('Soft landing · off you go again', CALM, 1.4); }
         else announce(gentleMode ? 'Gentle landing · try again' : `A life left · ${lives} remaining`, gentleMode ? CALM : GOLD, 1.7);
         c.respawning = true; respawnT = .5; fallDimT = .5;
       }
@@ -2093,7 +2104,7 @@
     if (Math.abs(c.vx) > 0 && (currentLevel.pits || []).some(([a, b]) => c.x >= a - 52 && c.x <= b + 52) && t >= edgeSoundAt) { edgeSoundAt = t + 1.2; sfx('ui', 'edge'); }
     if (c.y > VH + OY - 10) beginFall();
     if (c.on && Math.abs(c.vx) > 90) {
-      c.walk += dt * Math.abs(c.vx) / 17;
+      c.walk += dt * Math.min(Math.abs(c.vx), 300) / 27;   // calm steps: about 1.7 strides a second at full speed, so the legs never flutter
       const stepBeat = Math.floor(c.walk / Math.PI);
       if (stepBeat !== c.stepBeat) { c.stepBeat = stepBeat; sfx('ui', 'step'); }
     }
@@ -2361,13 +2372,10 @@
 
   function freeTick(dt) {
     freeT += dt;
-    if (freeT >= 90) bump('survive');
-    const lv = Math.floor(freeT / 20);
-    if (lv > level) { level = lv; announce(`Level ${level + 1} · more feelings are out`, VIOLET, 1.8); tone(660, .2, 'triangle', .05, 200); }
-    const pop = mood.filter(m => m.type !== 'G').length, want = Math.min(14, 6 + level * 2);
+    // a calm, steady number of feelings out in the night; never Golden, never a rush
+    const pop = mood.filter(m => m.type !== 'G').length, want = 8;
     const lonely = mood.filter(m => m.type === 'L').length;
-    if (pop < want && Math.random() < dt * 2) { const r = Math.random(); spawn(lonely < 2 && r < .2 ? 'L' : level >= 1 && r > .82 ? ['E', 'S', 'J'][Math.floor(Math.random() * 3)] : Math.random() < .5 ? 'F' : 'N'); }
-    if (freeT >= nextGold) { nextGold += 25; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); sfx('moodling', 'G'); announce('Golden Moodling! +5 seconds', GOLD); tone(1046, .3, 'sine', .06); }
+    if (pop < want && Math.random() < dt * 1.2) { const r = Math.random(); spawn(lonely < 2 && r < .2 ? 'L' : r > .7 ? ['E', 'S', 'J', 'C'][Math.floor(Math.random() * 4)] : Math.random() < .5 ? 'N' : 'F'); }
   }
   function update(dt) {
     t += dt;
@@ -2409,15 +2417,15 @@
     updateGuidance(dt);
     if (state === 'play') {
       if (mode === 'story') warmup = Math.max(0, warmup - dt);
-      if (warmup <= 0 && !guidanceTimerPaused()) timeLeft -= dt;
+      if (warmup <= 0 && !guidanceTimerPaused() && mode !== 'free') timeLeft -= dt;
       if (mode === 'free') freeTick(dt);
       const chapter = mode === 'story' ? chapterFor(storyNight) : null;
       if (mode === 'story') maybeSpawnSky();
-      if (mode === 'free' || chapter.goldensAllowed > 0) {
+      if (mode !== 'free' && chapter.goldensAllowed > 0) {
         if (!goldDone.a && timeLeft <= 62 && (mode === 'free' || chapter.goldensAllowed >= 1)) { goldDone.a = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); sfx('moodling', 'G'); announce('A golden Moodling appeared!', GOLD); tone(1046, .3, 'sine', .06); }
         if (!goldDone.b && timeLeft <= 28 && (mode === 'free' || chapter.goldensAllowed >= 2)) { goldDone.b = true; spawn('G', clamp(cat.x + (Math.random() < .5 ? -1 : 1) * 320, 120, WORLD - 120)); sfx('moodling', 'G'); announce('Golden Moodling! Catch it!', GOLD); tone(1046, .3, 'sine', .06); }
       }
-      if (!chaos && timeLeft <= 15 && (mode === 'free' || chapter.chaosWave)) {
+      if (!chaos && mode !== 'free' && timeLeft <= 15 && chapter.chaosWave) {
         chaos = true;
         const wave = mode === 'free' ? { F: 1, N: 2 } : chapter.chaosSize;
         for (const [type, count] of Object.entries(wave || {})) for (let i = 0; i < count; i++) spawn(type);
@@ -2425,7 +2433,7 @@
       }
       const sec = Math.ceil(timeLeft);
       if (sec <= 10 && sec < lastTick) { lastTick = sec; if (window.TCSfx) sfx('ui', sec <= 3 ? 'urgent' : 'countdown'); else tone(sec <= 3 ? 1200 : 880, .06, 'square', .03); }
-      if (timeLeft <= 0 && !pendingFallFail) { timeLeft = 0; if (allHome) beginStoryEnding(); else { sfx('ui', 'timeup'); finish(false); } }
+      if (mode !== 'free' && timeLeft <= 0 && !pendingFallFail) { timeLeft = 0; if (allHome) beginStoryEnding(); else { sfx('ui', 'timeup'); finish(false); } }
     } else if (state === 'ending') {
       endT -= dt; if (endT <= 0) finish(true);
     }
@@ -3699,7 +3707,7 @@
     // falls on a soft wave instead of a sharp bounce at every step.
     // Gait: each leg pair swings forward with its paw lifted, then pushes back with the paw on the
     // ground. Only the body bobs; the standing paws never leave the floor.
-    const pace = clamp((speed - 10) / 280, 0, 1), amp = c.sneak ? .2 : .28 + .2 * pace;
+    const pace = clamp((speed - 10) / 280, 0, 1), amp = c.sneak ? .22 : .32 + .22 * pace;
     let back = 0, front = 0, tail, breath = 0, bodyY = 0, backLift = 0, frontLift = 0;
     const scratching = (c.scratchAnim ?? scratchAnim) > 0;
     if (scratching && c.on) { front = Math.sin(now * 20) * .58; frontLift = Math.max(0, Math.sin(now * 20)) * .25; back = -.08; tail = .28 + Math.sin(now * 8) * .12; breath = .01; bodyY = 1.3; }
@@ -3707,8 +3715,9 @@
     else if (!c.on) { const rising = c.vy < 0; back = rising ? -.38 : .25; front = rising ? .32 : -.24; tail = rising ? -.32 : .3; backLift = rising ? .1 : .2; frontLift = rising ? .22 : .08; }
     else if (moving) {
       const lift = c.sneak ? .12 : .2 + .1 * pace;
-      back = Math.sin(ph) * amp; backLift = Math.max(0, Math.cos(ph)) ** 1.5 * lift;
-      front = -Math.sin(ph + 1.2) * amp * .95; frontLift = Math.max(0, -Math.cos(ph + 1.2)) ** 1.5 * lift;
+      const vary = 1 + .1 * Math.sin(ph * .37) + .05 * Math.sin(ph * .91 + 2);   // no two steps exactly alike
+      back = Math.sin(ph) * amp * vary; backLift = Math.max(0, Math.cos(ph)) ** 1.5 * lift * vary;
+      front = -Math.sin(ph + 1.2) * amp * .95 * vary; frontLift = Math.max(0, -Math.cos(ph + 1.2)) ** 1.5 * lift;
       tail = Math.sin(ph * .5 + 1.1) * (.12 + .12 * pace);
       bodyY = -(1 - Math.cos(ph * 2)) * .5 * (c.sneak ? .4 : .6 + .8 * pace);
     }
@@ -3731,8 +3740,13 @@
     if (eyesT > 0) { ctx.shadowColor = '#c8ff8a'; ctx.shadowBlur = 16; }
     // cat.y is the paw baseline; keep the sprite's bottom edge on that line.
     const spriteY = -hh + bob;
+    // a gentle rock of the body with each step (and a lean into jumps) so the walk feels alive
+    const ph = c.walk, pace = clamp((speed - 10) / 280, 0, 1);
+    const tilt = c.on ? (moving ? Math.sin(ph * 2 + .6) * .018 * (1 + pace) : 0) : clamp(c.vy / 9000, -.06, .06);
+    ctx.save(); ctx.translate(0, -2); ctx.rotate(tilt); ctx.translate(0, 2);
     const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, pose);
     if (!ok) ctx.drawImage(spr, -ww / 2 - 2, spriteY, ww, hh);
+    ctx.restore();
     ctx.shadowBlur = 0;
     drawCatGear(c, -ww / 2 - 2, spriteY, ww, hh, moving);
     return true;
@@ -3763,10 +3777,10 @@
     const c = cat; if (c.respawning) return; ctx.save();
     if (c.falling) ctx.globalAlpha = clamp(1 - c.fallTime / .38, 0, 1);
     if (c.inv > 0 && Math.floor(c.inv * 12) % 2) ctx.globalAlpha = .45;
-    ctx.translate(c.x, c.y); ctx.scale(c.face, 1);
+    { const px = dpr * S; ctx.translate(Math.round(c.x * px) / px, Math.round(c.y * px) / px); } ctx.scale(c.face, 1);
     let sxs = 1, sys = 1;
     if (c.pounce > 0) { sxs = 1.12; sys = .9; } else if (scratchAnim > 0 && c.on) { sxs = 1.03; sys = .92; } else if (c.squash > 0) { sxs = 1.04; sys = .95; } else if (c.sneak) { sys = .91; sxs = .98; } else if (!c.on) { sxs = .96; sys = 1.06; }
-    if (c.on && Math.abs(c.vx) > 285) ctx.rotate(.035);
+    // (removed: a lean that switched on and off right at top speed and made the cat flicker)
     ctx.scale(sxs, sys);
     if (!mkDrawSprite(c)) {
     const body = COAT.body, dark = COAT.dark, belly = COAT.belly;
@@ -3916,10 +3930,16 @@
     const hudCompact = innerWidth <= 400;
     sbPaper(HUD_X, top - 2, HUD_CARD_W, 74, -.025);
     sbTape(HUD_X + HUD_CARD_W / 2, top - 4, 54, 16, -.04, 'rgba(154,130,232,.72)');
+    if (mode === 'free') {
+      // free play is a chill wander: no clock, no score, nothing to lose
+      ctx.font = `700 ${hudCompact ? 26 : 30}px ${HAND}`; ctx.fillStyle = SB_INK; ctx.fillText('Free play', HUD_X + 12, top + 32);
+      ctx.font = `700 ${hudCompact ? 12 : 13}px ${BODY}`; ctx.fillStyle = SB_INK2; ctx.fillText('no clock · just wander', HUD_X + 13, top + 58);
+    } else {
     ctx.font = `700 ${urgent ? (hudCompact ? 42 : 46) + Math.sin(t * 10) * 2 : hudCompact ? 40 : 44}px ${HAND}`; ctx.fillStyle = urgent ? '#c2473f' : SB_INK;
     ctx.fillText(`${m}:${String(s).padStart(2, '0')}`, HUD_X + 12, top + 36);
     ctx.font = `700 ${hudCompact ? 12 : 13}px ${BODY}`; ctx.fillStyle = SB_INK2; ctx.fillText('SCORE', HUD_X + 13, top + 60);
     ctx.font = `700 ${hudCompact ? 24 : 26}px ${HAND}`; ctx.fillStyle = SB_INK; ctx.fillText(score.toLocaleString(), HUD_X + 66, top + 62);
+    }
     if (mode === 'story') {
       const lx = HUD_X + HUD_CARD_W + 10, ly = top + 8;
       sbPaper(lx, ly, 74, 34, .03, PAPER2);
@@ -3998,10 +4018,8 @@
       ctx.strokeText(hl, VW - 22, hy); ctx.fillText(hl, VW - 22, hy);
       drawItemsFound(hy + 8);
     } else {
-      ctx.textAlign = 'right'; ctx.font = `800 28px ${DISP}`; ctx.fillStyle = INK;
-      ctx.fillText(`${caughtN} caught`, VW - 22, top + 34);
-      ctx.font = `600 13px ${BODY}`; ctx.fillStyle = VIOLET;
-      ctx.fillText(`FREE MODE · LEVEL ${level + 1}`, VW - 22, top + 58);
+      ctx.textAlign = 'right'; ctx.font = `700 15px ${BODY}`; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(12,8,28,.7)'; ctx.fillStyle = '#f6eedc';
+      ctx.strokeText('Nothing is counted here. Pause to go home.', VW - 22, top + 30); ctx.fillText('Nothing is counted here. Pause to go home.', VW - 22, top + 30);
       drawItemsFound(top + 66);
     }
     if (atPortal()) {
@@ -4047,7 +4065,9 @@
     ctx.setTransform(dpr * S, 0, 0, dpr * S, 0, dpr * S * OY);
     if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
-    ctx.save(); ctx.translate(-camX, 0);
+    // snap the camera to whole screen pixels: a camera between pixels makes posts, trunks and the cat's
+    // stripes shimmer (like 'lllll') as the town scrolls, especially on screens scaled to 125% or 150%
+    { const px = dpr * S; ctx.save(); ctx.translate(-Math.round(camX * px) / px, 0); }
     drawWorld(); drawHazards(); drawTrinkets(); drawPortal(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); drawLevelDebug();
     ctx.restore();
@@ -4086,7 +4106,10 @@
     }
     lastGlow = glowRun; glow += glowRun; glowRun = 0; saveUpg(); refreshShopBtns();
     if (mode === 'free') {
-      const best = Math.max(getBest('mk-best-free'), score); setBest('mk-best-free', best);
+      state = 'menu'; cv.hidden = true; showMainMenu(true); return;
+    }
+    if (false) {
+      const best = 0;
       R = {
         free: true, final: score, best, combo: bestCombo, home: caughtN, survived: freeT, level: level + 1,
         tip: hits > 0 ? 'Tip: getting hit costs 3 seconds. Let charges miss, then pounce on the dizzy ones.' : 'Tip: chain catches within 4 seconds. A ×5 combo is where the big scores come from.'
@@ -4494,8 +4517,11 @@
 
   function playNightComplete(night) {
     const chapter = chapterFor(night), next = Math.min(50, night + 1);
-    $('#nightStoryline').hidden = true;
+    $('#nightStoryline').hidden = false;
     $('#endThiriArt').dataset.stage = String(Math.min(7, thiriSleepStage));
+    { const st = Math.min(7, thiriSleepStage), mood = st <= 1 ? 1 : st <= 3 ? 2 : st <= 5 ? 3 : 4, art = $('#endThiriArt');
+      let img = art.querySelector('img.thiri-mood'); if (!img) { img = document.createElement('img'); img.className = 'thiri-mood'; img.alt = ''; art.appendChild(img); }
+      img.src = `assets/thiri-moods/m${mood}.webp`; art.classList.add('has-mood'); }
     $('#endDiaryLine').textContent = `“${chapter.diary}”`;
     $('#endStageLine').textContent = `Thiri’s room is changing · sleep stage ${thiriSleepStage} of 7`;
     $('#endUnlockBadge').hidden = !R.unlocked;
@@ -4997,9 +5023,16 @@
     if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
     if (ac && ac.state === 'suspended') ac.resume();
   }
+  function markMode() { document.body.dataset.playMode = mode; }
   function startGame(m, night = storyNight) {
+    // the first step past the seventh night plays the team's Endless Nights film, once
+    if ((typeof m === 'string' ? m : mode) === 'story' && +night >= 8 && window.TCEndlessFilm && !TCEndlessFilm.seen()) {
+      $('#levelBriefingScreen').hidden = true; $('#startScreen').hidden = true; $('#endScreen').hidden = true;
+      music('duck', .25); TCEndlessFilm.play(() => { music('duck', 1); startGame(m, night); }); return;
+    }
     document.body.classList.remove('learning-with-shwe'); $('#tipCoach').classList.remove('shwe-lesson');
     if (typeof m === 'string') mode = m;
+    markMode();
     storyNight = mode === 'story' ? clamp(Math.floor(+night) || 1, 1, 50) : 1;
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
@@ -5021,7 +5054,7 @@
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     const visualTheme = mode === 'story' ? window.TCVisualChapters?.forLevel(storyNight) : null;
-    announce(mode === 'free' ? 'Free Mode · every catch adds time' : `${visualTheme?.name || chapter.name} · ${chapter.sub}`, INK, 2.1);
+    announce(mode === 'free' ? 'Free play · no clock, no score. Just wander with Shwe.' : `${visualTheme?.name || chapter.name} · ${chapter.sub}`, INK, 2.1);
     if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); }
     if (mode === 'free') queueJitTip('free', cat, guideCopy().mechanicTitles?.free || 'Free Play');
     if (!startGuidedTutorial()) showNextJitTip();
@@ -6055,7 +6088,7 @@
     if (!scr) {
       scr = document.createElement('div'); scr.className = 'overlay free-map-screen'; scr.id = 'freeMapScreen'; scr.hidden = true;
       scr.setAttribute('role', 'dialog'); scr.setAttribute('aria-modal', 'true'); scr.setAttribute('aria-labelledby', 'freeMapTitle');
-      scr.innerHTML = '<section class="panel free-map-panel"><p class="eyebrow">Free Play</p><h2 id="freeMapTitle">Where should Shwe play?</h2><p class="muted">Pick any place you have reached in the story. Every catch adds time.</p><div class="free-map-grid" id="freeMapGrid"></div><div class="actions"><button class="btn ghost" type="button" id="freeMapBack">Back</button></div></section>';
+      scr.innerHTML = '<section class="panel free-map-panel"><p class="eyebrow">Free Play</p><h2 id="freeMapTitle">Where should Shwe play?</h2><p class="muted">Pick any place you have reached in the story. No clock and no score: just a quiet wander with Shwe.</p><div class="free-map-grid" id="freeMapGrid"></div><div class="actions"><button class="btn ghost" type="button" id="freeMapBack">Back</button></div></section>';
       document.body.appendChild(scr);
       $('#freeMapBack').addEventListener('click', () => { scr.hidden = true; (scr._return || $('#freeBtn'))?.focus?.(); });
       scr.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); scr.hidden = true; (scr._return || $('#freeBtn'))?.focus?.(); } });
@@ -6127,7 +6160,8 @@
       for (const place of window.TCHeartData.places) {
         if (!lit.includes(place.id) || claimed.includes(place.id)) continue;
         glow += 30;
-        if (TRAILS[place.reward]) { if (!ownedTrails.includes(place.reward)) ownedTrails.push(place.reward); }
+        if (!place.reward) {}
+        else if (TRAILS[place.reward]) { if (!ownedTrails.includes(place.reward)) ownedTrails.push(place.reward); }
         else itemStock[place.reward] = (itemStock[place.reward] || 0) + 1;
         claimed.push(place.id);
       }
