@@ -3956,21 +3956,49 @@
     if (cat.on && !p && Math.abs(x - cat.x) < 30 && cat.y < best) best = cat.y;
     return best;
   }
+  // the lights ripple along the string like a ribbon in water: a wave starts at Shwe's tail and flows
+  // down to the last light. Only the drawing moves; the lights' real spots (catching, delivering) stay put.
+  function trailWavePoints() {
+    const a = trailAnchor(), pts = [{ x: a.x, y: a.y }];
+    if (reduce) { trail.forEach(l => pts.push({ x: l.x, y: l.y })); return pts; }
+    const speed = Math.min(1, Math.abs(cat.vx || 0) / 260);
+    const amp = (cat.on ? 7 : 9) + speed * 3;
+    let px = a.x, py = a.y;
+    trail.forEach((l, i) => {
+      let dx = l.x - px, dy = l.y - py, d = Math.hypot(dx, dy) || 1;
+      const nx = -dy / d, ny = dx / d;                 // sideways to the string
+      const grow = Math.min(1, (i + 1) / 3);           // calm at the tail, freer further down
+      const off = Math.sin(t * 4.2 - i * .9) * amp * grow;
+      // on the ground the string bobs above the floor (its lowest point just touches it); in the air it ripples both ways
+      let x = l.x + nx * off, y = cat.on ? l.y - amp * grow + off : l.y + ny * off;
+      if (cat.on) { const f = trailFloorY(x, l.y) - 6; if (y > f) y = f; }   // never ripple into the ground
+      pts.push({ x, y }); px = l.x; py = l.y;
+    });
+    return pts;
+  }
+  // a smooth line through the points, with an extra ripple between each pair so the string itself flows
+  function traceWave(pts, from, to) {
+    for (let i = from; i < to; i++) {
+      const p = pts[i], q = pts[i + 1];
+      const dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy) || 1;
+      const bend = reduce ? 5 : 5 + Math.sin(t * 4.2 - i * .9 - .45) * 4;   // sag plus the flowing wave
+      ctx.quadraticCurveTo((p.x + q.x) / 2 - dy / d * bend * .4, (p.y + q.y) / 2 + bend, q.x, q.y);
+    }
+  }
   function drawTrail() {
+    const pts = trailWavePoints();
     if (trail.length > 0) {   // the string shows as soon as the first light follows Shwe
       if (TRAILS[trailPick].rainbow) {
         // each piece of the trail gets the next colour of the rainbow, slowly shifting
         ctx.lineWidth = 5; ctx.lineCap = 'round';
-        const a = trailAnchor(); let px = a.x, py = a.y;
-        trail.forEach((l, i) => { ctx.strokeStyle = `hsla(${(i * 40 + t * 90) % 360},90%,70%,.9)`; ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo((px + l.x) / 2, (py + l.y) / 2 + 5, l.x, l.y); ctx.stroke(); px = l.x; py = l.y; });
+        for (let i = 0; i < pts.length - 1; i++) { ctx.strokeStyle = `hsla(${(i * 40 + t * 90) % 360},90%,70%,.9)`; ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); traceWave(pts, i, i + 1); ctx.stroke(); }
       } else {
-        // the thin string, tied at Shwe's tail and sagging a little between lights
+        // the thin string, tied at Shwe's tail, flowing between the lights
         ctx.strokeStyle = `rgba(${TRAILS[trailPick].c},${trailPick === 'honey' ? .45 : .65})`; ctx.lineWidth = trailPick === 'honey' ? 2.5 : 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
-        const a = trailAnchor(); let px = a.x, py = a.y; ctx.moveTo(px, py);
-        trail.forEach(l => { ctx.quadraticCurveTo((px + l.x) / 2, (py + l.y) / 2 + 5, l.x, l.y); px = l.x; py = l.y; }); ctx.stroke();
+        ctx.moveTo(pts[0].x, pts[0].y); traceWave(pts, 0, pts.length - 1); ctx.stroke();
       }
     }
-    trail.forEach(l => lightShape(l.type, l.x, l.y, 1, l.v));
+    trail.forEach((l, i) => lightShape(l.type, pts[i + 1].x, pts[i + 1].y, 1, l.v));
   }
   function drawParts() {
     for (const p of parts) { ctx.globalAlpha = clamp(p.life / p.max, 0, 1); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }

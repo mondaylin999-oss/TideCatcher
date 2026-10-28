@@ -1,3 +1,8 @@
+# Wavy light trail
+
+- The light trail now flows like a ribbon: a gentle wave starts at Shwe's tail and travels down the string, so the lights bob and sway even while she stands still. On the ground each light rises up to about 14 px and its lowest point just touches the floor; in the air the wave ripples both ways and gets a little livelier when she runs.
+- Only the drawing moves. The lights' real positions (catching, delivering, Jealous stealing) are unchanged, and with reduced motion on, the trail stays still as before.
+
 # Gameplay catch clips and a trail that follows Shwe
 
 - The catch guide in How to play now shows a short real gameplay clip of Shwe catching each Moodling (recorded from the game itself in Free Play), with the three translated steps and their keyboard/touch controls beside it. Rare variants share their family's clip; Calm and Breathing Calm have their own.
