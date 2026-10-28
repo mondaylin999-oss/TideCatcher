@@ -2142,7 +2142,7 @@
       } else if (c.x < wall.x + wall.w / 2) { c.x = wall.x - 18; c.wallTouch = { wall, side: -1 }; }
       else { c.x = wall.x + wall.w + 18; c.wallTouch = { wall, side: 1 }; }
     }
-    if (!c.on && !c.wallTouch && c.vy > 260) c.vy = Math.min(c.vy, 260);
+    if (!c.on && !c.wallTouch && c.vy > 1100) c.vy = Math.min(c.vy, 1100);   // terminal fall speed: was 260, which capped almost right after the jump apex and made every landing look like slow-motion lag
     let landed = false, landedOn = null;
     const floorY = terrainY(c.x);
     const pit = pitAt(c.x);
