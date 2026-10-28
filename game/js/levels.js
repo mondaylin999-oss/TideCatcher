@@ -271,6 +271,37 @@
         for (let i = 0; i < count; i++) level.hazards.push({ kind: 'bell', x: a + (i + .5) * (b - a) / count, radius: 190 });
       });
     }
+    if (map === 'train') {
+      // A passing carriage is a bonus ride on solid station track. Keep it
+      // outside the safety margins around gaps so pit bridges stay unique.
+      const spans = []; let left = 260;
+      for (const [a, b] of level.pits.slice().sort((x, y) => x[0] - y[0])) {
+        if (a - 120 > left + 180) spans.push([left, a - 120]);
+        left = b + 120;
+      }
+      if (level.width - 260 > left + 180) spans.push([left, level.width - 260]);
+      const usable = spans.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]))[0] || [300, Math.max(520, level.width - 300)];
+      const [lo, hi] = usable, trainW = Math.min(250, Math.max(120, (hi - lo - 40) * .52));
+      const start = lo + 20, end = Math.max(start + 24, hi - trainW - 20);
+      level.platforms.push(platform(start, 414, trainW, 'moving', { path: [[start, 414], [end, 414]], speed: .011, skin: 'train' }));
+
+      const hideSpots = [];
+      spans.forEach(([a, b], i) => {
+        const span = b - a;
+        if (span >= 420) {
+          const step = span >= 1500 ? 2100 : span;
+          for (let x = a + Math.min(430, span * .3); x < b - 100; x += step) hideSpots.push(x);
+        }
+        if (span >= 220 && (i % 2 === 1 || i === spans.length - 1)) hideSpots.push((a + b) / 2);
+        if (span >= 520) level.props.push({ kind: 'bench', x: a + 100, w: 118 });
+      });
+      if (!level.props.some(p => p.kind === 'bench') && usable[1] - usable[0] >= 150) {
+        level.props.push({ kind: 'bench', x: usable[0] + 20, w: 110 });
+      }
+      if (!hideSpots.length && spans.length) hideSpots.push((spans[0][0] + spans[0][1]) / 2);
+      level.hideSpots = [...new Set(hideSpots.map(Math.round))];
+      for (const x of level.hideSpots) level.props.push({ kind: 'ticket-booth', x: x - 48, w: 96 });
+    }
     if (map === 'market') {
       // Every market route gets optional bounce awnings, safe to ignore for
       // progression. Puddles and rope lanterns are placed only on solid spans;

@@ -14,9 +14,10 @@
     rooftop: { name: 'Rooftops', icon: '🏘️', map: 'rooftop', types: ['J', 'N', 'E', 'F'], color: '#ffd38a', from: 11 },
     market: { name: 'Night Market', icon: '🍢', map: 'market', types: ['E', 'J', 'N', 'S'], color: '#ff7ab6', from: 18 },
     garden: { name: 'Pagoda Garden', icon: '🪷', map: 'garden', types: ['C', 'L', 'S', 'B'], color: '#ffd166', from: 28 },
-    pagoda: { name: 'Pagoda Hill', icon: '🛕', map: 'pagoda', types: ['C', 'L', 'N', 'S'], color: '#e9cb91', from: 34 }
+    pagoda: { name: 'Pagoda Hill', icon: '🛕', map: 'pagoda', types: ['C', 'L', 'N', 'S'], color: '#e9cb91', from: 34 },
+    train: { name: 'Night Train Platform', icon: '🚂', map: 'train', types: ['N', 'L', 'J', 'S'], color: '#9fd6d2', from: 39 }
   };
-  const PLACE_ORDER = ['school', 'park', 'festival', 'hill', 'lake', 'rooftop', 'market', 'garden', 'pagoda'];
+  const PLACE_ORDER = ['school', 'park', 'festival', 'hill', 'lake', 'rooftop', 'market', 'garden', 'pagoda', 'train'];
   // Each card selects its place and version; painted and code-drawn maps share the same level flow.
   const VARIANTS = {
     school: [{ id: '', from: 8 }, { id: 'rainy', from: 12 }, { id: 'sunrise', from: 36 }],
@@ -27,7 +28,8 @@
     rooftop: [{ id: '', from: 11 }],
     market: [{ id: '', from: 18 }],
     garden: [{ id: '', from: 28 }],
-    pagoda: [{ id: '', from: 34 }]
+    pagoda: [{ id: '', from: 34 }],
+    train: [{ id: '', from: 39 }]
   };
   const TWISTS = {
     rainy: { name: 'Rainy', icon: '🌧️', twist: 'Rain hides your footsteps: Nervous hardly hears you. Puddles are slippery.' },
@@ -165,7 +167,7 @@
 
   const UNLOCKS = [];
   for (const p of PLACE_ORDER) for (const v of VARIANTS[p]) if (v.id) UNLOCKS.push({ level: v.from, place: p, variant: v.id, label: mapName(p, v.id), icon: mapIcon(p, v.id) });
-  for (const p of ['rooftop', 'market', 'garden', 'pagoda']) UNLOCKS.push({ level: PLACES[p].from, place: p, variant: '', label: PLACES[p].name, icon: PLACES[p].icon });
+  for (const p of ['rooftop', 'market', 'garden', 'pagoda', 'train']) UNLOCKS.push({ level: PLACES[p].from, place: p, variant: '', label: PLACES[p].name, icon: PLACES[p].icon });
   UNLOCKS.sort((a, b) => a.level - b.level);
 
   root.TCEndless = {

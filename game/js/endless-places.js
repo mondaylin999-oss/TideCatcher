@@ -176,8 +176,44 @@
     for (let row = 0; row < 3; row++) { const y = G - 96 + row * 24, shift = o.reduced ? 0 : Math.sin(o.t * .22 + row) * 8; g.beginPath(); g.ellipse(o.cam + o.W * .5 + shift, y, o.W * .62, 13, 0, 0, Math.PI * 2); g.fill(); }
     g.restore();
   }
-  const DRAW = { market, garden, pagoda };
+  function train(g, o) {
+    const G = o.ground, scene = o.reduced ? { ...o, t: 0 } : o;
+    sky(g, scene, [[0, '#101626'], [.55, '#202b42'], [1, '#554a63']]);
+    const moonX = o.cam + o.W * .82, moonY = 82;
+    glow(g, moonX, moonY, 112, '205,225,226', .2); g.fillStyle = '#dce8df'; g.beginPath(); g.arc(moonX, moonY, 19, 0, Math.PI * 2); g.fill();
+    layer(scene, .12, 210, (x, i) => {
+      const base = G - 126, w = 76 + hash(i) * 58, h = 56 + hash(i + 4) * 70;
+      g.fillStyle = '#202b3c'; g.fillRect(x + 24, base - h, w, h);
+      g.fillStyle = 'rgba(240,205,139,.58)';
+      for (let wy = base - h + 15; wy < base - 12; wy += 20) for (let wx = x + 34; wx < x + 24 + w - 8; wx += 21) if (hash(i + wx + wy) > .46) g.fillRect(wx, wy, 5, 8);
+    });
+    layer(scene, .32, 620, (x, i) => {
+      const base = G - 28, w = 300 + hash(i) * 120;
+      g.fillStyle = '#343342'; g.fillRect(x, base - 62, w, 62);
+      g.fillStyle = '#4e4652'; g.fillRect(x - 16, base - 72, w + 32, 12);
+      g.fillStyle = 'rgba(243,200,128,.66)'; g.fillRect(x + 28, base - 53, 6, 36); g.fillRect(x + w - 36, base - 53, 6, 36);
+      g.fillStyle = '#242537'; g.fillRect(x + w * .42, base - 51, 50, 51);
+    });
+    // Station roof canopy, repeating iron supports and warm practical lights.
+    g.fillStyle = '#282b3c'; g.fillRect(o.cam - 30, G - 178, o.W + 60, 15);
+    g.fillStyle = '#555360'; g.fillRect(o.cam - 30, G - 163, o.W + 60, 4);
+    for (let x = Math.floor(o.cam / 260) * 260; x < o.cam + o.W + 80; x += 260) {
+      g.fillStyle = '#454456'; g.fillRect(x, G - 163, 9, 128);
+      g.fillStyle = '#d9bd82'; g.fillRect(x + 28, G - 152, 38, 4);
+      glow(g, x + 48, G - 143, 48, '255,207,132', .19);
+    }
+    // Clock face and modest sign keep the place readable without clutter.
+    const cx = o.cam + o.W * .54, cy = G - 198;
+    g.fillStyle = '#222738'; g.fillRect(cx - 3, G - 178, 6, 24); g.fillStyle = '#c8c0a9'; g.beginPath(); g.arc(cx, cy, 21, 0, 7); g.fill();
+    g.fillStyle = '#34384a'; g.beginPath(); g.arc(cx, cy, 17, 0, 7); g.fill();
+    g.strokeStyle = '#f1d38f'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx, cy - 10); g.moveTo(cx, cy); g.lineTo(cx + 8, cy + 4); g.stroke();
+    // Parallel rails and sleepers beneath the safe station floor.
+    g.fillStyle = '#252b39'; g.fillRect(o.cam - 10, G - 18, o.W + 20, 20);
+    g.fillStyle = '#a69d91'; g.fillRect(o.cam - 10, G - 16, o.W + 20, 3); g.fillRect(o.cam - 10, G - 5, o.W + 20, 3);
+    for (let x = Math.floor(o.cam / 34) * 34; x < o.cam + o.W + 30; x += 34) { g.fillStyle = '#655c5c'; g.fillRect(x, G - 18, 12, 20); }
+  }
+  const DRAW = { market, garden, pagoda, train };
   // floor colours the game uses for these places: [top, middle, edge line]
-  const FLOOR = { market: ['#7a4256', '#4a2840', 'rgba(255,190,140,.75)'], garden: ['#8a7aa0', '#4f4466', 'rgba(255,228,170,.7)'], pagoda: ['#827a78', '#48454c', 'rgba(218,194,153,.72)'] };
+  const FLOOR = { market: ['#7a4256', '#4a2840', 'rgba(255,190,140,.75)'], garden: ['#8a7aa0', '#4f4466', 'rgba(255,228,170,.7)'], pagoda: ['#827a78', '#48454c', 'rgba(218,194,153,.72)'], train: ['#65616a', '#383846', 'rgba(207,210,196,.66)'] };
   root.TCPlaces = { has: k => !!DRAW[k], draw: (g, k, o) => { g.save(); DRAW[k](g, o); g.restore(); }, FLOOR };
 })(typeof window !== 'undefined' ? window : globalThis);

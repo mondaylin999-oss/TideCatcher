@@ -292,3 +292,9 @@
 - Pagoda routes use shallow repeating stone-step terrain, safe oil-lamp platforms, and hanging bells. Touching a bell plays a soft chime, briefly stills nearby Moodlings, and clears Nervous panic; the first bell tip is available in English and Burmese.
 - Kept all lamps and bells on solid ground and retained each pit's single moving bridge. Added the map to existing keep-sake and burial-site art so Endless setup remains compatible.
 - Added Pagoda Hill layout and unlock checks to game-integrity CI.
+# Night Train Platform map
+
+- Added Night Train Platform to Endless maps starting at Night 39, with a quiet station canopy, clock, rails, town lights, and matching night palette.
+- Each layout includes one slow moving train carriage that uses the game's existing moving-platform collision/carry behavior. Its route stays on solid track outside pit approaches, so required pit bridges remain the only gap crossings.
+- Added benches and ticket-booth hiding spots, including ticket-booth scenery and map-specific hiding prompts/keepsakes.
+- Added layout checks for Nights 39–50 covering carriage routes, pit clearance/bridge uniqueness, reachable ride height, and safe hiding spots.

@@ -321,7 +321,8 @@
     { id: 'park', name: 'The Park', note: '1 AM · swings and slides', level: 3, opens: 3 },
     { id: 'festival', name: 'Lighting Festival', note: '2 AM · lanterns and boats', level: 4, opens: 4 },
     { id: 'hill', name: 'Hilltop Park', note: '3 AM · windy stone steps', level: 5, opens: 5 },
-    { id: 'lake', name: 'Lakeside', note: '4 AM · logs and lily pads', level: 6, opens: 6 }
+    { id: 'lake', name: 'Lakeside', note: '4 AM · logs and lily pads', level: 6, opens: 6 },
+    { id: 'train', name: 'Night Train Platform', note: '39 · a slow train passes the station', level: 39, opens: 39, endless: true }
   ];
   let freeMap = 'classic';
   try { const saved = localStorage.getItem('mk-free-map'); if (FREE_MAPS.some(m => m.id === saved)) freeMap = saved; } catch (e) {}
@@ -329,6 +330,7 @@
   function selectLevelForRun() {
     if (mode === 'story') return window.TC_LEVELS[storyNight];
     const pick = FREE_MAPS.find(m => m.id === freeMap);
+    if (pick?.endless && freeMapOpen(pick) && window.TC_ENDLESS_LEVEL) return window.TC_ENDLESS_LEVEL(clamp(unlockedLevel, 39, 50), pick.id, []);
     if (pick && pick.level && freeMapOpen(pick) && window.TC_LEVELS[pick.level]) return window.TC_LEVELS[pick.level];
     const variants = window.TC_LEVELS.free.variants;
     return variants[Math.floor(Math.random() * variants.length)];
@@ -627,6 +629,7 @@
   function currentMapKey() {
     if (currentLevel?.map === 'market') return 'market';
     if (currentLevel?.map === 'pagoda') return 'pagoda';
+    if (currentLevel?.map === 'train') return 'train';
     if (inSchool()) return 'school';
     if (inRooftop()) return 'rooftop';
     if (inPark()) return 'park';
@@ -635,7 +638,7 @@
     if (inLake()) return 'lake';
     return 'free';
   }
-  const CAVE_LABELS = { school: 'locker', rooftop: 'roof nook', park: 'bush', festival: 'stall', market: 'market stall', pagoda: 'stone alcove', hill: 'tree hollow', lake: 'reed bed', free: 'cave' };
+  const CAVE_LABELS = { school: 'locker', rooftop: 'roof nook', park: 'bush', festival: 'stall', market: 'market stall', pagoda: 'stone alcove', train: 'ticket booth', hill: 'tree hollow', lake: 'reed bed', free: 'cave' };
   function caveXsForMap() { return currentLevel.hideSpots || []; }
   const NIGHT_CHAPTERS = [
     { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
@@ -1274,7 +1277,7 @@
   // Themed traps and hidden keepsakes (data in levels.js: hazards, keepsakes, 'sinking' platforms)
   const SINK_TIME = 1.6;
   const KEEPSAKE_GLOW = 25;
-  const KEEPSAKE_ART = { school: ['paper star', '#ffe39a'], rooftop: ['little bell', '#ffe1a3'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], market: ['lantern charm', '#ffb36b'], pagoda: ['bell charm', '#e4cc9c'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], free: ['star', '#ffe39a'] };
+  const KEEPSAKE_ART = { school: ['paper star', '#ffe39a'], rooftop: ['little bell', '#ffe1a3'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], market: ['lantern charm', '#ffb36b'], pagoda: ['bell charm', '#e4cc9c'], train: ['ticket stub', '#d6c7a2'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], free: ['star', '#ffe39a'] };
   const WEATHER = [
     { kind: 'rain', icon: '☔', title: 'Light rain' },
     { kind: 'wind', icon: '〰', title: 'Soft wind' },
@@ -1783,6 +1786,7 @@
     market: { kind: 'market goods', label: 'dropped snack basket', labelMarked: 'marked snack basket', labels: ['snack basket', 'paper lantern box', 'dropped fruit'], xs: [], draw: drawFestivalBurySpot, debris: [{ shape: 'straw', color: '#d9b66f' }, { shape: 'spark', color: '#ffd58a' }, { shape: 'paper', color: '#ffb36b' }], glow: '#ffb36b' },
     hill: { kind: 'hilltop finds', label: 'mossy stones', labelMarked: 'marked mossy stones', labels: ['mossy stones', 'fallen branch', 'leaf pile'], xs: [80, 350, 450, 550, 800, 910, 1020, 1130], draw: drawHillBurySpot, debris: [{ shape: 'moss', color: '#77a77c' }, { shape: 'twig', color: '#9b7659' }, { shape: 'leaf', color: '#83ad70' }], glow: '#c0b1ff' },
     pagoda: { kind: 'quiet hillside finds', label: 'loose stone chips', labelMarked: 'marked loose stone chips', labels: ['loose stone chips', 'fallen leaves', 'small seed pods'], xs: [], draw: drawHillBurySpot, debris: [{ shape: 'chip', color: '#a7a298' }, { shape: 'leaf', color: '#86917c' }, { shape: 'twig', color: '#9d896a' }], glow: '#e4cc9c' },
+    train: { kind: 'platform keepsakes', label: 'lost ticket', labelMarked: 'marked lost ticket', labels: ['lost ticket', 'paper timetable', 'dropped mitten'], xs: [], draw: drawSchoolBurySpot, debris: [{ shape: 'paper', color: '#d6c7a2' }, { shape: 'paper', color: '#f0d39a' }, { shape: 'chip', color: '#9ca4a2' }], glow: '#b8e4dc' },
     lake: { kind: 'lakeshore finds', label: 'sand mound', labelMarked: 'marked sand mound', labels: ['sand mound', 'driftwood', 'pebble stack'], xs: [100, 650, 1200, 1800, 2220, 2630, 3000, 3600, 4150], draw: drawLakeBurySpot, debris: [{ shape: 'sand', color: '#e8c58a' }, { shape: 'splash', color: '#9cdaee' }, { shape: 'shell', color: '#ffe2c5' }], glow: '#9fe8ff' },
     free: { kind: 'classic stones', label: 'rock', labelMarked: 'marked rock', xs: [], draw: drawClassicRockBase, debris: [{ shape: 'chip', color: '#77736f' }, { shape: 'chip', color: '#a29b8d' }, { shape: 'chip', color: '#5f6260' }], glow: '#c8baff' }
   };
@@ -1806,7 +1810,8 @@
   }
   function hideFeeling(m, x) {
     if (m.spot) { m.spot.used = true; m.spot.usedAt = t; m.spot.scratching = false; }
-    const inCave = mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight >= 7));
+    const inCave = (mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight >= 7)))
+      || (currentLevel.map === 'train' && (m.type === 'C' || m.type === 'L'));
     m.x = x ?? (inCave ? pickCaveX() : pickX()); m.caveX = inCave ? m.x : null;
     m.y = terrainY(m.x) - (m.type === 'C' ? 46 : 30); m.st = 0; m.sit = 0; m.rev = 0; m.fleeAlarm = 0;
     const tutorialLonely = m.type === 'L' && mode === 'story' && storyNight <= 3;
@@ -3563,20 +3568,27 @@
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
   function drawLevelDecor(x0, x1) {
-    const map = currentLevel.map, palette = map === 'school' ? ['#8a5e4c','#d4a66b','#f5d8a5'] : map === 'rooftop' ? ['#635568','#b5a0a6','#f2d5ae'] : map === 'park' ? ['#3f9b83','#8ed7a1','#f4c985'] : map === 'festival' ? ['#77503f','#d6aa5a','#ef8fbd'] : map === 'market' ? ['#492d55','#af5271','#ffd28a'] : map === 'pagoda' ? ['#5b5654','#978878','#e4cc9c'] : map === 'hill' ? ['#555078','#9a8cc4','#64aa8b'] : map === 'lake' ? ['#5a3d4b','#a77a5a','#9fe8ff'] : ['#4d5054','#818b83','#c0b1ff'];
+    const map = currentLevel.map, palette = map === 'school' ? ['#8a5e4c','#d4a66b','#f5d8a5'] : map === 'rooftop' ? ['#635568','#b5a0a6','#f2d5ae'] : map === 'park' ? ['#3f9b83','#8ed7a1','#f4c985'] : map === 'festival' ? ['#77503f','#d6aa5a','#ef8fbd'] : map === 'market' ? ['#492d55','#af5271','#ffd28a'] : map === 'pagoda' ? ['#5b5654','#978878','#e4cc9c'] : map === 'train' ? ['#424550','#77737c','#d6c7a2'] : map === 'hill' ? ['#555078','#9a8cc4','#64aa8b'] : map === 'lake' ? ['#5a3d4b','#a77a5a','#9fe8ff'] : ['#4d5054','#818b83','#c0b1ff'];
     const [dark, mid, light] = palette;
     if (map !== 'hill') {
       const bottom = VH + OY + 60, floor = ctx.createLinearGradient(0, GROUND - 28, 0, bottom);
       const tcFloor = window.TCPlaces?.FLOOR?.[map];
-      floor.addColorStop(0, tcFloor ? tcFloor[0] : map === 'festival' ? '#76513e' : map === 'lake' ? '#694a57' : map === 'park' ? '#3c705f' : map === 'market' ? '#7a4256' : map === 'pagoda' ? '#827a78' : map === 'school' ? '#58475c' : '#47514d');
-      floor.addColorStop(.22, tcFloor ? tcFloor[1] : map === 'festival' ? '#46313a' : map === 'lake' ? '#493247' : map === 'park' ? '#2a4550' : map === 'market' ? '#4a2840' : map === 'pagoda' ? '#48454c' : map === 'school' ? '#342b43' : '#303a38'); floor.addColorStop(1, '#151421');
+      floor.addColorStop(0, tcFloor ? tcFloor[0] : map === 'festival' ? '#76513e' : map === 'lake' ? '#694a57' : map === 'park' ? '#3c705f' : map === 'market' ? '#7a4256' : map === 'pagoda' ? '#827a78' : map === 'train' ? '#65616a' : map === 'school' ? '#58475c' : '#47514d');
+      floor.addColorStop(.22, tcFloor ? tcFloor[1] : map === 'festival' ? '#46313a' : map === 'lake' ? '#493247' : map === 'park' ? '#2a4550' : map === 'market' ? '#4a2840' : map === 'pagoda' ? '#48454c' : map === 'train' ? '#383846' : map === 'school' ? '#342b43' : '#303a38'); floor.addColorStop(1, '#151421');
       const left = Math.max(0, Math.floor(x0 / 8) * 8), right = Math.min(WORLD, x1 + 8);
       ctx.fillStyle = floor; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
       for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x));
       ctx.lineTo(right, bottom); ctx.lineTo(left, bottom); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = tcFloor ? tcFloor[2] : map === 'pagoda' ? 'rgba(218,194,153,.72)' : map === 'market' ? 'rgba(255,190,140,.75)' : map === 'festival' ? 'rgba(218,174,120,.65)' : map === 'lake' ? 'rgba(170,232,244,.48)' : map === 'park' ? 'rgba(133,210,157,.52)' : 'rgba(255,226,180,.36)';
+      ctx.strokeStyle = tcFloor ? tcFloor[2] : map === 'pagoda' ? 'rgba(218,194,153,.72)' : map === 'train' ? 'rgba(207,210,196,.66)' : map === 'market' ? 'rgba(255,190,140,.75)' : map === 'festival' ? 'rgba(218,174,120,.65)' : map === 'lake' ? 'rgba(170,232,244,.48)' : map === 'park' ? 'rgba(133,210,157,.52)' : 'rgba(255,226,180,.36)';
       ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
       for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x)); ctx.stroke();
+      if (map === 'train') {
+        const railY = terrainY(left) - 13;
+        ctx.fillStyle = '#2b2e39'; ctx.fillRect(left, railY - 2, right - left, 18);
+        ctx.fillStyle = '#a8a49a'; ctx.fillRect(left, railY, right - left, 3); ctx.fillRect(left, railY + 10, right - left, 3);
+        ctx.fillStyle = '#68636a';
+        for (let rx = Math.floor(left / 34) * 34; rx < right; rx += 34) ctx.fillRect(rx, railY - 3, 12, 19);
+      }
     }
     // A quiet contour trace makes the authored steps and slopes legible over the existing place art.
     ctx.strokeStyle = map === 'pagoda' ? 'rgba(220,205,174,.54)' : map === 'school' ? 'rgba(255,226,180,.38)' : map === 'festival' ? 'rgba(255,210,160,.46)' : map === 'lake' ? 'rgba(170,232,244,.5)' : 'rgba(195,220,180,.42)';
@@ -3642,6 +3654,22 @@
         ctx.fillStyle = p.skin === 'boat' ? '#704b4b' : '#72523c'; ctx.beginPath(); ctx.moveTo(x - 2, y + 2); ctx.lineTo(x + w + 2, y + 2); ctx.quadraticCurveTo(x + w * .84, y + 16, x + w * .5, y + 15); ctx.quadraticCurveTo(x + w * .14, y + 16, x - 2, y + 2); ctx.fill();
         ctx.fillStyle = p.skin === 'boat' ? '#d6aa5a' : '#ad8055'; ctx.fillRect(x + 5, y - 2, w - 10, 4);
       }
+      if (p.skin === 'train') {
+        // The carriage top is the real moving-platform collision surface.
+        const bodyY = y + 7, bodyH = Math.max(25, Math.min(43, GROUND - bodyY - 3));
+        ctx.fillStyle = '#344652'; ctx.beginPath(); canvasRoundRect(ctx, x + 2, bodyY, w - 4, bodyH, 8); ctx.fill();
+        ctx.fillStyle = '#6d9291'; ctx.fillRect(x + 8, bodyY, w - 16, 5);
+        ctx.strokeStyle = 'rgba(203,225,212,.65)'; ctx.lineWidth = 2; ctx.strokeRect(x + 4, bodyY + 1, w - 8, bodyH - 2);
+        for (let wx = x + 17; wx + 21 < x + w - 10; wx += 34) {
+          ctx.fillStyle = '#253442'; ctx.fillRect(wx, bodyY + 11, 22, 17);
+          const winGlow = ctx.createRadialGradient(wx + 11, bodyY + 18, 1, wx + 11, bodyY + 18, 19);
+          winGlow.addColorStop(0, 'rgba(255,222,153,.34)'); winGlow.addColorStop(1, 'rgba(255,222,153,0)');
+          ctx.fillStyle = winGlow; ctx.fillRect(wx - 8, bodyY + 1, 38, 34);
+          ctx.fillStyle = '#f3d79e'; ctx.fillRect(wx + 2, bodyY + 14, 3, 10); ctx.fillRect(wx + 10, bodyY + 14, 3, 10);
+        }
+        ctx.fillStyle = '#252a35';
+        for (let wx = x + 24; wx < x + w - 10; wx += 56) { ctx.beginPath(); ctx.arc(wx, bodyY + bodyH, 7, 0, Math.PI * 2); ctx.fill(); }
+      }
       if (p.type === 'swinging' && p.anchor) {
         const [ax, ay] = p.anchor, lanternRope = p.skin === 'lantern-rope', sway = reduce ? 0 : Math.sin(t * (p.speed || .8)) * (lanternRope ? 5 : 15), lx = ax + sway;
         ctx.strokeStyle = lanternRope ? 'rgba(255,174,123,.9)' : 'rgba(255,220,164,.82)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax - 18, ay - 28); ctx.quadraticCurveTo(lx, ay - 14, lx, ay + 4); ctx.stroke();
@@ -3674,6 +3702,16 @@
       else if (prop.kind === 'chairs') { for(let i=0;i<3;i++){const xx=x+i*18;ctx.strokeStyle=dark;ctx.lineWidth=4;ctx.strokeRect(xx,gy-34-i*4,15,17);ctx.fillStyle=mid;ctx.fillRect(xx,gy-18-i*4,17,4);ctx.fillRect(xx+2,gy-14-i*4,3,14);ctx.fillRect(xx+13,gy-14-i*4,3,14);} }
       else if (prop.kind === 'slide') { ctx.strokeStyle=mid;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x+15,gy-75);ctx.lineTo(x+15,gy);ctx.moveTo(x+48,gy-75);ctx.lineTo(x+48,gy);ctx.stroke();ctx.strokeStyle=light;ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(x+15,gy-70);ctx.lineTo(x+w*.65,gy-62);ctx.lineTo(x+w,gy-4);ctx.stroke();for(let yy=gy-58;yy<gy;yy+=14){ctx.strokeStyle=dark;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+17,yy);ctx.lineTo(x+45,yy);ctx.stroke();} }
       else if (prop.kind === 'bench') { ctx.fillStyle=dark;ctx.fillRect(x,gy-28,w,6);ctx.fillRect(x,gy-42,w,6);ctx.fillRect(x+8,gy-22,6,22);ctx.fillRect(x+w-14,gy-22,6,22);ctx.strokeStyle=light;ctx.lineWidth=1;ctx.strokeRect(x+2,gy-40,w-4,3); }
+      else if (prop.kind === 'ticket-booth') {
+        ctx.fillStyle = '#373342'; ctx.beginPath(); canvasRoundRect(ctx, x + 8, gy - 75, w - 16, 75, 7); ctx.fill();
+        ctx.fillStyle = '#75636a'; ctx.fillRect(x + 2, gy - 79, w - 4, 8);
+        ctx.fillStyle = '#2a3040'; ctx.fillRect(x + 18, gy - 60, w - 36, 29);
+        ctx.strokeStyle = '#c9bc9a'; ctx.lineWidth = 3; ctx.strokeRect(x + 18, gy - 60, w - 36, 29);
+        ctx.fillStyle = 'rgba(255,220,151,.78)'; ctx.fillRect(x + 24, gy - 53, w - 48, 15);
+        ctx.fillStyle = '#f4dba6'; ctx.font = `700 8px ${DISP}`; ctx.textAlign = 'center'; ctx.fillText('TICKETS', x + w / 2, gy - 42);
+        ctx.fillStyle = '#826a66'; ctx.fillRect(x + 32, gy - 24, w - 64, 24);
+        ctx.fillStyle = '#d0b67f'; ctx.fillRect(x + w / 2 - 2, gy - 16, 4, 3);
+      }
       else if (prop.kind === 'swing') { ctx.strokeStyle=dark;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x,gy);ctx.lineTo(x+12,gy-88);ctx.lineTo(x+w-12,gy-88);ctx.lineTo(x+w,gy);ctx.stroke();ctx.strokeStyle=light;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+35,gy-86);ctx.lineTo(x+35,gy-24);ctx.moveTo(x+w-35,gy-86);ctx.lineTo(x+w-35,gy-24);ctx.stroke();ctx.fillStyle=mid;ctx.fillRect(x+27,gy-25,w-54,6); }
       else if (prop.kind === 'stall') { ctx.fillStyle=dark;ctx.fillRect(x+10,gy-54,7,54);ctx.fillRect(x+w-17,gy-54,7,54);ctx.fillStyle=mid;ctx.beginPath();ctx.moveTo(x,gy-50);ctx.lineTo(x+w/2,gy-82);ctx.lineTo(x+w,gy-50);ctx.closePath();ctx.fill();ctx.fillStyle=light;for(let k=0;k<4;k++)ctx.fillRect(x+8+k*(w-16)/4,gy-52,(w-16)/8,7); }
       else if (prop.kind === 'lanterns') { ctx.strokeStyle=dark;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,gy-102);ctx.quadraticCurveTo(x+w/2,gy-62,x+w,gy-102);ctx.stroke();for(let k=1;k<6;k++){const lx=x+k*w/6,ly=gy-102+40*(4*k/6)*(1-k/6);ctx.fillStyle=light;ctx.beginPath();canvasRoundRect(ctx, lx-5,ly,10,15,3);ctx.fill();ctx.fillRect(lx-1,ly+15,2,7);} }
@@ -5574,7 +5612,7 @@
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
     const freePick = FREE_MAPS.find(m => m.id === freeMap), mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : (freePick && freePick.level && freeMapOpen(freePick) ? freePick.id : 'free');
-    const sceneTrack = ({ market: 'festival', garden: 'lakeside', pagoda: 'lakeside', school: 'school', rooftop: 'hilltop', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
+    const sceneTrack = ({ market: 'festival', garden: 'lakeside', pagoda: 'lakeside', train: 'lakeside', school: 'school', rooftop: 'hilltop', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
     music('duck', 1); music('play', sceneTrack);
     music('ambience', sceneTrack);
     cv.hidden = false;
