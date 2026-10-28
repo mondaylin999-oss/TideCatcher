@@ -10,6 +10,13 @@
   }
   const ground = (width, points) => ({ points: [[0, points[0][1]], ...points.filter(p => p[0] > 0 && p[0] < width), [width, points[points.length - 1][1]]] });
   const platform = (x, y, w, type = 'static', extra = null) => extra ? [x, y, w, type, extra] : [x, y, w, type];
+  const pagodaStepY = x => {
+    const heights = [0, 10, 20, 30, 40, 50, 50, 50, 40, 30, 20, 10];
+    const phase = ((x % 1200) + 1200) % 1200, index = Math.floor(phase / 100), within = phase % 100;
+    const here = heights[index], next = heights[(index + 1) % heights.length];
+    const rise = within < 78 ? here : here + (next - here) * ((within - 78) / 22);
+    return 470 - rise;
+  };
   const zones = (width, pits = []) => {
     const out = []; let left = 120;
     for (const [a,b] of pits.slice().sort((a,b) => a[0] - b[0])) { if (a - left > 180) out.push([left, a - 70]); left = b + 70; }
@@ -237,7 +244,33 @@
       pts.push([level.width - 300, 470], [level.width, 470]);
       level.ground = ground(level.width, pts);
     }
+    if (map === 'pagoda') {
+      // Shallow stone flights: short level treads joined by gently sloped risers.
+      const stops = new Set([0, level.width]);
+      for (let x = 0; x <= level.width; x += 50) stops.add(Math.min(level.width, x));
+      for (const [a, b] of level.pits) for (const x of [a - 110, a, b, b + 110]) stops.add(Math.max(0, Math.min(level.width, x)));
+      level.ground = ground(level.width, [...stops].sort((a, b) => a - b).map(x => {
+        const nearPit = level.pits.some(([a, b]) => x >= a - 110 && x <= b + 110);
+        return [x, nearPit ? 470 : pagodaStepY(x)];
+      }));
+      // Oil lamps sit on optional stone plinths on safe ground. No plinth is a pit crossing.
+      const safe = []; let left = 320;
+      for (const [a, b] of level.pits) { if (a - 110 > left + 180) safe.push([left, a - 110]); left = b + 110; }
+      if (level.width - 260 > left + 180) safe.push([left, level.width - 260]);
+      for (const [a, b] of safe) for (let x = a + 40; x + 82 < b - 40; x += 560) {
+        level.platforms.push(platform(x, pagodaStepY(x) - 76, 82, 'static', { skin: 'oil-lamp' }));
+      }
+    }
     level.hazards = twists.flatMap(t => endlessHazards(level, t));
+    if (map === 'pagoda') {
+      const safe = []; let left = 320;
+      for (const [a, b] of level.pits) { if (a - 110 > left + 180) safe.push([left, a - 110]); left = b + 110; }
+      if (level.width - 260 > left + 180) safe.push([left, level.width - 260]);
+      safe.forEach(([a, b]) => {
+        const count = Math.max(1, Math.ceil((b - a) / 760));
+        for (let i = 0; i < count; i++) level.hazards.push({ kind: 'bell', x: a + (i + .5) * (b - a) / count, radius: 190 });
+      });
+    }
     if (map === 'market') {
       // Every market route gets optional bounce awnings, safe to ignore for
       // progression. Puddles and rope lanterns are placed only on solid spans;

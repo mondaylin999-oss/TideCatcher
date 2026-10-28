@@ -1,6 +1,7 @@
-/* Two new Endless Nights places, drawn entirely in code (no image files):
+/* Endless Nights places, drawn entirely in code (no image files):
    Night Market – neon streets, striped stall awnings, string lights and paper lanterns.
    Pagoda Garden – a dusk sky, golden stupas on misty hills, tiered temple roofs and a lotus pond.
+   Pagoda Hill – a cool moonlit ridge, quiet temple silhouettes and stone stairways.
    draw() paints sky + parallax layers in world space; the game draws the floor, pits and Moodlings on top. */
 (function (root) {
   'use strict';
@@ -129,8 +130,54 @@
       });
     }
   }
-  const DRAW = { market, garden };
+  function pagoda(g, o) {
+    const G = o.ground, scene = o.reduced ? { ...o, t: 0 } : o;
+    sky(g, scene, [[0, '#101b34'], [.5, '#253a59'], [.82, '#5b5274'], [1, '#b18b83']]);
+    const moonX = o.cam + o.W * .78, moonY = 84;
+    glow(g, moonX, moonY, 138, '255,229,183', .24); g.fillStyle = '#f7e9c5'; g.beginPath(); g.arc(moonX, moonY, 24, 0, Math.PI * 2); g.fill();
+    const hills = (f, base, amp, color, seed) => {
+      const off = o.cam * (1 - f); g.fillStyle = color; g.beginPath(); g.moveTo(o.cam - 50, G);
+      for (let x = o.cam - 50; x <= o.cam + o.W + 50; x += 32) { const u = (x - off) / 370; g.lineTo(x, base - amp * (.62 + .38 * Math.sin(u + seed) * Math.sin(u * .41 + seed))); }
+      g.lineTo(o.cam + o.W + 50, G); g.closePath(); g.fill();
+    };
+    hills(.08, G - 145, 75, '#26334d', 1); hills(.19, G - 95, 54, '#34415a', 3);
+    // Distant pagodas remain quiet silhouettes on the ridge, with restrained gold light.
+    const stupa = (x, base, scale) => {
+      g.save(); g.translate(x, base); g.scale(scale, scale);
+      g.fillStyle = '#625b68'; g.fillRect(-28, -5, 56, 6); g.fillRect(-23, -12, 46, 7); g.fillRect(-18, -20, 36, 8);
+      g.fillStyle = '#756c71'; g.beginPath(); g.moveTo(-18, -20); g.bezierCurveTo(-20, -40, -5, -48, 0, -69); g.bezierCurveTo(5, -48, 20, -40, 18, -20); g.closePath(); g.fill();
+      g.strokeStyle = 'rgba(233,203,145,.72)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(0, -68); g.lineTo(0, -91); g.stroke(); g.beginPath(); g.arc(0, -93, 2, 0, Math.PI * 2); g.fillStyle = '#e9cb91'; g.fill();
+      g.restore();
+    };
+    layer(scene, .24, 460, (x, i) => stupa(x + 180, G - 130 - hash(i) * 22, .62 + hash(i + 2) * .24));
+    // A small monastery roof line sits among the trees; no sacred figures or props are placed on the path.
+    layer(scene, .48, 360, (x, i) => {
+      const cx = x + 170, base = G - 32;
+      g.fillStyle = '#4a3a43'; g.fillRect(cx - 54, base - 64, 108, 64);
+      g.fillStyle = '#6b4245';
+      for (let row = 0; row < 3; row++) {
+        const half = 76 - row * 19, y = base - 65 - row * 24;
+        g.beginPath(); g.moveTo(cx - half - 10, y + 5); g.quadraticCurveTo(cx - half, y - 5, cx - half + 9, y - 16); g.lineTo(cx + half - 9, y - 16); g.quadraticCurveTo(cx + half, y - 5, cx + half + 10, y + 5); g.closePath(); g.fill();
+        g.strokeStyle = 'rgba(233,203,145,.55)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(cx - half - 10, y + 5); g.lineTo(cx + half + 10, y + 5); g.stroke();
+      }
+      g.fillStyle = '#c4a978'; g.fillRect(cx - 24, base - 48, 12, 28); g.fillRect(cx + 12, base - 48, 12, 28);
+      if (i % 2) {
+        g.fillStyle = '#34483e'; g.beginPath(); g.arc(cx - 90, base - 95, 40, 0, Math.PI * 2); g.arc(cx - 58, base - 111, 35, 0, Math.PI * 2); g.arc(cx - 27, base - 94, 39, 0, Math.PI * 2); g.fill();
+      }
+    });
+    // Muted lanterns and a still band of mist keep the ridge serene.
+    layer(scene, .72, 330, (x, i) => {
+      const lx = x + 54, by = G - 26;
+      g.fillStyle = '#686674'; g.fillRect(lx - 3, by - 40, 6, 40); g.fillRect(lx - 12, by - 46, 24, 6);
+      g.fillStyle = '#b88f53'; g.beginPath(); g.ellipse(lx, by - 58, 7, 10, 0, 0, Math.PI * 2); g.fill();
+      glow(g, lx, by - 57, 34, '255,207,125', .23);
+    });
+    g.save(); g.fillStyle = 'rgba(222,226,232,.09)';
+    for (let row = 0; row < 3; row++) { const y = G - 96 + row * 24, shift = o.reduced ? 0 : Math.sin(o.t * .22 + row) * 8; g.beginPath(); g.ellipse(o.cam + o.W * .5 + shift, y, o.W * .62, 13, 0, 0, Math.PI * 2); g.fill(); }
+    g.restore();
+  }
+  const DRAW = { market, garden, pagoda };
   // floor colours the game uses for these places: [top, middle, edge line]
-  const FLOOR = { market: ['#7a4256', '#4a2840', 'rgba(255,190,140,.75)'], garden: ['#8a7aa0', '#4f4466', 'rgba(255,228,170,.7)'] };
+  const FLOOR = { market: ['#7a4256', '#4a2840', 'rgba(255,190,140,.75)'], garden: ['#8a7aa0', '#4f4466', 'rgba(255,228,170,.7)'], pagoda: ['#827a78', '#48454c', 'rgba(218,194,153,.72)'] };
   root.TCPlaces = { has: k => !!DRAW[k], draw: (g, k, o) => { g.save(); DRAW[k](g, o); g.restore(); }, FLOOR };
 })(typeof window !== 'undefined' ? window : globalThis);

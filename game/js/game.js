@@ -626,6 +626,7 @@
   function inFestival() { return (mode === 'story' && (FESTIVAL_NIGHTS.includes(storyNight) || currentLevel?.map === 'festival')) || (mode === 'free' && currentLevel?.map === 'festival'); }
   function currentMapKey() {
     if (currentLevel?.map === 'market') return 'market';
+    if (currentLevel?.map === 'pagoda') return 'pagoda';
     if (inSchool()) return 'school';
     if (inRooftop()) return 'rooftop';
     if (inPark()) return 'park';
@@ -634,7 +635,7 @@
     if (inLake()) return 'lake';
     return 'free';
   }
-  const CAVE_LABELS = { school: 'locker', rooftop: 'roof nook', park: 'bush', festival: 'stall', market: 'market stall', hill: 'tree hollow', lake: 'reed bed', free: 'cave' };
+  const CAVE_LABELS = { school: 'locker', rooftop: 'roof nook', park: 'bush', festival: 'stall', market: 'market stall', pagoda: 'stone alcove', hill: 'tree hollow', lake: 'reed bed', free: 'cave' };
   function caveXsForMap() { return currentLevel.hideSpots || []; }
   const NIGHT_CHAPTERS = [
     { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
@@ -1273,7 +1274,7 @@
   // Themed traps and hidden keepsakes (data in levels.js: hazards, keepsakes, 'sinking' platforms)
   const SINK_TIME = 1.6;
   const KEEPSAKE_GLOW = 25;
-  const KEEPSAKE_ART = { school: ['paper star', '#ffe39a'], rooftop: ['little bell', '#ffe1a3'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], market: ['lantern charm', '#ffb36b'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], free: ['star', '#ffe39a'] };
+  const KEEPSAKE_ART = { school: ['paper star', '#ffe39a'], rooftop: ['little bell', '#ffe1a3'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], market: ['lantern charm', '#ffb36b'], pagoda: ['bell charm', '#e4cc9c'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], free: ['star', '#ffe39a'] };
   const WEATHER = [
     { kind: 'rain', icon: '☔', title: 'Light rain' },
     { kind: 'wind', icon: '〰', title: 'Soft wind' },
@@ -1303,7 +1304,7 @@
   function keepsakesFound(night) { let n = 0; for (const id of foundKeeps) if (id.startsWith(`n${night}-`)) n++; return n; }
   function initHazards() {
     hazards = []; keepsakes = []; paperStars = []; hazSeen = {}; buriedHintShown = false;
-    if (mode === 'story' || currentLevel.map === 'market') hazards = (currentLevel.hazards || []).map((h, i) => ({ ...h, i, cd: 0, tt: 0, phase: 'idle', off: (i * 2.3) % 5, drops: [], squeakT: 0, puddleT: 0, sneakShown: false, splashShown: false }));
+    if (mode === 'story' || currentLevel.map === 'market' || currentLevel.map === 'pagoda') hazards = (currentLevel.hazards || []).map((h, i) => ({ ...h, i, cd: 0, tt: 0, phase: 'idle', off: (i * 2.3) % 5, drops: [], squeakT: 0, puddleT: 0, ringT: 0, touched: false, sneakShown: false, splashShown: false }));
     if (mode !== 'story') return;
     keepsakes = (currentLevel.keepsakes || []).map(([x, y], i) => ({ x, y, id: `n${storyNight}-${i}`, found: foundKeeps.has(`n${storyNight}-${i}`), bob: Math.random() * 6, got: 0 }));
     const paperPositions = window.TCPaperStars?.positionsFor(currentLevel) || [];
@@ -1345,7 +1346,21 @@
     for (const h of hazards) {
       h.cd = Math.max(0, h.cd - dt); h.squeakT = Math.max(0, h.squeakT - dt);
       h.puddleT = Math.max(0, (h.puddleT || 0) - dt);
-      if (h.kind === 'squeak') {
+      h.ringT = Math.max(0, (h.ringT || 0) - dt);
+      if (h.kind === 'bell') {
+        const touching = cat.on && Math.abs(cat.x - h.x) < 24 && Math.abs(cat.y - terrainY(h.x)) < 52;
+        if (!touching) { h.touched = false; continue; }
+        if (h.touched || h.cd > 0) continue;
+        h.touched = true; h.cd = 3.2; h.ringT = 1.25;
+        tone(740, .18, 'sine', .045); setTimeout(() => tone(988, .24, 'sine', .035), 95); sfx('ui', 'sparkle');
+        burst(h.x, terrainY(h.x) - 48, '#f2d99b', 8);
+        for (const m of mood) if (!m.dead && !m.sky && Math.abs(m.x - h.x) < (h.radius || 190)) {
+          m.bellCalmT = Math.max(m.bellCalmT || 0, 2.8);
+          if (m.type === 'N' && (m.state === 'panic' || m.state === 'hidden')) { m.state = 'wander'; m.st = 0; m.alarm = 0; m.alpha = 1; }
+          float(m.x, m.y - 36, '…', '#f2d99b');
+        }
+        hazNotice('pagoda-bell', guideCopy().pagodaBellTip || 'Touch a hanging bell to calm nearby Moodlings.', '#f2d99b');
+      } else if (h.kind === 'squeak') {
         const onBoard = cat.on && cat.x >= h.x && cat.x <= h.x + h.w;
         if (!onBoard) continue;
         if (cat.sneak || Math.abs(cat.vx) < 90) { if (!cat.sneak || h.sneakShown) continue; h.sneakShown = true; float(cat.x, cat.y - 74, 'Tiptoe… no squeak', '#c8ff8a'); continue; }
@@ -1461,7 +1476,17 @@
       if (sunk > .05) { ctx.fillStyle = 'rgba(200,240,255,.7)'; for (let k = 0; k < 3; k++) { const bt = (t * 1.6 + k / 3) % 1; ctx.beginPath(); ctx.arc(cx - rx * .6 + k * rx * .6, y + 4 - bt * 16, 1.5 + bt, 0, 7); ctx.fill(); } }
     }
     for (const h of hazards) {
-      if (h.kind === 'puddle') {
+      if (h.kind === 'bell') {
+        if (h.x < x0 - 30 || h.x > x1 + 30) continue;
+        const y = terrainY(h.x), light = ctx.createRadialGradient(h.x, y - 47, 1, h.x, y - 47, 56);
+        light.addColorStop(0, 'rgba(246,221,166,.27)'); light.addColorStop(1, 'rgba(246,221,166,0)');
+        ctx.fillStyle = light; ctx.beginPath(); ctx.arc(h.x, y - 47, 56, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#68605a'; ctx.fillRect(h.x - 2, y - 30, 4, 28); ctx.fillRect(h.x - 13, y - 32, 26, 4);
+        ctx.fillStyle = '#a68c68'; ctx.beginPath(); ctx.moveTo(h.x - 10, y - 30); ctx.quadraticCurveTo(h.x - 17, y - 56, h.x - 10, y - 68); ctx.quadraticCurveTo(h.x, y - 73, h.x + 10, y - 68); ctx.quadraticCurveTo(h.x + 17, y - 56, h.x + 10, y - 30); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#d9c59d'; ctx.beginPath(); ctx.ellipse(h.x, y - 30, 11, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#5c514b'; ctx.fillRect(h.x - 2, y - 31, 4, 8);
+        if (h.ringT > 0) for (let i = 0; i < 3; i++) { ctx.globalAlpha = Math.max(0, h.ringT / 1.25 - i * .22); ctx.strokeStyle = '#f3dfb1'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(h.x, y - 52, 18 + (1.25 - h.ringT) * 26 + i * 8, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke(); }
+        ctx.globalAlpha = 1;
+      } else if (h.kind === 'puddle') {
         if (h.x + h.w < x0 || h.x > x1) continue;
         const y = terrainY(h.x + h.w / 2), phase = h.puddleT > 0 ? h.puddleT / .7 : 0;
         const wet = ctx.createRadialGradient(h.x + h.w / 2, y - 4, 1, h.x + h.w / 2, y - 4, h.w * .7);
@@ -1757,6 +1782,7 @@
     festival: { kind: 'festival goods', label: 'bamboo basket', labelMarked: 'marked bamboo basket', labels: ['bamboo basket', 'clay pots', 'folded mat'], xs: [150, 600, 810, 1200, 1700, 2600, 3000, 3500, 4150], draw: drawFestivalBurySpot, debris: [{ shape: 'straw', color: '#d9b66f' }, { shape: 'spark', color: '#ffd58a' }, { shape: 'straw', color: '#b88952' }], glow: '#ffc887' },
     market: { kind: 'market goods', label: 'dropped snack basket', labelMarked: 'marked snack basket', labels: ['snack basket', 'paper lantern box', 'dropped fruit'], xs: [], draw: drawFestivalBurySpot, debris: [{ shape: 'straw', color: '#d9b66f' }, { shape: 'spark', color: '#ffd58a' }, { shape: 'paper', color: '#ffb36b' }], glow: '#ffb36b' },
     hill: { kind: 'hilltop finds', label: 'mossy stones', labelMarked: 'marked mossy stones', labels: ['mossy stones', 'fallen branch', 'leaf pile'], xs: [80, 350, 450, 550, 800, 910, 1020, 1130], draw: drawHillBurySpot, debris: [{ shape: 'moss', color: '#77a77c' }, { shape: 'twig', color: '#9b7659' }, { shape: 'leaf', color: '#83ad70' }], glow: '#c0b1ff' },
+    pagoda: { kind: 'quiet hillside finds', label: 'loose stone chips', labelMarked: 'marked loose stone chips', labels: ['loose stone chips', 'fallen leaves', 'small seed pods'], xs: [], draw: drawHillBurySpot, debris: [{ shape: 'chip', color: '#a7a298' }, { shape: 'leaf', color: '#86917c' }, { shape: 'twig', color: '#9d896a' }], glow: '#e4cc9c' },
     lake: { kind: 'lakeshore finds', label: 'sand mound', labelMarked: 'marked sand mound', labels: ['sand mound', 'driftwood', 'pebble stack'], xs: [100, 650, 1200, 1800, 2220, 2630, 3000, 3600, 4150], draw: drawLakeBurySpot, debris: [{ shape: 'sand', color: '#e8c58a' }, { shape: 'splash', color: '#9cdaee' }, { shape: 'shell', color: '#ffe2c5' }], glow: '#9fe8ff' },
     free: { kind: 'classic stones', label: 'rock', labelMarked: 'marked rock', xs: [], draw: drawClassicRockBase, debris: [{ shape: 'chip', color: '#77736f' }, { shape: 'chip', color: '#a29b8d' }, { shape: 'chip', color: '#5f6260' }], glow: '#c8baff' }
   };
@@ -2437,6 +2463,7 @@
     if (nightGuide.active && !m.tutorialOnly) return;
     const chapter = mode === 'story' ? chapterFor(storyNight) : { moodlingSpeed: 1, frustratedChargeSpeed: 1, frustratedWindup: .55, nervousHearingMul: 1, nervousPanicTime: 1.1 };
     const sp = mode === 'free' ? 1 + Math.min(.6, level * .1) : (chapter.moodlingSpeed * (chaos ? 1.25 : 1));
+    if (m.bellCalmT > 0) { m.bellCalmT = Math.max(0, m.bellCalmT - dt); return; }
     if (m.sky && m.skyPhase === 'cleared') return;
     if (m.sky && m.skyPhase !== 'ground') { updateSkyMood(m, dt, chapter); return; }
     if (m.sky && m.skyGroundStun > 0) {
@@ -3536,23 +3563,23 @@
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
   function drawLevelDecor(x0, x1) {
-    const map = currentLevel.map, palette = map === 'school' ? ['#8a5e4c','#d4a66b','#f5d8a5'] : map === 'rooftop' ? ['#635568','#b5a0a6','#f2d5ae'] : map === 'park' ? ['#3f9b83','#8ed7a1','#f4c985'] : map === 'festival' ? ['#77503f','#d6aa5a','#ef8fbd'] : map === 'market' ? ['#492d55','#af5271','#ffd28a'] : map === 'hill' ? ['#555078','#9a8cc4','#64aa8b'] : map === 'lake' ? ['#5a3d4b','#a77a5a','#9fe8ff'] : ['#4d5054','#818b83','#c0b1ff'];
+    const map = currentLevel.map, palette = map === 'school' ? ['#8a5e4c','#d4a66b','#f5d8a5'] : map === 'rooftop' ? ['#635568','#b5a0a6','#f2d5ae'] : map === 'park' ? ['#3f9b83','#8ed7a1','#f4c985'] : map === 'festival' ? ['#77503f','#d6aa5a','#ef8fbd'] : map === 'market' ? ['#492d55','#af5271','#ffd28a'] : map === 'pagoda' ? ['#5b5654','#978878','#e4cc9c'] : map === 'hill' ? ['#555078','#9a8cc4','#64aa8b'] : map === 'lake' ? ['#5a3d4b','#a77a5a','#9fe8ff'] : ['#4d5054','#818b83','#c0b1ff'];
     const [dark, mid, light] = palette;
     if (map !== 'hill') {
       const bottom = VH + OY + 60, floor = ctx.createLinearGradient(0, GROUND - 28, 0, bottom);
       const tcFloor = window.TCPlaces?.FLOOR?.[map];
-      floor.addColorStop(0, tcFloor ? tcFloor[0] : map === 'festival' ? '#76513e' : map === 'lake' ? '#694a57' : map === 'park' ? '#3c705f' : map === 'market' ? '#7a4256' : map === 'school' ? '#58475c' : '#47514d');
-      floor.addColorStop(.22, tcFloor ? tcFloor[1] : map === 'festival' ? '#46313a' : map === 'lake' ? '#493247' : map === 'park' ? '#2a4550' : map === 'market' ? '#4a2840' : map === 'school' ? '#342b43' : '#303a38'); floor.addColorStop(1, '#151421');
+      floor.addColorStop(0, tcFloor ? tcFloor[0] : map === 'festival' ? '#76513e' : map === 'lake' ? '#694a57' : map === 'park' ? '#3c705f' : map === 'market' ? '#7a4256' : map === 'pagoda' ? '#827a78' : map === 'school' ? '#58475c' : '#47514d');
+      floor.addColorStop(.22, tcFloor ? tcFloor[1] : map === 'festival' ? '#46313a' : map === 'lake' ? '#493247' : map === 'park' ? '#2a4550' : map === 'market' ? '#4a2840' : map === 'pagoda' ? '#48454c' : map === 'school' ? '#342b43' : '#303a38'); floor.addColorStop(1, '#151421');
       const left = Math.max(0, Math.floor(x0 / 8) * 8), right = Math.min(WORLD, x1 + 8);
       ctx.fillStyle = floor; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
       for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x));
       ctx.lineTo(right, bottom); ctx.lineTo(left, bottom); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = tcFloor ? tcFloor[2] : map === 'market' ? 'rgba(255,190,140,.75)' : map === 'festival' ? 'rgba(218,174,120,.65)' : map === 'lake' ? 'rgba(170,232,244,.48)' : map === 'park' ? 'rgba(133,210,157,.52)' : 'rgba(255,226,180,.36)';
+      ctx.strokeStyle = tcFloor ? tcFloor[2] : map === 'pagoda' ? 'rgba(218,194,153,.72)' : map === 'market' ? 'rgba(255,190,140,.75)' : map === 'festival' ? 'rgba(218,174,120,.65)' : map === 'lake' ? 'rgba(170,232,244,.48)' : map === 'park' ? 'rgba(133,210,157,.52)' : 'rgba(255,226,180,.36)';
       ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
       for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x)); ctx.stroke();
     }
     // A quiet contour trace makes the authored steps and slopes legible over the existing place art.
-    ctx.strokeStyle = map === 'school' ? 'rgba(255,226,180,.38)' : map === 'festival' ? 'rgba(255,210,160,.46)' : map === 'lake' ? 'rgba(170,232,244,.5)' : 'rgba(195,220,180,.42)';
+    ctx.strokeStyle = map === 'pagoda' ? 'rgba(220,205,174,.54)' : map === 'school' ? 'rgba(255,226,180,.38)' : map === 'festival' ? 'rgba(255,210,160,.46)' : map === 'lake' ? 'rgba(170,232,244,.5)' : 'rgba(195,220,180,.42)';
     ctx.lineWidth = 2; ctx.beginPath();
     const start = Math.max(0, Math.floor(x0 / 18) * 18), end = Math.min(WORLD, x1);
     for (let x = start; x <= end; x += 18) { const y = terrainY(x); x === start ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
@@ -3628,6 +3655,14 @@
         const colors = ['#f35c86', '#ffd166', '#41c7b3', '#b78cff'];
         for (let i = 0; i < 8; i++) { ctx.fillStyle = colors[i % colors.length]; ctx.fillRect(x + i * w / 8, y - 7, w / 8 + 1, 8); ctx.beginPath(); ctx.arc(x + (i + .5) * w / 8, y + 1, w / 16, 0, Math.PI); ctx.fill(); }
         ctx.fillStyle = 'rgba(255,236,189,.82)'; ctx.fillRect(x, y - 9, w, 2);
+      }
+      if (p.skin === 'oil-lamp') {
+        ctx.fillStyle = '#b5a68c'; ctx.beginPath(); canvasRoundRect(ctx, x + 7, y - 6, w - 14, 8, 3); ctx.fill();
+        ctx.fillStyle = '#d3b77f'; ctx.fillRect(x + 10, y - 8, w - 20, 2);
+        const lx = x + w / 2, flame = reduce ? 0 : Math.sin(t * 5 + x) * 1.2;
+        const halo = ctx.createRadialGradient(lx, y - 25, 1, lx, y - 25, 31); halo.addColorStop(0, 'rgba(255,218,139,.25)'); halo.addColorStop(1, 'rgba(255,218,139,0)');
+        ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(lx, y - 25, 31, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffd78d'; ctx.beginPath(); ctx.ellipse(lx, y - 14 - flame, 3.2, 6.5, 0, 0, Math.PI * 2); ctx.fill();
       }
     }
     for (const prop of currentProps) {
@@ -3874,6 +3909,12 @@
       if (m.alpha < .02) continue;
       ctx.save(); ctx.globalAlpha = m.alpha;
       const look = clamp((cat.x - m.x) / 160, -2.5, 2.5), near = Math.abs(cat.x - m.x) < 3 * T;
+      if (m.bellCalmT > 0) {
+        const calmAlpha = reduce ? .48 : .36 + .16 * Math.sin(t * 3 + m.phase), calmGlow = ctx.createRadialGradient(m.x, m.y - 24, 3, m.x, m.y - 24, 48);
+        calmGlow.addColorStop(0, `rgba(242,217,155,${calmAlpha})`); calmGlow.addColorStop(1, 'rgba(242,217,155,0)');
+        ctx.fillStyle = calmGlow; ctx.beginPath(); ctx.arc(m.x, m.y - 24, 48, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f2d99b'; ctx.font = `700 12px ${BODY}`; ctx.textAlign = 'center'; ctx.fillText('…', m.x, m.y - 58);
+      }
       if (m.sky && m.skyPhase !== 'ground' && m.skyPhase !== 'cleared') {
         const skyColor = m.v ? vcol(m.type, m.v) : col(m.type);
         if (m.skyPhase === 'wait') {
@@ -5533,7 +5574,7 @@
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
     const freePick = FREE_MAPS.find(m => m.id === freeMap), mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : (freePick && freePick.level && freeMapOpen(freePick) ? freePick.id : 'free');
-    const sceneTrack = ({ market: 'festival', garden: 'lakeside', school: 'school', rooftop: 'hilltop', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
+    const sceneTrack = ({ market: 'festival', garden: 'lakeside', pagoda: 'lakeside', school: 'school', rooftop: 'hilltop', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
     music('duck', 1); music('play', sceneTrack);
     music('ambience', sceneTrack);
     cv.hidden = false;

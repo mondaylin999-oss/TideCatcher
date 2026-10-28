@@ -18,3 +18,4 @@ jobs:
       - run: node tests/game-layouts.test.js
       - run: node tests/paper-stars.test.js
       - run: node tests/night-market.test.js
+      - run: node tests/pagoda-hill.test.js

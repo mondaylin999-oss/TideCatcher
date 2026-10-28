@@ -286,3 +286,9 @@
 - Made the market stay rainy with a gentle animated drizzle, added a one-time localized puddle tip, and themed its ground, lanterns, and keepsakes for the market.
 - Market platforms and puddles stay on solid ground; pit nights retain exactly one moving bridge per pit, so the market decorations never create a duplicate crossing.
 - Added a layout check for all market levels 18–50 and included it in game-integrity CI.
+# Pagoda Hill map
+
+- Added Pagoda Hill as a new Endless place unlocked at Night 34, with its own moonlit ridge scenery and subdued colors alongside the existing Pagoda Garden.
+- Pagoda routes use shallow repeating stone-step terrain, safe oil-lamp platforms, and hanging bells. Touching a bell plays a soft chime, briefly stills nearby Moodlings, and clears Nervous panic; the first bell tip is available in English and Burmese.
+- Kept all lamps and bells on solid ground and retained each pit's single moving bridge. Added the map to existing keep-sake and burial-site art so Endless setup remains compatible.
+- Added Pagoda Hill layout and unlock checks to game-integrity CI.
