@@ -1,3 +1,9 @@
+## Swaying lights and a brief recovery window
+
+- Caught lights now sway gently along Shwe’s tail-tied trail as she moves.
+- When Shwe is hit and loses a carried light, it floats nearby with a visible three-second countdown. Pounce on it before it fades to return it to the trail without earning duplicate score or Glow.
+- If the light fades, its Moodling returns at the drop point, preserving the existing catch and progress rules. Ambushes retain their existing number of lost lights.
+
 ## Sunrise countdown
 
 - Outdoor story skies now warm and brighten gradually as each night’s timer runs down; school interiors retain their indoor look.

@@ -1260,7 +1260,7 @@
   let need = { F: 4, N: 4, L: 2 }, got = { F: 0, N: 0, L: 0 }, hits = 0, startles = 0, goldDone = { a: false, b: false }, lastTick = 99;
   const requiredTotal = () => Object.values(need).reduce((sum, n) => sum + n, 0);
   const caughtTotal = () => Object.values(got).reduce((sum, n) => sum + n, 0);
-  let cat, mood = [], parts = [], floats = [], trail = [], hist = [], camX = 0, respawnQ = [], banner = null;
+  let cat, mood = [], parts = [], floats = [], trail = [], driftingLights = [], hist = [], camX = 0, respawnQ = [], banner = null;
   // Workshop lights are banked only at the run's normal completion boundary.
   let workshopRun = [], goldenCollar = false;
   let scratchSpots = [], scratchTarget = null, scratchAnim = 0, rocks = [], buriedHome = null, shake = 0;
@@ -1898,7 +1898,7 @@
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
     workshopRun = []; allHome = false; portal = null; bossEncounter = null; $('#bossIntroScreen').hidden = true;
-    goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
+    goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; driftingLights = []; hist = []; respawnQ = []; camX = 0;
     scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false; breathTipShown = false;
     const buryStyle = BURY_SPOTS[currentMapKey()];
     rocks = (currentLevel.burySpots || []).map((x, i) => {
@@ -1967,14 +1967,36 @@
     for (let i = 0; i < count && trail.length; i++) {
       const l = trail.pop();
       got[l.type] = Math.max(0, (got[l.type] || 0) - 1);
-      const nm = spawn(l.type, clamp(l.x, 60, WORLD - 60));
-      if (l.type === 'B' && nm.rock) { nm.rock.scratched = false; nm.rock.holeDepth = 0; }
-      if (l.type === 'N') panic(nm, cat.x - nm.x);
+      const away = Math.sign(l.x - cat.x) || -(cat.face || 1);
+      driftingLights.push({ ...l, x: l.x, y: l.y, age: 0, life: 3, vx: away * (34 + Math.random() * 10), vy: -30 - Math.random() * 12, phase: Math.random() * Math.PI * 2 });
       float(l.x, l.y - 20, 'A light drifted away', col(l.type));
       if (count > 1) burst(l.x, l.y, col(l.type), 8);
       dropped++;
     }
     return dropped;
+  }
+  function respawnDroppedLight(light) {
+    const nm = spawn(light.type, clamp(light.x, 60, WORLD - 60));
+    if (light.type === 'B' && nm.rock) { nm.rock.scratched = false; nm.rock.holeDepth = 0; }
+    if (light.type === 'N') panic(nm, cat.x - nm.x);
+  }
+  function updateDriftingLights(dt) {
+    for (const light of driftingLights) {
+      light.age += dt; light.life = Math.max(0, 3 - light.age);
+      if (!reduce) { light.vy += 18 * dt; light.x += light.vx * dt; light.y += light.vy * dt; light.vx *= Math.pow(.28, dt); }
+      if (light.life <= 0) respawnDroppedLight(light);
+    }
+    driftingLights = driftingLights.filter(light => light.life > 0);
+  }
+  function recoverDriftingLight(light) {
+    const index = driftingLights.indexOf(light);
+    if (index < 0 || light.life <= 0) return false;
+    driftingLights.splice(index, 1);
+    if (mode === 'story' && Object.prototype.hasOwnProperty.call(got, light.type)) got[light.type]++;
+    trail.push({ type: light.type, v: light.v, x: light.x, y: light.y, join: 0 });
+    burst(light.x, light.y, col(light.type), 12); float(light.x, light.y - 28, 'Light back with Shwe!', col(light.type));
+    sfx('ui', 'catch'); cat.bounced = true; cat.pounce = 0;
+    return true;
   }
   function hitCat(m) {
     hits++; cat.inv = 1.2; cat.vx = m.dir * 420; cat.vy = -420; cat.on = false; cat.pounce = 0;
@@ -2512,6 +2534,9 @@
   function checkCatches() {
     if (cat.pounce <= 0) return;
     if (tryBossPounce()) return;
+    for (const light of driftingLights) {
+      if (Math.hypot(cat.x - light.x, cat.y - 24 - light.y) < uv('pounce') + 18 && recoverDriftingLight(light)) return;
+    }
     const cx = cat.x + cat.face * 16, cy = cat.y - 24;
     for (const m of mood) {
       if (m.dead) continue;
@@ -2628,7 +2653,7 @@
     if (activeItems.sand && state === 'play' && t > 2.6) { activeItems.sand = false; burst(cat.x - cat.face * 8, cat.y - 50, GOLD, 14); float(cat.x, cat.y - 78, '⏳ The sand poured into your clock', GOLD); }
     for (const m of mood) updMood(m, purrT > 0 && Math.abs(m.x - cat.x) < 6 * T ? dt * .4 : dt);
     updFireflies(dt);
-    updHazards(dt); updTrinkets(dt); updPortal(dt);
+    updHazards(dt); updTrinkets(dt); updPortal(dt); updateDriftingLights(dt);
     checkCatches();
     mood = mood.filter(m => !m.dead);
     for (const r of respawnQ) r.at -= dt;
@@ -2668,8 +2693,9 @@
       let px = a.x, py = a.y;
       trail.forEach((l, i) => {
         const floor = trailFloorY(l.x, l.y) - LIFT;
-        const tx = px - face * SEG * .92;
-        const ty = cat.on ? floor : py + 7;           // grounded: rest on the floor; airborne: trail just below the bead before
+        const sway = reduce ? 0 : Math.sin(t * 2.15 - i * .68) * (cat.on ? 3 : 5.5);
+        const tx = px - face * SEG * .92 + sway;
+        const ty = cat.on ? floor : py + 7 + (reduce ? 0 : Math.sin(t * 1.9 - i * .62) * 2.5); // grounded lights skim the floor; airborne lights sway below one another
         const kx = Math.min(1, dt * 16), ky = Math.min(1, dt * Math.max(5, (cat.on ? 16 : 11) - i * 1.1));
         let x = l.x + (tx - l.x) * kx, y = l.y + (Math.min(ty, floor) - l.y) * ky;
         let dx = x - px, dy = y - py, d = Math.hypot(dx, dy);
@@ -4129,6 +4155,14 @@
       }
     }
     trail.forEach(l => lightShape(l.type, l.x, l.y, 1, l.v));
+    for (const light of driftingLights) {
+      const alpha = light.life < .75 ? light.life / .75 : 1, color = col(light.type);
+      ctx.save(); ctx.globalAlpha = alpha; ctx.shadowColor = color; ctx.shadowBlur = reduce ? 0 : 15;
+      lightShape(light.type, light.x, light.y, 1.08, light.v);
+      ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,244,196,.9)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(light.x, light.y, 17, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(light.life / 3, 0, 1)); ctx.stroke();
+      ctx.restore();
+    }
   }
   function drawParts() {
     for (const p of parts) { ctx.globalAlpha = clamp(p.life / p.max, 0, 1); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
