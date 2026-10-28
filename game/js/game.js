@@ -226,6 +226,7 @@
   // ---------- world ----------
   let currentLevel = window.TC_LEVELS?.[1] || { width: 4200, ground: { points: [[0, GROUND], [4200, GROUND]] }, pits: [], platforms: [], hideSpots: [], burySpots: [], spawnZones: [[120, 4080]], catStart: 200, props: [] };
   let activePlats = [];
+  let activeWalls = [];
   let currentProps = [];
   const levelGroundY = x => {
     const pts = currentLevel.ground.points, px = clamp(x, 0, currentLevel.width);
@@ -246,6 +247,10 @@
       const info = spec[4] || {}, p = [spec[0], spec[1], spec[2]];
       Object.assign(p, { type: spec[3] || 'static', path: info.path || null, speed: info.speed || 0, skin: info.skin || '', anchor: info.anchor || null, baseX: spec[0], baseY: spec[1], active: true, crumbleRemaining: 0, restRemaining: 0, movingPhase: 0 });
       return p;
+    });
+    activeWalls = (currentLevel.wallJumps || []).map(spec => {
+      const bottom = terrainY(spec.x + spec.w / 2);
+      return { ...spec, bottom, y: bottom - spec.h };
     });
   }
   function updateLevelPlatforms(dt) {
@@ -1484,7 +1489,7 @@
     free: { kind: 'classic stones', label: 'rock', labelMarked: 'marked rock', xs: [], draw: drawClassicRockBase, debris: [{ shape: 'chip', color: '#77736f' }, { shape: 'chip', color: '#a29b8d' }, { shape: 'chip', color: '#5f6260' }], glow: '#c8baff' }
   };
 
-  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, alpha: 1 }; }
+  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, wallTouch: null, ledgeGrab: null, alpha: 1 }; }
   function pickX() { let x, n = 0; do { x = levelSpawnX(); n++; } while ((Math.abs(x - cat.x) < 380 || (mode === 'story' && rocks.some(spot => Math.abs(x - spot.x) < 100))) && n < 40); return x; }
   function pickCaveX() {
     const occupied = new Set(mood.filter(m => !m.dead && m.caveX != null).map(m => m.caveX));
@@ -1751,7 +1756,7 @@
   function beginFall() {
     if (cat.falling || cat.respawning || state !== 'play') return;
     cat.y = Math.min(cat.y, VH + OY - 10);
-    cat.falling = true; cat.fallTime = 0; cat.fallFromX = cat.x; cat.vx = 0; cat.platform = null; cat.swinging = null;
+    cat.falling = true; cat.fallTime = 0; cat.fallFromX = cat.x; cat.vx = 0; cat.platform = null; cat.swinging = null; cat.wallTouch = null; cat.ledgeGrab = null; cat.wallSurface = null;
     jumpHeld = false; jumpQ = false; burst(cat.x, cat.y - 18, GOLD, 24); burst(cat.x, cat.y - 24, CALM, 14);
     sfx('cat', 'sad'); sfx('ui', 'fall'); sfx('ui', 'poof');
   }
@@ -1949,6 +1954,13 @@
     }
   }
 
+  function startWallJump(c, side, jumpSpeed) {
+    c.ledgeGrab = null; c.wallTouch = null; c.on = false; c.platform = null;
+    c.vx = -side * Math.max(330, uv('swift') * T * .9); c.vy = -Math.max(jumpSpeed * 1.32, 1050);
+    c.face = -side; c.coyote = 0; c.jumpBuffer = 0; c.squash = .08;
+    queueJitTip('wallJump', c, guideCopy().mechanicTitles?.wallJump || 'Wall jump & ledge grab');
+    sfx('ui', 'jump');
+  }
   function updCat(dt) {
     const c = cat;
     if (c.falling) {
@@ -1970,7 +1982,7 @@
       respawnT -= dt; fallDimT = Math.max(0, fallDimT - dt);
       if (respawnT <= 0) {
         if (pendingFallFail) { pendingFallFail = false; finish(false, 'fall'); return; }
-        c.x = checkpointX; c.y = terrainY(checkpointX); c.vx = 0; c.vy = 0; c.on = true;
+        c.x = checkpointX; c.y = terrainY(checkpointX); c.vx = 0; c.vy = 0; c.on = true; c.wallTouch = null; c.ledgeGrab = null; c.wallSurface = null;
         c.inv = 1.5; c.respawning = false; c.coyote = 0; c.jumpBuffer = 0;
         hist = []; sfx('ui', 'respawn'); burst(c.x, c.y - 20, CALM, 16); announce('Back at the lantern!', CALM, 1.2);
       }
@@ -1988,6 +2000,21 @@
     else { const slick = c.on && onSlick(c.x), acc = slick ? (Math.abs(target) > Math.abs(c.vx) && Math.sign(target) === Math.sign(c.vx || target) ? 700 : 220) : c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     const jumpSpeed = chapter?.jumpSpeed || 830, gravity = chapter?.jumpGravity || 2300;
+    if (c.ledgeGrab) {
+      const grab = c.ledgeGrab;
+      if (grab.platform && !grab.platform.active) c.ledgeGrab = null;
+      else if (c.jumpBuffer > 0) { startWallJump(c, grab.side, jumpSpeed); jumpQ = false; }
+      else {
+        grab.timer -= dt; c.x = grab.side < 0 ? grab.x - 19 : grab.x + grab.w + 19;
+        c.y = grab.y + 32; c.vx = 0; c.vy = 0; c.on = false; c.platform = null;
+        jumpQ = false;
+        if (grab.timer <= 0) {
+          c.x = grab.side < 0 ? grab.x + 25 : grab.x + grab.w - 25;
+          c.y = grab.y; c.on = true; c.platform = grab.platform || null; c.wallSurface = grab.wall || null;
+          c.ledgeGrab = null; c.squash = .08; c.coyote = .1; sfx('ui', 'land');
+        } else return;
+      }
+    }
     if (c.swinging) {
       if (jumpHeld) {
         const p = c.swinging, anchor = p.anchor || [p[0] + p[2] / 2, p[1] - 60];
@@ -1996,8 +2023,10 @@
       }
       c.swinging = null; c.vx = c.face * 360; c.vy = -720; c.on = false; c.jumpBuffer = 0; sfx('ui', 'jump');
     }
-    const wasOn = c.on, py = c.y;
-    if (c.jumpBuffer > 0 && (c.on || c.coyote > 0) && c.pounce <= 0) {
+    const wasOn = c.on, py = c.y, oldX = c.x;
+    if (c.jumpBuffer > 0 && c.wallTouch && c.pounce <= 0) {
+      startWallJump(c, c.wallTouch.side, jumpSpeed);
+    } else if (c.jumpBuffer > 0 && (c.on || c.coyote > 0) && c.pounce <= 0) {
       c.vy = -jumpSpeed; c.on = false; c.coyote = 0; c.jumpBuffer = 0;
       onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240);
     }
@@ -2007,6 +2036,18 @@
     c.pcd -= dt; c.inv -= dt; c.squash = Math.max(0, c.squash - dt);
     if (c.platform && !c.platform.active) c.platform = null;
     c.vy += gravity * dt; c.x += c.vx * dt; c.y += c.vy * dt; c.x = clamp(c.x, 30, WORLD - 30);
+    c.wallTouch = null;
+    for (const wall of activeWalls) {
+      const bodyOverlapsWall = c.y > wall.y + 8 && c.y - 54 < wall.bottom;
+      if (!bodyOverlapsWall || c.x + 18 < wall.x || c.x - 18 > wall.x + wall.w) continue;
+      if (c.vx > 0 && oldX + 18 <= wall.x + 2) {
+        c.x = wall.x - 18; c.vx = 0; c.wallTouch = { wall, side: -1 };
+      } else if (c.vx < 0 && oldX - 18 >= wall.x + wall.w - 2) {
+        c.x = wall.x + wall.w + 18; c.vx = 0; c.wallTouch = { wall, side: 1 };
+      } else if (c.x < wall.x + wall.w / 2) { c.x = wall.x - 18; c.wallTouch = { wall, side: -1 }; }
+      else { c.x = wall.x + wall.w + 18; c.wallTouch = { wall, side: 1 }; }
+    }
+    if (!c.on && !c.wallTouch && c.vy > 260) c.vy = Math.min(c.vy, 260);
     let landed = false, landedOn = null;
     const floorY = terrainY(c.x);
     const pit = pitAt(c.x);
@@ -2018,6 +2059,27 @@
         if (!p.active || p.type === 'swinging') continue;
         const pad = p.type === 'moving' ? 16 : 6;
         if (c.x > p[0] - pad && c.x < p[0] + p[2] + pad && py <= p[1] + .5 && c.y >= p[1]) { c.y = p[1]; landed = true; landedOn = p; break; }
+      }
+      if (!landed) for (const wall of activeWalls) {
+        if (c.x > wall.x - 12 && c.x < wall.x + wall.w + 12 && py <= wall.y + .5 && c.y >= wall.y) {
+          c.y = wall.y; landed = true; c.wallSurface = wall; break;
+        }
+      }
+    }
+    if (!landed && !c.on && c.vy < 0) {
+      const ledges = [
+        ...activeWalls.map(wall => ({ x: wall.x, w: wall.w, y: wall.y, wall })),
+        ...activePlats.filter(p => p.active && p.type === 'static').map(platform => ({ x: platform[0], w: platform[2], y: platform[1], platform }))
+      ];
+      for (const ledge of ledges) {
+        const side = ledge.wall && c.wallTouch?.wall === ledge.wall ? c.wallTouch.side : c.vx > 0 ? -1 : c.vx < 0 ? 1 : 0;
+        const edge = side < 0 ? ledge.x : ledge.x + ledge.w;
+        const reachedEdge = side && Math.abs(c.x - edge) <= 24 && (side < 0 ? oldX <= edge + 4 : oldX >= edge - 4);
+        if (!reachedEdge || c.y < ledge.y + 4 || c.y > ledge.y + 78) continue;
+        c.ledgeGrab = { x: ledge.x, w: ledge.w, y: ledge.y, side, timer: .2, wall: ledge.wall || null, platform: ledge.platform || null };
+        c.wallTouch = ledge.wall ? { wall: ledge.wall, side } : null; c.vx = 0; c.vy = 0; c.on = false; c.platform = null;
+        queueJitTip('wallJump', c, guideCopy().mechanicTitles?.wallJump || 'Wall jump & ledge grab');
+        break;
       }
     }
     if (jumpHeld && !landed) {
@@ -3145,6 +3207,23 @@
       ctx.fillStyle = 'rgba(24,17,42,.92)'; ctx.strokeStyle = edgeColor; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc((a+b)/2, top - 22, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.font = `800 13px ${DISP}`; ctx.textAlign = 'center'; ctx.fillStyle = INK; ctx.fillText('!', (a+b)/2, top - 17);
     }
+    // Wall-jump routes are separate collision scenery, never roost platforms.
+    for (const wall of activeWalls) {
+      if (wall.x + wall.w < x0 || wall.x > x1) continue;
+      const wallFill = ctx.createLinearGradient(wall.x, 0, wall.x + wall.w, 0);
+      wallFill.addColorStop(0, dark); wallFill.addColorStop(.5, mid); wallFill.addColorStop(1, dark);
+      ctx.fillStyle = wallFill; ctx.beginPath(); canvasRoundRect(ctx, wall.x, wall.y, wall.w, wall.bottom - wall.y + 5, 7); ctx.fill();
+      ctx.strokeStyle = map === 'lake' ? 'rgba(159,232,255,.68)' : map === 'park' ? 'rgba(142,215,161,.7)' : 'rgba(255,220,164,.66)';
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(wall.x + 2, wall.y + 3); ctx.lineTo(wall.x + wall.w - 2, wall.y + 3); ctx.stroke();
+      ctx.strokeStyle = 'rgba(18,13,30,.42)'; ctx.lineWidth = 1;
+      for (let row = 1; wall.y + row * 22 < wall.bottom; row++) {
+        const yy = wall.y + row * 22, offset = row % 2 ? wall.w * .42 : wall.w * .58;
+        ctx.beginPath(); ctx.moveTo(wall.x + 4, yy); ctx.lineTo(wall.x + wall.w - 4, yy); ctx.moveTo(wall.x + offset, yy - 20); ctx.lineTo(wall.x + offset, yy); ctx.stroke();
+      }
+      const glow = ctx.createRadialGradient(wall.x + wall.w / 2, wall.y, 2, wall.x + wall.w / 2, wall.y, 28);
+      glow.addColorStop(0, 'rgba(255,225,154,.18)'); glow.addColorStop(1, 'rgba(255,225,154,0)');
+      ctx.fillStyle = glow; ctx.fillRect(wall.x - 20, wall.y - 24, wall.w + 40, 35);
+    }
     for (const mark of currentLevel.checkpoints || []) {
       if (mark < x0 - 30 || mark > x1 + 30) continue;
       const gy = terrainY(mark), pulse = .7 + .3 * Math.sin(t * 3 + mark);
@@ -3622,10 +3701,7 @@
       drawCatGear(null, x0, y0, ww, hh, false, items);
     } finally { ctx = main; }
   }
-  function mkDrawSprite(c) {
-    const spr = mkGetSprite(MK_PROFILE.coat);
-    if (!spr || !spr.complete || !spr.naturalWidth) return false;
-    const hh = 70, ww = hh * spr.naturalWidth / spr.naturalHeight;
+  function gameCatRigPose(c, now = t) {
     const speed = Math.abs(c.vx), moving = c.on && speed > 10, ph = c.walk;
     // Stride grows smoothly with speed (no jump between walk and run), and the body rises and
     // falls on a soft wave instead of a sharp bounce at every step.
@@ -3633,7 +3709,8 @@
     // ground. Only the body bobs; the standing paws never leave the floor.
     const pace = clamp((speed - 10) / 280, 0, 1), amp = c.sneak ? .22 : .32 + .22 * pace;
     let back = 0, front = 0, tail, breath = 0, bodyY = 0, backLift = 0, frontLift = 0;
-    if (scratchAnim > 0 && c.on) { front = Math.sin(t * 20) * .58; frontLift = Math.max(0, Math.sin(t * 20)) * .25; back = -.08; tail = .28 + Math.sin(t * 8) * .12; breath = .01; bodyY = 1.3; }
+    const scratching = (c.scratchAnim ?? scratchAnim) > 0;
+    if (scratching && c.on) { front = Math.sin(now * 20) * .58; frontLift = Math.max(0, Math.sin(now * 20)) * .25; back = -.08; tail = .28 + Math.sin(now * 8) * .12; breath = .01; bodyY = 1.3; }
     else if (c.pounce > 0) { back = -.62; front = .72; tail = -.42; backLift = .12; frontLift = .2; }
     else if (!c.on) { const rising = c.vy < 0; back = rising ? -.38 : .25; front = rising ? .32 : -.24; tail = rising ? -.32 : .3; backLift = rising ? .1 : .2; frontLift = rising ? .22 : .08; }
     else if (moving) {
@@ -3644,28 +3721,58 @@
       tail = Math.sin(ph * .5 + 1.1) * (.12 + .12 * pace);
       bodyY = -(1 - Math.cos(ph * 2)) * .5 * (c.sneak ? .4 : .6 + .8 * pace);
     }
-    else { tail = Math.sin(t * 1.7) * .12 + Math.pow(Math.max(0, Math.sin(t * .83 + .7)), 8) * .28; breath = Math.sin(t * 2.2) * .016; }
+    else { tail = Math.sin(now * 1.7) * .12 + Math.pow(Math.max(0, Math.sin(now * .83 + .7)), 8) * .28; breath = Math.sin(now * 2.2) * .016; }
     // ease every pose change (start, stop, jump, land) over a few frames instead of snapping
-    const P = c.rigPose || (c.rigPose = { back, front, tail, bodyY, backLift, frontLift, at: t });
-    const k = scratchAnim > 0 ? 1 : 1 - Math.exp(-Math.max(0, Math.min(.1, t - P.at)) * (moving ? 30 : 16));
+    const P = c.rigPose || (c.rigPose = { back, front, tail, bodyY, backLift, frontLift, at: now });
+    const k = scratching ? 1 : 1 - Math.exp(-Math.max(0, Math.min(.1, now - P.at)) * (moving ? 30 : 16));
     for (const [key, v] of [['back', back], ['front', front], ['tail', tail], ['bodyY', bodyY], ['backLift', backLift], ['frontLift', frontLift]]) P[key] += (v - P[key]) * k;
-    P.at = t;
-    back = P.back; front = P.front; tail = P.tail; bodyY = P.bodyY; backLift = P.backLift; frontLift = P.frontLift;
+    P.at = now;
+    return { back: P.back, front: P.front, tail: P.tail, breath, bodyY: P.bodyY, backLift: P.backLift, frontLift: P.frontLift };
+  }
+  function mkDrawSprite(c) {
+    const spr = mkGetSprite(MK_PROFILE.coat);
+    if (!spr || !spr.complete || !spr.naturalWidth) return false;
+    const hh = 70, ww = hh * spr.naturalWidth / spr.naturalHeight;
+    const speed = Math.abs(c.vx), moving = c.on && speed > 10;
+    const pose = gameCatRigPose(c);
     const bob = 0;
     if (c.on) { ctx.fillStyle = 'rgba(8,10,24,.35)'; ctx.beginPath(); ctx.ellipse(-2, 2, ww * .36, 4.5, 0, 0, 7); ctx.fill(); }
     if (eyesT > 0) { ctx.shadowColor = '#c8ff8a'; ctx.shadowBlur = 16; }
     // cat.y is the paw baseline; keep the sprite's bottom edge on that line.
     const spriteY = -hh + bob;
     // a gentle rock of the body with each step (and a lean into jumps) so the walk feels alive
+    const ph = c.walk, pace = clamp((speed - 10) / 280, 0, 1);
     const tilt = c.on ? (moving ? Math.sin(ph * 2 + .6) * .018 * (1 + pace) : 0) : clamp(c.vy / 9000, -.06, .06);
     ctx.save(); ctx.translate(0, -2); ctx.rotate(tilt); ctx.translate(0, 2);
-    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, { back, front, tail, breath, bodyY, backLift, frontLift });
+    const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, pose);
     if (!ok) ctx.drawImage(spr, -ww / 2 - 2, spriteY, ww, hh);
     ctx.restore();
     ctx.shadowBlur = 0;
     drawCatGear(c, -ww / 2 - 2, spriteY, ww, hh, moving);
     return true;
   }
+  // Catch-guide clips call the same rig and pose function as live gameplay.
+  window.TCCatchClipArt = {
+    drawCat(g, { x, y, height = 188, action = 'idle', time = 0, facing = 1, rigPose } = {}) {
+      const key = MK_PROFILE.coat, spr = mkGetSprite(key);
+      if (!spr || !spr.complete || !spr.naturalWidth) return false;
+      const width = height * spr.naturalWidth / spr.naturalHeight;
+      const airborne = action === 'jump' || action === 'pounce';
+      const catPose = { vx: action === 'walk' ? 145 : action === 'sneak' ? 62 : 0, walk: time * (action === 'sneak' ? 8 : 12),
+        on: !airborne, sneak: action === 'sneak', pounce: action === 'pounce' ? .2 : 0,
+        vy: action === 'jump' || action === 'pounce' ? -120 : 0, scratchAnim: action === 'scratch' ? 1 : 0, rigPose };
+      const pose = gameCatRigPose(catPose, time);
+      g.save(); g.translate(x, y); g.scale(facing < 0 ? -1 : 1, 1);
+      if (action === 'jump') g.scale(.98, 1.04);
+      if (action === 'pounce') g.scale(1.12, .9);
+      if (action === 'land') g.scale(1.07, .9);
+      if (action === 'sit') g.scale(1.02, .9);
+      const drawn = mkDrawRig(g, key, -width / 2, -height, width, height, pose);
+      if (!drawn) g.drawImage(spr, -width / 2, -height, width, height);
+      g.restore();
+      return catPose.rigPose;
+    }
+  };
   function drawCat() {
     const c = cat; if (c.respawning) return; ctx.save();
     if (c.falling) ctx.globalAlpha = clamp(1 - c.fallTime / .38, 0, 1);
@@ -4175,37 +4282,28 @@
       item.appendChild(details); moods.appendChild(item);
     }
   }
-  let catchClipTimer = 0, catchClipReturnFocus = null;
+  let catchClipReturnFocus = null;
   function runCatchClip(type, variant) {
     const stage = $('#catchClipStage'), copy = guideCopy().help || {}, key = `${type}${variant}`, steps = copy.catchClipSteps?.[key] || copy.catchClipSteps?.[type] || [copy.catchGuides?.[key] || copy.catchGuides?.[type] || vinfo(type, variant).d];
     const captions = steps.length ? steps : [vinfo(type, variant).d];
-    if (catchClipTimer) { clearInterval(catchClipTimer); catchClipTimer = 0; }
-    stage.classList.remove('is-playing'); stage.dataset.type = type; stage.dataset.variant = String(variant);
-    stage.style.setProperty('--clip-mood-color', vcol(type, variant));
-    $('#catchClipMoodling').src = bookPortrait(type, variant, true);
-    $('#catchClipCat').src = COAT.img;
-    $('#catchClipCue').textContent = type === 'C' && variant === 1 ? '◯' : ({ F: '⚡', N: '…', L: 'EYES', B: 'EYES', E: '↑', S: '…', J: '✦', C: '✧', G: '✦' })[type] || '✦';
+    stage.dataset.type = type; stage.dataset.variant = String(variant);
+    stage.style.setProperty('--clip-accent', vcol(type, variant));
     $('#catchClipTitle').textContent = `${guideCopy().help?.catchClipLabel || 'Short guided clip'} · ${vinfo(type, variant).n}`;
     $('#catchClipClose').setAttribute('aria-label', copy.catchClipClose || 'Close clip');
-    $('#catchClipReplay').textContent = copy.catchClipReplay || 'Replay clip';
-    const tagLabels = copy.catchClipStages || ['NOTICE', 'TRY IT', 'BRING IT HOME'];
-    const showStep = index => {
-      const at = Math.min(index, captions.length - 1);
-      $('#catchClipCaption').textContent = captions[at];
-      $('#catchClipTag').textContent = `${at + 1} / ${captions.length} · ${tagLabels[Math.min(at, tagLabels.length - 1)] || ''}`;
-      $('#catchClipProgress').textContent = `${copy.catchClipStep || 'Step'} ${at + 1} / ${captions.length}`;
+    const buttonText = document.getElementById('bJump')?.textContent?.trim();
+    const playerCopy = {
+      catchClipNoButton: copy.catchClipNoButton || 'No button — watch Shwe',
+      catchClipGalleryLabel: copy.catchClipGalleryLabel || 'Three catch guide pictures', catchClipControlsLabel: copy.catchClipControlsLabel || 'Control for this step',
+      catchClipActionLabels: copy.catchClipActionLabels || {}, catchClipGlow: copy.catchClipGlow || '+Glow', catchClipOr: copy.catchClipOr || 'or',
+      catchClipStages: copy.catchClipStages || ['NOTICE', 'TRY IT', 'BRING IT HOME']
     };
-    showStep(0); $('#catchClipProgress').textContent = copy.catchClipPlaying || `${copy.catchClipStep || 'Step'} 1 / ${captions.length}`;
-    void stage.offsetWidth; stage.classList.add('is-playing');
-    let index = 0;
-    catchClipTimer = setInterval(() => {
-      index++;
-      if (index < captions.length) showStep(index);
-      else {
-        clearInterval(catchClipTimer); catchClipTimer = 0;
-        $('#catchClipProgress').textContent = copy.catchClipProgress || 'Clip finished · replay any time';
-      }
-    }, 2000);
+    $('#catchClipPrev').setAttribute('aria-label', copy.catchClipPrev || 'Previous picture');
+    $('#catchClipNext').setAttribute('aria-label', copy.catchClipNext || 'Next picture');
+    window.TCCatchClipPlayer?.open({
+      type, variant, steps: captions, stages: playerCopy.catchClipStages,
+      moodSrc: bookPortrait(type, variant, true), moodName: vinfo(type, variant).n, color: vcol(type, variant), copy: playerCopy,
+      touchLabels: { ...(copy.catchClipTouchLabels || {}), move: copy.catchClipTouchLabels?.move || 'MOVE', sneak: copy.catchClipTouchLabels?.sneak || 'SNEAK', jump: buttonText || copy.catchClipTouchLabels?.jump || 'JUMP', pounce: $('#bPounce')?.textContent.trim() || copy.catchClipTouchLabels?.pounce || 'POUNCE', eyes: $('#bEyes')?.textContent.trim() || copy.catchClipTouchLabels?.eyes || 'EYES', scratch: $('#bScratch')?.textContent.trim() || copy.catchClipTouchLabels?.scratch || 'SCRATCH', hold: copy.catchClipTouchLabels?.hold || 'HOLD', release: copy.catchClipTouchLabels?.release || 'LET GO' }
+    });
   }
   function openCatchClip(type, variant, trigger) {
     catchClipReturnFocus = trigger || document.activeElement;
@@ -4215,8 +4313,8 @@
     $('#catchClipClose').focus({ preventScroll: true });
   }
   function closeCatchClip(restoreFocus = true) {
-    if (catchClipTimer) { clearInterval(catchClipTimer); catchClipTimer = 0; }
-    $('#catchClipView').hidden = true; $('#catchClipStage').classList.remove('is-playing');
+    window.TCCatchClipPlayer?.close();
+    $('#catchClipView').hidden = true;
     $('#helpPanel').removeAttribute('aria-hidden');
     if (restoreFocus && catchClipReturnFocus?.isConnected) catchClipReturnFocus.focus({ preventScroll: true });
   }
@@ -4225,16 +4323,16 @@
     const key = button.dataset.catchClip, type = key[0], variant = Number(key.slice(1));
     if (VARS[type]?.[variant]) openCatchClip(type, variant, button);
   });
-  $('#catchClipReplay').addEventListener('click', () => runCatchClip($('#catchClipStage').dataset.type, Number($('#catchClipStage').dataset.variant) || 0));
   $('#catchClipClose').addEventListener('click', () => closeCatchClip());
   $('#catchClipView').addEventListener('click', e => { if (e.target.id === 'catchClipView') closeCatchClip(); });
   $('#catchClipView').addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeCatchClip(); }
     if (e.key === 'Tab') {
       e.stopPropagation();
-      const close = $('#catchClipClose'), replay = $('#catchClipReplay');
-      if (e.shiftKey && document.activeElement === close) { e.preventDefault(); replay.focus({ preventScroll: true }); }
-      else if (!e.shiftKey && document.activeElement === replay) { e.preventDefault(); close.focus({ preventScroll: true }); }
+      const focusables = [...$('#catchClipView').querySelectorAll('button:not([hidden]):not(:disabled)')];
+      const first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus({ preventScroll: true }); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus({ preventScroll: true }); }
     }
   });
   function openHelp(source = 'hub') {

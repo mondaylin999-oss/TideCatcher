@@ -1,4 +1,27 @@
+# Picture-based Moodling catch guides
+
+- Replaced the timed catch-clip animation with three illustrated, step-by-step cards for each Moodling, including rare variants.
+- Cards use the live game cat rig and Moodling portraits, plus movement arrows, action cues, catch effects, translated captions and keyboard/touch control badges.
+- Desktop shows all three pictures together. Phones show one swipeable picture with previous/next buttons and step dots; arrow keys navigate on every screen. Start again returns to step one.
+- Removed the redundant progress strip and numeric step counter to keep attention on the picture cards.
+- Removed the extra Start again footer button for a cleaner guide panel.
+- Timing-sensitive artwork uses a subtle one-second loop and becomes fully still with reduced motion enabled. Captions, close behavior, Escape and focus trapping remain accessible.
+- The integrity check verifies all Moodling types, both caption languages and three-picture coverage. Game scoring and catch rules are unchanged.
+
+# Wall jumps and ledge grabs
+
+- Added wall-jump routes on Nights 12, 23, 34, 45 and 50, with the walls becoming taller as the challenge advances. Their themed stone surfaces are separate collision scenery, so non-pit nights still have no roost platforms.
+- Shwe can spring away from a wall with Jump, catch the edge of a wall or static shelf, and automatically climb onto it after 0.2 seconds. Moving, crumbling, bouncy and swinging platforms keep their existing behavior.
+- Added a first-use wall-jump tip in English and Burmese. It uses the existing tips-seen save, sound cues and reduced-motion-compatible game rendering; no save format, scoring or Moodling rules changed.
+- Added layout checks for route placement, reachability, selected nights and separation from pits/roosts; the existing integrity test also checks the mechanic and translations.
+
 # Voices, bedroom Thiri and Persian tail
+
+## Moving roosts only on pit nights
+
+- Story pits and their moving roost bridges now appear every fifth level only. Other story levels use continuous ground and have no roost platforms.
+- Each pit is at least five bridge-widths and wider than Shwe's unaided jump; each pit has exactly one moving bridge and no overlapping duplicate roosts.
+- Free Play pit routes use the same five-to-one bridge width. Updated the level-layout regression test and map notes to enforce the schedule.
 
 ## Quiet Rooftops
 
@@ -201,3 +224,10 @@
 ## Pit frequency
 
 - Story pits now appear only on levels 5, 10, 15, 20, 25, 30, 35, 40, 45 and 50. Other story levels have solid ground beneath their existing roosts. Free Play layouts are unchanged.
+## Smooth Moodling catch guides
+
+- Rebuilt the catch guide as a canvas mini-player using the game's live cat rig and Moodling portraits, with eased movement, facing, gait, jump/landing effects, scene highlights and a catch-to-trail Glow ending.
+- Each complete clip now runs in two seconds, with three timed caption beats, synchronized input badges for keyboard or touch, segmented progress, pause/play, beat stepping, manual replay and playback speed. Closing or hiding the tab pauses playback; reduced-motion users get still frames with manual beat navigation.
+- Added illustrated storyboards for Frustrated, Nervous, Lonely, Buried, Excited, Shy, Jealous, Calm, breathing Calm and Golden. Kept existing catch rules, scoring and Moodling behavior unchanged.
+- Localized clip controls and catch captions in English and Burmese. Removed the former CSS slide keyframes and kept the stage at 16:9 on mobile and desktop.
+- Verified JavaScript syntax and game-source integrity. Browser-checked the Frustrated clip at 375px and 1280px, including its Space-or-A/D badge, final catch and Glow animation, exact 16:9 scene, and Burmese captions/controls.

@@ -99,10 +99,20 @@
       if (i === 0) spawnZones.push([120, a - 70]);
       spawnZones.push([b + 70, nextA - (i + 1 < pitCount ? 70 : 100)]);
     }
+    // Wall-jump routes are collision scenery rather than roost platforms, so
+    // they do not alter the rule that only pit nights contain roosts.
+    const wallRoutes = {
+      12: [{ x: 420, w: 54, h: 166 }, { x: 520, w: 58, h: 184 }],
+      23: [{ x: 400, w: 58, h: 174 }, { x: 508, w: 62, h: 194 }],
+      34: [{ x: 416, w: 62, h: 182 }, { x: 528, w: 66, h: 202 }],
+      45: [{ x: 398, w: 66, h: 190 }, { x: 514, w: 70, h: 210 }],
+      50: [{ x: 410, w: 70, h: 198 }, { x: 532, w: 74, h: 216 }]
+    };
     return {
       night, map, width, pits, checkpoints, ground: ground(width, groundPoints), platforms,
       restSpots: map === 'rooftop' ? [220, ...checkpoints] : [],
-      hideSpots, burySpots, spawnZones, catStart: 150, homeLight: [width - 150, 390], props: [], pitToBridgeRatio: 5
+      hideSpots, burySpots, spawnZones, catStart: 150, homeLight: [width - 150, 390], props: [], pitToBridgeRatio: 5,
+      wallJumps: wallRoutes[night] || []
     };
   };
   const levels = {
@@ -158,8 +168,10 @@
       ]
     }
   };
-  for (const [night, ratio] of [[2,3.25],[3,3.5],[4,3.75],[5,4],[6,4.5],[7,5]]) sizePitsByDifficulty(levels[night], ratio);
-  for (const [variant, ratio] of levels.free.variants.map((level, i) => [level, [3.25,4,5][i]])) sizePitsByDifficulty(variant, ratio);
+  // Story pits appear once every five nights. Each is wider than Shwe's
+  // unaided jump and has one moving roost bridge sized to the full gap.
+  sizePitsByDifficulty(levels[5], 5);
+  for (const variant of levels.free.variants) sizePitsByDifficulty(variant, 5);
   // Themed traps and Thiri's hidden keepsakes, in final coordinates (after the pits are sized).
   //   squeak {x,w}: creaky floorboard (sneak across) · sprinkler {x} · lantern {x,w}: drops on its shadow
   //   wind {a,b,dir}: gusts push Shwe toward a (dir -1) or b (dir 1); zones end well before any pit
@@ -178,10 +190,20 @@
   // Hilltop: every hill's middle stone pillar crumbles, not just the first one
   for (const p of levels[5].platforms) if (p[2] === 90 && p[1] === 420) p[3] = 'crumbling';
   for (let night = 8; night <= 50; night++) levels[night] = makeChallengeLevel(night);
-  // One pit-bearing story level per five levels. The ground profile already
-  // spans the entire route; clearing gaps restores solid ground beneath roosts.
+  // Keep roosts exclusive to pit nights: every gap has exactly one moving
+  // bridge, while non-pit nights use continuous ground and no roost platforms.
   for (let night = 1; night <= 50; night++) {
-    if (night % 5 !== 0) levels[night].pits = [];
+    const level = levels[night];
+    if (night % 5 !== 0) {
+      level.pits = [];
+      level.platforms = [];
+      continue;
+    }
+    level.platforms = (level.pits || []).map(([a, b]) => level.platforms.find(p =>
+      p[3] === 'moving' && p[4]?.path?.length > 1
+      && Math.min(...p[4].path.map(([x]) => x)) <= a
+      && Math.max(...p[4].path.map(([x]) => x)) + p[2] >= b
+    )).filter(Boolean);
   }
   root.TC_LEVELS = levels;
   if (typeof module !== 'undefined' && module.exports) module.exports = levels;
