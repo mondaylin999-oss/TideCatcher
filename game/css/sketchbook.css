@@ -787,6 +787,161 @@
 @keyframes ef-cap{from{opacity:0; transform:translate(-50%,8px)}to{opacity:1; transform:translate(-50%,0)}}
 @keyframes ef-rise{0%{opacity:0; transform:translateY(0)}15%{opacity:.9}100%{opacity:0; transform:translateY(-80vh) translateX(20px)}}
 @media (prefers-reduced-motion:reduce){#endlessFilm img[class]{animation:none}#endlessFilm .ef-sparks{display:none}}
+#endlessFilm .ef-canvas{position:absolute; inset:0; display:block}
+#endlessFilm .ef-bars::before,#endlessFilm .ef-bars::after{animation:ef-bars 1.4s cubic-bezier(.2,.7,.2,1) both}
+#endlessFilm .ef-caption span{display:inline-block; opacity:0; filter:blur(6px); transform:translateY(6px); animation:ef-word .9s ease forwards}
+#endlessFilm .ef-caption{opacity:1; letter-spacing:.01em; text-shadow:0 2px 18px rgba(0,0,0,.9),0 0 2px #000}
+#endlessFilm.ef-out{animation:ef-fade .65s ease forwards}
+@keyframes ef-word{to{opacity:1; filter:blur(0); transform:none}}
+@keyframes ef-bars{from{height:0}}
+@media (prefers-reduced-motion:reduce){#endlessFilm .ef-caption span{animation-duration:.01s}}
 #endScreen #nightStoryline:not([hidden]){display:grid!important}
 #endScreen .thiri-mini.has-mood{max-height:22vh; width:auto; justify-self:center}
 @media (max-height:520px){#endScreen #nightStoryline{display:none!important}}
+
+/* ==========================================================================
+   Endless Nights: night cards, challenges, Thiri's Sketchbook, map labels
+   ========================================================================== */
+.night-cards-screen{z-index:1250; background:radial-gradient(ellipse at 50% 0,rgba(60,44,110,.6),rgba(12,9,28,.92) 70%)}
+.nc-panel{width:min(980px,calc(100vw - 24px))!important; max-width:none!important; max-height:calc(100dvh - 24px); overflow:auto; display:flex; flex-direction:column; gap:10px; padding:18px 20px 16px!important;
+  background:var(--sb-paper-2)!important; color:var(--sb-ink); border:0!important; border-radius:3px!important; box-shadow:var(--sb-shadow)!important}
+.nc-head h2{margin:0; font:700 clamp(26px,3.4vw,36px)/1 var(--sb-hand); color:var(--sb-ink)}
+.nc-head .eyebrow{margin:0 0 4px; color:#7a63c9!important; letter-spacing:.12em}
+.nc-sub{margin:4px 0 0; color:var(--sb-ink-2); font-size:14px}
+.nc-special{color:#ffe7a6!important; margin:0; padding:8px 12px; background:#2b2547; color:#ffe7a6; border-radius:4px; font-size:14px; transform:rotate(-.4deg)}
+.nc-special b{font:700 19px var(--sb-hand); margin-right:6px; color:#ffd166}
+.nc-cards{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; padding:6px 2px}
+.nc-card{position:relative; display:flex; flex-direction:column; align-items:stretch; gap:7px; padding:14px 12px 12px; text-align:left; cursor:pointer; border:0; border-radius:3px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--place) 26%,#fffdf6),#fffdf6 46%); color:var(--sb-ink); font-family:var(--body);
+  box-shadow:0 8px 18px rgba(30,20,60,.22); transform:rotate(-1deg); transition:transform .18s ease,box-shadow .18s ease}
+.nc-card:nth-child(2){transform:rotate(.8deg)} .nc-card:nth-child(3){transform:rotate(-.4deg)}
+.nc-card::before{content:""; position:absolute; top:-9px; left:50%; width:64px; height:18px; margin-left:-32px; background:var(--sb-tape); transform:rotate(-3deg)}
+.nc-card:hover{transform:rotate(0) translateY(-3px)}
+.nc-card.on{box-shadow:0 0 0 4px #e0a12a,0 12px 24px rgba(30,20,60,.3); transform:rotate(0) translateY(-4px)}
+.nc-card:focus-visible{outline:3px solid #4d6fd6; outline-offset:4px}
+.nc-place{display:flex; align-items:center; gap:8px}
+.nc-place i{font-style:normal; font-size:28px; line-height:1}
+.nc-place b{font:700 24px/1 var(--sb-hand); letter-spacing:-.3px}
+.nc-new{position:absolute; top:8px; right:8px; padding:2px 8px; border-radius:999px; background:#ffd166; color:#5a3b00; font:800 11px var(--body); letter-spacing:.02em; animation:nc-pop 1.6s ease-in-out infinite}
+@keyframes nc-pop{50%{transform:scale(1.07)}}
+.nc-needs{display:flex; flex-wrap:wrap; gap:4px 10px; font-size:13px; font-weight:700; color:var(--sb-ink-2)}
+.nc-need{display:inline-flex; align-items:center; gap:3px}
+.nc-need img{width:24px; height:24px; object-fit:contain}
+.nc-need b{color:var(--sb-ink)}
+.nc-twist{font-size:13px; line-height:1.3; color:var(--sb-ink-2); border-top:1px dashed var(--sb-paper-shade); padding-top:6px}
+.nc-piece{font-size:13px; font-weight:800; color:#a0632a}
+.nc-piece.done{color:#2f8a55}
+.nc-h3{margin:4px 0 0; font:700 20px var(--sb-hand); color:var(--sb-ink)}
+.nc-h3 span{font:400 13px var(--body); color:var(--sb-pencil); margin-left:6px}
+.nc-chal{display:flex; flex-wrap:wrap; gap:8px}
+.nc-ch{display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border-radius:999px; border:2px dashed #cfc4e6; background:#fbf8ff; color:var(--sb-ink); font:700 13px var(--body); cursor:pointer}
+.nc-ch i{font-style:normal}
+.nc-ch b{color:#8a5cd6; font-weight:800}
+.nc-ch.on{border-style:solid; border-color:#8a5cd6; background:#efe7ff; box-shadow:0 2px 0 #8a5cd6}
+.nc-ch:focus-visible{outline:3px solid #4d6fd6; outline-offset:2px}
+.nc-meta{margin:2px 0 0; font-weight:700; color:var(--sb-ink-2); font-size:14px}
+.nc-actions{justify-content:flex-end; gap:10px; margin-top:2px}
+@media (max-width:560px){ .nc-cards{grid-template-columns:1fr; gap:10px} .nc-card,.nc-card:nth-child(2),.nc-card:nth-child(3){transform:none} .nc-place b{font-size:21px} }
+@media (max-height:560px){ .nc-panel{gap:6px; padding:12px 14px!important} .nc-sub{display:none} .nc-twist{font-size:11.5px} .nc-need img{width:18px; height:18px} .nc-needs{font-size:11.5px} .nc-place b{font-size:19px} .nc-place i{font-size:22px} .nc-card{padding:10px 9px 9px; gap:5px} .nc-head h2{font-size:24px} .nc-ch{padding:5px 9px; font-size:12px} }
+
+/* story map: what each Endless night unlocks */
+.level-entry .level-caption .level-unlock{display:block; margin-top:2px; font:700 13px var(--body); color:#7a4fc9!important}
+.level-entry .level-caption .level-teaser{color:#a0632a!important}
+
+/* Thiri's wall in her room: the drawings Shwe has put back together */
+.rh-sketch .rh-wall{position:absolute; inset:8% 2%; display:grid; grid-template-columns:repeat(6,1fr); gap:6%; pointer-events:none}
+.rh-pic{display:block; border:1.5px dashed rgba(255,240,210,.35); border-radius:2px; transform:rotate(var(--r)); background:rgba(255,248,230,.06)}
+.rh-pic.ok{border:0; background:#fbf6e6; box-shadow:0 2px 4px rgba(0,0,0,.45); padding:4%}
+.rh-pic.ok::before{content:""; position:absolute; top:-10%; left:30%; width:40%; height:18%; background:var(--sb-tape-2)}
+.rh-pic{position:relative}
+.rh-pic img{display:block; width:100%; height:100%; object-fit:cover}
+.rh-sketch[hidden]{display:none}
+
+/* Thiri's Sketchbook */
+.sketch-screen{z-index:1300; background:radial-gradient(ellipse at 50% 20%,rgba(60,44,110,.55),rgba(12,9,28,.94) 70%)}
+.sk-panel{position:relative; width:min(1000px,calc(100vw - 24px))!important; max-width:none!important; max-height:calc(100dvh - 24px); overflow:auto; padding:18px 20px!important;
+  background:var(--sb-paper-2)!important; color:var(--sb-ink); border:0!important; border-radius:3px!important; box-shadow:var(--sb-shadow)!important}
+.sk-head{display:flex; justify-content:space-between; gap:12px; align-items:flex-start}
+.sk-head h2{margin:0; font:700 clamp(28px,3.6vw,38px)/1 var(--sb-hand)}
+.sk-head .eyebrow{margin:0 0 4px; color:#7a63c9!important; letter-spacing:.1em}
+.sk-head .muted{margin:6px 0 0; color:var(--sb-ink-2)!important; font-size:14px; max-width:60ch}
+.sk-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:14px}
+.sk-page{position:relative; margin:0; padding:8px 8px 10px; background:#fff; box-shadow:0 6px 14px rgba(30,20,60,.2); transform:rotate(-.8deg)}
+.sk-page:nth-child(2n){transform:rotate(.9deg)}
+.sk-page img{display:block; width:100%; aspect-ratio:4/3; object-fit:cover}
+.sk-page figcaption{display:flex; flex-direction:column; gap:2px; margin-top:6px}
+.sk-page figcaption b{font:700 19px/1.05 var(--sb-hand)}
+.sk-page figcaption span{font-size:12px; color:var(--sb-pencil)}
+.sk-page.whole{cursor:pointer}
+.sk-page.whole:hover{transform:rotate(0) translateY(-3px)}
+.sk-page.whole:focus-visible{outline:3px solid #4d6fd6; outline-offset:3px}
+.sk-page.locked img{filter:blur(6px) grayscale(.6); opacity:.5}
+.sk-lock{position:absolute; left:50%; top:38%; transform:translate(-50%,-50%); font:700 56px var(--sb-hand); color:#9a8fc0}
+.sk-memory{position:fixed; inset:0; z-index:5; display:grid; place-content:center; justify-items:center; gap:10px; padding:20px; background:rgba(255,253,246,.97); text-align:center}
+.sk-memory[hidden]{display:none}
+.sk-memory .btn{justify-self:center; margin:4px auto 0}
+.sk-memory img{width:min(620px,86vw); max-height:58dvh; object-fit:contain; box-shadow:0 10px 24px rgba(30,20,60,.25); transform:rotate(-.6deg); background:#fff; padding:8px}
+.sk-memory h3{margin:4px 0 0; font:700 28px var(--sb-hand)}
+.sk-memory p{margin:0; max-width:52ch; font:700 20px/1.3 var(--sb-hand); color:#7a4fc9}
+@media (max-width:720px){ .sk-grid{grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px} }
+
+/* ==========================================================================
+   Player controls: touch buttons the player has tuned, the layout editor, the Controls screen
+   ========================================================================== */
+#touch .tbtn{opacity:var(--tc-op,.72)!important; scale:var(--tc-size,1)}
+#touch .tbtn:active,#touch .tbtn.is-touch-pressed{opacity:min(1,calc(var(--tc-op,.72) + .28))!important}
+#touch #stick{opacity:var(--tc-op,.6)!important; scale:var(--tc-size,1)}
+#touch .tbtn.tc-placed{left:var(--tc-x)!important; top:var(--tc-y)!important; right:auto!important; bottom:auto!important; translate:-50% -50%}
+#touch.tc-stick-right #stickZone{left:auto; right:0}
+#touch.tc-editing{z-index:3000; background:rgba(10,8,26,.55); pointer-events:auto}
+#touch.tc-editing .tbtn{opacity:max(.55,var(--tc-op,.72))!important; cursor:grab; outline:2px dashed #ffe08a; outline-offset:4px; touch-action:none}
+#touch.tc-editing .tbtn.tc-dragging{cursor:grabbing; outline-style:solid}
+#touch.tc-editing #stickZone{background:repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 10px,transparent 10px 20px); outline:2px dashed rgba(255,255,255,.35); outline-offset:-6px; pointer-events:none}
+#touch.tc-editing #stickZone::after{content:"Joystick area"; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); color:#fff; font:700 14px var(--body); opacity:.8}
+.tc-layout-bar{position:fixed; z-index:3001; left:50%; top:calc(10px + env(safe-area-inset-top,0px)); transform:translateX(-50%); display:flex; align-items:center; gap:12px; padding:8px 12px; background:var(--sb-paper-2); color:var(--sb-ink); border-radius:3px; box-shadow:var(--sb-shadow)}
+.tc-layout-bar p{margin:0; font-size:14px}
+.tc-layout-bar div{display:flex; gap:8px}
+.game-notes-btn{position:fixed; z-index:1000; top:calc(env(safe-area-inset-top,0px) + 64px); left:calc(env(safe-area-inset-left,0px) + 14px); width:40px; height:40px; border-radius:50%; border:2px solid var(--lilac,#b9a3ff); background:rgba(20,16,40,.55); color:#fff; font-size:18px; line-height:1; cursor:pointer; display:grid; place-items:center; padding:0}
+.game-notes-btn.off{opacity:.75; border-style:dashed}
+.game-notes-btn:focus-visible{outline:3px solid #ffe08a; outline-offset:2px}
+.game-notes-btn[hidden]{display:none}
+@media(max-width:560px),(orientation:portrait){.game-notes-btn{top:calc(150px + env(safe-area-inset-top,0px))}}
+.controls-screen{z-index:2500; background:radial-gradient(ellipse at 50% 10%,rgba(60,44,110,.6),rgba(12,9,28,.94) 70%)}
+.ctl-panel{width:min(640px,calc(100vw - 24px))!important; max-width:none!important; max-height:calc(100dvh - 24px); overflow:auto; padding:18px 20px!important; display:flex; flex-direction:column; gap:10px;
+  background:var(--sb-paper-2)!important; color:var(--sb-ink); border:0!important; border-radius:3px!important; box-shadow:var(--sb-shadow)!important}
+.ctl-head{display:flex; justify-content:space-between; align-items:flex-start}
+.ctl-head h2{margin:0; font:700 34px/1 var(--sb-hand)}
+.ctl-head .eyebrow{margin:0 0 4px; color:#7a63c9!important}
+.ctl-tabs{display:flex; gap:8px}
+.ctl-tabs button{flex:1; padding:9px 10px!important; min-height:0!important; border-radius:999px!important; border:2px solid #d9cfee!important; background:#fbf8ff!important; color:var(--sb-ink)!important; font:700 14px var(--body)!important; cursor:pointer; box-shadow:none!important}
+#controlsScreen .ctl-panel .ctl-tabs button[aria-selected="true"]{background:#2b2547!important; color:#ffe08a!important; border-color:#2b2547!important}
+.ctl-note{margin:0; font-size:13px; color:var(--sb-ink-2)}
+.ctl-keys{display:grid; gap:6px}
+.ctl-row{display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:8px; padding:4px 0; border-bottom:1px dashed var(--sb-paper-shade); font-weight:700; font-size:14px}
+.ctl-key-wrap{position:relative; display:inline-flex}
+.ctl-key{min-height:0!important; box-shadow:none!important; min-width:104px; padding:7px 10px; border-radius:8px; border:2px solid #cfc4e6; border-bottom-width:4px; background:#fff; color:var(--sb-ink); font:800 14px var(--body); cursor:pointer}
+.ctl-key.empty{color:#a39cb8; border-style:dashed}
+.ctl-key.listening{background:#fff3c4; border-color:#e0a12a; animation:ctl-blink 1s ease-in-out infinite}
+@keyframes ctl-blink{50%{border-color:#ffd166}}
+.ctl-key:focus-visible,.ctl-clear:focus-visible,.ctl-pill:focus-visible{outline:3px solid #4d6fd6; outline-offset:2px}
+.ctl-clear{position:absolute; top:-7px; right:-7px; width:20px!important; height:20px!important; min-width:0!important; min-height:0!important; border-radius:50%!important; border:0!important; background:#e8a0a0!important; color:#fff!important; font:800 13px/20px var(--body)!important; padding:0!important; cursor:pointer; box-shadow:none!important}
+.ctl-msg{margin:0; color:#a0632a; font-weight:700; font-size:13px}
+.ctl-actions{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; margin-top:4px}
+.ctl-range{display:grid; grid-template-columns:110px 1fr 48px; align-items:center; gap:10px; font-weight:700; font-size:14px}
+.ctl-range input{accent-color:#8a5cd6}
+.ctl-range output{font-variant-numeric:tabular-nums; color:var(--sb-ink-2)}
+.ctl-stick{grid-template-columns:1fr auto}
+.ctl-stick div{display:flex; gap:6px}
+.ctl-pill{min-height:0!important; box-shadow:none!important; padding:6px 14px; border-radius:999px; border:2px solid #cfc4e6; background:#fff; color:var(--sb-ink); font:700 13px var(--body); cursor:pointer}
+.ctl-pill.on{background:#8a5cd6; border-color:#8a5cd6; color:#fff}
+.ctl-preview{position:relative; height:90px; border-radius:8px; background:linear-gradient(180deg,#3a2f6a,#1d1838); overflow:hidden}
+.ctl-preview span{position:absolute; left:18px; bottom:12px; font-size:calc(40px * var(--sz)); line-height:1; color:#fff; opacity:var(--op)}
+.ctl-preview span.r{left:auto; right:18px}
+.ctl-preview i{position:absolute; bottom:12px; display:grid; place-items:center; width:calc(46px * var(--sz)); height:calc(46px * var(--sz)); border-radius:50%; border:2px solid #fff; background:rgba(20,16,40,.3); color:#fff; font:700 10px var(--body); font-style:normal; opacity:var(--op)}
+.ctl-preview i:nth-of-type(1){right:calc(50% - 60px)} .ctl-preview i:nth-of-type(2){right:calc(50% - 4px)} .ctl-preview i:nth-of-type(3){right:calc(50% + 52px); bottom:40px}
+.ctl-preview span.r ~ i:nth-of-type(1){right:auto; left:calc(50% - 60px)} .ctl-preview span.r ~ i:nth-of-type(2){right:auto; left:calc(50% - 4px)} .ctl-preview span.r ~ i:nth-of-type(3){right:auto; left:calc(50% + 52px)}
+.ctl-open-row{display:flex; justify-content:space-between; align-items:center; gap:10px}
+@media (max-width:520px){ .ctl-row{grid-template-columns:1fr; } .ctl-key{min-width:84px} .ctl-range{grid-template-columns:80px 1fr 44px} }
+@media (max-height:520px) and (orientation:landscape){ .game-notes-btn{top:calc(env(safe-area-inset-top,0px) + 110px); left:calc(env(safe-area-inset-left,0px) + 16px); width:34px; height:34px; font-size:15px}
+  .ctl-panel{padding:10px 14px!important; gap:6px} .ctl-head h2{font-size:24px} .ctl-head .eyebrow{display:none} .ctl-tabs button{padding:5px 8px!important; font-size:13px!important}
+  .ctl-note{font-size:12px} .ctl-row{padding:2px 0; font-size:13px} .ctl-key{padding:4px 8px; font-size:13px} .ctl-preview{height:60px} .ctl-actions .btn{min-height:36px; padding:4px 12px} }

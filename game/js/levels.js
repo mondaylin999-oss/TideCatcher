@@ -205,6 +205,39 @@
       && Math.max(...p[4].path.map(([x]) => x)) + p[2] >= b
     )).filter(Boolean);
   }
+  // Endless Nights: the night card the player picks decides the place (and so the map art), and its
+  // version adds a twist made only of hazards the game already knows (wind, slick ground, falling lanterns).
+  const endlessHazards = (level, twist) => {
+    // spans of solid ground, well clear of every pit (hazard zones must end before a gap)
+    const spans = []; let left = 320;
+    for (const [a, b] of (level.pits || []).slice().sort((p, q) => p[0] - q[0])) { if (a - 110 - left > 200) spans.push([left, a - 110]); left = b + 110; }
+    if (level.width - 260 - left > 200) spans.push([left, level.width - 260]);
+    const chunks = (len, gap) => { const out = []; for (const [a, b] of spans) for (let x = a; x + 160 < b; x += len + gap) out.push([x, Math.min(b, x + len)]); return out; };
+    const out = [];
+    if (twist === 'blossom') chunks(480, 700).filter(([a]) => a >= 600).slice(0, 5).forEach(([a, b], i) => out.push({ kind: 'wind', a, b, dir: i % 2 ? -1 : 1 }));
+    if (twist === 'snowy') spans.forEach(([a, b]) => out.push({ kind: 'slick', a, b }));
+    if (twist === 'rain') chunks(420, 600).forEach(([a, b]) => out.push({ kind: 'slick', a, b }));
+    if (twist === 'candle') chunks(240, 900).filter(([a]) => a >= 700).slice(0, 5).forEach(([a]) => out.push({ kind: 'lantern', x: a, w: 240 }));
+    return out;
+  };
+  const buildEndless = (night, map, twists = []) => {
+    const level = makeChallengeLevel(night);
+    level.map = map;
+    level.endless = true;
+    const skin = map === 'festival' ? 'boat' : map === 'lake' ? 'log' : map === 'hill' ? 'stone' : '';
+    if (night % 5 !== 0) { level.pits = []; level.platforms = []; level.spawnZones = [[260, level.width - 200]]; }
+    else level.platforms = level.platforms.filter(p => p[3] === 'moving' && p[4]?.path?.length > 1).map(p => { if (skin) p[4].skin = skin; else delete p[4].skin; return p; });
+    if (map === 'hill' && !level.pits.length) {
+      // rolling hill steps instead of a flat street
+      const pts = [[0, 470], [420, 470]];
+      for (let x = 700, i = 0; x < level.width - 420; x += 300, i++) pts.push([x, Math.round(452 + 14 * Math.sin(i * 1.3) + 8 * Math.sin(i * .55))]);
+      pts.push([level.width - 300, 470], [level.width, 470]);
+      level.ground = ground(level.width, pts);
+    }
+    level.hazards = twists.flatMap(t => endlessHazards(level, t));
+    return level;
+  };
+  root.TC_ENDLESS_LEVEL = buildEndless;
   root.TC_LEVELS = levels;
   if (typeof module !== 'undefined' && module.exports) module.exports = levels;
 })(typeof window !== 'undefined' ? window : globalThis);
