@@ -64,6 +64,15 @@
       g.strokeStyle = 'rgba(120,20,30,.45)'; for (let k = -1; k <= 1; k++) { g.beginPath(); g.ellipse(0, 18, Math.abs(k) * 9 + 2, 18, 0, 0, 7); g.stroke(); }
       g.strokeStyle = '#ffd166'; g.beginPath(); g.moveTo(0, 39); g.lineTo(0, 48); g.stroke(); g.restore();
     });
+    // Steady rainy-night-market drizzle. Reduced-motion mode keeps the rain still.
+    const rainT = o.reduced ? 0 : o.t * 150;
+    g.save(); g.strokeStyle = 'rgba(190,220,255,.34)'; g.lineWidth = 1.3; g.lineCap = 'round';
+    for (let i = 0; i < 58; i++) {
+      const x = o.cam + ((i * 89 + rainT) % (o.W + 60) + o.W + 60) % (o.W + 60) - 30;
+      const y = ((i * 67 + rainT * 1.25) % (G + 80) + G + 80) % (G + 80) - 20;
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x - 4, y + 11); g.stroke();
+    }
+    g.restore();
   }
 
   function garden(g, o) {

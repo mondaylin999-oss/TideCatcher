@@ -279,3 +279,10 @@
 - Reuses the existing Jump input on keyboard and touch. Wall jumps, ledge grabs, and rope releases keep their own movement behavior; landing clears the extra jump. Reduced-motion mode omits the added sparkle trail and squash effect.
 - Kept old upgrade saves compatible while adding the new save field. The upgrade does not alter any level layout or its required jump settings.
 - Added focused boss-night and Second Leap regression tests and wired them into GitHub Actions. JavaScript syntax, game integrity, both new tests, and all 53 level-layout checks pass.
+
+# Rainy Night Market chapter map
+
+- Expanded the existing Night Market Endless map with striped awning bounce pads, hanging lantern ropes, and glossy puddles that splash and startle nearby Nervous Moodlings unless Shwe sneaks through.
+- Made the market stay rainy with a gentle animated drizzle, added a one-time localized puddle tip, and themed its ground, lanterns, and keepsakes for the market.
+- Market platforms and puddles stay on solid ground; pit nights retain exactly one moving bridge per pit, so the market decorations never create a duplicate crossing.
+- Added a layout check for all market levels 18–50 and included it in game-integrity CI.

@@ -238,6 +238,34 @@
       level.ground = ground(level.width, pts);
     }
     level.hazards = twists.flatMap(t => endlessHazards(level, t));
+    if (map === 'market') {
+      // Every market route gets optional bounce awnings, safe to ignore for
+      // progression. Puddles and rope lanterns are placed only on solid spans;
+      // when pits exist, their moving bridge remains the only way across.
+      const spans = []; let left = 250;
+      for (const [a, b] of level.pits.slice().sort((x, y) => x[0] - y[0])) {
+        if (a - left > 220) spans.push([left, a - 90]);
+        left = b + 90;
+      }
+      if (level.width - 220 - left > 220) spans.push([left, level.width - 160]);
+      const marketRuns = spans.flatMap(([a, b]) => {
+        if (b - a < 760) return [[a, b]];
+        const out = [];
+        for (let x = a; x + 240 < b; x += 680) out.push([x, Math.min(b, x + 470)]);
+        return out;
+      });
+      marketRuns.forEach(([a, b], i) => {
+        if (b - a < 220) return;
+        const awningX = a + 34, awningW = 112;
+        level.platforms.push(platform(awningX, 390 - (i % 2) * 12, awningW, 'bouncy', { skin: 'awning' }));
+        const puddleX = Math.max(a + 30, b - 118);
+        if (puddleX > awningX + awningW + 26 || puddleX + 72 < awningX) level.hazards.push({ kind: 'puddle', x: puddleX, w: 72 });
+        if ((i % 2 === 1 || i === marketRuns.length - 1) && b - a >= 220) {
+          const anchorX = Math.min(b - 50, awningX + 206), anchorY = 292;
+          level.platforms.push(platform(anchorX - 21, anchorY + 50, 42, 'swinging', { anchor: [anchorX, anchorY], speed: .74 + (night - 18) * .006, skin: 'lantern-rope' }));
+        }
+      });
+    }
     return level;
   };
   root.TC_ENDLESS_LEVEL = buildEndless;
