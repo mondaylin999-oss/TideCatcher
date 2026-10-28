@@ -12,7 +12,7 @@ The 8 feelings the cat catches: Frustrated (red), Nervous (purple), Lonely (blue
 
 ## 2. Code (`02-code/`)
 - `moodling-art.js` — the Moodlings are drawn as vector shapes in code (no image files). This is the version that went into the game.
-- In the game: `MOOD_ART` and `drawCuteMood()` in [`frontend/js/game.js`](../../../frontend/js/game.js).
+- In the game: `MOOD_ART` and `drawCuteMood()` in [`game/js/game.js`](../../../game/js/game.js).
 
 ## 3. In game (`03-in-game/`)
 - `nights-overview.png`, `night7-gameplay.png` — screenshots of the Moodlings in the game.

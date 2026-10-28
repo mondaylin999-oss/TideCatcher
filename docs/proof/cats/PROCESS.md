@@ -20,8 +20,8 @@ All steps on 16 Oct 2026, done with Claude (Anthropic) at the team's direction. 
 
 ## 3. Final (`03-final/`)
 - `all-8-cats.png` — all 8 final cats side by side.
-- Game files: [`frontend/assets/cats/`](../../../frontend/assets/cats/)
-- Animation code: `mkDrawRig()` in [`frontend/js/customization.js`](../../../frontend/js/customization.js), poses in `mkDrawSprite()` in `frontend/js/game.js`.
+- Game files: [`game/assets/cats/`](../../../game/assets/cats/)
+- Animation code: `mkDrawRig()` in [`game/js/customization.js`](../../../game/js/customization.js), poses in `mkDrawSprite()` in `game/js/game.js`.
 
 ## Still to do
 - Real hand-drawn walk frames from the team's designers would replace the code-bent poses.

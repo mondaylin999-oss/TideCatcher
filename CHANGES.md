@@ -52,7 +52,7 @@
 - Added a separate saved light inventory. New catches (including Golden and extra catches, excluding tutorial/ambush-only catches) bank after successful story nights or completed Free Play runs. Abandoned and failed story nights do not bank lights. Existing Mood Book records are preserved; historical catches are not retroactively converted into spendable stock. Scoring and Moodling behavior are unchanged.
 - Lantern Town has ten illustrated places with ingredient requirements, memories, warm windows, 30 Glow per place and existing trail/comfort-item rewards. Spending lights never removes discoveries. Place rewards are tracked once per save.
 - Discover all seven deep feelings, then combine Happiness and Love for Whole Heart. Lighting all ten places and discovering Whole Heart unlocks a replayable sky-lantern ending with Thiri drawing her town and a permanent cosmetic golden collar for Shwe. The existing chapter ending remains available.
-- Progress uses the existing browser save/reset model. No external service, AI generation or backend is required. Recipe and place transactions refuse consumption when browser storage cannot save.
+- Progress uses the existing browser save/reset model. No external service or AI generation is required. Recipe and place transactions refuse consumption when browser storage cannot save.
 
 ## Startup loading screen
 
@@ -73,7 +73,7 @@
 
 ## Voice acting in the intro and ending
 
-- Every spoken line of the intro and the morning ending now has its voice clip (`frontend/assets/audio/voice`). The words type out at the speed they are spoken, the next line starts after the voice ends, and the music dips while someone speaks.
+- Every spoken line of the intro and the morning ending now has its voice clip (`game/assets/audio/voice`). The words type out at the speed they are spoken, the next line starts after the voice ends, and the music dips while someone speaks.
 - Clicking or pressing Space still skips ahead and stops the current clip. With sound muted (or effects at 0) the cutscenes play silently at the old pace.
 - Shwe meows first, then says the words in brackets. Thiri laughs before "This time I'll draw all of you", and Shy giggles before her line.
 - Intro text now says the Moodlings "walked" to the window, to match the voice and the walking Moodlings.
@@ -160,7 +160,7 @@
 - **Mood Book:** silhouettes, feeling-colored tags, rare sparkle borders and striped collection progress.
 - **Briefing/Ready:** night chip, sunrise time pill, padded objectives and contained decorative wave.
 - **Gameplay:** translucent timer/score and combo pills, combo color/size progression, speech-bubble announcements and softer joystick. Scoring, timers, saves and Moodling rules unchanged.
-- **Per-night level layouts:** Nights 1–7 load independent ground profiles, world widths, pits, roosts, checkpoints, spawn zones and hide/burial markers from `frontend/js/levels.js`. Night 1 teaches safely; later nights add static, moving, crumbling, swinging and bouncy crossings. Free Play randomly selects one of three trails per run. Moodling rules and scoring remain unchanged.
+- **Per-night level layouts:** Nights 1–7 load independent ground profiles, world widths, pits, roosts, checkpoints, spawn zones and hide/burial markers from `game/js/levels.js`. Night 1 teaches safely; later nights add static, moving, crumbling, swinging and bouncy crossings. Free Play randomly selects one of three trails per run. Moodling rules and scoring remain unchanged.
 - **Pit sizing and crossings:** Pit-to-bridge ratios now scale by difficulty: Nights 2–7 progress from 3.25× to 5×, while Free Play trails use 3.25×, 4× and 5×. Every gap is too wide for Shwe to jump across unaided and has one moving bridge; level geometry and markers shift with each widened pit.
 - **50-level campaign:** Added challenge Levels 8–50 with rotating place themes, a steadily increasing bridge speed, and pit counts that rise from four to eighteen. Later routes combine moving bridges with crumbling ledges, bouncy roosts and swinging lanterns; checkpoints increase in frequency on the hardest routes. The chapter map, saved unlock progression and continue/replay flow now support all 50 levels. Moodling requirements, behavior and scoring remain unchanged.
 - **Park crossing cleanup:** Removed overlapping static platforms at Night 3’s second pit and widened the gap from 105 to 385 units. One moving bridge spans the gap; hiding and burial spots remain on safe ground.
@@ -174,7 +174,7 @@
 
 ## Shared implementation
 
-`frontend/css/theme.css` centralizes palette, font stacks, radii and shadows, including original CSS art details. `cozy.css` supplies the presentation layer; `cozy-ui.js` handles presentation steps, progress and dynamic `data-sfx` hooks. Existing IDs/classes and illustrated assets are retained. Google Fonts: Fredoka, Nunito and Padauk fallback. Reduced-motion disables decorative animation. Keyboard focus uses honey outlines; interactive targets are at least 44px.
+`game/css/theme.css` centralizes palette, font stacks, radii and shadows, including original CSS art details. `cozy.css` supplies the presentation layer; `cozy-ui.js` handles presentation steps, progress and dynamic `data-sfx` hooks. Existing IDs/classes and illustrated assets are retained. Google Fonts: Fredoka, Nunito and Padauk fallback. Reduced-motion disables decorative animation. Keyboard focus uses honey outlines; interactive targets are at least 44px.
 
 ## Validation
 
@@ -191,12 +191,12 @@
 - **Why to play:** First launches now progress from the existing intro into three swipeable Welcome cards before setup. The cards explain Thiri and the Night Side, the before-sunrise goal, Glow and upgrades, the 17-feeling Mood Book, seven nights, and the sunrise ending. A compact, linked **Your goals** card on the hub points to the next chapter, Mood Book progress, and the next available upgrade.
 - **Guided Night 1:** The real Night 1 pauses its countdown while each accessible coach step waits for movement, jumping, sneaking, a harmless practice catch, a Frustrated dodge and dizzy pounce, Night Eyes, scratching, and completing the required lights. Each step has an on-canvas target marker, device-specific keyboard/touch control art, a success sparkle/chime, and an always-visible Skip tutorial control.
 - **Later help:** New-mechanic, Free Play, combo, and gentle struggle hints use one-time four-second coach bubbles and the existing chapter hint state; a per-run struggle hint appears after three hits from one Moodling or 30 seconds without a catch. The Info button and pause menu both open a full How to play guide with keyboard/touch controls, known and unknown Moodlings, upgrades, and combos.
-- **Preferences and saves:** `mk-profile`/`mk-onboarding` now safely retain `welcomeSeen`, `tutorialDone`, `tipsSeen`, Show tips, and the English/Burmese-ready copy choice. Reset still removes every `mk-` key. Settings includes Show tips, an English/Burmese-ready tip language selector, and Replay tutorial. All editable Welcome, tutorial, just-in-time, struggle, and sky-tip copy lives in `frontend/js/tips.js`.
+- **Preferences and saves:** `mk-profile`/`mk-onboarding` now safely retain `welcomeSeen`, `tutorialDone`, `tipsSeen`, Show tips, and the English/Burmese-ready copy choice. Reset still removes every `mk-` key. Settings includes Show tips, an English/Burmese-ready tip language selector, and Replay tutorial. All editable Welcome, tutorial, just-in-time, struggle, and sky-tip copy lives in `game/js/tips.js`.
 
 ## Cloudflare deployment
 
-- Added explicit Wrangler static-assets configuration for frontend/, preventing Git history and repository-only files from being uploaded. The failed build included a 65 MiB Git pack, exceeding Cloudflare's 25 MiB asset limit.
-- Preserved legacy frontend and TideCatcher.html entry URLs with redirects.
+- Added explicit Wrangler static-assets configuration for `game/`, preventing Git history and repository-only files from being uploaded. The failed build included a 65 MiB Git pack, exceeding Cloudflare's 25 MiB asset limit.
+- Preserved the legacy `/frontend/` and `TideCatcher.html` entry URLs with redirects after the game directory rename.
 
 ## Pit frequency
 

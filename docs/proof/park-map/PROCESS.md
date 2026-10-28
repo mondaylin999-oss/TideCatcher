@@ -1,6 +1,6 @@
 # Park map: process
 
-Map for **Night 3 · The Park** (Lonely and Shy). In the game: [`frontend/assets/park/park-night.webp`](../../../frontend/assets/park/park-night.webp), drawn by `drawParkWorld()` in `frontend/js/game.js`.
+Map for **Night 3 · The Park** (Lonely and Shy). In the game: [`game/assets/park/park-night.webp`](../../../game/assets/park/park-night.webp), drawn by `drawParkWorld()` in `game/js/game.js`.
 
 | File | Step |
 |---|---|

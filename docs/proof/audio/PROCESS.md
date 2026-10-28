@@ -1,10 +1,10 @@
 # Audio process and provenance
 
-Updated 2026-10-20. Audio stays local to the game; this change adds no external audio URLs. `frontend/js/tc-sfx.js` extends the existing player, volume controls, and music routing. All newly synthesized interface/gameplay cues and the new screen beds below are **code placeholder** sounds made at runtime with the Web Audio API (oscillators, envelopes, filtering, and generated noise); they are not downloaded or model-generated files.
+Updated 2026-10-20. Audio stays local to the game; this change adds no external audio URLs. `game/js/tc-sfx.js` extends the existing player, volume controls, and music routing. All newly synthesized interface/gameplay cues and the new screen beds below are **code placeholder** sounds made at runtime with the Web Audio API (oscillators, envelopes, filtering, and generated noise); they are not downloaded or model-generated files.
 
 ## Shipped sound-effect files
 
-Each listed stem is shipped in both `frontend/assets/audio/ogg/<stem>.ogg` and `frontend/assets/audio/mp3/<stem>.mp3` (the MP3 is the browser fallback copy).
+Each listed stem is shipped in both `game/assets/audio/ogg/<stem>.ogg` and `game/assets/audio/mp3/<stem>.mp3` (the MP3 is the browser fallback copy).
 
 | File stem | Who made it | Tool or source | Licence / status |
 |---|---|---|---|
@@ -29,7 +29,7 @@ See `CREDITS-sfx.md` and `PROCESS-sfx.md` for the original pack notes, asset-gen
 
 ## Shipped music files
 
-All music stems are available in `frontend/assets/audio/music/ogg/` and `frontend/assets/audio/music/mp3/`. The player currently selects the five `piano_` arrangements (`STYLE = 'piano'`); the `music_` loop stems remain available as an alternate style.
+All music stems are available in `game/assets/audio/music/ogg/` and `game/assets/audio/music/mp3/`. The player currently selects the five `piano_` arrangements (`STYLE = 'piano'`); the `music_` loop stems remain available as an alternate style.
 
 | File stem | Who made it | Tool or source | Licence / status |
 |---|---|---|---|
@@ -48,7 +48,7 @@ The loop files were cut/crossfaded for looping and normalized according to `PROC
 
 ## Runtime code placeholders (Web Audio API)
 
-There are no corresponding new audio files for these cues. Their producer and tool/source are `TideCatcher` code in `frontend/js/tc-sfx.js` using Web Audio oscillator/noise buffers, gain envelopes and filters; the entries are **code placeholder** sounds. They are original procedural app sounds with no third-party source or sample. They use the Effects slider and Mute state. Repeated effects randomize pitch by ±5%; no more than four simultaneous copies of one sound stem are allowed.
+There are no corresponding new audio files for these cues. Their producer and tool/source are `TideCatcher` code in `game/js/tc-sfx.js` using Web Audio oscillator/noise buffers, gain envelopes and filters; the entries are **code placeholder** sounds. They are original procedural app sounds with no third-party source or sample. They use the Effects slider and Mute state. Repeated effects randomize pitch by ±5%; no more than four simultaneous copies of one sound stem are allowed.
 
 | Runtime sound / use | Who made it | Tool or source | Licence |
 |---|---|---|---|

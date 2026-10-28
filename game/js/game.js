@@ -801,6 +801,14 @@
   const BOOK_ORDER = ['F0', 'F1', 'F2', 'N0', 'N1', 'N2', 'L0', 'L1', 'L2', 'B0', 'B1', 'B2', 'E0', 'S0', 'J0', 'C0', 'C1', 'G0'];
   let book = {};
   try { book = JSON.parse(localStorage.getItem('mk-book') || '{}') || {}; } catch (e) { book = {}; }
+  let encounteredMoodlings = {};
+  try { const seen = JSON.parse(localStorage.getItem('mk-moodling-seen') || '[]'); if (Array.isArray(seen)) seen.forEach(key => { if (typeof key === 'string') encounteredMoodlings[key] = true; }); } catch (e) {}
+  function rememberMoodlingEncounter(type, variant = 0) {
+    const key = `${type}${variant}`;
+    if (encounteredMoodlings[key]) return;
+    encounteredMoodlings[key] = true;
+    try { localStorage.setItem('mk-moodling-seen', JSON.stringify(Object.keys(encounteredMoodlings))); } catch (e) {}
+  }
   const saveBook = () => { try { localStorage.setItem('mk-book', JSON.stringify(book)); } catch (e) {} };
   const vinfo = (ty, v = 0) => VARS[ty][v] || VARS[ty][0];
   const vcol = (ty, v = 0) => vinfo(ty, v).c;
@@ -868,7 +876,6 @@
   }
   function welcomeNext() { if (welcomeCardIndex >= (guideCopy().welcome || []).length - 1) finishWelcomeCards(); else renderWelcomeCard(welcomeCardIndex + 1); }
   function welcomePrevious() { if (welcomeCardIndex > 0) renderWelcomeCard(welcomeCardIndex - 1); }
-  const MECHANIC_TIP_BY_TYPE = { N: ['nervous', 'nervous'], J: ['jealous', 'jealous'], L: ['lonely', 'lonely'], S: ['shy', 'shy'], E: ['excited', 'excited'], B: ['buried', 'buried'], C: ['calm', 'calm'] };
   function tutorialSpotX() { const spots = currentLevel.hideSpots || []; return clamp(Number(spots[0]) || cat.x + 190, 80, WORLD - 80); }
   function ensureTutorialCatchMoodling() {
     let target = mood.find(m => !m.dead && m.tutorialCatch);
@@ -1013,28 +1020,31 @@
     showCoachTip({ kicker: `${MK_PROFILE.cat} · ${nightGuide.step + 1} / 4`, title: current.title, text: guideCopy().success, action: current.action, skip: true, success: true });
   }
   function guidanceTimerPaused() { return nightGuide.active || !!activeJitTip; }
-  function queueJitTip(key, target = null, title = null) {
-    if (!MK_PROFILE.showTips || nightGuide.active || guidanceSeen(`mechanic:${key}`)) return;
-    const id = `mechanic:${key}`;
+  function queueJitTip(key, target = null, title = null, text = null, seenId = null) {
+    if (!MK_PROFILE.showTips || nightGuide.active || guidanceSeen(seenId || `mechanic:${key}`)) return;
+    const id = seenId || `mechanic:${key}`;
     if (activeJitTip?.id === id || jitTipQueue.some(item => item.id === id)) return;
-    jitTipQueue.push({ id, key, target: target && Number.isFinite(target.x) ? { x: target.x, y: target.y } : null, title });
+    jitTipQueue.push({ id, key, text, target: target && Number.isFinite(target.x) ? { x: target.x, y: target.y } : null, title });
     if (state === 'play') showNextJitTip();
   }
   function showNextJitTip() {
     if (state !== 'play' || nightGuide.active || activeJitTip || !jitTipQueue.length) return;
     const item = jitTipQueue.shift(); if (guidanceSeen(item.id)) return showNextJitTip();
-    const copy = guideCopy().mechanics?.[item.key]; if (!copy) return showNextJitTip();
+    const copy = item.text || guideCopy().mechanics?.[item.key]; if (!copy) return showNextJitTip();
     activeJitTip = { ...item, text: copy, time: 4 };
     rememberGuidance(item.id);
     if (mode === 'story') { const chapter = chapterFor(storyNight); if (chapter?.sky) chapter.sky.hintShown = true; }
     showCoachTip({ kicker: guideCopy().jitLabel || 'A little tip', title: item.title || item.key[0].toUpperCase() + item.key.slice(1), text: copy });
   }
   function onGuidanceSpawn(m) {
-    if (!m || m.tutorialOnly || !MK_PROFILE.showTips || nightGuide.active || mode !== 'story') return;
-    const meta = MECHANIC_TIP_BY_TYPE[m.type], chapter = chapterFor(storyNight);
-    if (!meta || !chapter?.newMoodling) return;
-    const [key, sourceWord] = meta;
-    if (chapter.newMoodling.toLowerCase().includes(sourceWord) && !guidanceSeen(`mechanic:${key}`)) queueJitTip(key, m, guideCopy().mechanicTitles?.[key] || vinfo(m.type, m.v || 0).n);
+    if (!m || m.tutorialOnly || !VARS[m.type]) return;
+    const variant = Math.min(VARS[m.type].length - 1, Math.max(0, Math.floor(m.v || 0)));
+    const key = `${m.type}${variant}`;
+    rememberMoodlingEncounter(m.type, variant);
+    if (!MK_PROFILE.showTips || nightGuide.active) return;
+    const info = vinfo(m.type, variant), id = `moodling:${key}`, guides = guideCopy().help?.catchGuides || {};
+    const text = [guides[key] || guides[m.type] || info.d, guideCopy().catchClipHint].filter(Boolean).join(' ');
+    queueJitTip(`moodling-${key}`, m, info.n, text, id);
   }
   let struggleTipShownThisRun = false;
   function maybeStruggleTip(kind, target = null) {
@@ -4131,7 +4141,7 @@
     const copy = guideCopy().help || {}, controls = guideCopy().controlLabels || {}, names = copy.controlNames || {};
     $('#helpTitle').textContent = copy.title || 'How to play'; $('#helpSubtitle').textContent = copy.subtitle || '';
     $('#helpControlsTitle').textContent = copy.controls || 'Controls'; $('#helpMoodsTitle').textContent = copy.moods || 'Moodlings';
-    $('#helpMoodsNote').textContent = `${copy.moodsNote || ''} ${copy.unknownHint || ''}`.trim();
+    $('#helpMoodsNote').textContent = copy.moodsNote || '';
     $('#helpGlowTitle').textContent = copy.glow || 'Glow & upgrades'; $('#helpGlowText').textContent = copy.glowText || '';
     $('#helpCombosTitle').textContent = copy.combos || 'Combos'; $('#helpComboText').textContent = copy.comboText || '';
     $('#helpDoneBtn').textContent = copy.close || 'Back'; $('#helpReplayStory').textContent = copy.story || 'Replay the story';
@@ -4147,15 +4157,86 @@
       values.append(keyboard, touch); row.appendChild(values); rows.appendChild(row);
     }
     const moods = $('#helpMoods'); moods.replaceChildren(); moods.setAttribute('aria-label', copy.moods || 'Moodlings');
-    for (const key of BOOK_ORDER) {
-      const type = key[0], variant = +key[1], known = (book[key] || 0) > 0, info = vinfo(type, variant);
-      const item = document.createElement('article'); item.className = `help-mood-entry${known ? '' : ' unknown'}`; item.setAttribute('role', 'listitem');
-      const art = document.createElement('div'); art.className = 'help-mood-art'; art.setAttribute('aria-hidden', 'true'); art.innerHTML = iconSVG(type, variant, known); item.appendChild(art);
-      const details = document.createElement('div'), title = document.createElement('strong'), desc = document.createElement('span');
-      title.textContent = known ? info.n : (copy.unknown || '???'); desc.textContent = known ? info.d : (copy.unknownHint || 'Catch one to discover.');
-      details.append(title, desc); item.appendChild(details); moods.appendChild(item);
+    for (const [type, variants] of Object.entries(VARS)) for (let variant = 0; variant < variants.length; variant++) {
+      const key = `${type}${variant}`, known = (book[key] || 0) > 0, met = known || !!encounteredMoodlings[key], info = vinfo(type, variant);
+      const item = document.createElement('article'); item.className = `help-mood-entry${met ? '' : ' unknown'}`; item.setAttribute('role', 'listitem');
+      const art = document.createElement('div'); art.className = 'help-mood-art'; art.setAttribute('aria-hidden', 'true'); art.innerHTML = iconSVG(type, variant, met); item.appendChild(art);
+      const details = document.createElement('div'); details.className = 'help-mood-copy';
+      const title = document.createElement('strong'), desc = document.createElement('span');
+      title.textContent = met ? info.n : (copy.unknown || '???');
+      desc.textContent = met ? (copy.catchGuides?.[key] || copy.catchGuides?.[type] || info.d) : (copy.unknownHint || 'Meet it in a night to unlock its catch guide.');
+      details.append(title, desc);
+      if (met) {
+        const watch = document.createElement('button'); watch.type = 'button'; watch.className = 'help-clip-button'; watch.dataset.catchClip = key;
+        watch.textContent = copy.catchClipButton || '▶ Watch catch clip';
+        watch.setAttribute('aria-label', `${copy.catchClipButton || 'Watch catch clip'} · ${info.n}`);
+        details.appendChild(watch);
+      }
+      item.appendChild(details); moods.appendChild(item);
     }
   }
+  let catchClipTimer = 0, catchClipReturnFocus = null;
+  function runCatchClip(type, variant) {
+    const stage = $('#catchClipStage'), copy = guideCopy().help || {}, key = `${type}${variant}`, steps = copy.catchClipSteps?.[key] || copy.catchClipSteps?.[type] || [copy.catchGuides?.[key] || copy.catchGuides?.[type] || vinfo(type, variant).d];
+    const captions = steps.length ? steps : [vinfo(type, variant).d];
+    if (catchClipTimer) { clearInterval(catchClipTimer); catchClipTimer = 0; }
+    stage.classList.remove('is-playing'); stage.dataset.type = type; stage.dataset.variant = String(variant);
+    stage.style.setProperty('--clip-mood-color', vcol(type, variant));
+    $('#catchClipMoodling').src = bookPortrait(type, variant, true);
+    $('#catchClipCat').src = COAT.img;
+    $('#catchClipCue').textContent = type === 'C' && variant === 1 ? '◯' : ({ F: '⚡', N: '…', L: 'EYES', B: 'EYES', E: '↑', S: '…', J: '✦', C: '✧', G: '✦' })[type] || '✦';
+    $('#catchClipTitle').textContent = `${guideCopy().help?.catchClipLabel || 'Short guided clip'} · ${vinfo(type, variant).n}`;
+    $('#catchClipClose').setAttribute('aria-label', copy.catchClipClose || 'Close clip');
+    $('#catchClipReplay').textContent = copy.catchClipReplay || 'Replay clip';
+    const tagLabels = copy.catchClipStages || ['NOTICE', 'TRY IT', 'BRING IT HOME'];
+    const showStep = index => {
+      const at = Math.min(index, captions.length - 1);
+      $('#catchClipCaption').textContent = captions[at];
+      $('#catchClipTag').textContent = `${at + 1} / ${captions.length} · ${tagLabels[Math.min(at, tagLabels.length - 1)] || ''}`;
+      $('#catchClipProgress').textContent = `${copy.catchClipStep || 'Step'} ${at + 1} / ${captions.length}`;
+    };
+    showStep(0); $('#catchClipProgress').textContent = copy.catchClipPlaying || `${copy.catchClipStep || 'Step'} 1 / ${captions.length}`;
+    void stage.offsetWidth; stage.classList.add('is-playing');
+    let index = 0;
+    catchClipTimer = setInterval(() => {
+      index++;
+      if (index < captions.length) showStep(index);
+      else {
+        clearInterval(catchClipTimer); catchClipTimer = 0;
+        $('#catchClipProgress').textContent = copy.catchClipProgress || 'Clip finished · replay any time';
+      }
+    }, 2000);
+  }
+  function openCatchClip(type, variant, trigger) {
+    catchClipReturnFocus = trigger || document.activeElement;
+    $('#helpPanel').setAttribute('aria-hidden', 'true');
+    $('#catchClipView').hidden = false;
+    runCatchClip(type, variant);
+    $('#catchClipClose').focus({ preventScroll: true });
+  }
+  function closeCatchClip(restoreFocus = true) {
+    if (catchClipTimer) { clearInterval(catchClipTimer); catchClipTimer = 0; }
+    $('#catchClipView').hidden = true; $('#catchClipStage').classList.remove('is-playing');
+    $('#helpPanel').removeAttribute('aria-hidden');
+    if (restoreFocus && catchClipReturnFocus?.isConnected) catchClipReturnFocus.focus({ preventScroll: true });
+  }
+  $('#helpMoods').addEventListener('click', e => {
+    const button = e.target.closest('button[data-catch-clip]'); if (!button) return;
+    const key = button.dataset.catchClip, type = key[0], variant = Number(key.slice(1));
+    if (VARS[type]?.[variant]) openCatchClip(type, variant, button);
+  });
+  $('#catchClipReplay').addEventListener('click', () => runCatchClip($('#catchClipStage').dataset.type, Number($('#catchClipStage').dataset.variant) || 0));
+  $('#catchClipClose').addEventListener('click', () => closeCatchClip());
+  $('#catchClipView').addEventListener('click', e => { if (e.target.id === 'catchClipView') closeCatchClip(); });
+  $('#catchClipView').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeCatchClip(); }
+    if (e.key === 'Tab') {
+      e.stopPropagation();
+      const close = $('#catchClipClose'), replay = $('#catchClipReplay');
+      if (e.shiftKey && document.activeElement === close) { e.preventDefault(); replay.focus({ preventScroll: true }); }
+      else if (!e.shiftKey && document.activeElement === replay) { e.preventDefault(); close.focus({ preventScroll: true }); }
+    }
+  });
   function openHelp(source = 'hub') {
     helpReturn = source; helpReturnFocus = document.activeElement;
     if (source === 'pause') { pauseScreen.hidden = true; $('#helpReplayStory').hidden = true; }
@@ -4163,6 +4244,7 @@
     renderHelp(); $('#helpScreen').hidden = false; $('#helpDoneBtn').focus({ preventScroll: true });
   }
   function closeHelp() {
+    closeCatchClip(false);
     $('#helpScreen').hidden = true;
     if (helpReturn === 'pause') { pauseScreen.hidden = false; pauseHelpBtn.focus({ preventScroll: true }); }
     else if (helpReturn === 'settings') { $('#hubSettingsScreen').hidden = false; $('#settingsHelpBtn').focus({ preventScroll: true }); }
@@ -4174,7 +4256,7 @@
   $('#helpScreen').addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeHelp(); return; }
     if (e.key !== 'Tab') return;
-    const focusable = Array.from($('#helpScreen').querySelectorAll('button:not([disabled])')).filter(el => !el.hidden);
+    const focusable = Array.from($('#helpScreen').querySelectorAll('button:not([disabled])')).filter(el => !el.closest('[hidden]'));
     if (!focusable.length) return;
     if (e.shiftKey && document.activeElement === focusable[0]) { e.preventDefault(); focusable[focusable.length - 1].focus(); }
     else if (!e.shiftKey && document.activeElement === focusable[focusable.length - 1]) { e.preventDefault(); focusable[0].focus(); }

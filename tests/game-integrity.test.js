@@ -2,7 +2,7 @@ const { execFileSync } = require('node:child_process');
 const { readFileSync } = require('node:fs');
 const { extname } = require('node:path');
 
-const files = execFileSync('git', ['ls-files', '-z', 'frontend'], { encoding: 'utf8' })
+const files = execFileSync('git', ['ls-files', '-z', 'game'], { encoding: 'utf8' })
   .split('\0')
   .filter(Boolean)
   .filter(file => ['.html', '.css', '.js', '.json', '.md'].includes(extname(file)));
@@ -17,4 +17,4 @@ for (const file of files) {
   }
 }
 
-console.log(`Frontend integrity passed (${files.length} source files).`);
+console.log(`Game source integrity passed (${files.length} files).`);

@@ -1,6 +1,6 @@
 # School map: process
 
-Background for **Nights 1–2** (School). In the game: [`frontend/assets/school/hallway-night.webp`](../../../frontend/assets/school/hallway-night.webp), drawn by `drawSchoolWorld()` in `frontend/js/game.js`.
+Background for **Nights 1–2** (School). In the game: [`game/assets/school/hallway-night.webp`](../../../game/assets/school/hallway-night.webp), drawn by `drawSchoolWorld()` in `game/js/game.js`.
 
 | File | Step |
 |---|---|

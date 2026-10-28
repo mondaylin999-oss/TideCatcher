@@ -1,4 +1,4 @@
-name: Frontend integrity
+name: Game integrity
 
 on:
   push:
@@ -12,4 +12,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node tests/frontend-integrity.test.js
+      - run: node tests/game-integrity.test.js

@@ -1,6 +1,6 @@
 # Hilltop park map: process
 
-Map for **Night 5 · Hilltop Park**. Drawn by `drawHillSky()` and `drawHillWorld()` in `frontend/js/game.js`; the city view is [`frontend/assets/hill/hill-vista.webp`](../../../frontend/assets/hill/hill-vista.webp).
+Map for **Night 5 · Hilltop Park**. Drawn by `drawHillSky()` and `drawHillWorld()` in `game/js/game.js`; the city view is [`game/assets/hill/hill-vista.webp`](../../../game/assets/hill/hill-vista.webp).
 
 | File | Step |
 |---|---|

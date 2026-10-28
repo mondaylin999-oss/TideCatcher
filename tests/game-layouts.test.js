@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const LEVELS = require('../frontend/js/levels.js');
+const LEVELS = require('../game/js/levels.js');
 
 // These are the matching player settings in NIGHT_CHAPTERS (game.js).
 const JUMP_SPEED = 830, GRAVITY = 2300, BASE_RUN_SPEED = 6 * 48, CAT_HALF_WIDTH = 16;

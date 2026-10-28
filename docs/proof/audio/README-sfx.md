@@ -1,7 +1,7 @@
 # TideCatcher - Cat & Moodlings SFX (v2, 14 files)
 
-Made by our team member for the game. The files used by the game are in `frontend/assets/audio/ogg/` (and `mp3/` for browsers that cannot play Ogg); the player is `frontend/js/tc-sfx.js`.
-Files: `frontend/assets/audio/wav/` (44.1 kHz 16-bit mono) and `.../ogg/` (use these in the web game). Player: `frontend/js/tc-sfx.js`.
+Made by our team member for the game. The files used by the game are in `game/assets/audio/ogg/` (and `mp3/` for browsers that cannot play Ogg); the player is `game/js/tc-sfx.js`.
+Files: `game/assets/audio/wav/` (44.1 kHz 16-bit mono) and `.../ogg/` (use these in the web game). Player: `game/js/tc-sfx.js`.
 
 ## Shwe (kitten) - real CC0 cat recordings, light edit
 | file | length | notes |

@@ -1,6 +1,6 @@
 # Lakeside map: process
 
-Map for **Night 6 · Lakeside** (4:30 AM) and **Night 7 · Sunrise**, the end of the story. Drawn by `drawLakeSky()` and `drawLakeWorld()` in `frontend/js/game.js`. There is no picture file: everything is painted in code, so it stays sharp on any screen.
+Map for **Night 6 · Lakeside** (4:30 AM) and **Night 7 · Sunrise**, the end of the story. Drawn by `drawLakeSky()` and `drawLakeWorld()` in `game/js/game.js`. There is no picture file: everything is painted in code, so it stays sharp on any screen.
 
 Made on 17 Oct 2026 with Claude (Anthropic), following the team's design brief (Lakeside at dawn, green and pink).
 

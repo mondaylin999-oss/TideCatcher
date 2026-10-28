@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Padauk:wght@400;700&display=swap">
 <link rel="stylesheet" href="css/theme.css?v=ae0a5a6e0e1a">
 <link rel="stylesheet" href="css/styles.css?v=d56824e6fa9c">
-<link rel="stylesheet" href="css/cozy.css?v=20261024-shwe-tutorial">
+<link rel="stylesheet" href="css/cozy.css?v=20261027-catch-clips-smooth">
 <link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 <link rel="stylesheet" href="css/heart.css?v=20261024-heart-depth">
@@ -252,12 +252,28 @@
   </section>
 </div>
 <div class="overlay help-screen" id="helpScreen" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-  <section class="panel help-panel">
+  <section class="panel help-panel" id="helpPanel">
     <header class="help-heading"><div><p class="eyebrow" id="helpSubtitle">A small guide for the Night Side.</p><h2 id="helpTitle">How to play</h2></div><button class="btn ghost help-close" id="helpCloseBtn" type="button" aria-label="Close Help">×</button></header>
     <section class="help-section" aria-labelledby="helpControlsTitle"><h3 id="helpControlsTitle">Controls</h3><div class="help-controls" id="helpControls"></div></section>
-    <section class="help-section" aria-labelledby="helpMoodsTitle"><h3 id="helpMoodsTitle">Moodlings</h3><p class="muted" id="helpMoodsNote">Unknown feelings stay hidden until you meet them.</p><div class="help-moods" id="helpMoods" role="list"></div></section>
+    <section class="help-section" aria-labelledby="helpMoodsTitle"><h3 id="helpMoodsTitle">How to catch each Moodling</h3><p class="muted" id="helpMoodsNote">Meet a new Moodling to unlock its catch guide. Shwe also shares a tip when it first appears.</p><div class="help-moods" id="helpMoods" role="list"></div></section>
     <div class="help-extras"><section class="help-section"><h3 id="helpGlowTitle">Glow &amp; upgrades</h3><p id="helpGlowText"></p></section><section class="help-section"><h3 id="helpCombosTitle">Combos</h3><p id="helpComboText"></p></section></div>
     <div class="actions help-actions"><button class="btn ghost" id="helpReplayStory" type="button" data-sfx="toggle">Replay the story</button><button class="btn" id="helpDoneBtn" type="button" data-sfx="back">Back</button></div>
+  </section>
+  <section class="catch-clip-view" id="catchClipView" hidden role="dialog" aria-modal="true" aria-labelledby="catchClipTitle" aria-describedby="catchClipCaption">
+    <div class="catch-clip-panel">
+      <header class="catch-clip-heading"><div><p class="eyebrow" id="catchClipKicker">A little catch lesson</p><h2 id="catchClipTitle">How to catch</h2></div><button class="btn ghost help-close" id="catchClipClose" type="button" aria-label="Close clip">×</button></header>
+      <div class="catch-clip-stage" id="catchClipStage" aria-hidden="true">
+        <div class="catch-clip-moon"></div><span class="catch-clip-stars catch-clip-stars-a">✦　·　✧</span><span class="catch-clip-stars catch-clip-stars-b">·　✧　✦</span>
+        <div class="catch-clip-cue" id="catchClipCue">✦</div><i class="catch-clip-stolen-light"></i>
+        <div class="catch-clip-fireflies"><i></i><i></i><i></i></div>
+        <img class="catch-clip-moodling" id="catchClipMoodling" alt="">
+        <img class="catch-clip-cat" id="catchClipCat" alt="">
+        <div class="catch-clip-ground"></div>
+        <span class="catch-clip-tag" id="catchClipTag">1 · Notice</span>
+      </div>
+      <p class="catch-clip-caption" id="catchClipCaption" aria-live="polite"></p>
+      <div class="catch-clip-actions"><button class="btn" id="catchClipReplay" type="button">Replay clip</button><span id="catchClipProgress" class="catch-clip-progress" aria-live="polite"></span></div>
+    </div>
   </section>
 </div>
 <div class="overlay level-briefing-screen" id="levelBriefingScreen" hidden role="dialog" aria-modal="true" aria-labelledby="levelBriefingTitle" aria-describedby="levelBriefingSub">
@@ -384,7 +400,7 @@
 </div>
 
 <script src="js/customization.js?v=20261027-crisp"></script>
-<script src="js/tips.js?v=20261027-chill"></script>
+<script src="js/tips.js?v=20261027-merge"></script>
 <script src="js/levels.js?v=20261025-rooftops"></script>
 <script src="js/visual-chapters.js?v=20261026-nolamps"></script>
 <script src="js/school-hallways.js?v=20261024-school-outdoors"></script>
@@ -395,7 +411,7 @@
 <script src="js/heart-data.js?v=20261027-cost"></script>
 <script src="js/lantern-town.js?v=20261027-v3"></script>
 <script src="js/heart-ui.js?v=20261027-cost"></script>
-<script src="js/game.js?v=20261027-film"></script>
+<script src="js/game.js?v=20261027-merge"></script>
 <script src="js/cozy-ui.js?v=20261027-chill"></script>
 <script src="js/sketchbook.js?v=sb5"></script>
 <script src="js/afterstory.js?v=as2"></script>

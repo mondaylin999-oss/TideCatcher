@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/frontend", "destination": "/game/", "permanent": true },
+    { "source": "/frontend/:path*", "destination": "/game/:path*", "permanent": true }
+  ]
+}
