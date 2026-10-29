@@ -34,6 +34,7 @@
       skipWelcome: 'Skip',
       welcomeLabel: 'Welcome to TideCatcher',
       tutorialLabel: 'Night 1 · Guided steps',
+      nightPreview: { title: 'Tonight’s route · find the sunrise goal', skip: 'Press any key or tap to skip' },
       controlLabels: {
         move: { keyboard: 'A / D or ← / →', touch: 'Left joystick' },
         jump: { keyboard: 'Space or ↑', touch: 'JUMP button' },
@@ -187,6 +188,7 @@
       skipWelcome: 'ကျော်မည်',
       welcomeLabel: 'TideCatcher မှ ကြိုဆိုပါသည်',
       tutorialLabel: 'ည ၁ · လမ်းညွှန်အဆင့်များ',
+      nightPreview: { title: 'ဒီညသွားမည့်လမ်း · နေထွက်ပန်းတိုင်ကို ရှာပါ', skip: 'ကျော်ရန် ခလုတ်တစ်ခုခုနှိပ်ပါ သို့မဟုတ် တို့ပါ' },
       controlLabels: {
         move: { keyboard: 'A / D သို့မဟုတ် ← / →', touch: 'ဘယ်ဘက် joystick' },
         jump: { keyboard: 'Space သို့မဟုတ် ↑', touch: 'JUMP ခလုတ်' },

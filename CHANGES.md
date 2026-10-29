@@ -314,3 +314,10 @@
 ## Cloudflare preview build fix
 
 - Added the required `previews` block to `wrangler.jsonc`. Cloudflare’s linked preview build had failed because `npx wrangler preview` requires this configuration block.
+
+## Night opening camera pan
+
+- Each story night opens with a short eased camera sweep from Shwe’s starting point toward the moon-door goal, then returns to the starting view before play continues.
+- Added a sunrise-goal route marker and translated skip hint. Any keyboard key or screen tap skips the pan; the intro pauses the night timer and defers the Night 1 tutorial until it finishes.
+- Reduced-motion settings shorten the sweep. Free Play remains unchanged, and scoring, saves, and gameplay rules are untouched.
+- Verified syntax, game integrity, level layouts, and the camera-pan behavior with a focused regression check.

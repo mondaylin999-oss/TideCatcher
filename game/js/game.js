@@ -167,6 +167,41 @@
 
   // ---------- input ----------
   const keys = {};
+  const nightPan = { active: false, elapsed: 0, duration: 3.8, from: 0, goal: 0, restoreTouchHidden: true, after: null };
+  function finishNightPan() {
+    if (!nightPan.active) return;
+    nightPan.active = false;
+    camX = nightPan.from;
+    touchUI.hidden = nightPan.restoreTouchHidden;
+    for (const code in keys) keys[code] = false;
+    jumpQ = false; jumpHeld = false; pounceQ = false; scratchQ = false; scratchHeld = false; touchAxis = 0;
+    const after = nightPan.after; nightPan.after = null;
+    if (after) after();
+  }
+  function startNightPan(after) {
+    if (mode !== 'story') { after(); return; }
+    const limit = Math.max(0, WORLD - VW);
+    nightPan.active = true; nightPan.elapsed = 0; nightPan.duration = reduce ? 1.1 : 3.8;
+    nightPan.from = clamp(cat.x - VW * .36, 0, limit);
+    nightPan.goal = clamp((currentLevel.homeLight?.[0] ?? WORLD - 80) - VW * .62, 0, limit);
+    nightPan.restoreTouchHidden = touchUI.hidden; nightPan.after = after;
+    touchUI.hidden = true; camX = nightPan.from;
+  }
+  function updateNightPan(dt) {
+    nightPan.elapsed = Math.min(nightPan.duration, nightPan.elapsed + Math.min(dt, .05));
+    const progress = nightPan.elapsed / nightPan.duration;
+    const smooth = p => p * p * (3 - 2 * p);
+    if (progress < .72) {
+      camX = nightPan.from + (nightPan.goal - nightPan.from) * smooth(progress / .72);
+    } else {
+      camX = nightPan.goal + (nightPan.from - nightPan.goal) * smooth((progress - .72) / .28);
+    }
+    if (progress >= 1) finishNightPan();
+  }
+  document.addEventListener('pointerdown', event => {
+    if (!nightPan.active) return;
+    event.preventDefault(); event.stopImmediatePropagation(); finishNightPan();
+  }, true);
   const DEBUG_ALLOWED = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && new URLSearchParams(location.search).get('debug') === '1';
   let debugLayout = false;
   let jumpQ = false, jumpHeld = false, pounceQ = false, scratchQ = false, scratchHeld = false, touchAxis = 0, mouseSneakHeld = false, mouseSneakPointerId = null, mouseSneakPress = null;
@@ -175,6 +210,7 @@
   const keyIs = (code, a) => window.TCControls ? TCControls.is(code, a) : (CK[a] || []).includes(code);
   const keyHeld = a => window.TCControls ? TCControls.held(keys, a) : (CK[a] || []).some(c => keys[c]);
   addEventListener('keydown', e => {
+    if (nightPan.active) { e.preventDefault(); e.stopImmediatePropagation(); finishNightPan(); return; }
     if (bossEncounter?.introOpen) {
       if (['Enter', 'Space'].includes(e.code)) { e.preventDefault(); e.stopPropagation(); startBossFight(); }
       else if (e.code === 'Escape' || keyIs(e.code, 'pause')) { e.preventDefault(); e.stopPropagation(); $('#bossIntroScreen').hidden = true; pauseGame(); }
@@ -251,7 +287,7 @@
   $('#bScratch').addEventListener('pointerdown', e => { e.preventDefault(); scratchQ = true; scratchHeld = true; });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('#bScratch').addEventListener(ev, () => { scratchHeld = false; }));
   const coarse = matchMedia('(pointer: coarse)').matches;
-  addEventListener('touchstart', () => { if (state === 'play') touchUI.hidden = false; }, { passive: true });
+  addEventListener('touchstart', () => { if (state === 'play' && !nightPan.active) touchUI.hidden = false; }, { passive: true });
 
   // ---------- world ----------
   let currentLevel = window.TC_LEVELS?.[1] || { width: 4200, ground: { points: [[0, GROUND], [4200, GROUND]] }, pits: [], platforms: [], hideSpots: [], burySpots: [], spawnZones: [[120, 4080]], catStart: 200, props: [] };
@@ -2789,6 +2825,7 @@
     if (pop < want && Math.random() < dt * 1.2) { const r = Math.random(); spawn(lonely < 2 && r < .2 ? 'L' : r > .7 ? ['E', 'S', 'J', 'C'][Math.floor(Math.random() * 4)] : Math.random() < .5 ? 'N' : 'F'); }
   }
   function update(dt) {
+    if (nightPan.active) { updateNightPan(dt); return; }
     t += dt;
     if (bossEncounter?.introOpen) return;
     shake = Math.max(0, shake - dt * 24);
@@ -4734,7 +4771,31 @@
       ctx.strokeStyle = `rgba(200,255,138,${.35 * fade})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.stroke();
     }
     drawHUD();
+    if (nightPan.active) drawNightPan();
     if (fallDimT > 0) { ctx.save(); ctx.globalAlpha = clamp(fallDimT / .5, 0, 1) * .46; ctx.fillStyle = '#080817'; ctx.fillRect(0, -OY, VW, VH + OY * 2); ctx.restore(); }
+  }
+
+  function drawNightPan() {
+    const copy = guideCopy().nightPreview || {};
+    const boxW = Math.min(440, VW - 36), boxH = 82, x = (VW - boxW) / 2, y = VH - 100;
+    const progress = nightPan.elapsed / nightPan.duration;
+    const alpha = reduce ? 1 : .9 + Math.sin(nightPan.elapsed * 3) * .1;
+    ctx.save(); ctx.globalAlpha = alpha;
+    ctx.fillStyle = 'rgba(22,16,43,.88)'; ctx.strokeStyle = 'rgba(202,176,255,.72)'; ctx.lineWidth = 2;
+    ctx.beginPath(); canvasRoundRect(ctx, x, y, boxW, boxH, 17); ctx.fill(); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = INK; ctx.font = `700 17px ${DISP}, system-ui, sans-serif`;
+    ctx.fillText(copy.title || 'Tonight’s route', VW / 2, y + 20, boxW - 24);
+    const routeY = y + 48, routeW = Math.min(188, boxW - 70), routeX = (VW - routeW) / 2;
+    ctx.strokeStyle = 'rgba(202,176,255,.55)'; ctx.lineWidth = 3; ctx.setLineDash([4, 6]);
+    ctx.beginPath(); ctx.moveTo(routeX, routeY); ctx.lineTo(routeX + routeW, routeY); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = GOLD; ctx.beginPath(); ctx.arc(routeX, routeY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff0a2'; ctx.beginPath(); ctx.arc(routeX + routeW, routeY, 7, 0, Math.PI * 2); ctx.fill();
+    const panProgress = progress < .72 ? progress / .72 : 1 - (progress - .72) / .28;
+    ctx.fillStyle = VIOLET; ctx.beginPath(); ctx.arc(routeX + routeW * clamp(panProgress, 0, 1), routeY, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = MUTED; ctx.font = `500 11px ${BODY}, system-ui, sans-serif`;
+    ctx.fillText(copy.skip || 'Press any key or tap to skip', VW / 2, y + 68, boxW - 18);
+    ctx.restore();
   }
 
   // ---------- flow ----------
@@ -5777,9 +5838,12 @@
     announce(mode === 'free' ? 'Free play · no clock, no score. Just wander with Shwe.' : endlessOn() ? `${EN.title} · ${chapter.sub}` : `${visualTheme?.name || chapter.name} · ${chapter.sub}`, INK, endlessOn() ? 3 : 2.1);
     if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); }
     if (mode === 'free') queueJitTip('free', cat, guideCopy().mechanicTitles?.free || 'Free Play');
-    const startedTutorial = startGuidedTutorial();
-    queueJitTip('weather', null, weatherTitle, weatherCopy?.tips?.[weather.kind], `weather:${weather.kind}`);
-    if (!startedTutorial) showNextJitTip();
+    const showNightGuidance = () => {
+      const startedTutorial = startGuidedTutorial();
+      queueJitTip('weather', null, weatherTitle, weatherCopy?.tips?.[weather.kind], `weather:${weather.kind}`);
+      if (!startedTutorial) showNextJitTip();
+    };
+    if (mode === 'story') startNightPan(showNightGuidance); else showNightGuidance();
     cv.focus?.();
   }
   const LEVEL_MAP_LIMIT = 50, LEVEL_MAP_STEP = 240;
