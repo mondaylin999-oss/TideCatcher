@@ -683,8 +683,10 @@
   function inFestival() { return (mode === 'story' && (FESTIVAL_NIGHTS.includes(storyNight) || currentLevel?.map === 'festival')) || (mode === 'free' && currentLevel?.map === 'festival'); }
   function currentMapKey() {
     if (currentLevel?.map === 'market') return 'market';
+    if (currentLevel?.map === 'garden') return 'garden';
     if (currentLevel?.map === 'pagoda') return 'pagoda';
     if (currentLevel?.map === 'train') return 'train';
+    if (currentLevel?.map === 'rooftop') return 'rooftop';
     if (inSchool()) return 'school';
     if (inRooftop()) return 'rooftop';
     if (inPark()) return 'park';
@@ -4758,7 +4760,9 @@
     // snap the camera to whole screen pixels: a camera between pixels makes posts, trunks and the cat's
     // stripes shimmer (like 'lllll') as the town scrolls, especially on screens scaled to 125% or 150%
     { const px = dpr * S; ctx.save(); ctx.translate(-Math.round(camX * px) / px, 0); }
-    drawWorld(); drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawBossEncounter(); drawGuidanceMarker(); drawFireflies(); drawTrail();
+    drawWorld();
+    window.TCParallaxLayers?.draw(ctx, currentLevel?.map || currentMapKey(), { cam: camX, width: VW, ground: GROUND, time: t, reduced: reduce, pits: currentLevel?.pits || [] });
+    drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawBossEncounter(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.front(ctx, endlessFxOpts()); drawLevelDebug();
     ctx.restore();
     drawWeather();

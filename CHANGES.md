@@ -321,3 +321,10 @@
 - Added a sunrise-goal route marker and translated skip hint. Any keyboard key or screen tap skips the pan; the intro pauses the night timer and defers the Night 1 tutorial until it finishes.
 - Reduced-motion settings shorten the sweep. Free Play remains unchanged, and scoring, saves, and gameplay rules are untouched.
 - Verified syntax, game integrity, level layouts, and the camera-pan behavior with a focused regression check.
+
+## Map parallax depth
+
+- Added a distant skyline silhouette and a near foreground detail layer for every map, including school, rooftops, park, festival, hill, lakeside, market, garden, pagoda, train, and classic Free Play.
+- The skyline drifts slowly and near details track the camera more closely. Lightweight vector art is rasterized into small, on-demand tiles and reused each frame; the cache holds only the active map. Near railing tiles are omitted across pit spans so they cannot suggest a crossing.
+- Reduced-motion mode nearly aligns the layers with the camera and stops foliage sway. Both layers are drawn beneath Shwe and Moodlings and do not change collision geometry.
+- Added a regression check covering all map themes, draw paths, and pit-aware foregrounds.
