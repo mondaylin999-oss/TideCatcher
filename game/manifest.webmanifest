@@ -1,0 +1,14 @@
+{
+  "name": "TideCatcher",
+  "short_name": "TideCatcher",
+  "description": "Bring every feeling home. A cozy cat platformer by NextCrown for Digit7 Jam 2026.",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#140b2e",
+  "theme_color": "#140b2e",
+  "icons": [
+    { "src": "assets/brand/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/brand/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

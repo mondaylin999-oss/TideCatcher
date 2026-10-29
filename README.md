@@ -1,3 +1,5 @@
+![TideCatcher by NextCrown × Digit7 Jam 2026](docs/brand/github-banner-1280x640.png)
+
 # TideCatcher
 
 TideCatcher is a static browser Canvas game by **NextCrown** for Digit7 Jam 2026. Vercel uses the repository root as its project root; Cloudflare Workers serves the `game/` static assets.

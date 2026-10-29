@@ -4,6 +4,16 @@
 <meta charset=utf8>
 <meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>TideCatcher · A little light to bring home</title>
+<meta name="description" content="TideCatcher: bring every feeling home. A cozy cat platformer by NextCrown for Digit7 Jam 2026.">
+<meta name="theme-color" content="#140b2e">
+<link rel="icon" href="assets/brand/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:title" content="TideCatcher · Bring every feeling home">
+<meta property="og:description" content="A cozy cat platformer by NextCrown for Digit7 Jam 2026.">
+<meta property="og:image" content="assets/brand/share-card.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Padauk:wght@400;700&display=swap">
@@ -14,8 +24,28 @@
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 <link rel="stylesheet" href="css/heart.css?v=20261024-heart-depth">
 <link rel="stylesheet" href="css/sketchbook.css?v=sb28">
+<link rel="stylesheet" href="css/brand.css?v=20261029-colour">
 </head>
 <body>
+<div class="title-screen" id="titleScreen" role="dialog" aria-label="TideCatcher title screen">
+  <div class="title-stars" aria-hidden="true"></div>
+  <img class="title-art" src="assets/brand/title-card.webp" alt="TideCatcher: Bring every feeling home" width="1600" height="900" decoding="async" fetchpriority="high">
+  <button class="title-play" id="titlePlayBtn" type="button" autofocus><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>PLAY</button>
+  <p class="title-hint">Press Enter or Space</p>
+  <div class="team-credit"><img src="assets/brand/nextcrown.webp" alt="" width="30" height="30"><span><b>NextCrown</b> ×</span><img class="team-credit-d7" src="assets/brand/digit7.webp" alt="" width="30" height="30"><span>Digit7 Jam 2026</span></div>
+</div>
+<script>
+(function(){
+  var t=document.getElementById('titleScreen'),b=document.getElementById('titlePlayBtn'),done=false;
+  function play(){
+    if(done)return;done=true;t.classList.add('leaving');
+    try{var A=window.AudioContext||window.webkitAudioContext;if(A){var c=new A();c.resume();}}catch(e){}
+    setTimeout(function(){t.hidden=true;document.removeEventListener('keydown',key,true);document.dispatchEvent(new CustomEvent('tidecatcher:play'));},600);
+  }
+  function key(e){if(done)return;e.stopPropagation();if(e.key==='Enter'||e.key===' '||e.code==='Space'){e.preventDefault();play();}}
+  b.addEventListener('click',play);document.addEventListener('keydown',key,true);
+})();
+</script>
 <canvas id="game" aria-label="TideCatcher prototype game" hidden></canvas>
 <div class="boot-screen" id="bootLoadingScreen" role="status" aria-live="polite" aria-label="Loading TideCatcher">
   <div class="boot-loading-card">
@@ -24,10 +54,11 @@
       <svg class="boot-paw boot-paw-two" viewBox="0 0 72 72"><ellipse cx="36" cy="48" rx="17" ry="14"/><ellipse cx="17" cy="29" rx="7" ry="9"/><ellipse cx="31" cy="19" rx="7" ry="9"/><ellipse cx="45" cy="19" rx="7" ry="9"/><ellipse cx="57" cy="29" rx="7" ry="9"/></svg>
       <svg class="boot-paw boot-paw-three" viewBox="0 0 72 72"><ellipse cx="36" cy="48" rx="17" ry="14"/><ellipse cx="17" cy="29" rx="7" ry="9"/><ellipse cx="31" cy="19" rx="7" ry="9"/><ellipse cx="45" cy="19" rx="7" ry="9"/><ellipse cx="57" cy="29" rx="7" ry="9"/></svg>
     </div></div>
-    <p class="boot-kicker">TIDECATCHER</p>
+    <img class="boot-logo" src="assets/brand/tidecatcher-logo.webp" alt="TideCatcher: Bring every feeling home" width="900" height="506" decoding="async" fetchpriority="high">
     <h1>Following the pawprints</h1>
     <p class="boot-loading-message">Waking Shwe and gathering the moonlight…</p>
     <div class="boot-loading-bar" aria-hidden="true"><span></span></div>
+    <div class="team-credit"><img src="assets/brand/nextcrown.webp" alt="" width="30" height="30"><span><b>NextCrown</b> ×</span><img class="team-credit-d7" src="assets/brand/digit7.webp" alt="" width="30" height="30"><span>Digit7 Jam 2026</span></div>
   </div>
 </div>
 
@@ -117,7 +148,8 @@
   <section class="welcome-panel" aria-describedby="welcomeDescription">
     <p class="eyebrow welcome-eyebrow">Thiri’s sketchbook · please don’t peek</p>
     <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/ginger-toon.png" alt="Shwe, a cat ready to follow the night lights" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
-    <h1 id="welcomeTitle" class="welcome-title">TideCatcher</h1>
+    <img class="welcome-logo" src="assets/brand/tidecatcher-logo.webp" alt="" width="900" height="506" decoding="async">
+    <h1 id="welcomeTitle" class="welcome-title sr-only">TideCatcher</h1>
     <p id="welcomeDescription" class="welcome-description">When Thiri falls asleep with a heavy heart, Shwe follows her little feelings into the Night Side.</p>
     <div class="welcome-loading" id="welcomeLoading" role="status" aria-live="polite">
       <div class="welcome-loading-copy"><span id="welcomeLoadStatus">Gathering the moonlight…</span><span class="sr-only" id="welcomeLoadCount">0 / 8</span></div>
@@ -126,6 +158,7 @@
     </div>
     <button class="btn welcome-begin" id="welcomeBeginBtn" type="button" disabled>Begin the story →</button>
     <p class="welcome-note">One quiet night. Seven hours. Every colour back home.</p>
+    <div class="team-credit"><img src="assets/brand/nextcrown.webp" alt="" width="30" height="30"><span><b>NextCrown</b> ×</span><img class="team-credit-d7" src="assets/brand/digit7.webp" alt="" width="30" height="30"><span>Digit7 Jam 2026</span></div>
   </section>
 </div>
 <div class="overlay welcome-cards-screen" id="welcomeCardsScreen" hidden role="dialog" aria-modal="true" aria-labelledby="welcomeCardsTitle">
@@ -175,7 +208,7 @@
 
 <div class="overlay hub-screen" id="startScreen" hidden>
   <header class="hub-topbar" aria-label="TideCatcher home">
-    <div class="hub-brand"><span class="hub-brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M5 28c6-8 12-8 19 0s13 8 19 0v9c-6 7-12 7-19 0s-13-7-19 0z" fill="currentColor" opacity=".72"/><path d="M6 21c6-8 12-8 18 0s12 8 18 0" fill="none" stroke="#e8f1f5" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="11" r="4" fill="#e0b04a"/></svg></span><span class="hub-brand-copy"><span class="hub-brand-kicker">THE NIGHT SIDE</span><strong>TideCatcher</strong></span></div>
+    <div class="hub-brand"><span class="hub-brand-copy"><span class="hub-brand-kicker">THE NIGHT SIDE</span><strong>TideCatcher</strong></span></div>
     <div class="hub-currencies" aria-label="Saved collection totals">
       <div class="hub-currency-pill"><span class="hub-currency-icon glow-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><ellipse cx="13" cy="22" rx="8" ry="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 18v4m16-4v4M5 18c0-2 3.6-4 8-4s8 2 8 4-3.6 4-8 4-8-2-8-4Zm5-8 3-5 3 5-3 5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span><span class="hub-currency-copy"><span>GLOW</span><strong id="hubGlowValue">0</strong></span></div>
       <div class="hub-currency-pill"><span class="hub-currency-icon book-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 8c5-2 9-1 12 2v17c-3-3-7-4-12-2zm24 0c-5-2-9-1-12 2v17c3-3 7-4 12-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 13c2-.4 4 0 6 1m10-1c-2-.4-4 0-6 1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span><span class="hub-currency-copy"><span>MOOD BOOK</span><strong id="hubBookValue">0 / 17</strong></span></div>
