@@ -15,6 +15,7 @@
         { title: 'Bring a light home', text: 'See our glowing practice friend? Move close and press Pounce to catch it. It cannot hurt us.', action: 'catch' }
       ],
       tutorialComplete: 'You did it! Now let’s bring the feelings home.',
+      bossIntro: { title: 'Storm Frustrated', text: 'Dodge each charge. When the storm gets dizzy, pounce. Three good pounces open the moon door.', dodge: '↔ Dodge or jump', pounce: '✦ Pounce when dizzy', ready: 'Face the storm', warning: 'Storm Frustrated is winding up!', dizzy: 'It is dizzy! Pounce now!', hit: 'A stormy bump · {lives} lives left', defeated: 'The storm is calm. The moon door is open!', fail: 'Shwe ran out of lives in the storm challenge. The lights already safe in the Mood Book remain yours.' },
       success: 'Purrfect! You learned it by doing it.',
       skipTutorial: 'Skip tutorial',
       jitLabel: 'A little tip',
@@ -22,6 +23,12 @@
       struggleLabel: 'A gentle hint',
       struggleTitle: 'Take your time',
       mechanicTitles: { nervous: 'Nervous', jealous: 'Jealous', lonely: 'Lonely', shy: 'Shy', excited: 'Excited', buried: 'Buried', calm: 'Calm', combo: 'Combo', free: 'Free Play', wallJump: 'Wall jump & ledge grab' },
+      weather: {
+        titles: { rain: 'Light rain', wind: 'Soft wind', fog: 'Moon fog' },
+        tips: { rain: 'Light rain makes the ground slippery. Ease off the controls to stop, and listen for Lonely’s chime.', wind: 'A soft wind nudges Shwe’s jumps a little higher or lower. Watch the breeze and adjust your landing.', fog: 'Moon fog hides distant details. Night Eyes now reaches farther, so look around for hidden glows.' }
+      },
+      puddleTip: 'Watch the puddles! Their splash can startle Nervous. Sneak across quietly.',
+      pagodaBellTip: 'Brush a hanging bell to send a gentle chime through the hill and calm nearby Moodlings.',
       next: 'Next',
       finishWelcome: 'Choose your cat →',
       skipWelcome: 'Skip',
@@ -98,6 +105,35 @@
           C1: ['Hold S as the breathing ring grows.', 'Release S as the ring gently shrinks.', 'Match three slow breaths, then catch Calm.'],
           G: ['Watch Golden swoop in a quick arc.', 'Press Space to jump and meet it in the air.', 'Press J or X to pounce mid-air and catch it.']
         },
+        paperStars: {
+          label: 'Paper stars', progress: 'Paper stars · {count} / 3', diaryUnlocked: 'bonus diary page unlocked',
+          diaryTitle: 'Paper-star diary', diaryPrompt: 'Find all 3 hidden paper stars in a night to unlock its bonus page.', diaryCount: '{count} / 50 pages', diaryEmpty: 'Your first page is waiting among the stars.',
+          found: 'Paper star · {count}/3', allFound: 'All 3 paper stars found · bonus diary page unlocked!', pageFound: 'Bonus diary page!',
+          pages: {
+            1: 'I tucked three little stars away where the classroom moonlight could find them. Shwe waited beside me until my hands stopped shaking.',
+            2: 'The wall felt taller at night. Shwe found the stars up high, and I remembered that being brave can be quiet.',
+            3: 'Three paper stars rested near the park path. Shwe sat with Lonely until even the shadows felt friendly.',
+            4: 'The festival lights looked like a sky brought down to earth. I folded three stars so Shwe could carry a little of it home.',
+            5: 'On the hill, Shwe found stars caught between the stones. I think the wind had been saving them for us.',
+            6: 'The lake held the moon in pieces. Shwe brought me three stars, and the water looked less lonely after that.',
+            7: 'Morning came softly. Shwe placed the last three stars beside my drawing, where they can keep shining.'
+          },
+          endlessPage: 'On {chapter}, Shwe found three paper stars hidden around {place}. I pressed them into my diary so this little adventure would always have a place to rest.'
+        },
+        secretRooms: {
+          wallPrompt: 'Scratch the cracked wall · {count}/3 · {key}', opened: 'A secret room!',
+          pageFound: 'Secret diary page found!', pageTitle: 'Secret-room diary', pageCount: '{count} / 6 pages',
+          pagePrompt: 'Find the cracked walls hidden across the maps.', pageEmpty: 'A little memory is waiting behind a cracked wall.',
+          rareWaiting: 'A rare Moodling is hiding inside!', alreadyRead: 'You have already saved this memory.',
+          pages: {
+            school: 'I found this note tucked behind a loose classroom wall. Shwe waited while I read it twice.',
+            festival: 'The lanterns made the hidden room feel warm. I want to remember how safe the quiet felt.',
+            lake: 'The moon kept a little light for us behind the old wall. Shwe found it first.',
+            market: 'Rain tapped above the hidden room. We sat together until the last drops softened.',
+            pagoda: 'A quiet note beneath the hill reminded me to be gentle with every small thing.',
+            free: 'Shwe found a little memory in the Night Side, safe from the wind and the dark.'
+          }
+        },
         catchGuides: {
           F: 'Let it charge, dodge the rush, then pounce while it is dizzy.',
           N: 'Sneak or walk slowly within range. Avoid running and jumping; pounce while it wanders calmly.',
@@ -132,6 +168,7 @@
         { title: 'အလင်းလေးကိုဖမ်းမယ်', text: 'တောက်ပတဲ့ လေ့ကျင့်ဖော်လေးအနားကိုသွားပြီး Pounce ကိုနှိပ်ပါ။ သူက အန္တရာယ်မပေးပါဘူး။', action: 'catch' }
       ],
       tutorialComplete: 'တတ်သွားပြီ! ခံစားချက်လေးတွေကို အိမ်ပြန်ပို့ကြမယ်။',
+      bossIntro: { title: 'မုန်တိုင်း Frustrated', text: 'ပြေးဝင်တိုက်လာချိန်မှာ ရှောင်ပါ။ မူးဝေသွားတဲ့အခါ Pounce လုပ်ပါ။ သုံးကြိမ်ထိမှန်ရင် လမင်းတံခါး ပွင့်လာမယ်။', dodge: '↔ ရှောင်ပါ သို့မဟုတ် ခုန်ပါ', pounce: '✦ မူးဝေချိန် Pounce လုပ်ပါ', ready: 'မုန်တိုင်းကို ရင်ဆိုင်မယ်', warning: 'မုန်တိုင်း Frustrated က အားယူနေသည်။', dizzy: 'မူးဝေနေပြီ! Pounce လုပ်ပါ။', hit: 'မုန်တိုင်းနဲ့ တိုက်မိသည် · အသက် {lives} ခု', defeated: 'မုန်တိုင်း ငြိမ်သက်သွားပြီ။ လမင်းတံခါး ပွင့်လာပြီ။', fail: 'မုန်တိုင်းတိုက်ပွဲတွင် Shwe အသက်ကုန်သွားသည်။ Mood Book ထဲ သိမ်းထားပြီးသား အလင်းများက သင့်အတွက် ကျန်ရှိနေမည်။' },
       success: 'ကောင်းလိုက်တာ! ကိုယ်တိုင်လုပ်ပြီး သင်ယူတတ်မြောက်သွားပြီ။',
       skipTutorial: 'သင်ခန်းစာ ကျော်မည်',
       jitLabel: 'အကြံပြုချက်လေး',
@@ -139,6 +176,12 @@
       struggleLabel: 'ညင်သာသော အကူအညီ',
       struggleTitle: 'အချိန်ယူပါ',
       mechanicTitles: { nervous: 'Nervous', jealous: 'Jealous', lonely: 'Lonely', shy: 'Shy', excited: 'Excited', buried: 'Buried', calm: 'Calm', combo: 'Combo', free: 'Free Play', wallJump: 'နံရံခုန်နှင့် အနားကိုင်တက်ခြင်း' },
+      weather: {
+        titles: { rain: 'မိုးဖွဲဖွဲ', wind: 'လေညင်း', fog: 'လမြူ' },
+        tips: { rain: 'မိုးဖွဲဖွဲကြောင့် မြေပြင်ချော်နိုင်သည်။ ရပ်ရန် ထိန်းချုပ်မှုကို ဖြည်းဖြည်းလျှော့ပြီး Lonely ၏ ခေါင်းလောင်းသံကို နားထောင်ပါ။', wind: 'လေညင်းက Shwe ၏ ခုန်အားကို အနည်းငယ် မြှင့်နိုင်၊ လျှော့နိုင်သည်။ လေကိုကြည့်ပြီး ဆင်းမည့်နေရာကို ချိန်ပါ။', fog: 'လမြူကြောင့် အဝေးကအရာများ မှုန်ဝါးနေသည်။ Night Eyes က ပိုဝေးဝေးထိ မြင်နိုင်သဖြင့် ဝှက်ထားသောအလင်းများကို ရှာပါ။' }
+      },
+      puddleTip: 'ရေအိုင်တွေကို သတိထားပါ။ ရေဖျန်းသံကြောင့် Nervous လန့်သွားနိုင်သည်။ တိတ်တိတ်လေး ဖြတ်သွားပါ။',
+      pagodaBellTip: 'တွဲလောင်းခေါင်းလောင်းလေးကို ထိလိုက်ပါ။ သာယာတဲ့အသံက အနီးက Moodling တွေကို ငြိမ်သက်စေမယ်။',
       next: 'ရှေ့သို့',
       finishWelcome: 'ကြောင်ကို ရွေးပါ →',
       skipWelcome: 'ကျော်မည်',
@@ -214,6 +257,35 @@
           C: ['ကျူပင်များကြား ပိုးစုန်းကြူးများနှင့်အတူ ဖြည်းဖြည်းလျှောက်ပါ။', 'Calm ဘေးတွင် ရပ်ပြီး ငြိမ်ငြိမ်ထိုင်ပါ။', 'ဖမ်းယူကွင်းပြည့်သည်အထိ အတူတူငြိမ်နေပါ။'],
           C1: ['အသက်ရှူကွင်းကြီးလာချိန် S ကိုဖိထားပါ။', 'ကွင်းကျုံ့လာချိန် S ကိုလွှတ်ပါ။', 'ဖြည်းဖြည်းအသက်ရှူမှု သုံးကြိမ်လိုက်လုပ်ပြီး ဖမ်းပါ။'],
           G: ['Golden ပျံဝဲသည့် အကွေးလမ်းကြောင်းကို ကြည့်ပါ။', 'Space နှိပ်၍ ခုန်ပြီး လေထဲတွင် ဆုံပါ။', 'လေထဲတွင် J သို့မဟုတ် X နှိပ်၍ ခုန်တိုက်ဖမ်းပါ။']
+        },
+        paperStars: {
+          label: 'စက္ကူကြယ်များ', progress: 'စက္ကူကြယ်များ · {count} / 3', diaryUnlocked: 'အပိုဒိုင်ယာရီ စာမျက်နှာ ဖွင့်ပြီး',
+          diaryTitle: 'စက္ကူကြယ် ဒိုင်ယာရီ', diaryPrompt: 'အပိုစာမျက်နှာဖွင့်ရန် ညတစ်ညတွင် ဝှက်ထားသော စက္ကူကြယ် ၃ ပွင့်လုံးကို ရှာပါ။', diaryCount: '{count} / ၅၀ စာမျက်နှာ', diaryEmpty: 'ပထမစာမျက်နှာလေးက ကြယ်တွေကြားမှာ စောင့်နေပါတယ်။',
+          found: 'စက္ကူကြယ် · {count}/၃', allFound: 'စက္ကူကြယ် ၃ ပွင့်လုံး ရပြီ · အပိုဒိုင်ယာရီစာမျက်နှာ ဖွင့်ပြီး!', pageFound: 'အပိုဒိုင်ယာရီစာမျက်နှာ!',
+          pages: {
+            1: 'စာသင်ခန်းထဲက လရောင်အောက်မှာ ကြယ်လေးသုံးပွင့်ကို ကျွန်မ သိမ်းထားလိုက်တယ်။ ကျွန်မလက်တွေ တုန်မနေတော့တဲ့အထိ Shwe က ဘေးမှာ စောင့်ပေးခဲ့တယ်။',
+            2: 'ညဘက်မှာ နံရံက ပိုမြင့်သလိုပဲ။ Shwe က အပေါ်ကကြယ်တွေကို ရှာတွေ့ခဲ့ပြီး ရဲရင့်ခြင်းဆိုတာ တိတ်ဆိတ်နေလည်း ဖြစ်နိုင်တယ်လို့ ကျွန်မ သတိရလာတယ်။',
+            3: 'ပန်းခြံလမ်းဘေးမှာ စက္ကူကြယ်သုံးပွင့် ရှိနေတယ်။ အရိပ်တွေတောင် မကြောက်စရာ မဟုတ်တော့တဲ့အထိ Shwe က Lonely ဘေးမှာ ထိုင်နေခဲ့တယ်။',
+            4: 'ပွဲတော်မီးရောင်တွေက ကောင်းကင်ကို မြေပြင်ပေါ် ချထားသလိုပဲ။ Shwe အိမ်ပြန်သယ်သွားနိုင်အောင် ကြယ်သုံးပွင့်ကို ကျွန်မ ခေါက်ပေးခဲ့တယ်။',
+            5: 'တောင်ကုန်းပေါ်က ကျောက်တုံးတွေကြားမှာ Shwe ကြယ်တွေကို ရှာတွေ့ခဲ့တယ်။ လေက ကျွန်မတို့အတွက် သိမ်းထားပေးတာ ဖြစ်မယ်။',
+            6: 'ရေကန်ထဲမှာ လရောင်က အပိုင်းပိုင်းဖြစ်နေတယ်။ Shwe က ကြယ်သုံးပွင့် ယူလာပေးပြီးနောက် ရေကန်ကြီးက အထီးကျန်မှု နည်းသွားသလိုပဲ။',
+            7: 'မနက်ခင်းက နူးညံ့စွာ ရောက်လာတယ်။ Shwe က နောက်ဆုံးကြယ်သုံးပွင့်ကို ကျွန်မပုံဘေးမှာ ချထားခဲ့ပြီး အဲဒီမှာ ဆက်လက်တောက်ပနေတော့မယ်။'
+          },
+          endlessPage: '{chapter} မှာ Shwe က {place} အနီးက ဝှက်ထားတဲ့ စက္ကူကြယ်သုံးပွင့်ကို ရှာတွေ့ခဲ့တယ်။ ဒီစွန့်စားခန်းလေးမှာ အနားယူစရာနေရာ ရှိနေစေဖို့ ဒိုင်ယာရီထဲမှာ ထည့်သိမ်းလိုက်တယ်။'
+        },
+        secretRooms: {
+          wallPrompt: 'အက်နေသောနံရံကို ကုတ်ပါ · {count}/၃ · {key}', opened: 'လျှို့ဝှက်အခန်း ပွင့်သွားပြီ!',
+          pageFound: 'လျှို့ဝှက်ဒိုင်ယာရီစာမျက်နှာ ရပြီ!', pageTitle: 'လျှို့ဝှက်အခန်း ဒိုင်ယာရီ', pageCount: '{count} / ၆ စာမျက်နှာ',
+          pagePrompt: 'မြေပုံများအနှံ့ ဝှက်ထားသော အက်နံရံများကို ရှာပါ။', pageEmpty: 'အက်နံရံနောက်မှာ အမှတ်တရလေးတစ်ခု စောင့်နေပါတယ်။',
+          rareWaiting: 'အခန်းထဲမှာ ရှားပါး Moodling လေး ဝှက်နေပါတယ်!', alreadyRead: 'ဒီအမှတ်တရကို သိမ်းထားပြီးပါပြီ။',
+          pages: {
+            school: 'စာသင်ခန်းနံရံနောက်မှာ ဒီမှတ်စုလေးကို တွေ့ခဲ့တယ်။ ကျွန်မ နှစ်ခါဖတ်နေတုန်း Shwe က စောင့်ပေးခဲ့တယ်။',
+            festival: 'မီးပုံးတွေကြောင့် လျှို့ဝှက်အခန်းလေးက နွေးထွေးနေတယ်။ အေးချမ်းလုံခြုံတဲ့ခံစားချက်ကို မှတ်မိနေချင်တယ်။',
+            lake: 'နံရံဟောင်းနောက်မှာ လရောင်က ကျွန်မတို့အတွက် အလင်းလေးတစ်ခု သိမ်းထားတယ်။ Shwe က အရင်တွေ့ခဲ့တယ်။',
+            market: 'လျှို့ဝှက်အခန်းပေါ်မှာ မိုးစက်တွေ တောက်တောက်ကျနေတယ်။ မိုးသံပျော့သွားတဲ့အထိ အတူထိုင်နေခဲ့ကြတယ်။',
+            pagoda: 'တောင်ကုန်းအောက်က မှတ်စုလေးက သေးငယ်တဲ့အရာတိုင်းကို ညင်သာစွာ ဆက်ဆံဖို့ သတိပေးတယ်။',
+            free: 'ညဘက်ကမ္ဘာထဲမှာ လေနဲ့အမှောင်ကင်းဝေးတဲ့ မှတ်ဉာဏ်လေးကို Shwe ရှာတွေ့ခဲ့တယ်။'
+          }
         },
         catchGuides: {
           F: 'အနားသို့ ချဉ်းကပ်ပြီး တိုက်ခိုက်လာစေပါ။ ရှောင်ထွက်ပြီး မူးဝေနေချိန်တွင် ခုန်တိုက်ပါ။',

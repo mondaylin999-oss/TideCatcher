@@ -3,6 +3,33 @@
 - The light trail now flows like a ribbon: a gentle wave starts at Shwe's tail and travels down the string, so the lights bob and sway even while she stands still. On the ground each light rises up to about 14 px and its lowest point just touches the floor; in the air the wave ripples both ways and gets a little livelier when she runs.
 - Only the drawing moves. The lights' real positions (catching, delivering, Jealous stealing) are unchanged, and with reduced motion on, the trail stays still as before.
 
+# Hidden paper stars and bonus diary pages
+
+- Added three fixed paper-star collectibles to every story night. They sit on raised ledges or require a timed jump; stars placed on moving ledges travel with them.
+- Paper-star progress saves independently per night in `mk-paper-stars`, without changing score stars, Glow, Moodling catches, or existing save keys.
+- Night-map entries and the night briefing/endless selection cards show the `0–3` paper-star count. Finding all three unlocks a bonus diary page on Thiri’s shelf.
+- Added a placement check for all 50 nights and included it in the game-integrity workflow.
+
+## Swaying lights and a brief recovery window
+
+- Caught lights now sway gently along Shwe’s tail-tied trail as she moves.
+- When Shwe is hit and loses a carried light, it floats nearby with a visible three-second countdown. Pounce on it before it fades to return it to the trail without earning duplicate score or Glow.
+- If the light fades, its Moodling returns at the drop point, preserving the existing catch and progress rules. Ambushes retain their existing number of lost lights.
+
+## Sunrise countdown
+
+- Outdoor story skies now warm and brighten gradually as each night’s timer runs down; school interiors retain their indoor look.
+- During the final 20 seconds, a soft sunrise glow and partial sun rise at the screen edge. The movement is held still when reduced motion is enabled.
+- The current music eases up to 1.16× speed in the final 20 seconds, then returns smoothly to normal when time is added, play is paused, or the run ends.
+- Night 7’s lakeside dawn now follows the same countdown across the night. Scoring, catch rules, and saves are unchanged.
+
+## Nightly weather
+
+- Each run rolls one steady weather condition: light rain, a gentle wind, or moon fog. Its icon and localized name appear in the HUD, with an accessible canvas label.
+- Rain makes Shwe slide more on the ground and brings Lonely back sooner, with an extra early Lonely where the night calls for one. Wind shifts jump height slightly in either direction. Fog extends Night Eyes' reveal radius by 35%.
+- Outdoor rain uses a soft falling-rain effect; school interiors keep their established indoor scenery. Weather tips are localized in English and Burmese and appear once per weather type using the existing saved tip history.
+- Catch, scoring, and existing save data formats are unchanged. Reduced-motion mode keeps rain still.
+
 # Gameplay catch clips and a trail that follows Shwe
 
 - The catch guide in How to play now shows a short real gameplay clip of Shwe catching each Moodling (recorded from the game itself in Free Play), with the three translated steps and their keyboard/touch controls beside it. Rare variants share their family's clip; Calm and Breathing Calm have their own.
@@ -244,3 +271,42 @@
 - Added illustrated storyboards for Frustrated, Nervous, Lonely, Buried, Excited, Shy, Jealous, Calm, breathing Calm and Golden. Kept existing catch rules, scoring and Moodling behavior unchanged.
 - Localized clip controls and catch captions in English and Burmese. Removed the former CSS slide keyframes and kept the stage at 16:9 on mobile and desktop.
 - Verified JavaScript syntax and game-source integrity. Browser-checked the Frustrated clip at 375px and 1280px, including its Space-or-A/D badge, final catch and Glow animation, exact 16:9 scene, and Burmese captions/controls.
+
+## Storm Moodling encounters
+
+- Added a three-pounce Storm Frustrated encounter after all required feelings are home on Nights 3, 5 and 7. The encounter is separate from normal Moodling catches, so it grants no catch score or collection progress.
+- Added a short translated intro, visible attack wind-up and charge lane, dizzy pounce windows, a three-mark health ring, checkpoint respawn, life loss, Gentle mode support, and the existing Night failed results flow. The night timer pauses for the encounter and the moon door opens after the boss is defeated.
+- Verified JavaScript syntax, source integrity and all 53 authored layouts. Automated browser gameplay smoke testing could not run in this turn because the computer-use tool stopped on the unsupported Firefox URL policy.
+
+## Second Leap upgrade
+
+- Added the optional, one-purchase Second Leap upgrade to the Treat box Shop. It starts off, costs 220 Glow, and lets Shwe jump once more in mid-air after a normal jump; the second leap is shorter and leaves a brief cozy sparkle trail.
+- Reuses the existing Jump input on keyboard and touch. Wall jumps, ledge grabs, and rope releases keep their own movement behavior; landing clears the extra jump. Reduced-motion mode omits the added sparkle trail and squash effect.
+- Kept old upgrade saves compatible while adding the new save field. The upgrade does not alter any level layout or its required jump settings.
+- Added focused boss-night and Second Leap regression tests and wired them into GitHub Actions. JavaScript syntax, game integrity, both new tests, and all 53 level-layout checks pass.
+
+# Rainy Night Market chapter map
+
+- Expanded the existing Night Market Endless map with striped awning bounce pads, hanging lantern ropes, and glossy puddles that splash and startle nearby Nervous Moodlings unless Shwe sneaks through.
+- Made the market stay rainy with a gentle animated drizzle, added a one-time localized puddle tip, and themed its ground, lanterns, and keepsakes for the market.
+- Market platforms and puddles stay on solid ground; pit nights retain exactly one moving bridge per pit, so the market decorations never create a duplicate crossing.
+- Added a layout check for all market levels 18–50 and included it in game-integrity CI.
+# Pagoda Hill map
+
+- Added Pagoda Hill as a new Endless place unlocked at Night 34, with its own moonlit ridge scenery and subdued colors alongside the existing Pagoda Garden.
+- Pagoda routes use shallow repeating stone-step terrain, safe oil-lamp platforms, and hanging bells. Touching a bell plays a soft chime, briefly stills nearby Moodlings, and clears Nervous panic; the first bell tip is available in English and Burmese.
+- Kept all lamps and bells on solid ground and retained each pit's single moving bridge. Added the map to existing keep-sake and burial-site art so Endless setup remains compatible.
+- Added Pagoda Hill layout and unlock checks to game-integrity CI.
+# Night Train Platform map
+
+- Added Night Train Platform to Endless maps starting at Night 39, with a quiet station canopy, clock, rails, town lights, and matching night palette.
+- Each layout includes one slow moving train carriage that uses the game's existing moving-platform collision/carry behavior. Its route stays on solid track outside pit approaches, so required pit bridges remain the only gap crossings.
+- Added benches and ticket-booth hiding spots, including ticket-booth scenery and map-specific hiding prompts/keepsakes.
+- Added layout checks for Nights 39–50 covering carriage routes, pit clearance/bridge uniqueness, reachable ride height, and safe hiding spots.
+
+# Scratchable secret rooms
+
+- Added one cracked-wall secret room to every story night, Free Play route, and Endless map. Rooms are positioned on solid ground with clearance from pits.
+- Shwe can scratch each wall three times to open a softly lit alcove. Its reward is either a rare Frustrated/Nervous Moodling or a collectible diary page, selected for the map.
+- Secret diary pages save under a new `mk-secret-pages` localStorage key and appear on Thiri’s shelf; existing save keys, score, and Moodling rules are unchanged. Page text and prompts are available in English and Burmese.
+- Added placement and reward coverage for all story levels, Free Play variants, and Endless map families, and wired the check into GitHub Actions.

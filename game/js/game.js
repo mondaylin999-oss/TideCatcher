@@ -156,6 +156,12 @@
   const keyIs = (code, a) => window.TCControls ? TCControls.is(code, a) : (CK[a] || []).includes(code);
   const keyHeld = a => window.TCControls ? TCControls.held(keys, a) : (CK[a] || []).some(c => keys[c]);
   addEventListener('keydown', e => {
+    if (bossEncounter?.introOpen) {
+      if (['Enter', 'Space'].includes(e.code)) { e.preventDefault(); e.stopPropagation(); startBossFight(); }
+      else if (e.code === 'Escape' || keyIs(e.code, 'pause')) { e.preventDefault(); e.stopPropagation(); $('#bossIntroScreen').hidden = true; pauseGame(); }
+      else if (e.code !== 'Tab') { e.preventDefault(); }
+      keys[e.code] = false; return;
+    }
     if ((['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code) || (window.TCControls ? TCControls.isGameKey(e.code) : false)) && (state === 'play' || state === 'home')) e.preventDefault();
     keys[e.code] = true;
     if (e.code === 'F2' && DEBUG_ALLOWED) { e.preventDefault(); debugLayout = !debugLayout; return; }
@@ -315,7 +321,8 @@
     { id: 'park', name: 'The Park', note: '1 AM · swings and slides', level: 3, opens: 3 },
     { id: 'festival', name: 'Lighting Festival', note: '2 AM · lanterns and boats', level: 4, opens: 4 },
     { id: 'hill', name: 'Hilltop Park', note: '3 AM · windy stone steps', level: 5, opens: 5 },
-    { id: 'lake', name: 'Lakeside', note: '4 AM · logs and lily pads', level: 6, opens: 6 }
+    { id: 'lake', name: 'Lakeside', note: '4 AM · logs and lily pads', level: 6, opens: 6 },
+    { id: 'train', name: 'Night Train Platform', note: '39 · a slow train passes the station', level: 39, opens: 39, endless: true }
   ];
   let freeMap = 'classic';
   try { const saved = localStorage.getItem('mk-free-map'); if (FREE_MAPS.some(m => m.id === saved)) freeMap = saved; } catch (e) {}
@@ -323,11 +330,12 @@
   function selectLevelForRun() {
     if (mode === 'story') return window.TC_LEVELS[storyNight];
     const pick = FREE_MAPS.find(m => m.id === freeMap);
+    if (pick?.endless && freeMapOpen(pick) && window.TC_ENDLESS_LEVEL) return window.TC_ENDLESS_LEVEL(clamp(unlockedLevel, 39, 50), pick.id, []);
     if (pick && pick.level && freeMapOpen(pick) && window.TC_LEVELS[pick.level]) return window.TC_LEVELS[pick.level];
     const variants = window.TC_LEVELS.free.variants;
     return variants[Math.floor(Math.random() * variants.length)];
   }
-  let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0;
+  let state = 'menu', t = 0, timeLeft = 90, score = 0, combo = 0, comboT = 0, bestCombo = 1, hitstop = 0, slowmo = 0, chaos = false, endT = 0, warmup = 0, sunriseMusicFast = false;
   let lives = 3, checkpointX = 0, fallDimT = 0, respawnT = 0, pitTipShown = false, edgeSoundAt = 0, pendingFallFail = false;
   let gentleMode = false;
   try { gentleMode = localStorage.getItem('mk-gentle-mode') === '1'; } catch (e) {}
@@ -495,9 +503,12 @@
   const hex = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
   const lerpC = (a, b, u) => { const A = hex(a), B = hex(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * u)).join(',')})`; };
   function dawnP() {
-    if (storyNight !== 7) return .3;
-    const lim = chapterFor(7).timeLimit || 135;
-    return .42 + .58 * clamp(1 - timeLeft / lim, 0, 1);
+    return mode === 'story' ? .24 + .76 * dawnProgress() : .3;
+  }
+  function dawnProgress() {
+    if (mode !== 'story') return 0;
+    const limit = Math.max(1, chapterFor(storyNight)?.timeLimit || 120);
+    return clamp(1 - timeLeft / limit, 0, 1);
   }
   function drawLakeSky() {
     const p = dawnP(), y0 = -OY, H = 362;
@@ -616,6 +627,9 @@
   const festCol = i => FEST_COLORS[((Math.floor(i) % FEST_COLORS.length) + FEST_COLORS.length) % FEST_COLORS.length];
   function inFestival() { return (mode === 'story' && (FESTIVAL_NIGHTS.includes(storyNight) || currentLevel?.map === 'festival')) || (mode === 'free' && currentLevel?.map === 'festival'); }
   function currentMapKey() {
+    if (currentLevel?.map === 'market') return 'market';
+    if (currentLevel?.map === 'pagoda') return 'pagoda';
+    if (currentLevel?.map === 'train') return 'train';
     if (inSchool()) return 'school';
     if (inRooftop()) return 'rooftop';
     if (inPark()) return 'park';
@@ -624,7 +638,7 @@
     if (inLake()) return 'lake';
     return 'free';
   }
-  const CAVE_LABELS = { school: 'locker', rooftop: 'roof nook', park: 'bush', festival: 'stall', hill: 'tree hollow', lake: 'reed bed', free: 'cave' };
+  const CAVE_LABELS = { school: 'locker', rooftop: 'roof nook', park: 'bush', festival: 'stall', market: 'market stall', pagoda: 'stone alcove', train: 'ticket booth', hill: 'tree hollow', lake: 'reed bed', free: 'cave' };
   function caveXsForMap() { return currentLevel.hideSpots || []; }
   const NIGHT_CHAPTERS = [
     { night: 1, name: 'First Night', sub: 'Learn to dodge Frustrated', theme: '#7893bb', musicRoot: 196, timeLimit: 120, rareChance: 0, feelingsNeeded: { F: 3 }, newMoodling: 'Frustrated charges when you get close; dodge, then pounce while it is dizzy', diary: 'She stopped crying in her sleep. That is something.', moodlingSpeed: .65, frustratedChargeSpeed: .60, frustratedWindup: 1.10, nervousHearingMul: 1, nervousPanicTime: 1.1, initialSpawns: { F: 1 }, respawnDelay: 3.5, goldensAllowed: 0, chaosWave: false, chaosSize: {}, tutorialHints: true, tutorialHint: 'Frustrated charges when you get close. Dodge, then pounce while it is dizzy.' , sky: { A: 0, B: 0, C: 0, wait: 2.0, fallSpeed: 90, gravity: 900, scratchWindow: 1.6, ambushBase: 2, pounceWindowMul: 1.0, hintShown: false }},
@@ -704,16 +718,17 @@
     { id: 'swift', name: 'Swift paws', desc: 'Run faster across the Night Side.', costs: [50, 90, 140, 210, 300, 410, 550], vals: [6, 6.3, 6.6, 6.9, 7.2, 7.5, 7.8, 8.1], fmt: v => `${v} tiles per second` },
     { id: 'paws', name: 'Soft paws', desc: 'Nervous Moodlings hear you from less far away.', costs: [70, 120, 180, 260, 360, 480, 620], vals: [5, 4.5, 4, 3.6, 3.2, 2.85, 2.5, 2.2], fmt: v => `heard from ${v} tiles` },
     { id: 'eyes', name: 'Night eyes', desc: 'Press E (or the Eyes button) to highlight nearby scratch spots. Upgrades let Shwe find them from further away.', costs: [60, 100, 160, 240, 340, 460, 600], vals: [4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5], fmt: v => `see ${v} tiles` },
-    { id: 'purr', name: 'Purr', desc: 'Press K (or the Purr button) to slow nearby Moodlings for 3 seconds.', costs: [100, 150, 220, 300, 400, 520, 660], vals: [0, 16, 15, 12, 10, 8, 6, 5], fmt: v => v ? `${v}s cooldown` : 'not unlocked' }
+    { id: 'purr', name: 'Purr', desc: 'Press K (or the Purr button) to slow nearby Moodlings for 3 seconds.', costs: [100, 150, 220, 300, 400, 520, 660], vals: [0, 16, 15, 12, 10, 8, 6, 5], fmt: v => v ? `${v}s cooldown` : 'not unlocked' },
+    { id: 'secondLeap', name: 'Second Leap', desc: 'Unlock one small extra jump while Shwe is in the air. Optional; all nights remain beatable without it.', costs: [220], max: 1, vals: [0, 1], fmt: v => v ? 'unlocked' : 'off' }
   ];
-  let upg = { pounce: 0, swift: 0, paws: 0, eyes: 0, purr: 0 }, glow = 0, glowRun = 0, lastGlow = 0;
+  let upg = { pounce: 0, swift: 0, paws: 0, eyes: 0, purr: 0, secondLeap: 0 }, glow = 0, glowRun = 0, lastGlow = 0;
   try {
     const s = JSON.parse(localStorage.getItem('mk-upg') || '{}');
-    const v7 = localStorage.getItem('mk-upg-v') === '7';
-    for (const k in upg) if (Number.isInteger(s[k])) upg[k] = clamp(v7 ? s[k] : s[k] * 2, 0, UPG_MAX);
+    const version = localStorage.getItem('mk-upg-v'), currentVersion = version === '7' || version === '8';
+    for (const k in upg) if (Number.isInteger(s[k])) upg[k] = clamp(currentVersion ? s[k] : s[k] * 2, 0, UPG.find(u => u.id === k)?.max ?? UPG_MAX);
     glow = Math.max(0, +localStorage.getItem('mk-glow') || 0);
   } catch (e) {}
-  function saveUpg() { try { localStorage.setItem('mk-upg-v', '7'); localStorage.setItem('mk-upg', JSON.stringify(upg)); localStorage.setItem('mk-glow', String(glow)); } catch (e) {} }
+  function saveUpg() { try { localStorage.setItem('mk-upg-v', '8'); localStorage.setItem('mk-upg', JSON.stringify(upg)); localStorage.setItem('mk-glow', String(glow)); } catch (e) {} }
   // Cats: everyone starts with the story cat (Ginger Tabby, as in the intro). The others are bought with Glow; each has one small perk.
   const CAT_SHOP = {
     ginger: { cost: 0, perk: 'Shwe from the story. Good at everything, best at nothing.' },
@@ -784,6 +799,7 @@
     if (id === 'paws') { if (catPerk() === 'persian') v *= .85; if (activeItems.bell) v *= .8; }
     return v;
   };
+  const eyesRange = () => uv('eyes') * T * (weather.kind === 'fog' ? 1.35 : 1);
   const FREE_GLOW_CAP = 150;
   let freeCapShown = false, freeLightCapShown = false;
   // Free mode is for practice: it brings home at most a few lights for the Heart Workshop per run, so the story stays the way to grow Lantern Town
@@ -961,11 +977,102 @@
   // When every feeling is home the night no longer ends by itself: a moon door opens near Shwe.
   // The player can keep exploring (trinkets, keepsakes, score) and stand at the door and press H to go home;
   // if the timer runs out first, the night still ends safely.
-  let allHome = false, portal = null;
+  let allHome = false, portal = null, bossEncounter = null, bossTouchWasHidden = true;
+  const stormBossCopy = () => guideCopy().bossIntro || {};
+  function showBossIntro() {
+    const copy = stormBossCopy(), screen = $('#bossIntroScreen');
+    $('#bossIntroTitle').textContent = copy.title || 'Storm Frustrated';
+    $('#bossIntroText').textContent = copy.text || 'Dodge each charge, then pounce while the storm is dizzy.';
+    $('#bossIntroDodge').textContent = copy.dodge || '↔ Dodge or jump';
+    $('#bossIntroPounce').textContent = copy.pounce || '✦ Pounce when dizzy';
+    $('#bossIntroReady').textContent = copy.ready || 'Face the storm';
+    screen.hidden = false; bossTouchWasHidden = touchUI.hidden; touchUI.hidden = true; pauseBtn.hidden = true;
+    $('#bossIntroReady').focus({ preventScroll: true });
+  }
+  function startBossFight() {
+    if (!bossEncounter?.introOpen) return;
+    bossEncounter.introOpen = false; bossEncounter.mode = 'windup'; bossEncounter.timer = 1.25;
+    $('#bossIntroScreen').hidden = true; touchUI.hidden = bossTouchWasHidden; pauseBtn.hidden = false;
+    cv.focus?.(); announce(stormBossCopy().warning || 'Storm Frustrated is winding up!', RED, 2.4);
+  }
+  function beginBossEncounter() {
+    const config = currentLevel?.boss; if (!config || mode !== 'story') return false;
+    const face = cat.face || 1, x = safeLevelX(clamp(cat.x + face * 250, 120, WORLD - 120));
+    bossEncounter = { ...config, x, y: terrainY(x), homeX: x, health: config.phases || 3, phase: 0, mode: 'intro', timer: 0, dir: -face, introOpen: true, defeated: false, warningAt: -1 };
+    showBossIntro(); return true;
+  }
+  function bossContact() {
+    if (!bossEncounter || cat.inv > 0 || cat.respawning || cat.falling) return;
+    const copy = stormBossCopy();
+    if (!gentleMode) { lives = Math.max(0, lives - 1); sfx('ui', 'lifeLost'); }
+    cat.pounce = 0; cat.vx = 0; cat.vy = 0; cat.on = false; cat.platform = null; cat.swinging = null;
+    cat.respawning = true; respawnT = .75; fallDimT = .5; bossEncounter.mode = 'recover'; bossEncounter.timer = 1.05; bossEncounter.x = bossEncounter.homeX; bossEncounter.y = terrainY(bossEncounter.x);
+    sfx('cat', 'sad'); sfx('ui', 'hit'); sfx('ui', 'poof'); burst(cat.x, cat.y - 24, GOLD, 26); burst(cat.x, cat.y - 36, CALM, 18);
+    shake = Math.max(shake, 8);
+    if (lives <= 0 && !gentleMode) { bossEncounter = null; finish(false, 'boss'); return; }
+    const message = (copy.hit || 'A stormy bump · {lives} lives left').replace('{lives}', String(lives));
+    announce(message, gentleMode ? CALM : RED, 1.8);
+  }
+  function updateBossEncounter(dt) {
+    const b = bossEncounter; if (!b || b.introOpen || b.defeated || cat.falling || cat.respawning) return;
+    b.timer -= dt;
+    if (b.mode === 'windup' && b.timer <= 0) {
+      b.mode = 'charge'; b.dir = Math.sign(cat.x - b.x) || -1; b.startX = b.x; b.travelled = 0; b.speed = 500 + b.phase * 75;
+      b.aimX = clamp(cat.x + b.dir * 175, 50, WORLD - 50); b.timer = 3.5;
+    } else if (b.mode === 'charge') {
+      const step = b.speed * dt; b.x = clamp(b.x + b.dir * step, 50, WORLD - 50); b.y = terrainY(b.x); b.travelled += step;
+      if (Math.abs(cat.x - b.x) < 70 && cat.y > terrainY(cat.x) - 48) { bossContact(); return; }
+      if (b.dir * (b.x - b.aimX) >= 0 || b.travelled > 620 || b.timer <= 0) {
+        b.mode = 'dizzy'; b.timer = 2.35; b.x = clamp(b.x, 50, WORLD - 50); b.y = terrainY(b.x);
+        announce(stormBossCopy().dizzy || 'It is dizzy! Pounce now!', GOLD, 1.7); sfx('moodling', 'F');
+      }
+    } else if (b.mode === 'dizzy' && b.timer <= 0) { b.mode = 'windup'; b.timer = .9; b.x = b.homeX; b.y = terrainY(b.x); }
+    else if (b.mode === 'recover' && b.timer <= 0) { b.mode = 'windup'; b.timer = .9; }
+    if (b.mode === 'windup' && t - b.warningAt > 1.1) {
+      b.warningAt = t; announce(stormBossCopy().warning || 'Storm Frustrated is winding up!', RED, 1.1); sfx('moodling', 'F');
+    }
+  }
+  function tryBossPounce() {
+    const b = bossEncounter; if (!b || cat.pounce <= 0) return false;
+    const close = Math.hypot(cat.x + cat.face * 16 - b.x, cat.y - 24 - (b.y - 10)) <= uv('pounce') * 1.35;
+    if (!close) return false;
+    cat.pounce = 0;
+    if (b.mode !== 'dizzy') {
+      if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 260; cat.vy = -150; cat.on = false; float(cat.x, cat.y - 72, 'Wait until the storm is dizzy', RED); sfx('cat', 'hiss'); }
+      return true;
+    }
+    b.health = Math.max(0, b.health - 1); b.phase = (b.phases || 3) - b.health;
+    cat.bounced = true; cat.vx = -cat.face * 220; cat.vy = -190; cat.on = false;
+    burst(b.x, b.y - 42, '#ffcf5c', 34); sfx('caught', 'F'); float(b.x, b.y - 100, `${b.health} left`, GOLD);
+    if (!b.health) {
+      const copy = stormBossCopy(); bossEncounter = null; openPortal();
+      announce(copy.defeated || 'The storm is calm. The moon door is open!', CALM, 3.2); sfx('ui', 'unlock'); burst(cat.x, cat.y - 60, GOLD, 35);
+    } else { b.mode = 'windup'; b.timer = .9; b.x = b.homeX; b.y = terrainY(b.x); announce(stormBossCopy().warning || 'The storm gathers again!', RED, 1.5); }
+    return true;
+  }
+  function drawBossEncounter() {
+    const b = bossEncounter; if (!b || b.defeated) return;
+    const x = b.x, y = b.y, color = b.mode === 'dizzy' ? '#ffd37a' : '#ff737b', pulse = .7 + .3 * Math.sin(t * 8);
+    if (b.mode === 'charge') {
+      ctx.save(); ctx.globalAlpha = .32 + .18 * pulse; ctx.strokeStyle = '#ff737b'; ctx.lineWidth = 16; ctx.setLineDash([20, 14]); ctx.beginPath(); ctx.moveTo(x - b.dir * 25, y - 14); ctx.lineTo(x - b.dir * 210, y - 14); ctx.stroke(); ctx.restore();
+    } else if (b.mode === 'windup') {
+      ctx.save(); ctx.globalAlpha = .28 + .25 * pulse; ctx.strokeStyle = '#ff737b'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.beginPath(); ctx.moveTo(x, y + 4); ctx.lineTo(x + b.dir * 270, y + 4); ctx.stroke(); ctx.restore();
+    }
+    ctx.save(); ctx.globalAlpha = .16 + .08 * pulse; ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y - 18, 76 + pulse * 8, 68 + pulse * 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    drawCuteMood('F', x, y, 1.18 + .035 * Math.sin(t * 5), { color: '#ff5a68', glow: '#ff778c', look: clamp((cat.x - x) / 110, -1.5, 1.5), dizzy: b.mode === 'dizzy', flash: b.mode === 'windup' ? .2 + .18 * pulse : 0, t, cy: 70 });
+    for (let i = 0; i < 3; i++) {
+      const a = -Math.PI * .84 + i * Math.PI * .34;
+      const hx = x + Math.cos(a) * 56, hy = y - 84 + Math.sin(a) * 28;
+      ctx.beginPath(); ctx.arc(hx, hy, 8, 0, Math.PI * 2); ctx.fillStyle = i < b.health ? '#ffcf5c' : 'rgba(210,198,230,.25)'; ctx.fill();
+      ctx.strokeStyle = '#fff6e6'; ctx.lineWidth = 2; ctx.stroke();
+    }
+    ctx.font = `700 18px ${HAND}`; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,12,40,.9)'; ctx.fillStyle = color; ctx.strokeText(b.name, x, y - 112); ctx.fillText(b.name, x, y - 112);
+  }
   function reachAllHome() {
     if (allHome || state !== 'play') return;
-    allHome = true; sfx('ui', 'reward'); openPortal();
-    announce('All feelings found! A moon door opened. Stand in it and press H to go home.', GOLD, 3.6);
+    allHome = true; sfx('ui', 'reward');
+    if (beginBossEncounter()) announce('All feelings found! A storm guards the moon door.', RED, 3.6);
+    else { openPortal(); announce('All feelings found! A moon door opened. Stand in it and press H to go home.', GOLD, 3.6); }
     float(cat.x, cat.y - 90, 'Time left still adds +20 points a second', GOLD);
   }
   function openPortal() {
@@ -981,7 +1088,7 @@
   }
   // Shwe has to stand at the moon door and press H (or tap the Go home button) to go through it.
   function atPortal() { return !!portal && state === 'play' && portal.open >= 1 && !cat.falling && Math.abs(cat.x - portal.x) < 60 && Math.abs(cat.y - portal.y) < 90; }
-  function enterPortal() { if (!atPortal()) return; burst(portal.x, portal.y - 60, '#fff3c4', 36); goHome(); }
+  function enterPortal() { if (!atPortal() || (currentLevel?.boss && mode === 'story' && bossEncounter)) return; burst(portal.x, portal.y - 60, '#fff3c4', 36); goHome(); }
   function drawPortal() {
     if (!portal) return;
     const k = portal.open, e = 1 - Math.pow(1 - k, 3), x = portal.x, y = portal.y, w = 34 * e, h = 62 * e, cy = y - 66;
@@ -1158,10 +1265,10 @@
   let need = { F: 4, N: 4, L: 2 }, got = { F: 0, N: 0, L: 0 }, hits = 0, startles = 0, goldDone = { a: false, b: false }, lastTick = 99;
   const requiredTotal = () => Object.values(need).reduce((sum, n) => sum + n, 0);
   const caughtTotal = () => Object.values(got).reduce((sum, n) => sum + n, 0);
-  let cat, mood = [], parts = [], floats = [], trail = [], hist = [], camX = 0, respawnQ = [], banner = null;
+  let cat, mood = [], parts = [], floats = [], trail = [], driftingLights = [], hist = [], camX = 0, respawnQ = [], banner = null;
   // Workshop lights are banked only at the run's normal completion boundary.
   let workshopRun = [], goldenCollar = false;
-  let scratchSpots = [], scratchTarget = null, scratchAnim = 0, rocks = [], buriedHome = null, shake = 0;
+  let scratchSpots = [], scratchTarget = null, scratchAnim = 0, rocks = [], buriedHome = null, shake = 0, secretRooms = [];
   // Calm (4 AM, Lakeside): it sits dim on a lily pad. Shwe gathers FLY_NEED fireflies by walking slowly,
   // then brings them to Calm, which lights up and comes home. Running/jumping/pouncing near a firefly scatters it.
   const FLY_NEED = 3, FLY_SLOW = 140;
@@ -1170,17 +1277,65 @@
   // Themed traps and hidden keepsakes (data in levels.js: hazards, keepsakes, 'sinking' platforms)
   const SINK_TIME = 1.6;
   const KEEPSAKE_GLOW = 25;
-  const KEEPSAKE_ART = { school: ['paper star', '#ffe39a'], rooftop: ['little bell', '#ffe1a3'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], free: ['star', '#ffe39a'] };
-  let hazards = [], keepsakes = [], hazSeen = {}, buriedHintShown = false;
+  const KEEPSAKE_ART = { school: ['paper star', '#ffe39a'], rooftop: ['little bell', '#ffe1a3'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], market: ['lantern charm', '#ffb36b'], pagoda: ['bell charm', '#e4cc9c'], train: ['ticket stub', '#d6c7a2'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], free: ['star', '#ffe39a'] };
+  const WEATHER = [
+    { kind: 'rain', icon: '☔', title: 'Light rain' },
+    { kind: 'wind', icon: '〰', title: 'Soft wind' },
+    { kind: 'fog', icon: '☾', title: 'Moon fog' }
+  ];
+  let weather = WEATHER[0], hazards = [], keepsakes = [], paperStars = [], hazSeen = {}, buriedHintShown = false;
   let foundKeeps = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-keepsakes') || '[]')); } catch (e) { return new Set(); } })();
+  let foundPaperStars = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-paper-stars') || '[]')); } catch (e) { return new Set(); } })();
+  const SECRET_PAGE_MAPS = ['school', 'festival', 'lake', 'market', 'pagoda', 'free'];
+  const SECRET_MAP_NAMES = { school: 'School', festival: 'Lighting Festival', lake: 'Lakeside', market: 'Night Market', pagoda: 'Pagoda Hill', free: 'Classic routes' };
+  let foundSecretPages = (() => { try { const pages = JSON.parse(localStorage.getItem('mk-secret-pages') || '[]'); return new Set(Array.isArray(pages) ? pages.filter(x => SECRET_PAGE_MAPS.includes(x)) : []); } catch (e) { return new Set(); } })();
   function saveKeeps() { try { localStorage.setItem('mk-keepsakes', JSON.stringify([...foundKeeps])); } catch (e) {} }
+  function savePaperStars() { try { localStorage.setItem('mk-paper-stars', JSON.stringify([...foundPaperStars])); } catch (e) {} }
+  function saveSecretPages() { try { localStorage.setItem('mk-secret-pages', JSON.stringify([...foundSecretPages])); } catch (e) {} }
+  const secretRoomCopy = () => guideCopy().help?.secretRooms || {};
+  function initSecretRooms() {
+    const spec = currentLevel.secretRoom;
+    secretRooms = spec ? [{ ...spec, reward: { ...spec.reward }, progress: 0, open: false, openedAt: 0, rewardSpawned: false, rewardX: spec.x + 92, pageFound: foundSecretPages.has(spec.id) }] : [];
+  }
+  function collectSecretPage(room) {
+    if (!room || room.reward?.kind !== 'page' || foundSecretPages.has(room.id)) return;
+    foundSecretPages.add(room.id); room.pageFound = true; saveSecretPages();
+    burst(room.rewardX, terrainY(room.rewardX) - 56, '#ffe3a1', 24); sfx('ui', 'sparkle'); tone(988, .14, 'sine', .05); setTimeout(() => tone(1319, .2, 'sine', .04), 90);
+    const message = secretRoomCopy().pageFound || 'Secret diary page found!';
+    float(room.rewardX, terrainY(room.rewardX) - 90, message, '#ffe3a1'); announce(message, '#ffe3a1', 2.8);
+  }
+  function updateSecretRooms() {
+    if (state !== 'play' || cat.falling || cat.respawning) return;
+    for (const room of secretRooms) {
+      if (!room.open || room.reward.kind !== 'page' || room.pageFound) continue;
+      const y = terrainY(room.rewardX);
+      if (cat.on && Math.abs(cat.x - room.rewardX) < 34 && Math.abs(cat.y - y) < 70) collectSecretPage(room);
+    }
+  }
+  function paperStarId(night, index) { return `n${night}-paper-${index}`; }
+  function paperStarsFound(night) { let count = 0; for (let i = 0; i < 3; i++) if (foundPaperStars.has(paperStarId(night, i))) count++; return count; }
+  function paperDiaryUnlocked(night) { return paperStarsFound(night) === 3; }
+  function paperStarCopy() { return guideCopy().help?.paperStars || {}; }
+  function paperDiaryText(night) {
+    const copy = paperStarCopy();
+    if (copy.pages?.[night]) return copy.pages[night];
+    const special = window.TCEndless?.SPECIALS?.[night];
+    const chapterName = special?.name || window.TCVisualChapters?.forLevel(night)?.name || 'the Night Side';
+    const map = window.TC_LEVELS?.[night]?.map || 'night';
+    const places = { school: 'the quiet school', rooftop: 'the rooftops', park: 'the moonlit park', festival: 'the lantern festival', market: 'the rainy night market', hill: 'the hilltop', lake: 'the lakeshore', free: 'the Night Side' };
+    const my = { school: 'တိတ်ဆိတ်သော စာသင်ကျောင်း', rooftop: 'အိမ်ခေါင်မိုးများ', park: 'လရောင်အောက်က ပန်းခြံ', festival: 'မီးထွန်းပွဲတော်', market: 'မိုးရွာနေသော ညဈေး', hill: 'တောင်ကုန်း', lake: 'ရေကန်ကမ်းစပ်' };
+    const place = MK_PROFILE.tipLanguage === 'my' ? (my[map] || 'ညဘက်ကမ္ဘာ') : (places[map] || 'the Night Side');
+    return (copy.endlessPage || 'On {chapter}, Shwe found three paper stars around {place}.').replaceAll('{chapter}', chapterName).replaceAll('{place}', place);
+  }
   function keepsakeTotal(night) { const L = window.TC_LEVELS?.[night]; return L ? (L.keepsakes || []).length + ((chapterFor(night)?.feelingsNeeded?.B || 0) ? 0 : 1) : 0; }
   function keepsakesFound(night) { let n = 0; for (const id of foundKeeps) if (id.startsWith(`n${night}-`)) n++; return n; }
   function initHazards() {
-    hazards = []; keepsakes = []; hazSeen = {}; buriedHintShown = false;
+    hazards = []; keepsakes = []; paperStars = []; hazSeen = {}; buriedHintShown = false;
+    if (mode === 'story' || currentLevel.map === 'market' || currentLevel.map === 'pagoda') hazards = (currentLevel.hazards || []).map((h, i) => ({ ...h, i, cd: 0, tt: 0, phase: 'idle', off: (i * 2.3) % 5, drops: [], squeakT: 0, puddleT: 0, ringT: 0, touched: false, sneakShown: false, splashShown: false }));
     if (mode !== 'story') return;
-    hazards = (currentLevel.hazards || []).map((h, i) => ({ ...h, i, cd: 0, tt: 0, phase: 'idle', off: (i * 2.3) % 5, drops: [], squeakT: 0, sneakShown: false, splashShown: false }));
     keepsakes = (currentLevel.keepsakes || []).map(([x, y], i) => ({ x, y, id: `n${storyNight}-${i}`, found: foundKeeps.has(`n${storyNight}-${i}`), bob: Math.random() * 6, got: 0 }));
+    const paperPositions = window.TCPaperStars?.positionsFor(currentLevel) || [];
+    paperStars = paperPositions.map(p => ({ ...p, key: paperStarId(storyNight, p.id), found: foundPaperStars.has(paperStarId(storyNight, p.id)), bob: p.id * 1.7 }));
     // nights without Buried hide one keepsake under a dig spot instead (other spots still rumble)
     if (!need.B && rocks.length && !foundKeeps.has(`n${storyNight}-dig`)) rocks[Math.floor(Math.random() * rocks.length)].keepsake = true;
   }
@@ -1194,13 +1349,22 @@
     float(x, y - 40, `+${KEEPSAKE_GLOW} Glow`, GOLD);
     announce(`Found Thiri’s ${name}! Keepsakes ${keepsakesFound(storyNight)}/${keepsakeTotal(storyNight)}`, c, 2.4);
   }
+  function collectPaperStar(star) {
+    if (!star || foundPaperStars.has(star.key)) return;
+    foundPaperStars.add(star.key); savePaperStars();
+    burst(star.x, star.y, '#ffe39a', 18); sfx('ui', 'sparkle'); tone(1046, .16, 'sine', .045);
+    const count = paperStarsFound(storyNight);
+    const copy = paperStarCopy(), msg = (count === 3 ? copy.pageFound : copy.found) || (count === 3 ? 'Bonus diary page!' : `Paper star · ${count}/3`);
+    float(star.x, star.y - 28, msg.replaceAll('{count}', String(count)), '#ffe39a');
+    announce(count === 3 ? (copy.allFound || 'All 3 paper stars found · bonus diary page unlocked!') : msg.replaceAll('{count}', String(count)), '#ffe39a', 2.8);
+  }
   function knockCat(dir, msg) {
     if (cat.inv > 0) return;
     cat.inv = 1; cat.vx = dir * 380; cat.vy = -380; cat.on = false; cat.pounce = 0; combo = 0; comboT = 0;
     timeLeft = Math.max(0, timeLeft - 1); shake = Math.max(shake, 8);
     sfx('ui', 'hit'); sfx('cat', 'sad'); float(cat.x, cat.y - 80, msg + '  −1s', RED);
   }
-  function onSlick(x) { return hazards.some(h => h.kind === 'slick' && x >= h.a && x <= h.b); }
+  function onSlick(x) { return weather.kind === 'rain' || hazards.some(h => h.kind === 'slick' && x >= h.a && x <= h.b); }
   function hazNotice(kind, text, c) { if (hazSeen[kind]) return; hazSeen[kind] = true; announce(text, c, 2.4); }
   function hazPhase(h, period, idle, warn) { const q = ((t + h.off) % period + period) % period; return q < idle ? 'idle' : q < idle + warn ? 'warn' : 'on'; }
   function updHazards(dt) {
@@ -1208,7 +1372,22 @@
     if (state !== 'play' && state !== 'ending') return;
     for (const h of hazards) {
       h.cd = Math.max(0, h.cd - dt); h.squeakT = Math.max(0, h.squeakT - dt);
-      if (h.kind === 'squeak') {
+      h.puddleT = Math.max(0, (h.puddleT || 0) - dt);
+      h.ringT = Math.max(0, (h.ringT || 0) - dt);
+      if (h.kind === 'bell') {
+        const touching = cat.on && Math.abs(cat.x - h.x) < 24 && Math.abs(cat.y - terrainY(h.x)) < 52;
+        if (!touching) { h.touched = false; continue; }
+        if (h.touched || h.cd > 0) continue;
+        h.touched = true; h.cd = 3.2; h.ringT = 1.25;
+        tone(740, .18, 'sine', .045); setTimeout(() => tone(988, .24, 'sine', .035), 95); sfx('ui', 'sparkle');
+        burst(h.x, terrainY(h.x) - 48, '#f2d99b', 8);
+        for (const m of mood) if (!m.dead && !m.sky && Math.abs(m.x - h.x) < (h.radius || 190)) {
+          m.bellCalmT = Math.max(m.bellCalmT || 0, 2.8);
+          if (m.type === 'N' && (m.state === 'panic' || m.state === 'hidden')) { m.state = 'wander'; m.st = 0; m.alarm = 0; m.alpha = 1; }
+          float(m.x, m.y - 36, '…', '#f2d99b');
+        }
+        hazNotice('pagoda-bell', guideCopy().pagodaBellTip || 'Touch a hanging bell to calm nearby Moodlings.', '#f2d99b');
+      } else if (h.kind === 'squeak') {
         const onBoard = cat.on && cat.x >= h.x && cat.x <= h.x + h.w;
         if (!onBoard) continue;
         if (cat.sneak || Math.abs(cat.vx) < 90) { if (!cat.sneak || h.sneakShown) continue; h.sneakShown = true; float(cat.x, cat.y - 74, 'Tiptoe… no squeak', '#c8ff8a'); continue; }
@@ -1224,6 +1403,20 @@
           if (m.type === 'N' && m.state === 'wander') panic(m, cat.x - m.x);
           else if (m.type === 'S' && (m.state === 'walk' || m.state === 'look' || m.state === 'turn')) { m.state = 'hide'; m.st = 2.2; float(m.x, m.y - 40, 'Shy jumped at the squeak!', '#ff9ccb'); startles++; }
         }
+      } else if (h.kind === 'puddle') {
+        const inPuddle = cat.on && cat.x + 15 >= h.x && cat.x - 15 <= h.x + h.w;
+        if (!inPuddle) { h.wet = false; continue; }
+        if (h.wet) continue;
+        h.wet = true;
+        if (cat.sneak || (Math.abs(cat.vx) < 90 && !cat.justLanded) || h.cd > 0) continue;
+        h.cd = .9; h.puddleT = .7;
+        tone(330, .06, 'triangle', .05, 180); setTimeout(() => tone(210, .08, 'sine', .035, -70), 45);
+        sfx('ui', 'land');
+        for (let i = 0; i < 10; i++) parts.push({ x: h.x + Math.random() * h.w, y: terrainY(h.x) - 3, vx: (Math.random() - .5) * 190, vy: -70 - Math.random() * 110, life: .42, max: .42, c: '#9fe8ff', r: 2 + Math.random() * 2, g: 500 });
+        float(h.x + h.w / 2, terrainY(h.x) - 34, 'SPLASH!', '#9fe8ff');
+        hazNotice('puddle', guideCopy().puddleTip || 'Watch the puddles! Their splash can startle Nervous. Sneak across quietly.', '#9fe8ff');
+        if (t < 3) continue;
+        for (const m of mood) if (!m.dead && !m.sky && m.type === 'N' && m.state === 'wander' && Math.abs(m.x - cat.x) < 8 * T) panic(m, cat.x - m.x);
       } else if (h.kind === 'sprinkler') {
         const ph = hazPhase(h, 6.5, 3.8, 1);
         if (ph === 'warn' && h.phase !== 'warn' && Math.abs(cat.x - h.x) < VW * .6) tone(300, .06, 'square', .02);
@@ -1272,10 +1465,23 @@
         }
       }
     }
+    if (weather.kind === 'rain' && cat.on && Math.random() < dt * 5) {
+      parts.push({ x: cat.x - Math.sign(cat.vx || cat.face) * 12, y: cat.y - 2, vx: -cat.vx * .12, vy: -40 - Math.random() * 35, life: .35, max: .35, c: 'rgba(176,224,255,.72)', r: 1.5 + Math.random(), g: 380 });
+    }
     for (const k of keepsakes) {
       k.got = Math.max(0, k.got - dt);
       if (k.found) continue;
       if (Math.abs(cat.x - k.x) < 34 && Math.abs(cat.y - 28 - k.y) < 48) { k.found = true; k.got = 1; collectKeepsake(k.id, k.x, k.y); }
+    }
+    for (const star of paperStars) {
+      if (star.platformIndex != null) {
+        const platform = activePlats[star.platformIndex];
+        if (platform) { star.x = platform[0] + star.offsetX; star.y = platform[1] - 30; }
+      }
+      star.got = Math.max(0, (star.got || 0) - dt);
+      if (!star.found && Math.abs(cat.x - star.x) < 34 && Math.abs(cat.y - 28 - star.y) < 48) {
+        star.found = true; star.got = 1; collectPaperStar(star);
+      }
     }
     // Buried: one nudge if it has not been dug up after a while
     if (!buriedHintShown && need.B && !got.B && t > 40 && mood.some(m => m.type === 'B' && m.state === 'buried')) {
@@ -1297,7 +1503,26 @@
       if (sunk > .05) { ctx.fillStyle = 'rgba(200,240,255,.7)'; for (let k = 0; k < 3; k++) { const bt = (t * 1.6 + k / 3) % 1; ctx.beginPath(); ctx.arc(cx - rx * .6 + k * rx * .6, y + 4 - bt * 16, 1.5 + bt, 0, 7); ctx.fill(); } }
     }
     for (const h of hazards) {
-      if (h.kind === 'squeak') {
+      if (h.kind === 'bell') {
+        if (h.x < x0 - 30 || h.x > x1 + 30) continue;
+        const y = terrainY(h.x), light = ctx.createRadialGradient(h.x, y - 47, 1, h.x, y - 47, 56);
+        light.addColorStop(0, 'rgba(246,221,166,.27)'); light.addColorStop(1, 'rgba(246,221,166,0)');
+        ctx.fillStyle = light; ctx.beginPath(); ctx.arc(h.x, y - 47, 56, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#68605a'; ctx.fillRect(h.x - 2, y - 30, 4, 28); ctx.fillRect(h.x - 13, y - 32, 26, 4);
+        ctx.fillStyle = '#a68c68'; ctx.beginPath(); ctx.moveTo(h.x - 10, y - 30); ctx.quadraticCurveTo(h.x - 17, y - 56, h.x - 10, y - 68); ctx.quadraticCurveTo(h.x, y - 73, h.x + 10, y - 68); ctx.quadraticCurveTo(h.x + 17, y - 56, h.x + 10, y - 30); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#d9c59d'; ctx.beginPath(); ctx.ellipse(h.x, y - 30, 11, 3, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#5c514b'; ctx.fillRect(h.x - 2, y - 31, 4, 8);
+        if (h.ringT > 0) for (let i = 0; i < 3; i++) { ctx.globalAlpha = Math.max(0, h.ringT / 1.25 - i * .22); ctx.strokeStyle = '#f3dfb1'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(h.x, y - 52, 18 + (1.25 - h.ringT) * 26 + i * 8, Math.PI * 1.08, Math.PI * 1.92); ctx.stroke(); }
+        ctx.globalAlpha = 1;
+      } else if (h.kind === 'puddle') {
+        if (h.x + h.w < x0 || h.x > x1) continue;
+        const y = terrainY(h.x + h.w / 2), phase = h.puddleT > 0 ? h.puddleT / .7 : 0;
+        const wet = ctx.createRadialGradient(h.x + h.w / 2, y - 4, 1, h.x + h.w / 2, y - 4, h.w * .7);
+        wet.addColorStop(0, '#8ad7ed'); wet.addColorStop(.55, '#416d91'); wet.addColorStop(1, 'rgba(24,38,75,.24)');
+        ctx.fillStyle = wet; ctx.beginPath(); ctx.ellipse(h.x + h.w / 2, y - 3, h.w / 2, 7, -.04, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(190,238,255,.58)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(h.x + h.w * .42, y - 5, h.w * .27, 2.1, -.04, .15, 2.8); ctx.stroke();
+        if (phase > 0) for (let i = 0; i < 2; i++) { ctx.globalAlpha = phase * (1 - i * .35); ctx.strokeStyle = '#b8f1ff'; ctx.beginPath(); ctx.ellipse(h.x + h.w / 2, y - 5, h.w * (.24 + i * .2) * (1 + (1 - phase) * .25), 4 + i * 2, 0, 0, Math.PI * 2); ctx.stroke(); }
+        ctx.globalAlpha = 1;
+      } else if (h.kind === 'squeak') {
         if (h.x + h.w < x0 || h.x > x1) continue;
         const y = terrainY(h.x), wob = h.squeakT > 0 ? Math.sin(t * 60) * 2 * (h.squeakT / .5) : 0;
         ctx.fillStyle = '#6b4a35'; ctx.fillRect(h.x, y - 3 + wob, h.w, 5);
@@ -1343,13 +1568,27 @@
     for (const k of keepsakes) {
       if (k.x < x0 || k.x > x1) continue;
       if (k.found && k.got <= 0) continue;
-      const d = Math.hypot(cat.x - k.x, cat.y - 28 - k.y), eyes = eyesT > 0 && Math.abs(cat.x - k.x) <= uv('eyes') * T;
+      const d = Math.hypot(cat.x - k.x, cat.y - 28 - k.y), eyes = eyesT > 0 && Math.abs(cat.x - k.x) <= eyesRange();
       const a = k.found ? k.got : eyes ? 1 : clamp(1 - (d - 2.5 * T) / (2 * T), 0, 1) * .9;
       if (a <= .02) { if (Math.sin(t * 2.3 + k.bob) > .985) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.arc(k.x, k.y, 1.6, 0, 7); ctx.fill(); } continue; }
       const y = k.y + Math.sin(t * 2.4 + k.bob) * 3 - (k.found ? (1 - k.got) * 30 : 0);
       ctx.globalAlpha = a; ctx.drawImage(glowImg(kc), k.x - 30, y - 30, 60, 60);
       drawKeepsake(currentMapKey(), k.x, y, kc);
       ctx.globalAlpha = 1;
+    }
+    for (const star of paperStars) {
+      if (star.x < x0 || star.x > x1 || (star.found && star.got <= 0)) continue;
+      const rise = (reduce ? 0 : Math.sin(t * 2.5 + star.bob) * 3) - (star.found ? (1 - star.got) * 24 : 0);
+      const x = star.x, y = star.y + rise, pulse = reduce ? .9 : .78 + .22 * Math.sin(t * 3 + star.bob);
+      ctx.save(); ctx.globalAlpha = star.found ? star.got : 1;
+      const halo = ctx.createRadialGradient(x, y, 2, x, y, 24); halo.addColorStop(0, `rgba(255,235,166,${.34 * pulse})`); halo.addColorStop(1, 'rgba(255,220,130,0)');
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(x, y, 24, 0, Math.PI * 2); ctx.fill();
+      ctx.translate(x, y); ctx.rotate(reduce ? 0 : Math.sin(t * 1.3 + star.bob) * .12);
+      ctx.fillStyle = '#fff0ad'; ctx.strokeStyle = '#9b6934'; ctx.lineWidth = 2;
+      ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 6 : 13; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-2, -7); ctx.lineTo(1, -1); ctx.lineTo(-1, 6); ctx.stroke();
+      ctx.restore();
     }
     ctx.restore();
   }
@@ -1482,7 +1721,7 @@
   function drawEndlessPiece() {
     const p = enPiece; if (!p) return;
     if (p.found && p.got <= 0) return;
-    const eyes = eyesT > 0 && Math.abs(cat.x - p.x) <= uv('eyes') * T, d = Math.hypot(cat.x - p.x, cat.y - 30 - p.y);
+    const eyes = eyesT > 0 && Math.abs(cat.x - p.x) <= eyesRange(), d = Math.hypot(cat.x - p.x, cat.y - 30 - p.y);
     const rev = window.TCEndlessFX?.revealing?.() || 0;
     let a = p.found ? p.got : Math.max(eyes ? 1 : 0, rev, clamp(1 - (d - 2.5 * T) / (2 * T), 0, 1) * .9);
     const y = p.y + Math.sin(t * 2.2 + p.bob) * 3 - (p.found ? (1 - p.got) * 34 : 0);
@@ -1548,6 +1787,16 @@
     let eh = 0, ea = 0;
     for (let n = 8; n <= 50; n++) { const ids = keepsakeIds(n); ea += ids.length; eh += ids.filter(id => foundKeeps.has(id)).length; }
     if (ea) rows.push(`<div class="item shelf-row"><h3>Endless Nights</h3><div class="side"><span class="shelf-count">${eh} / ${ea}</span></div><p>Keepsakes found on the Endless routes.</p></div>`);
+    const diaryNights = Array.from({ length: 50 }, (_, i) => i + 1).filter(paperDiaryUnlocked);
+    const diaryPages = diaryNights.map(n => {
+      const ch = LEVEL_MAP_CHAPTERS.get(n), label = n >= 8 ? (window.TCEndless?.SPECIALS?.[n]?.name || window.TCVisualChapters?.forLevel(n)?.name || 'Endless Night') : ch?.name || chapterFor(n).name;
+      return `<article class="paper-diary-page"><h4>${hourOf(n)} · ${label}</h4><p>“${paperDiaryText(n)}”</p></article>`;
+    }).join('');
+    const diaryCopy = paperStarCopy(), diaryCount = (diaryCopy.diaryCount || '{count} / 50 pages').replace('{count}', String(diaryNights.length));
+    rows.push(`<section class="item shelf-row"><h3>${diaryCopy.diaryTitle || 'Paper-star diary'}</h3><div class="side"><span class="shelf-count">${diaryCount}</span></div><p>${diaryCopy.diaryPrompt || 'Find all 3 hidden paper stars in a night to unlock its bonus page.'}</p>${diaryPages ? `<div class="paper-diary-pages">${diaryPages}</div>` : `<p class="muted">${diaryCopy.diaryEmpty || 'Your first page is waiting among the stars.'}</p>`}</section>`);
+    const secretCopy = secretRoomCopy(), secretPages = SECRET_PAGE_MAPS.filter(map => foundSecretPages.has(map));
+    const secretDiaryPages = secretPages.map(map => `<article class="paper-diary-page"><h4>${SECRET_MAP_NAMES[map]}</h4><p>“${secretCopy.pages?.[map] || 'Shwe found a small memory behind the cracked wall.'}”</p></article>`).join('');
+    rows.push(`<section class="item shelf-row"><h3>${secretCopy.pageTitle || 'Secret-room diary'}</h3><div class="side"><span class="shelf-count">${(secretCopy.pageCount || '{count} / 6 pages').replace('{count}', String(secretPages.length))}</span></div><p>${secretCopy.pagePrompt || 'Find the cracked walls hidden across the maps.'}</p>${secretDiaryPages ? `<div class="paper-diary-pages">${secretDiaryPages}</div>` : `<p class="muted">${secretCopy.pageEmpty || 'A little memory is waiting behind a cracked wall.'}</p>`}</section>`);
     $('#shelfList').innerHTML = rows.join('');
     document.querySelectorAll('#shelfList canvas.keep-ico').forEach(drawKeepIcon);
   }
@@ -1561,12 +1810,15 @@
     rooftop: { kind: 'roof finds', label: 'loose tiles', labelMarked: 'marked loose tiles', labels: ['loose tiles', 'folded cloth', 'roof basket'], xs: [], draw: drawRoofBurySpot, debris: [{ shape: 'chip', color: '#b59a92' }, { shape: 'paper', color: '#c9c3d4' }, { shape: 'straw', color: '#b69c79' }], glow: '#f3d9ac' },
     park: { kind: 'park groundcover', label: 'leaf pile', labelMarked: 'marked leaf pile', labels: ['leaf pile', 'sand mound', 'flower-bed mound'], xs: [100, 550, 850, 1140, 1800, 2630, 3000, 3440, 3740], draw: drawParkBurySpot, debris: [{ shape: 'leaf', color: '#86bd77' }, { shape: 'petal', color: '#ffb4d3' }, { shape: 'leaf', color: '#d2a85f' }], glow: '#9bf0c5' },
     festival: { kind: 'festival goods', label: 'bamboo basket', labelMarked: 'marked bamboo basket', labels: ['bamboo basket', 'clay pots', 'folded mat'], xs: [150, 600, 810, 1200, 1700, 2600, 3000, 3500, 4150], draw: drawFestivalBurySpot, debris: [{ shape: 'straw', color: '#d9b66f' }, { shape: 'spark', color: '#ffd58a' }, { shape: 'straw', color: '#b88952' }], glow: '#ffc887' },
+    market: { kind: 'market goods', label: 'dropped snack basket', labelMarked: 'marked snack basket', labels: ['snack basket', 'paper lantern box', 'dropped fruit'], xs: [], draw: drawFestivalBurySpot, debris: [{ shape: 'straw', color: '#d9b66f' }, { shape: 'spark', color: '#ffd58a' }, { shape: 'paper', color: '#ffb36b' }], glow: '#ffb36b' },
     hill: { kind: 'hilltop finds', label: 'mossy stones', labelMarked: 'marked mossy stones', labels: ['mossy stones', 'fallen branch', 'leaf pile'], xs: [80, 350, 450, 550, 800, 910, 1020, 1130], draw: drawHillBurySpot, debris: [{ shape: 'moss', color: '#77a77c' }, { shape: 'twig', color: '#9b7659' }, { shape: 'leaf', color: '#83ad70' }], glow: '#c0b1ff' },
+    pagoda: { kind: 'quiet hillside finds', label: 'loose stone chips', labelMarked: 'marked loose stone chips', labels: ['loose stone chips', 'fallen leaves', 'small seed pods'], xs: [], draw: drawHillBurySpot, debris: [{ shape: 'chip', color: '#a7a298' }, { shape: 'leaf', color: '#86917c' }, { shape: 'twig', color: '#9d896a' }], glow: '#e4cc9c' },
+    train: { kind: 'platform keepsakes', label: 'lost ticket', labelMarked: 'marked lost ticket', labels: ['lost ticket', 'paper timetable', 'dropped mitten'], xs: [], draw: drawSchoolBurySpot, debris: [{ shape: 'paper', color: '#d6c7a2' }, { shape: 'paper', color: '#f0d39a' }, { shape: 'chip', color: '#9ca4a2' }], glow: '#b8e4dc' },
     lake: { kind: 'lakeshore finds', label: 'sand mound', labelMarked: 'marked sand mound', labels: ['sand mound', 'driftwood', 'pebble stack'], xs: [100, 650, 1200, 1800, 2220, 2630, 3000, 3600, 4150], draw: drawLakeBurySpot, debris: [{ shape: 'sand', color: '#e8c58a' }, { shape: 'splash', color: '#9cdaee' }, { shape: 'shell', color: '#ffe2c5' }], glow: '#9fe8ff' },
     free: { kind: 'classic stones', label: 'rock', labelMarked: 'marked rock', xs: [], draw: drawClassicRockBase, debris: [{ shape: 'chip', color: '#77736f' }, { shape: 'chip', color: '#a29b8d' }, { shape: 'chip', color: '#5f6260' }], glow: '#c8baff' }
   };
 
-  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, wallTouch: null, ledgeGrab: null, alpha: 1 }; }
+  function newCat() { const x = currentLevel.catStart ?? 200; return { x, y: terrainY(x), vx: 0, vy: 0, on: true, face: 1, pounce: 0, pcd: 0, inv: 0, squash: 0, walk: 0, sneak: false, justLanded: false, bounced: false, platform: null, coyote: 0, jumpBuffer: 0, extraJumpAvailable: false, leapSparkle: 0, leapSparkleCd: 0, fallTime: 0, fallFromX: x, falling: false, respawning: false, swinging: null, wallTouch: null, ledgeGrab: null, alpha: 1 }; }
   function pickX() { let x, n = 0; do { x = levelSpawnX(); n++; } while ((Math.abs(x - cat.x) < 380 || (mode === 'story' && rocks.some(spot => Math.abs(x - spot.x) < 100))) && n < 40); return x; }
   function pickCaveX() {
     const occupied = new Set(mood.filter(m => !m.dead && m.caveX != null).map(m => m.caveX));
@@ -1585,7 +1837,8 @@
   }
   function hideFeeling(m, x) {
     if (m.spot) { m.spot.used = true; m.spot.usedAt = t; m.spot.scratching = false; }
-    const inCave = mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight >= 7));
+    const inCave = (mode === 'story' && ((m.type === 'C' && storyNight >= 6) || (m.type === 'L' && storyNight >= 7)))
+      || (currentLevel.map === 'train' && (m.type === 'C' || m.type === 'L'));
     m.x = x ?? (inCave ? pickCaveX() : pickX()); m.caveX = inCave ? m.x : null;
     m.y = terrainY(m.x) - (m.type === 'C' ? 46 : 30); m.st = 0; m.sit = 0; m.rev = 0; m.fleeAlarm = 0;
     const tutorialLonely = m.type === 'L' && mode === 'story' && storyNight <= 3;
@@ -1776,6 +2029,8 @@
   }
   function reset() {
     currentLevel = selectLevelForRun();
+    weather = currentLevel.map === 'market' ? { ...WEATHER.find(item => item.kind === 'rain') } : { ...WEATHER[Math.floor(Math.random() * WEATHER.length)] };
+    if (weather.kind === 'wind') weather.wind = Math.random() < .5 ? -1 : 1;
     loadLevelGeometry();
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     t = 0; warmup = mode === 'free' ? 0 : 1.5; frustWakeAt = warmup + FRUST_SLEEP; timeLeft = mode === 'free' ? 60 : chapter.timeLimit; score = 0; freeT = 0; level = 0; struggleTipShownThisRun = false;
@@ -1785,9 +2040,10 @@
     lives = 3; checkpointX = currentLevel.catStart ?? 200; fallDimT = 0; respawnT = 0; pitTipShown = false; edgeSoundAt = 0; pendingFallFail = false; jumpHeld = false;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
     got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
-    workshopRun = []; allHome = false; portal = null;
-    goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; hist = []; respawnQ = []; camX = 0;
+    workshopRun = []; allHome = false; portal = null; bossEncounter = null; $('#bossIntroScreen').hidden = true;
+    goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; driftingLights = []; hist = []; respawnQ = []; camX = 0;
     scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false; breathTipShown = false;
+    initSecretRooms();
     const buryStyle = BURY_SPOTS[currentMapKey()];
     rocks = (currentLevel.burySpots || []).map((x, i) => {
       const variant = i % (buryStyle.labels?.length || 1), label = buryStyle.labels?.[variant] || buryStyle.label;
@@ -1819,7 +2075,7 @@
     }
     for (const type of Object.keys(need)) {
       const base = chapter.initialSpawns?.[type] || 0;
-      const count = ['F', 'N', 'L', 'E', 'S', 'J'].includes(type) ? Math.max(base, Math.min(need[type], 2)) : base;
+      const count = ['F', 'N', 'L', 'E', 'S', 'J'].includes(type) ? Math.max(base, Math.min(need[type], 2)) + (weather.kind === 'rain' && type === 'L' && need[type] > 0 ? 1 : 0) : base;
       for (let i = 0; i < count; i++) {
         if (!need[type]) continue;
         spawn(type);
@@ -1855,14 +2111,36 @@
     for (let i = 0; i < count && trail.length; i++) {
       const l = trail.pop();
       got[l.type] = Math.max(0, (got[l.type] || 0) - 1);
-      const nm = spawn(l.type, clamp(l.x, 60, WORLD - 60));
-      if (l.type === 'B' && nm.rock) { nm.rock.scratched = false; nm.rock.holeDepth = 0; }
-      if (l.type === 'N') panic(nm, cat.x - nm.x);
+      const away = Math.sign(l.x - cat.x) || -(cat.face || 1);
+      driftingLights.push({ ...l, x: l.x, y: l.y, age: 0, life: 3, vx: away * (34 + Math.random() * 10), vy: -30 - Math.random() * 12, phase: Math.random() * Math.PI * 2 });
       float(l.x, l.y - 20, 'A light drifted away', col(l.type));
       if (count > 1) burst(l.x, l.y, col(l.type), 8);
       dropped++;
     }
     return dropped;
+  }
+  function respawnDroppedLight(light) {
+    const nm = spawn(light.type, clamp(light.x, 60, WORLD - 60));
+    if (light.type === 'B' && nm.rock) { nm.rock.scratched = false; nm.rock.holeDepth = 0; }
+    if (light.type === 'N') panic(nm, cat.x - nm.x);
+  }
+  function updateDriftingLights(dt) {
+    for (const light of driftingLights) {
+      light.age += dt; light.life = Math.max(0, 3 - light.age);
+      if (!reduce) { light.vy += 18 * dt; light.x += light.vx * dt; light.y += light.vy * dt; light.vx *= Math.pow(.28, dt); }
+      if (light.life <= 0) respawnDroppedLight(light);
+    }
+    driftingLights = driftingLights.filter(light => light.life > 0);
+  }
+  function recoverDriftingLight(light) {
+    const index = driftingLights.indexOf(light);
+    if (index < 0 || light.life <= 0) return false;
+    driftingLights.splice(index, 1);
+    if (mode === 'story' && Object.prototype.hasOwnProperty.call(got, light.type)) got[light.type]++;
+    trail.push({ type: light.type, v: light.v, x: light.x, y: light.y, join: 0 });
+    burst(light.x, light.y, col(light.type), 12); float(light.x, light.y - 28, 'Light back with Shwe!', col(light.type));
+    sfx('ui', 'catch'); cat.bounced = true; cat.pounce = 0;
+    return true;
   }
   function hitCat(m) {
     hits++; cat.inv = 1.2; cat.vx = m.dir * 420; cat.vy = -420; cat.on = false; cat.pounce = 0;
@@ -2025,7 +2303,7 @@
     }
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
     else if (mode === 'free') { timeLeft += 2; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 12) trail.shift(); }
-    else { const chapter = chapterFor(storyNight); if (Object.prototype.hasOwnProperty.call(got, m.type)) { got[m.type]++; if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay + Math.random() * .8 }); } trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } }
+    else { const chapter = chapterFor(storyNight); if (Object.prototype.hasOwnProperty.call(got, m.type)) { got[m.type]++; if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay * (weather.kind === 'rain' && m.type === 'L' ? .72 : 1) + Math.random() * .8 }); } trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } }
     const key = m.type + (m.v || 0), info = vinfo(m.type, m.v || 0);
     if (!book[key]) {
       const bonus = m.v ? 30 : m.type === 'G' ? 20 : 10;
@@ -2063,7 +2341,7 @@
       if (c.fallTime >= .38) {
         c.falling = false; c.respawning = true; c.swinging = null; c.platform = null;
         if (mode === 'story' && !gentleMode) { lives = Math.max(0, lives - 1); sfx('ui', 'lifeLost'); }
-        if (mode === 'story' && !gentleMode && lives <= 0 && allHome) { lives = 1; c.respawning = true; respawnT = .5; fallDimT = .5; beginStoryEnding(); return; }
+        if (mode === 'story' && !gentleMode && lives <= 0 && allHome && !bossEncounter) { lives = 1; c.respawning = true; respawnT = .5; fallDimT = .5; beginStoryEnding(); return; }
         if (mode === 'story' && !gentleMode && lives <= 0) {
           // Catches already recorded in the Mood Book remain banked; this run's carried lights do not.
           trail = []; got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); glowRun = 0; pendingFallFail = true;
@@ -2076,7 +2354,7 @@
     if (c.respawning) {
       respawnT -= dt; fallDimT = Math.max(0, fallDimT - dt);
       if (respawnT <= 0) {
-        if (pendingFallFail) { pendingFallFail = false; finish(false, 'fall'); return; }
+        if (pendingFallFail) { pendingFallFail = false; finish(false, bossEncounter ? 'boss' : 'fall'); return; }
         c.x = checkpointX; c.y = terrainY(checkpointX); c.vx = 0; c.vy = 0; c.on = true; c.wallTouch = null; c.ledgeGrab = null; c.wallSurface = null;
         c.inv = 1.5; c.respawning = false; c.coyote = 0; c.jumpBuffer = 0;
         hist = []; sfx('ui', 'respawn'); burst(c.x, c.y - 20, CALM, 16); announce('Back at the lantern!', CALM, 1.2);
@@ -2085,6 +2363,11 @@
     }
     c.justLanded = false;
     if (jumpQ) c.jumpBuffer = .12; else c.jumpBuffer = Math.max(0, c.jumpBuffer - dt);
+    c.leapSparkle = Math.max(0, c.leapSparkle - dt); c.leapSparkleCd -= dt;
+    if (c.leapSparkle > 0 && c.leapSparkleCd <= 0 && !reduce) {
+      c.leapSparkleCd = .075;
+      for (let i = 0; i < 2; i++) parts.push({ x: c.x - c.face * (14 + Math.random() * 13), y: c.y - 18 + Math.random() * 12, vx: -c.face * 24 + (Math.random() - .5) * 26, vy: -18 - Math.random() * 34, life: .24 + Math.random() * .12, max: .36, c: i ? '#ffe9a6' : '#c8adff', r: 2 + Math.random() * 2, g: -4 });
+    }
     const a = axisNow(), sneaking = a !== 0 && Math.abs(a) < .55;
     if (a !== 0) onTutorialAction('move', c);
     if (sneaking) onTutorialAction('sneak', c);
@@ -2094,7 +2377,7 @@
     if (c.pounce > 0) c.pounce -= dt;
     else { const slick = c.on && onSlick(c.x), acc = slick ? (Math.abs(target) > Math.abs(c.vx) && Math.sign(target) === Math.sign(c.vx || target) ? 700 : 220) : c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
-    const jumpSpeed = chapter?.jumpSpeed || 830, gravity = chapter?.jumpGravity || 2300;
+    const jumpSpeed = (chapter?.jumpSpeed || 830) * (weather.kind === 'wind' ? 1 + weather.wind * .035 : 1), gravity = chapter?.jumpGravity || 2300;
     if (c.ledgeGrab) {
       const grab = c.ledgeGrab;
       if (grab.platform && !grab.platform.active) c.ledgeGrab = null;
@@ -2122,8 +2405,11 @@
     if (c.jumpBuffer > 0 && c.wallTouch && c.pounce <= 0) {
       startWallJump(c, c.wallTouch.side, jumpSpeed);
     } else if (c.jumpBuffer > 0 && (c.on || c.coyote > 0) && c.pounce <= 0) {
-      c.vy = -jumpSpeed; c.on = false; c.coyote = 0; c.jumpBuffer = 0;
+      c.vy = -jumpSpeed; c.on = false; c.coyote = 0; c.jumpBuffer = 0; window.TCJumpUpgrade?.prime(c, upg.secondLeap > 0);
       onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240);
+    } else if (c.jumpBuffer > 0 && !c.on && c.coyote <= 0 && !c.wallTouch && !c.ledgeGrab && !c.swinging && c.pounce <= 0 && window.TCJumpUpgrade?.canUse(c, upg.secondLeap > 0)) {
+      c.vy = -jumpSpeed * .78; c.on = false; c.coyote = 0; c.jumpBuffer = 0; window.TCJumpUpgrade.consume(c); c.leapSparkle = reduce ? 0 : .48; c.leapSparkleCd = 0; c.squash = reduce ? 0 : .09;
+      if (!reduce) burst(c.x, c.y - 22, '#c8adff', 9); sfx('ui', 'jump');
     }
     jumpQ = false;
     if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) { sfx('ui', 'pounce'); catVoice('trill', .25); } else tone(240, .1, 'square', .035, 320); }
@@ -2182,11 +2468,12 @@
       if (rope) { c.swinging = rope; c.on = false; c.vy = 0; jumpQ = false; return; }
     }
     if (landed) {
+      if (!wasOn) window.TCJumpUpgrade?.land(c);
       if (!wasOn) { c.justLanded = true; if (c.vy > 500) { c.squash = .16; sfx('ui', 'land'); } }
       c.vy = 0; c.platform = landedOn;
       if (landedOn?.type === 'crumbling' && landedOn.crumbleRemaining <= 0) { landedOn.crumbleRemaining = .6; sfx('ui', 'crumble'); }
       if (landedOn?.type === 'moving' && !wasOn) sfx('ui', 'platformHum');
-      if (landedOn?.type === 'bouncy' && !wasOn) { c.vy = -960; c.on = false; c.bounced = true; sfx('ui', 'jump'); }
+      if (landedOn?.type === 'bouncy' && !wasOn) { c.vy = -960; c.on = false; c.bounced = true; window.TCJumpUpgrade?.prime(c, upg.secondLeap > 0); sfx('ui', 'jump'); }
     } else c.platform = null;
     c.on = landed && !(landedOn?.type === 'bouncy' && !wasOn);
     c.coyote = c.on ? .1 : Math.max(0, c.coyote - dt);
@@ -2209,6 +2496,7 @@
     if (nightGuide.active && !m.tutorialOnly) return;
     const chapter = mode === 'story' ? chapterFor(storyNight) : { moodlingSpeed: 1, frustratedChargeSpeed: 1, frustratedWindup: .55, nervousHearingMul: 1, nervousPanicTime: 1.1 };
     const sp = mode === 'free' ? 1 + Math.min(.6, level * .1) : (chapter.moodlingSpeed * (chaos ? 1.25 : 1));
+    if (m.bellCalmT > 0) { m.bellCalmT = Math.max(0, m.bellCalmT - dt); return; }
     if (m.sky && m.skyPhase === 'cleared') return;
     if (m.sky && m.skyPhase !== 'ground') { updateSkyMood(m, dt, chapter); return; }
     if (m.sky && m.skyGroundStun > 0) {
@@ -2390,6 +2678,10 @@
   }
   function checkCatches() {
     if (cat.pounce <= 0) return;
+    if (tryBossPounce()) return;
+    for (const light of driftingLights) {
+      if (Math.hypot(cat.x - light.x, cat.y - 24 - light.y) < uv('pounce') + 18 && recoverDriftingLight(light)) return;
+    }
     const cx = cat.x + cat.face * 16, cy = cat.y - 24;
     for (const m of mood) {
       if (m.dead) continue;
@@ -2474,8 +2766,10 @@
   }
   function update(dt) {
     t += dt;
+    if (bossEncounter?.introOpen) return;
     shake = Math.max(0, shake - dt * 24);
     updateLevelPlatforms(dt);
+    updateBossEncounter(dt);
     updCat(dt);
     if (cat.falling || cat.respawning) {
       for (const p of parts) { p.life -= dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .98; }
@@ -2501,10 +2795,11 @@
     checkScratchProximity();
     if (scratchQ) performScratch();
     scratchQ = false;
+    updateSecretRooms();
     if (activeItems.sand && state === 'play' && t > 2.6) { activeItems.sand = false; burst(cat.x - cat.face * 8, cat.y - 50, GOLD, 14); float(cat.x, cat.y - 78, '⏳ The sand poured into your clock', GOLD); }
     for (const m of mood) updMood(m, purrT > 0 && Math.abs(m.x - cat.x) < 6 * T ? dt * .4 : dt);
     updFireflies(dt);
-    updHazards(dt); updTrinkets(dt); updPortal(dt);
+    updHazards(dt); updTrinkets(dt); updPortal(dt); updateDriftingLights(dt);
     checkCatches();
     mood = mood.filter(m => !m.dead);
     for (const r of respawnQ) r.at -= dt;
@@ -2513,7 +2808,7 @@
     updateGuidance(dt);
     if (state === 'play') {
       if (mode === 'story') warmup = Math.max(0, warmup - dt);
-      if (warmup <= 0 && !guidanceTimerPaused() && mode !== 'free') timeLeft -= dt;
+      if (warmup <= 0 && !guidanceTimerPaused() && mode !== 'free' && !bossEncounter) timeLeft -= dt;
       if (mode === 'free') freeTick(dt);
       if (endlessOn() && warmup <= 0) endlessTick(dt);
       const chapter = mode === 'story' ? chapterFor(storyNight) : null;
@@ -2530,7 +2825,7 @@
       }
       const sec = Math.ceil(timeLeft);
       if (sec <= 10 && sec < lastTick) { lastTick = sec; if (window.TCSfx) sfx('ui', sec <= 3 ? 'urgent' : 'countdown'); else tone(sec <= 3 ? 1200 : 880, .06, 'square', .03); }
-      if (mode !== 'free' && timeLeft <= 0 && !pendingFallFail) { timeLeft = 0; if (allHome) beginStoryEnding(); else { sfx('ui', 'timeup'); finish(false); } }
+      if (mode !== 'free' && timeLeft <= 0 && !pendingFallFail && !bossEncounter) { timeLeft = 0; if (allHome) beginStoryEnding(); else { sfx('ui', 'timeup'); finish(false); } }
     } else if (state === 'ending') {
       endT -= dt; if (endT <= 0) finish(true);
     }
@@ -2544,8 +2839,9 @@
       let px = a.x, py = a.y;
       trail.forEach((l, i) => {
         const floor = trailFloorY(l.x, l.y) - LIFT;
-        const tx = px - face * SEG * .92;
-        const ty = cat.on ? floor : py + 7;           // grounded: rest on the floor; airborne: trail just below the bead before
+        const sway = reduce ? 0 : Math.sin(t * 2.15 - i * .68) * (cat.on ? 3 : 5.5);
+        const tx = px - face * SEG * .92 + sway;
+        const ty = cat.on ? floor : py + 7 + (reduce ? 0 : Math.sin(t * 1.9 - i * .62) * 2.5); // grounded lights skim the floor; airborne lights sway below one another
         const kx = Math.min(1, dt * 16), ky = Math.min(1, dt * Math.max(5, (cat.on ? 16 : 11) - i * 1.1));
         let x = l.x + (tx - l.x) * kx, y = l.y + (Math.min(ty, floor) - l.y) * ky;
         let dx = x - px, dy = y - py, d = Math.hypot(dx, dy);
@@ -2581,6 +2877,9 @@
     if (breathCalm) { scratchTarget = { type: 'breath', mood: breathCalm }; $('#bScratch').hidden = touchUI.hidden; return scratchTarget; }
     let best = 74;
     const reachableHeight = Math.abs(cat.y - terrainY(cat.x)) <= 115;
+    if (reachableHeight && cat.on) for (const room of secretRooms) {
+      if (!room.open && Math.abs(cat.x - room.x) <= 78) { scratchTarget = { kind: 'secret-wall', room }; $('#bScratch').hidden = touchUI.hidden; return scratchTarget; }
+    }
     for (const m of mood) {
       if (!reachableHeight) break;
       if (m.dead || !m.spot || m.state !== 'hide' || m.spot.used) continue;
@@ -2611,6 +2910,23 @@
     }
     const activeSkyChallenge = mood.find(m => !m.dead && m.sky && m.skyFeature === 'C' && m.skyPhase === 'scratchReq');
     if (activeSkyChallenge) { failSkyChallenge(activeSkyChallenge); return false; }
+    if (scratchTarget?.kind === 'secret-wall') {
+      const room = scratchTarget.room;
+      if (!room || room.open || !cat.on || Math.abs(cat.x - room.x) > 80 || Math.abs(cat.y - terrainY(room.x)) > 115) return false;
+      room.progress++; cat.vx = 0; cat.walk = 0; scratchAnim = .52; sfx('ui', 'scratch');
+      for (let i = 0; i < 8; i++) parts.push({ x: room.x + (Math.random() - .5) * 48, y: terrainY(room.x) - 34, vx: (Math.random() - .5) * 125, vy: -60 - Math.random() * 80, life: .45, max: .45, c: '#b7a89b', r: 2 + Math.random() * 2.5, g: 240 });
+      if (room.progress >= room.scratches) {
+        room.open = true; room.openedAt = t; shake = Math.max(shake, 4); burst(room.x, terrainY(room.x) - 54, '#ffe1a1', 20);
+        const copy = secretRoomCopy(); float(room.x, terrainY(room.x) - 104, copy.opened || 'A secret room!', '#ffe1a1'); tone(520, .16, 'triangle', .06, 320); sfx('ui', 'sparkle');
+        if (room.reward.kind === 'moodling' && !room.rewardSpawned) {
+          const rare = spawn(room.reward.type, room.rewardX); rare.v = room.reward.variant || 1; room.rewardSpawned = true;
+          announce(copy.rareWaiting || 'A rare Moodling is hiding inside!', GOLD, 2.7);
+        } else if (room.reward.kind === 'page' && room.pageFound) float(room.rewardX, terrainY(room.rewardX) - 62, copy.alreadyRead || 'You have already saved this memory.', '#d6c7a2');
+      } else {
+        float(room.x, terrainY(room.x) - 74, `${room.progress}/${room.scratches}`, '#d6c7a2'); tone(250, .08, 'triangle', .035, -35);
+      }
+      scratchTarget = null; return true;
+    }
     if (scratchTarget?.kind === 'rock') {
       const rock = scratchTarget.rock; if (!rock || rock.scratched || !cat.on || Math.abs(cat.y - rock.y) > 115) return false;
       rock.scratched = true; rock.holeDepth = 0; scratchAnim = .8; shake = Math.max(shake, rock.marked ? 0 : 10); sfx('ui', 'scratch');
@@ -2703,6 +3019,28 @@
     const mist = ctx.createLinearGradient(0, 300, 0, 460); mist.addColorStop(0, 'rgba(148,183,201,0)'); mist.addColorStop(1, 'rgba(148,183,201,.13)');
     ctx.fillStyle = mist; ctx.fillRect(0, 280, VW, 190);
   }
+  function drawSunrise() {
+    if (mode !== 'story' || inSchool()) return;
+    const day = dawnProgress();
+    if (day > 0) {
+      const sky = ctx.createLinearGradient(0, -OY, 0, GROUND);
+      sky.addColorStop(0, `rgba(150,174,255,${day * .055})`);
+      sky.addColorStop(.55, `rgba(255,180,178,${day * .09})`);
+      sky.addColorStop(1, `rgba(255,202,145,${day * .17})`);
+      ctx.fillStyle = sky; ctx.fillRect(0, -OY, VW, GROUND + OY);
+    }
+    const lastTwenty = clamp((20 - timeLeft) / 20, 0, 1);
+    if (!lastTwenty) return;
+    const x = reduce ? VW - 8 : VW + 28 - lastTwenty * 44, y = GROUND - 10;
+    const radius = 115 + lastTwenty * 72;
+    const halo = ctx.createRadialGradient(x, y, 2, x, y, radius);
+    halo.addColorStop(0, `rgba(255,229,168,${lastTwenty * .4})`);
+    halo.addColorStop(.3, `rgba(255,164,139,${lastTwenty * .24})`);
+    halo.addColorStop(1, 'rgba(255,130,125,0)');
+    ctx.fillStyle = halo; ctx.fillRect(Math.max(0, x - radius), y - radius, Math.min(VW, radius * 2), radius * 2);
+    ctx.fillStyle = `rgba(255,231,175,${lastTwenty * .9})`;
+    ctx.beginPath(); ctx.arc(x, y, 34 + lastTwenty * 8, Math.PI, Math.PI * 2); ctx.fill();
+  }
   function drawParallaxLayer(layerIndex, scrollSpeed) {
     const px = camX * scrollSpeed, left = Math.floor(px / 360) * 360 - 720, right = px + VW + 720;
     ctx.save(); ctx.translate(camX * (1 - scrollSpeed), 0);
@@ -2762,7 +3100,7 @@
   }
   function drawScratchSpot(x, y, type, spot) {
     const kind = spot.kind;
-    const visible = eyesT > 0 && Math.abs(cat.x - x) <= uv('eyes') * T;
+    const visible = eyesT > 0 && Math.abs(cat.x - x) <= eyesRange();
     const near = Math.abs(cat.x - x) <= 5 * T;
     if (spot.used) { const fade = clamp(1 - (t - spot.usedAt) / 1.3, 0, 1); if (!fade) return; ctx.globalAlpha = fade; }
     if (visible) {
@@ -2905,7 +3243,7 @@
   }
   function drawRockFormation(x, y, rock, moodHolding) {
     ctx.save();
-    const pulse = .5 + .5 * Math.sin(t * 4 + rock.phase), markedGlow = eyesT > 0 && (rock.marked || rock.keepsake) && !rock.scratched && Math.abs(cat.x - x) <= uv('eyes') * T;
+    const pulse = .5 + .5 * Math.sin(t * 4 + rock.phase), markedGlow = eyesT > 0 && (rock.marked || rock.keepsake) && !rock.scratched && Math.abs(cat.x - x) <= eyesRange();
     const glow = rock.glow || '#a67646';
     if (markedGlow) { const g = ctx.createRadialGradient(x, y - 24, 3, x, y - 24, 66); g.addColorStop(0, hexRgba(glow,.35)); g.addColorStop(1, hexRgba(glow,0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 24, 66, 0, 7); ctx.fill(); }
     (rock.draw || drawClassicRockBase)(x, y, rock, moodHolding);
@@ -3279,23 +3617,30 @@
     for (const rock of rocks) { if (rock.x < x0 - 80 || rock.x > x1 + 80) continue; drawRockFormation(rock.x, rock.y, rock, rockHoldsFeeling(rock)); }
   }
   function drawLevelDecor(x0, x1) {
-    const map = currentLevel.map, palette = map === 'school' ? ['#8a5e4c','#d4a66b','#f5d8a5'] : map === 'rooftop' ? ['#635568','#b5a0a6','#f2d5ae'] : map === 'park' ? ['#3f9b83','#8ed7a1','#f4c985'] : map === 'festival' ? ['#77503f','#d6aa5a','#ef8fbd'] : map === 'hill' ? ['#555078','#9a8cc4','#64aa8b'] : map === 'lake' ? ['#5a3d4b','#a77a5a','#9fe8ff'] : ['#4d5054','#818b83','#c0b1ff'];
+    const map = currentLevel.map, palette = map === 'school' ? ['#8a5e4c','#d4a66b','#f5d8a5'] : map === 'rooftop' ? ['#635568','#b5a0a6','#f2d5ae'] : map === 'park' ? ['#3f9b83','#8ed7a1','#f4c985'] : map === 'festival' ? ['#77503f','#d6aa5a','#ef8fbd'] : map === 'market' ? ['#492d55','#af5271','#ffd28a'] : map === 'pagoda' ? ['#5b5654','#978878','#e4cc9c'] : map === 'train' ? ['#424550','#77737c','#d6c7a2'] : map === 'hill' ? ['#555078','#9a8cc4','#64aa8b'] : map === 'lake' ? ['#5a3d4b','#a77a5a','#9fe8ff'] : ['#4d5054','#818b83','#c0b1ff'];
     const [dark, mid, light] = palette;
     if (map !== 'hill') {
       const bottom = VH + OY + 60, floor = ctx.createLinearGradient(0, GROUND - 28, 0, bottom);
       const tcFloor = window.TCPlaces?.FLOOR?.[map];
-      floor.addColorStop(0, tcFloor ? tcFloor[0] : map === 'festival' ? '#76513e' : map === 'lake' ? '#694a57' : map === 'park' ? '#3c705f' : map === 'school' ? '#58475c' : '#47514d');
-      floor.addColorStop(.22, tcFloor ? tcFloor[1] : map === 'festival' ? '#46313a' : map === 'lake' ? '#493247' : map === 'park' ? '#2a4550' : map === 'school' ? '#342b43' : '#303a38'); floor.addColorStop(1, '#151421');
+      floor.addColorStop(0, tcFloor ? tcFloor[0] : map === 'festival' ? '#76513e' : map === 'lake' ? '#694a57' : map === 'park' ? '#3c705f' : map === 'market' ? '#7a4256' : map === 'pagoda' ? '#827a78' : map === 'train' ? '#65616a' : map === 'school' ? '#58475c' : '#47514d');
+      floor.addColorStop(.22, tcFloor ? tcFloor[1] : map === 'festival' ? '#46313a' : map === 'lake' ? '#493247' : map === 'park' ? '#2a4550' : map === 'market' ? '#4a2840' : map === 'pagoda' ? '#48454c' : map === 'train' ? '#383846' : map === 'school' ? '#342b43' : '#303a38'); floor.addColorStop(1, '#151421');
       const left = Math.max(0, Math.floor(x0 / 8) * 8), right = Math.min(WORLD, x1 + 8);
       ctx.fillStyle = floor; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
       for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x));
       ctx.lineTo(right, bottom); ctx.lineTo(left, bottom); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = tcFloor ? tcFloor[2] : map === 'festival' ? 'rgba(218,174,120,.65)' : map === 'lake' ? 'rgba(170,232,244,.48)' : map === 'park' ? 'rgba(133,210,157,.52)' : 'rgba(255,226,180,.36)';
+      ctx.strokeStyle = tcFloor ? tcFloor[2] : map === 'pagoda' ? 'rgba(218,194,153,.72)' : map === 'train' ? 'rgba(207,210,196,.66)' : map === 'market' ? 'rgba(255,190,140,.75)' : map === 'festival' ? 'rgba(218,174,120,.65)' : map === 'lake' ? 'rgba(170,232,244,.48)' : map === 'park' ? 'rgba(133,210,157,.52)' : 'rgba(255,226,180,.36)';
       ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(left, terrainY(left));
       for (let x = left + 8; x <= right; x += 8) ctx.lineTo(x, terrainY(x)); ctx.stroke();
+      if (map === 'train') {
+        const railY = terrainY(left) - 13;
+        ctx.fillStyle = '#2b2e39'; ctx.fillRect(left, railY - 2, right - left, 18);
+        ctx.fillStyle = '#a8a49a'; ctx.fillRect(left, railY, right - left, 3); ctx.fillRect(left, railY + 10, right - left, 3);
+        ctx.fillStyle = '#68636a';
+        for (let rx = Math.floor(left / 34) * 34; rx < right; rx += 34) ctx.fillRect(rx, railY - 3, 12, 19);
+      }
     }
     // A quiet contour trace makes the authored steps and slopes legible over the existing place art.
-    ctx.strokeStyle = map === 'school' ? 'rgba(255,226,180,.38)' : map === 'festival' ? 'rgba(255,210,160,.46)' : map === 'lake' ? 'rgba(170,232,244,.5)' : 'rgba(195,220,180,.42)';
+    ctx.strokeStyle = map === 'pagoda' ? 'rgba(220,205,174,.54)' : map === 'school' ? 'rgba(255,226,180,.38)' : map === 'festival' ? 'rgba(255,210,160,.46)' : map === 'lake' ? 'rgba(170,232,244,.5)' : 'rgba(195,220,180,.42)';
     ctx.lineWidth = 2; ctx.beginPath();
     const start = Math.max(0, Math.floor(x0 / 18) * 18), end = Math.min(WORLD, x1);
     for (let x = start; x <= end; x += 18) { const y = terrainY(x); x === start ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
@@ -3358,15 +3703,44 @@
         ctx.fillStyle = p.skin === 'boat' ? '#704b4b' : '#72523c'; ctx.beginPath(); ctx.moveTo(x - 2, y + 2); ctx.lineTo(x + w + 2, y + 2); ctx.quadraticCurveTo(x + w * .84, y + 16, x + w * .5, y + 15); ctx.quadraticCurveTo(x + w * .14, y + 16, x - 2, y + 2); ctx.fill();
         ctx.fillStyle = p.skin === 'boat' ? '#d6aa5a' : '#ad8055'; ctx.fillRect(x + 5, y - 2, w - 10, 4);
       }
+      if (p.skin === 'train') {
+        // The carriage top is the real moving-platform collision surface.
+        const bodyY = y + 7, bodyH = Math.max(25, Math.min(43, GROUND - bodyY - 3));
+        ctx.fillStyle = '#344652'; ctx.beginPath(); canvasRoundRect(ctx, x + 2, bodyY, w - 4, bodyH, 8); ctx.fill();
+        ctx.fillStyle = '#6d9291'; ctx.fillRect(x + 8, bodyY, w - 16, 5);
+        ctx.strokeStyle = 'rgba(203,225,212,.65)'; ctx.lineWidth = 2; ctx.strokeRect(x + 4, bodyY + 1, w - 8, bodyH - 2);
+        for (let wx = x + 17; wx + 21 < x + w - 10; wx += 34) {
+          ctx.fillStyle = '#253442'; ctx.fillRect(wx, bodyY + 11, 22, 17);
+          const winGlow = ctx.createRadialGradient(wx + 11, bodyY + 18, 1, wx + 11, bodyY + 18, 19);
+          winGlow.addColorStop(0, 'rgba(255,222,153,.34)'); winGlow.addColorStop(1, 'rgba(255,222,153,0)');
+          ctx.fillStyle = winGlow; ctx.fillRect(wx - 8, bodyY + 1, 38, 34);
+          ctx.fillStyle = '#f3d79e'; ctx.fillRect(wx + 2, bodyY + 14, 3, 10); ctx.fillRect(wx + 10, bodyY + 14, 3, 10);
+        }
+        ctx.fillStyle = '#252a35';
+        for (let wx = x + 24; wx < x + w - 10; wx += 56) { ctx.beginPath(); ctx.arc(wx, bodyY + bodyH, 7, 0, Math.PI * 2); ctx.fill(); }
+      }
       if (p.type === 'swinging' && p.anchor) {
-        const [ax, ay] = p.anchor, sway = Math.sin(t * (p.speed || .8)) * 15;
-        ctx.strokeStyle = 'rgba(255,220,164,.82)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax - 18, ay - 28); ctx.quadraticCurveTo(ax + sway, ay - 14, ax + sway, ay + 4); ctx.stroke();
-        ctx.fillStyle = 'rgba(255,205,111,.18)'; ctx.beginPath(); ctx.arc(ax + sway, ay + 10, 20, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffd98a'; ctx.beginPath(); canvasRoundRect(ctx, ax + sway - 8, ay + 3, 16, 19, 5); ctx.fill();
-        ctx.strokeStyle = 'rgba(113,74,96,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax + sway - 4, ay + 10); ctx.lineTo(ax + sway + 4, ay + 10); ctx.stroke();
+        const [ax, ay] = p.anchor, lanternRope = p.skin === 'lantern-rope', sway = reduce ? 0 : Math.sin(t * (p.speed || .8)) * (lanternRope ? 5 : 15), lx = ax + sway;
+        ctx.strokeStyle = lanternRope ? 'rgba(255,174,123,.9)' : 'rgba(255,220,164,.82)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ax - 18, ay - 28); ctx.quadraticCurveTo(lx, ay - 14, lx, ay + 4); ctx.stroke();
+        ctx.fillStyle = lanternRope ? 'rgba(255,110,136,.24)' : 'rgba(255,205,111,.18)'; ctx.beginPath(); ctx.arc(lx, ay + 10, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = lanternRope ? '#ff8e78' : '#ffd98a'; ctx.beginPath(); canvasRoundRect(ctx, lx - 8, ay + 3, 16, 19, 5); ctx.fill();
+        ctx.strokeStyle = 'rgba(113,74,96,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(lx - 4, ay + 10); ctx.lineTo(lx + 4, ay + 10); ctx.stroke();
       }
       if (p.type === 'crumbling') { const fade = p.crumbleRemaining > 0 ? .45 + .4 * p.crumbleRemaining : 1; ctx.globalAlpha=fade; ctx.strokeStyle=dark; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x+w*.34,y+1); ctx.lineTo(x+w*.42,y+7); ctx.lineTo(x+w*.48,y+3); ctx.moveTo(x+w*.68,y+1); ctx.lineTo(x+w*.61,y+6); ctx.stroke(); ctx.globalAlpha=1; }
       if (p.type === 'bouncy') { ctx.fillStyle=mid; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.fill(); ctx.strokeStyle=light; ctx.lineWidth=1.5; ctx.beginPath(); ctx.ellipse(x+w/2,y+3,w*.34,7,0,Math.PI,Math.PI*2); ctx.stroke(); }
+      if (p.skin === 'awning') {
+        const colors = ['#f35c86', '#ffd166', '#41c7b3', '#b78cff'];
+        for (let i = 0; i < 8; i++) { ctx.fillStyle = colors[i % colors.length]; ctx.fillRect(x + i * w / 8, y - 7, w / 8 + 1, 8); ctx.beginPath(); ctx.arc(x + (i + .5) * w / 8, y + 1, w / 16, 0, Math.PI); ctx.fill(); }
+        ctx.fillStyle = 'rgba(255,236,189,.82)'; ctx.fillRect(x, y - 9, w, 2);
+      }
+      if (p.skin === 'oil-lamp') {
+        ctx.fillStyle = '#b5a68c'; ctx.beginPath(); canvasRoundRect(ctx, x + 7, y - 6, w - 14, 8, 3); ctx.fill();
+        ctx.fillStyle = '#d3b77f'; ctx.fillRect(x + 10, y - 8, w - 20, 2);
+        const lx = x + w / 2, flame = reduce ? 0 : Math.sin(t * 5 + x) * 1.2;
+        const halo = ctx.createRadialGradient(lx, y - 25, 1, lx, y - 25, 31); halo.addColorStop(0, 'rgba(255,218,139,.25)'); halo.addColorStop(1, 'rgba(255,218,139,0)');
+        ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(lx, y - 25, 31, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffd78d'; ctx.beginPath(); ctx.ellipse(lx, y - 14 - flame, 3.2, 6.5, 0, 0, Math.PI * 2); ctx.fill();
+      }
     }
     for (const prop of currentProps) {
       // The hallway picture already supplies furniture; omit extra chair stacks.
@@ -3377,6 +3751,16 @@
       else if (prop.kind === 'chairs') { for(let i=0;i<3;i++){const xx=x+i*18;ctx.strokeStyle=dark;ctx.lineWidth=4;ctx.strokeRect(xx,gy-34-i*4,15,17);ctx.fillStyle=mid;ctx.fillRect(xx,gy-18-i*4,17,4);ctx.fillRect(xx+2,gy-14-i*4,3,14);ctx.fillRect(xx+13,gy-14-i*4,3,14);} }
       else if (prop.kind === 'slide') { ctx.strokeStyle=mid;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x+15,gy-75);ctx.lineTo(x+15,gy);ctx.moveTo(x+48,gy-75);ctx.lineTo(x+48,gy);ctx.stroke();ctx.strokeStyle=light;ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(x+15,gy-70);ctx.lineTo(x+w*.65,gy-62);ctx.lineTo(x+w,gy-4);ctx.stroke();for(let yy=gy-58;yy<gy;yy+=14){ctx.strokeStyle=dark;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x+17,yy);ctx.lineTo(x+45,yy);ctx.stroke();} }
       else if (prop.kind === 'bench') { ctx.fillStyle=dark;ctx.fillRect(x,gy-28,w,6);ctx.fillRect(x,gy-42,w,6);ctx.fillRect(x+8,gy-22,6,22);ctx.fillRect(x+w-14,gy-22,6,22);ctx.strokeStyle=light;ctx.lineWidth=1;ctx.strokeRect(x+2,gy-40,w-4,3); }
+      else if (prop.kind === 'ticket-booth') {
+        ctx.fillStyle = '#373342'; ctx.beginPath(); canvasRoundRect(ctx, x + 8, gy - 75, w - 16, 75, 7); ctx.fill();
+        ctx.fillStyle = '#75636a'; ctx.fillRect(x + 2, gy - 79, w - 4, 8);
+        ctx.fillStyle = '#2a3040'; ctx.fillRect(x + 18, gy - 60, w - 36, 29);
+        ctx.strokeStyle = '#c9bc9a'; ctx.lineWidth = 3; ctx.strokeRect(x + 18, gy - 60, w - 36, 29);
+        ctx.fillStyle = 'rgba(255,220,151,.78)'; ctx.fillRect(x + 24, gy - 53, w - 48, 15);
+        ctx.fillStyle = '#f4dba6'; ctx.font = `700 8px ${DISP}`; ctx.textAlign = 'center'; ctx.fillText('TICKETS', x + w / 2, gy - 42);
+        ctx.fillStyle = '#826a66'; ctx.fillRect(x + 32, gy - 24, w - 64, 24);
+        ctx.fillStyle = '#d0b67f'; ctx.fillRect(x + w / 2 - 2, gy - 16, 4, 3);
+      }
       else if (prop.kind === 'swing') { ctx.strokeStyle=dark;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x,gy);ctx.lineTo(x+12,gy-88);ctx.lineTo(x+w-12,gy-88);ctx.lineTo(x+w,gy);ctx.stroke();ctx.strokeStyle=light;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+35,gy-86);ctx.lineTo(x+35,gy-24);ctx.moveTo(x+w-35,gy-86);ctx.lineTo(x+w-35,gy-24);ctx.stroke();ctx.fillStyle=mid;ctx.fillRect(x+27,gy-25,w-54,6); }
       else if (prop.kind === 'stall') { ctx.fillStyle=dark;ctx.fillRect(x+10,gy-54,7,54);ctx.fillRect(x+w-17,gy-54,7,54);ctx.fillStyle=mid;ctx.beginPath();ctx.moveTo(x,gy-50);ctx.lineTo(x+w/2,gy-82);ctx.lineTo(x+w,gy-50);ctx.closePath();ctx.fill();ctx.fillStyle=light;for(let k=0;k<4;k++)ctx.fillRect(x+8+k*(w-16)/4,gy-52,(w-16)/8,7); }
       else if (prop.kind === 'lanterns') { ctx.strokeStyle=dark;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,gy-102);ctx.quadraticCurveTo(x+w/2,gy-62,x+w,gy-102);ctx.stroke();for(let k=1;k<6;k++){const lx=x+k*w/6,ly=gy-102+40*(4*k/6)*(1-k/6);ctx.fillStyle=light;ctx.beginPath();canvasRoundRect(ctx, lx-5,ly,10,15,3);ctx.fill();ctx.fillRect(lx-1,ly+15,2,7);} }
@@ -3385,6 +3769,44 @@
       else if (prop.kind === 'stone' || prop.kind === 'stones') { for(let k=0;k<3;k++){const xx=x+k*(w/3),ww=Math.min(40,w/3-4),yy=gy-7-(k%2)*7;ctx.fillStyle=k%2?mid:dark;ctx.beginPath();ctx.ellipse(xx+ww/2,yy,ww/2,7,0,Math.PI,Math.PI*2);ctx.fill();ctx.strokeStyle=light;ctx.lineWidth=1;ctx.stroke();} }
       else if (prop.kind === 'jetty') { ctx.fillStyle=dark;for(let k=0;k<5;k++)ctx.fillRect(x+k*w/5,gy-5,w/5-2,7);ctx.fillStyle=mid;ctx.fillRect(x+4,gy-8,w-8,4); }
       else if (prop.kind === 'bush') { for(const [dx,dy,r] of [[18,-20,20],[48,-30,25],[75,-18,20]]){ctx.fillStyle=mid;ctx.beginPath();ctx.arc(x+dx,gy+dy,r,0,Math.PI*2);ctx.fill();} }
+      ctx.restore();
+    }
+    for (const room of secretRooms) {
+      if (room.x < x0 - 150 || room.x > x1 + 150) continue;
+      const x = room.x, gy = terrainY(x), half = room.width / 2, top = gy - 118, pulse = .55 + .45 * Math.sin(t * 2.2);
+      ctx.save();
+      const halo = ctx.createRadialGradient(x, gy - 56, 4, x, gy - 56, room.open ? 145 : 86);
+      halo.addColorStop(0, `rgba(255,220,151,${room.open ? .23 : .08 + .04 * pulse})`); halo.addColorStop(1, 'rgba(255,220,151,0)');
+      ctx.fillStyle = halo; ctx.fillRect(x - 150, top - 36, 300, 180);
+      ctx.beginPath(); ctx.moveTo(x - half, gy); ctx.lineTo(x - half + 8, top + 38);
+      ctx.quadraticCurveTo(x, top - 34, x + half - 8, top + 38); ctx.lineTo(x + half, gy); ctx.closePath();
+      ctx.fillStyle = room.open ? 'rgba(12,12,28,.92)' : dark; ctx.fill();
+      ctx.strokeStyle = light; ctx.lineWidth = 4; ctx.stroke();
+      if (room.open) {
+        const inside = ctx.createLinearGradient(0, top, 0, gy);
+        inside.addColorStop(0, 'rgba(255,221,157,.16)'); inside.addColorStop(.65, 'rgba(94,76,94,.18)'); inside.addColorStop(1, 'rgba(18,15,34,.12)');
+        ctx.beginPath(); ctx.moveTo(x - half + 8, gy - 3); ctx.lineTo(x - half + 15, top + 40); ctx.quadraticCurveTo(x, top - 23, x + half - 15, top + 40); ctx.lineTo(x + half - 8, gy - 3); ctx.closePath(); ctx.fillStyle = inside; ctx.fill();
+        ctx.fillStyle = 'rgba(255,223,164,.78)'; ctx.fillRect(x - half + 13, gy - 5, room.width - 26, 4);
+        for (const side of [-1, 1]) { ctx.fillStyle = mid; ctx.beginPath(); ctx.moveTo(x + side * (half - 14), gy); ctx.lineTo(x + side * (half - 10), top + 44); ctx.lineTo(x + side * (half - 2), top + 62); ctx.lineTo(x + side * half, gy); ctx.closePath(); ctx.fill(); }
+        if (room.reward.kind === 'page' && !room.pageFound) {
+          const py = terrainY(room.rewardX) - 58 - Math.sin(t * 3) * 4;
+          ctx.fillStyle = `rgba(255,222,151,${.12 + pulse * .1})`; ctx.beginPath(); ctx.arc(room.rewardX, py, 26, 0, Math.PI * 2); ctx.fill();
+          ctx.save(); ctx.translate(room.rewardX, py); ctx.rotate(-.08);
+          ctx.fillStyle = '#f5e7bd'; ctx.beginPath(); canvasRoundRect(ctx, -9, -12, 18, 24, 2); ctx.fill();
+          ctx.strokeStyle = '#b39a76'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-5, -5); ctx.lineTo(5, -5); ctx.moveTo(-5, 0); ctx.lineTo(4, 0); ctx.moveTo(-5, 5); ctx.lineTo(2, 5); ctx.stroke(); ctx.restore();
+        }
+      } else {
+        // The stone/plaster slab is visibly split; each scratch adds a warm glint.
+        ctx.beginPath(); ctx.moveTo(x - half + 13, gy - 2); ctx.lineTo(x - half + 18, top + 43); ctx.quadraticCurveTo(x, top - 23, x + half - 18, top + 43); ctx.lineTo(x + half - 13, gy - 2); ctx.closePath();
+        ctx.fillStyle = mid; ctx.fill(); ctx.strokeStyle = 'rgba(20,15,35,.65)'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = 'rgba(20,15,35,.9)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+        const cracks = [[-4,-92,3,-70,-5,-55,2,-35],[24,-66,13,-52,20,-38,12,-20],[-34,-48,-22,-38,-30,-22]];
+        for (let i = 0; i < cracks.length; i++) {
+          const [a,b,c,d,e,f,g,h] = cracks[i]; ctx.beginPath(); ctx.moveTo(x + a, gy + b); ctx.lineTo(x + c, gy + d); ctx.lineTo(x + e, gy + f); ctx.lineTo(x + g, gy + h); ctx.stroke();
+          if (room.progress > i) { ctx.strokeStyle = `rgba(255,222,151,${.42 + pulse * .28})`; ctx.lineWidth = 2; ctx.stroke(); ctx.strokeStyle = 'rgba(20,15,35,.9)'; ctx.lineWidth = 3; }
+        }
+        ctx.fillStyle = `rgba(255,222,151,${.42 + pulse * .35})`; ctx.font = `800 14px ${DISP}`; ctx.textAlign = 'center'; ctx.fillText('✦', x, gy - 108);
+      }
       ctx.restore();
     }
     if (currentLevel.homeLight) {
@@ -3414,7 +3836,7 @@
     else if (inHill()) drawHillWorld(x0, x1);
     else {
     const tcPlace = window.TCPlaces?.has(currentLevel?.map) ? currentLevel.map : null;
-    if (tcPlace) window.TCPlaces.draw(ctx, tcPlace, { cam: camX, W: VW, H: VH, ground: GROUND, t, OY });
+    if (tcPlace) window.TCPlaces.draw(ctx, tcPlace, { cam: camX, W: VW, H: VH, ground: GROUND, t, OY, reduced: reduce });
     else {
     drawParallaxLayer(0,.10);drawParallaxLayer(1,.38);drawParallaxLayer(2,.78);
     const ground=ctx.createLinearGradient(0,410,0,VH+OY+60);ground.addColorStop(0,'#394440');ground.addColorStop(.18,'#303a38');ground.addColorStop(1,'#151f27');
@@ -3448,6 +3870,18 @@
     if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.back(ctx, endlessFxOpts());
     else if (mode === 'story') window.TCVisualChapters?.draw(ctx, { level: storyNight, cam: camX, width: VW, height: VH, ground: GROUND, time: t, reduced: reduce, map: currentMapKey() });
     drawLevelDecor(x0, x1);
+  }
+  function drawWeather() {
+    if (weather.kind !== 'rain' || inSchool()) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(190,220,255,.24)'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+    const drift = reduce ? 0 : t * 190;
+    for (let i = 0; i < 36; i++) {
+      const x = ((i * 97 + drift) % VW + VW) % VW;
+      const y = ((i * 61 + drift * 1.65) % (VH + OY * 2)) - OY;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y + 11); ctx.stroke();
+    }
+    ctx.restore();
   }
   // ---------- cute Moodling art (from the character sheet; drawn with SVG paths) ----------
   const MP = s => new Path2D(s);
@@ -3600,6 +4034,12 @@
       if (m.alpha < .02) continue;
       ctx.save(); ctx.globalAlpha = m.alpha;
       const look = clamp((cat.x - m.x) / 160, -2.5, 2.5), near = Math.abs(cat.x - m.x) < 3 * T;
+      if (m.bellCalmT > 0) {
+        const calmAlpha = reduce ? .48 : .36 + .16 * Math.sin(t * 3 + m.phase), calmGlow = ctx.createRadialGradient(m.x, m.y - 24, 3, m.x, m.y - 24, 48);
+        calmGlow.addColorStop(0, `rgba(242,217,155,${calmAlpha})`); calmGlow.addColorStop(1, 'rgba(242,217,155,0)');
+        ctx.fillStyle = calmGlow; ctx.beginPath(); ctx.arc(m.x, m.y - 24, 48, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f2d99b'; ctx.font = `700 12px ${BODY}`; ctx.textAlign = 'center'; ctx.fillText('…', m.x, m.y - 58);
+      }
       if (m.sky && m.skyPhase !== 'ground' && m.skyPhase !== 'cleared') {
         const skyColor = m.v ? vcol(m.type, m.v) : col(m.type);
         if (m.skyPhase === 'wait') {
@@ -3999,6 +4439,14 @@
       }
     }
     trail.forEach((l, i) => lightShape(l.type, pts[i + 1].x, pts[i + 1].y, 1, l.v));
+    for (const light of driftingLights) {
+      const alpha = light.life < .75 ? light.life / .75 : 1, color = col(light.type);
+      ctx.save(); ctx.globalAlpha = alpha; ctx.shadowColor = color; ctx.shadowBlur = reduce ? 0 : 15;
+      lightShape(light.type, light.x, light.y, 1.08, light.v);
+      ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(255,244,196,.9)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(light.x, light.y, 17, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(light.life / 3, 0, 1)); ctx.stroke();
+      ctx.restore();
+    }
   }
   function drawParts() {
     for (const p of parts) { ctx.globalAlpha = clamp(p.life / p.max, 0, 1); ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); }
@@ -4180,11 +4628,18 @@
       }
       ctx.font = `700 12px ${BODY}`; ctx.textAlign = 'right'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(12,8,28,.7)'; ctx.fillStyle = '#f6eedc';
       const hl = `${hourOf(storyNight).toUpperCase()} · ${chapterFor(storyNight).name.toUpperCase()}`, hy = top + (compactNeeds ? 96 : 72);
-      ctx.strokeText(hl, VW - 22, hy); ctx.fillText(hl, VW - 22, hy);
+      const weatherName = guideCopy().weather?.titles?.[weather.kind] || weather.title;
+      ctx.strokeText(hl, VW - 126, hy); ctx.fillText(hl, VW - 126, hy);
+      ctx.fillStyle = 'rgba(43,37,72,.88)'; ctx.strokeStyle = 'rgba(214,195,255,.58)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect ? canvasRoundRect(ctx, VW - 112, hy - 20, 90, 26, 12) : ctx.rect(VW - 112, hy - 20, 90, 26); ctx.fill(); ctx.stroke();
+      ctx.font = `700 11px ${BODY}`; ctx.textAlign = 'center'; ctx.fillStyle = '#f6eedc';
+      ctx.fillText(`${weather.icon} ${weatherName}`, VW - 67, hy - 3);
       drawItemsFound(hy + 8);
     } else {
+      const weatherName = guideCopy().weather?.titles?.[weather.kind] || weather.title;
+      const freeLabel = `Nothing is counted here. Pause to go home. · ${weather.icon} ${weatherName}`;
       ctx.textAlign = 'right'; ctx.font = `700 15px ${BODY}`; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(12,8,28,.7)'; ctx.fillStyle = '#f6eedc';
-      ctx.strokeText('Nothing is counted here. Pause to go home.', VW - 22, top + 30); ctx.fillText('Nothing is counted here. Pause to go home.', VW - 22, top + 30);
+      ctx.strokeText(freeLabel, VW - 22, top + 30); ctx.fillText(freeLabel, VW - 22, top + 30);
       drawItemsFound(top + 66);
     }
     if (atPortal()) {
@@ -4193,9 +4648,9 @@
       const msg = touchUI && !touchUI.hidden ? 'Tap  Go home  to go through the moon door' : 'H  Go home through the moon door';
       ctx.strokeText(msg,VW/2,VH - 104 + bob);ctx.fillText(msg,VW/2,VH - 104 + bob);
     }
-    if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
+    if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.kind === 'secret-wall' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
-      const SK = window.TCControls ? TCControls.short('scratch') : 'S', prompt = scratchTarget.type === 'breath' ? (scratchTarget.mood.bphase < .5 ? `Hold ${SK} · breathe in…` : 'Let go · breathe out…') : scratchTarget.type === 'sky' ? `Scratch it! (${SK})` : scratchTarget.kind === 'rock' ? `${SK}  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? scratchTarget.rock.labelMarked : scratchTarget.rock.label}` : `${SK}  Scratch ${scratchTarget.caveX != null ? CAVE_LABELS[currentMapKey()] : 'hiding spot'}`, py=VH-74;
+      const SK = window.TCControls ? TCControls.short('scratch') : 'S', roomCopy = secretRoomCopy(), prompt = scratchTarget.kind === 'secret-wall' ? (roomCopy.wallPrompt || 'Scratch the cracked wall · {count}/3 · {key}').replace('{count}', `${scratchTarget.room.progress}/${scratchTarget.room.scratches}`).replace('{key}', SK) : scratchTarget.type === 'breath' ? (scratchTarget.mood.bphase < .5 ? `Hold ${SK} · breathe in…` : 'Let go · breathe out…') : scratchTarget.type === 'sky' ? `Scratch it! (${SK})` : scratchTarget.kind === 'rock' ? `${SK}  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? scratchTarget.rock.labelMarked : scratchTarget.rock.label}` : `${SK}  Scratch ${scratchTarget.caveX != null ? CAVE_LABELS[currentMapKey()] : 'hiding spot'}`, py=VH-74;
       ctx.strokeText(prompt,VW/2,py);ctx.fillText(prompt,VW/2,py);
     } else if (scratchAnim>0) {
       ctx.textAlign='center';ctx.font=`800 16px ${DISP}`;ctx.fillStyle='#f4e8c7';ctx.fillText('Scratching…',VW/2,VH-74);
@@ -4227,18 +4682,26 @@
 
   function render(dt) {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#120c24'; ctx.fillRect(0, 0, cv.width, cv.height);
+    const fastSunriseMusic = mode === 'story' && state === 'play' && timeLeft > 0 && timeLeft <= 20;
+    if (fastSunriseMusic !== sunriseMusicFast) {
+      sunriseMusicFast = fastSunriseMusic;
+      music('setRate', sunriseMusicFast ? 1.16 : 1);
+    }
+    music('updateRate', dt);
     ctx.setTransform(dpr * S, 0, 0, dpr * S, 0, dpr * S * OY);
     if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     drawBG();
+    drawSunrise();
     // snap the camera to whole screen pixels: a camera between pixels makes posts, trunks and the cat's
     // stripes shimmer (like 'lllll') as the town scrolls, especially on screens scaled to 125% or 150%
     { const px = dpr * S; ctx.save(); ctx.translate(-Math.round(camX * px) / px, 0); }
-    drawWorld(); drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawGuidanceMarker(); drawFireflies(); drawTrail();
+    drawWorld(); drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawBossEncounter(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.front(ctx, endlessFxOpts()); drawLevelDebug();
     ctx.restore();
-    if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.screen(ctx, endlessFxOpts({ catX: cat.x - camX, catY: cat.y - 30, eyes: eyesT > 0, eyesR: uv('eyes') * T, dt }));
+    drawWeather();
+    if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.screen(ctx, endlessFxOpts({ catX: cat.x - camX, catY: cat.y - 30, eyes: eyesT > 0, eyesR: eyesRange(), dt }));
     if (eyesT > 0) {
-      const sx = cat.x - camX, sy = cat.y - 24, r = uv('eyes') * T, fade = Math.min(1, eyesT / .4, (eyesDur() - eyesT) / .25);
+      const sx = cat.x - camX, sy = cat.y - 24, r = eyesRange(), fade = Math.min(1, eyesT / .4, (eyesDur() - eyesT) / .25);
       const g = ctx.createRadialGradient(sx, sy, r * .75, sx, sy, r * 1.15);
       g.addColorStop(0, 'rgba(6,12,24,0)'); g.addColorStop(1, `rgba(6,12,24,${.6 * fade})`);
       ctx.fillStyle = g; ctx.fillRect(0, -OY, VW, VH + OY * 2);
@@ -4632,11 +5095,11 @@
       return;
     }
     $('#shopList').innerHTML = UPG.map(u => {
-      const lv = upg[u.id], max = lv >= UPG_MAX, cost = u.costs[lv];
+      const maxLevel = u.max ?? UPG_MAX, lv = upg[u.id], max = lv >= maxLevel, cost = u.costs[lv];
       const now = u.fmt(u.vals[lv]), next = max ? '' : ` · next: ${u.fmt(u.vals[lv + 1])}`;
       const btn = max ? '<button class="buy" disabled>Maxed</button>'
         : `<button class="buy" data-id="${u.id}" ${glow < cost ? 'disabled' : ''}>${glow < cost ? '🔒 Can’t afford' : lv === 0 && u.id === 'purr' ? 'Unlock' : 'Buy'} · ${cost} Glow</button>`;
-      return `<div class="item" data-upgrade="${u.id}"><h3>${u.name}</h3><div class="side"><div class="pips" aria-label="Level ${lv} of ${UPG_MAX}">${Array.from({ length: UPG_MAX }, (_, i) => i).map(i => `<span class="pip${i < lv ? ' on' : ''}"></span>`).join('')}</div>${btn}</div><p>${u.desc}</p><p>Now: ${now}${next}</p></div>`;
+      return `<div class="item" data-upgrade="${u.id}"><h3>${u.name}</h3><div class="side"><div class="pips" aria-label="Level ${lv} of ${maxLevel}">${Array.from({ length: maxLevel }, (_, i) => `<span class="pip${i < lv ? ' on' : ''}"></span>`).join('')}</div>${btn}</div><p>${u.desc}</p><p>Now: ${now}${next}</p></div>`;
     }).join('');
   }
   // selling trinkets from the pouch, and claiming a full shelf set
@@ -4717,7 +5180,7 @@
     }
     const b = e.target.closest('button[data-id]'); if (!b) return;
     const u = UPG.find(x => x.id === b.dataset.id), lv = upg[u.id];
-    if (lv >= UPG_MAX || glow < u.costs[lv]) return;
+    if (lv >= (u.max ?? UPG_MAX) || glow < u.costs[lv]) return;
     initAudio(); glow -= u.costs[lv]; upg[u.id]++; saveUpg();
     sfx('ui', 'buy');
     renderShop(); refreshShopBtns();
@@ -4801,13 +5264,15 @@
       return;
     }
     $('#nightStoryline').hidden = true;
-    $('#endEyebrow').textContent = R.won ? `${hourOf(R.night)} · done` : R.failReason === 'fall' ? `${hourOf(R.night)} · night failed` : `${hourOf(R.night)} · time's up`;
-    $('#endTitle').textContent = R.won ? 'A little more of Thiri returns' : R.failReason === 'fall' ? 'Night failed' : 'Some feelings need more time';
+    $('#endEyebrow').textContent = R.won ? `${hourOf(R.night)} · done` : ['fall', 'boss'].includes(R.failReason) ? `${hourOf(R.night)} · night failed` : `${hourOf(R.night)} · time's up`;
+    $('#endTitle').textContent = R.won ? 'A little more of Thiri returns' : ['fall', 'boss'].includes(R.failReason) ? 'Night failed' : 'Some feelings need more time';
     $('#endStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < R.starsN ? '' : 'off'}">★</span>`).join('');
     $('#endStars').hidden = !R.won;
     $('#endMsg').textContent = R.won
       ? `You brought all ${R.total} feelings home with ${Math.round(R.left)} seconds to spare. Time bonus: +${Math.round(R.left) * 20}. Score ${R.goals[1].toLocaleString()} for ★★ and ${R.goals[2].toLocaleString()} for ★★★.`
-      : R.failReason === 'fall' ? 'Shwe ran out of lives. The lights from this run were lost, but anything already in the Mood Book is safe.' : "That's okay. Let's try again.";
+      : R.failReason === 'fall' ? 'Shwe ran out of lives. The lights from this run were lost, but anything already in the Mood Book is safe.'
+        : R.failReason === 'boss' ? (stormBossCopy().fail || 'Shwe ran out of lives in the storm challenge. The Mood Book remains safe.')
+          : "That's okay. Let's try again.";
     $('#sScore').textContent = R.final.toLocaleString();
     $('#sBest').textContent = R.best.toLocaleString();
     $('#sCombo').textContent = '×' + R.combo;
@@ -5262,7 +5727,7 @@
     nightGuide.active = false; nightGuide.success = 0; nightGuide.pendingWin = false; activeJitTip = null; jitTipQueue = []; struggleTimer = 0; struggleTipShownThisRun = false; guidanceCaught = caughtN; guidanceHits = {}; hideCoachTip();
     initAudio(); sfx('ui', 'start'); setTimeout(() => sfx('cat', 'meow'), 400);
     const freePick = FREE_MAPS.find(m => m.id === freeMap), mapKey = mode === 'story' ? window.TC_LEVELS[storyNight]?.map : (freePick && freePick.level && freeMapOpen(freePick) ? freePick.id : 'free');
-    const sceneTrack = ({ market: 'festival', garden: 'lakeside', school: 'school', rooftop: 'hilltop', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
+    const sceneTrack = ({ market: 'festival', garden: 'lakeside', pagoda: 'lakeside', train: 'lakeside', school: 'school', rooftop: 'hilltop', park: 'park', festival: 'festival', hill: 'hilltop', lake: 'lakeside' })[mapKey] || 'park';
     music('duck', 1); music('play', sceneTrack);
     music('ambience', sceneTrack);
     cv.hidden = false;
@@ -5279,10 +5744,16 @@
     touchUI.hidden = !coarse && !('ontouchstart' in window && navigator.maxTouchPoints > 0);
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     const visualTheme = mode === 'story' ? window.TCVisualChapters?.forLevel(storyNight) : null;
+    const weatherCopy = guideCopy().weather;
+    const weatherTitle = weatherCopy?.titles?.[weather.kind] || weather.title;
+    cv.setAttribute('aria-label', `TideCatcher game · ${weatherTitle}`);
+    cv.title = weatherTitle;
     announce(mode === 'free' ? 'Free play · no clock, no score. Just wander with Shwe.' : endlessOn() ? `${EN.title} · ${chapter.sub}` : `${visualTheme?.name || chapter.name} · ${chapter.sub}`, INK, endlessOn() ? 3 : 2.1);
     if (chapter) { tone(chapter.musicRoot, .9, 'sine', .025); setTimeout(() => tone(chapter.musicRoot * 1.25, .8, 'sine', .018), 180); setTimeout(() => tone(chapter.musicRoot * 1.5, .9, 'triangle', .014), 380); }
     if (mode === 'free') queueJitTip('free', cat, guideCopy().mechanicTitles?.free || 'Free Play');
-    if (!startGuidedTutorial()) showNextJitTip();
+    const startedTutorial = startGuidedTutorial();
+    queueJitTip('weather', null, weatherTitle, weatherCopy?.tips?.[weather.kind], `weather:${weather.kind}`);
+    if (!startedTutorial) showNextJitTip();
     cv.focus?.();
   }
   const LEVEL_MAP_LIMIT = 50, LEVEL_MAP_STEP = 240;
@@ -5461,13 +5932,17 @@
         caption.appendChild(name); caption.appendChild(sub);
         if (unlock) { const u = document.createElement('span'); u.className = 'level-unlock'; u.textContent = `${unlock.icon} unlocks ${unlock.label}`; caption.appendChild(u); }
         if (level === 50) { const u = document.createElement('span'); u.className = 'level-unlock level-teaser'; u.textContent = 'To be continued… more nights are coming'; caption.appendChild(u); }
-        const bestScore = getBest(`mk-best-n${level}`), st = nightStars[level] || 0;
+        const bestScore = getBest(`mk-best-n${level}`), st = nightStars[level] || 0, paperFound = paperStarsFound(level);
         if (playable && (bestScore || st)) {
           const rec = document.createElement('span'); rec.className = 'level-best';
           rec.innerHTML = [1, 2, 3].map(i => `<b style="color:${i <= st ? '#e0a12a' : 'rgba(59,53,80,.25)'}">★</b>`).join('') + (bestScore ? ` Best ${bestScore.toLocaleString()}` : '');
           rec.setAttribute('aria-label', `${st} of 3 stars${bestScore ? `, best score ${bestScore}` : ''}`);
           caption.appendChild(rec);
         }
+        const paperProgress = document.createElement('span'); paperProgress.className = 'level-paper-stars';
+        const paperCopy = paperStarCopy();
+        paperProgress.textContent = `✦ ${paperCopy.label || 'Paper stars'} ${paperFound}/3${paperFound === 3 ? ` · ${paperCopy.diaryUnlocked || 'diary page unlocked'}` : ''}`;
+        caption.appendChild(paperProgress);
         entry.appendChild(caption);
       }
       track.appendChild(entry);
@@ -5564,6 +6039,7 @@
   }
   function pauseGame() {
     if (state !== 'play') return;
+    if (bossEncounter?.introOpen) $('#bossIntroScreen').hidden = true;
     $('#pauseChaptersBtn').textContent = mode === 'story' ? 'Back to chapters' : 'Back to menu';    pauseTouchWasHidden = touchUI.hidden; pauseCoachWasHidden = $('#tipCoach').hidden; $('#tipCoach').hidden = true;
     state = 'paused'; pauseBtn.hidden = true; touchUI.hidden = true;
     for (const key in keys) keys[key] = false;
@@ -5576,6 +6052,7 @@
     if (state !== 'paused') return;
     pauseScreen.hidden = true; state = 'play'; touchUI.hidden = pauseTouchWasHidden; music('duck', 1);
     pauseBtn.hidden = false; pauseBtn.focus({ preventScroll: true });
+    if (bossEncounter?.introOpen) { $('#bossIntroScreen').hidden = false; touchUI.hidden = true; pauseBtn.hidden = true; $('#bossIntroReady').focus({ preventScroll: true }); }
     if (!pauseCoachWasHidden && (nightGuide.active || activeJitTip)) $('#tipCoach').hidden = false;
   }
   function quitPausedRun() {
@@ -6160,7 +6637,8 @@
     const p = E.plan(night, enCards[enPick], [...enChosen]), total = Object.values(p.need).reduce((a, b) => a + b, 0);
     const g = (() => { const keep = NIGHT_CHAPTERS[night - 1].feelingsNeeded; NIGHT_CHAPTERS[night - 1].feelingsNeeded = p.need; const r = starGoals(night); NIGHT_CHAPTERS[night - 1].feelingsNeeded = keep; return r; })();
     const mult = p.glowMult !== 1 ? ` · ×${p.glowMult.toFixed(1).replace('.0', '')} Glow` : '';
-    $('#ncMeta').textContent = `⏱ ${Math.floor(p.time / 60)}:${String(p.time % 60).padStart(2, '0')} · ${total} Moodlings · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}${mult}${p.extraStar ? ' · +1 star' : ''}${(nightStars[night] || 0) ? ` · best ${'★'.repeat(nightStars[night])}` : ''}`;
+    const paperCopy = paperStarCopy();
+    $('#ncMeta').textContent = `⏱ ${Math.floor(p.time / 60)}:${String(p.time % 60).padStart(2, '0')} · ${total} Moodlings · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}${mult}${p.extraStar ? ' · +1 star' : ''} · ✦ ${paperCopy.label || 'Paper stars'} ${paperStarsFound(night)}/3${paperDiaryUnlocked(night) ? ` · ${paperCopy.diaryUnlocked || 'bonus diary page unlocked'}` : ''}${(nightStars[night] || 0) ? ` · best ${'★'.repeat(nightStars[night])}` : ''}`;
   }
   function closeNightCards() {
     const scr = $('#nightCardsScreen'); if (scr) scr.hidden = true;
@@ -6232,6 +6710,8 @@
     if (window.TC_LEVELS?.[briefingNight]?.map === 'rooftop') $('#levelBriefingTip').textContent = 'Cross the rooftops past chimneys and laundry. Warm roof cushions mark clear places to pause.';
     const seconds = Math.max(0, Math.floor(chapter.timeLimit || 0));
     { const g = starGoals(briefingNight); $('#levelBriefingTime').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} before sunrise · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}`; }
+    const paperCopy = paperStarCopy();
+    $('#levelBriefingPaperStars').textContent = `✦ ${(paperCopy.progress || 'Paper stars · {count} / 3').replace('{count}', String(paperStarsFound(briefingNight)))}${paperDiaryUnlocked(briefingNight) ? ` · ${paperCopy.diaryUnlocked || 'bonus diary page unlocked'}` : ''}`;
     $('#levelBriefingScreen').hidden = false; $('#levelBriefingStart').focus({ preventScroll: true });
   }
   function closeLevelBriefing() {
@@ -6422,6 +6902,11 @@
     setTimeout(() => { bootScreen.hidden = true; }, 260);
   });
   pauseBtn.addEventListener('click', pauseGame);
+  $('#bossIntroReady').addEventListener('click', startBossFight);
+  $('#bossIntroScreen').addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    e.preventDefault(); $('#bossIntroReady').focus();
+  });
   pauseContinueBtn.addEventListener('click', resumeGame);
   pauseHelpBtn.addEventListener('click', () => openHelp('pause'));
   $('#pauseRestartBtn').addEventListener('click', () => startGame(mode, storyNight));

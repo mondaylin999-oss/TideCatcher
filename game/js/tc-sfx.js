@@ -122,7 +122,7 @@
   const MBASE = (ogg ? 'assets/audio/music/ogg/' : 'assets/audio/music/mp3/') + (STYLE === 'piano' ? 'piano_' : 'music_');
   const STORY_TRACKS = new Set(['intro', 'menu', 'bedroom', 'ending']);
   const GAP = [25, 45];
-  const music = { cur: null, el: null, media: null, generated: null, duck: 1, timer: 0 };
+  const music = { cur: null, el: null, media: null, generated: null, duck: 1, timer: 0, rate: 1, targetRate: 1 };
   const musicGain = () => muted ? 0 : Math.min(1, musicVol * 1.15 * music.duck);
   function fadeTo(el, target, ms, done) {
     if (el._tcGain && ctx) {
@@ -175,7 +175,7 @@
       if (!name) return;
       if (name === 'results') { startGenerated(name); return; }
       const story = STORY_TRACKS.has(name);
-      const el = new Audio(story ? `assets/audio/story/${name}${EXT}` : MBASE + name + EXT); el.preload = 'auto'; el.loop = story || STYLE !== 'piano'; el.volume = 0; music.el = el;
+      const el = new Audio(story ? `assets/audio/story/${name}${EXT}` : MBASE + name + EXT); el.preload = 'auto'; el.loop = story || STYLE !== 'piano'; el.volume = 0; el.playbackRate = music.rate; music.el = el;
       el.addEventListener('error', () => {
         if (music.el !== el) return;
         el.pause(); music.el = null; music.media = null; startGenerated(name);
@@ -188,6 +188,12 @@
       music.timer = setTimeout(() => startEl(el), !story && STYLE === 'piano' ? 1800 : 0);
     },
     stop() { TCMusic.play(null); },
+    setRate(rate) { music.targetRate = Math.max(.75, Math.min(1.5, Number(rate) || 1)); },
+    updateRate(dt) {
+      const blend = 1 - Math.exp(-Math.max(0, Number(dt) || 0) * 5);
+      music.rate += (music.targetRate - music.rate) * blend;
+      if (music.el && Math.abs(music.el.playbackRate - music.rate) > .004) music.el.playbackRate = music.rate;
+    },
     duck(k) {
       music.duck = Math.max(0, Math.min(1, k)); if (music.el && !music.el.paused) fadeTo(music.el, musicGain(), 420);
       const cutoff = music.duck < 1 ? 1800 : 20000;

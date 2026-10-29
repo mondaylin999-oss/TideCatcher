@@ -10,6 +10,13 @@
   }
   const ground = (width, points) => ({ points: [[0, points[0][1]], ...points.filter(p => p[0] > 0 && p[0] < width), [width, points[points.length - 1][1]]] });
   const platform = (x, y, w, type = 'static', extra = null) => extra ? [x, y, w, type, extra] : [x, y, w, type];
+  const pagodaStepY = x => {
+    const heights = [0, 10, 20, 30, 40, 50, 50, 50, 40, 30, 20, 10];
+    const phase = ((x % 1200) + 1200) % 1200, index = Math.floor(phase / 100), within = phase % 100;
+    const here = heights[index], next = heights[(index + 1) % heights.length];
+    const rise = within < 78 ? here : here + (next - here) * ((within - 78) / 22);
+    return 470 - rise;
+  };
   const zones = (width, pits = []) => {
     const out = []; let left = 120;
     for (const [a,b] of pits.slice().sort((a,b) => a[0] - b[0])) { if (a - left > 180) out.push([left, a - 70]); left = b + 70; }
@@ -130,6 +137,7 @@
       props: [{kind:'desk',x:740,w:130},{kind:'chairs',x:1500,w:70},{kind:'desk',x:2010,w:130},{kind:'chairs',x:2690,w:70}]
     },
     3: {
+      boss: { type: 'F', name: 'Storm Frustrated', phases: 3 },
       night: 3, map: 'park', width: 3600, pits: [[900,1200],[2380,2710]], checkpoints: [790,2280], ground: ground(3600, [[0,470],[300,448],[520,430],[760,454],[900,454],[1200,478],[1430,462],[1680,430],[1930,442],[2190,478],[2220,490],[2380,462],[2710,462],[2780,432],[3040,448],[3310,478],[3600,458]]),
       platforms: [platform(250,395,130),platform(520,360,125,'bouncy'),platform(750,398,120),platform(900,420,100,'moving',{path:[[900,420],[1100,410]],speed:.52}),platform(1220,375,130),platform(1430,350,132),platform(1740,390,128),platform(2050,420,132,'bouncy'),platform(2380,438,110,'moving',{path:[[2380,438],[2600,438]],speed:.52}),platform(2730,348,132),platform(2970,385,130),platform(3280,410,140)],
       hideSpots: [400,1300,1590,2180,2810,3400], burySpots: [160,830,1280,1540,1930,3160,3480], spawnZones: zones(3600, [[900,1200],[2380,2710]]), catStart: 145, homeLight: [3500,380],
@@ -142,6 +150,7 @@
       props: [{kind:'stall',x:500,w:150},{kind:'lanterns',x:1340,w:250},{kind:'stall',x:2420,w:150},{kind:'lanterns',x:3380,w:260}]
     },
     5: {
+      boss: { type: 'F', name: 'Storm Frustrated', phases: 3 },
       night: 5, map: 'hill', width: 4200, pits: [[920,1205],[2700,3000]], checkpoints: [820,2580], ground: ground(4200, hillProfile),
       platforms: [platform(165,330,120),platform(655,420,90,'crumbling'),platform(920,430,95,'moving',{path:[[920,430],[1110,430]],speed:.56,skin:'stone'}),platform(1225,348,120),platform(1565,330,120),platform(2055,420,90),platform(2580,348,120),platform(2700,430,100,'moving',{path:[[2700,430],[2900,430]],speed:.6,skin:'stone'}),platform(3025,330,120),platform(3455,420,90),platform(3985,348,120)],
       hideSpots: [1345,3100,4145], burySpots: [80,350,850,1450,1600,2500,3150,3750,4050],
@@ -155,6 +164,7 @@
       props: [{kind:'jetty',x:420,w:130},{kind:'stones',x:3500,w:90}]
     },
     7: {
+      boss: { type: 'F', name: 'Storm Frustrated', phases: 3 },
       night: 7, map: 'lake', width: 5400, pits: [[940,1210],[2110,2440],[3380,3650],[4440,4710]], checkpoints: [850,1980,3250,4310,4750], ground: ground(5400, [[0,470],[380,448],[760,430],[940,470],[1210,470],[1410,470],[1480,462],[1760,440],[2110,470],[2440,470],[2560,470],[2640,455],[3030,430],[3380,470],[3650,470],[3840,470],[3910,458],[4180,438],[4440,470],[4710,470],[4860,470],[4940,462],[5400,450]]),
       platforms: [platform(260,396,128),platform(540,360,130),platform(790,400,130),platform(940,438,90,'moving',{path:[[940,438],[1120,438]],speed:.6,skin:'log'}),platform(1230,406,130),platform(1410,390,130,'moving',{path:[[1410,390],[1500,380]],speed:.75}),platform(1630,392,132),platform(1920,350,132),platform(2110,438,110,'moving',{path:[[2110,438],[2330,438]],speed:.64,skin:'log'}),platform(2460,412,138),platform(2630,380,132,'bouncy'),platform(2820,337,132),platform(3120,390,136),platform(3380,438,90,'moving',{path:[[3380,438],[3560,438]],speed:.66,skin:'log'}),platform(3670,410,135),platform(3825,378,136,'crumbling'),platform(4100,340,138),platform(4395,420,42,'swinging',{anchor:[4485,350],speed:.82}),platform(4440,438,90,'moving',{path:[[4440,438],[4620,438]],speed:.7,skin:'log'}),platform(4730,400,135),platform(4900,365,140,'moving',{path:[[4900,365],[5000,340]],speed:.7}),platform(5200,400,140)],
       hideSpots: [420,1240,1840,2600,3120,3700,4270,5050], burySpots: [150,550,1380,1550,1870,2485,2700,3220,3970,4150,4850,5220], spawnZones: zones(5400, [[940,1210],[2110,2440],[3380,3650],[4440,4710]]), catStart: 135, homeLight: [5250,385],
@@ -220,6 +230,35 @@
     if (twist === 'candle') chunks(240, 900).filter(([a]) => a >= 700).slice(0, 5).forEach(([a]) => out.push({ kind: 'lantern', x: a, w: 240 }));
     return out;
   };
+  const SECRET_ROOM_REWARDS = {
+    school: { kind: 'page' }, park: { kind: 'moodling', type: 'F', variant: 1 },
+    festival: { kind: 'page' }, hill: { kind: 'moodling', type: 'N', variant: 1 },
+    lake: { kind: 'page' }, free: { kind: 'page' }, rooftop: { kind: 'moodling', type: 'F', variant: 1 },
+    market: { kind: 'page' }, garden: { kind: 'moodling', type: 'N', variant: 1 },
+    pagoda: { kind: 'page' }, train: { kind: 'moodling', type: 'F', variant: 1 }
+  };
+  function addSecretRoom(level) {
+    const map = level.map || 'free', reward = SECRET_ROOM_REWARDS[map] || SECRET_ROOM_REWARDS.free;
+    const spans = []; let left = 100;
+    for (const [a, b] of (level.pits || []).slice().sort((a, b) => a[0] - b[0])) {
+      if (a - 130 > left + 190) spans.push([left, a - 130]);
+      left = b + 130;
+    }
+    if (level.width - 100 > left + 190) spans.push([left, level.width - 100]);
+    if (!spans.length) spans.push([100, Math.max(300, level.width - 100)]);
+    spans.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]));
+    const [lo, hi] = spans[0], width = hi - lo;
+    const candidates = [lo + width * .5, lo + width * .36, lo + width * .64]
+      .map(x => Math.round(x))
+      .filter(x => !(level.props || []).some(p => Math.abs(x - (p.x + (p.w || 80) / 2)) < 170));
+    const x = candidates[0] ?? Math.round((lo + hi) / 2);
+    level.secretRoom = { id: map, x, width: 190, scratches: 3, reward: { ...reward } };
+    return level;
+  }
+  // Place one scratchable room in every generated night and Free Play route.
+  // This runs after map layouts are complete so rooms can avoid the final pits.
+  for (let night = 1; night <= 50; night++) addSecretRoom(levels[night]);
+  for (const variant of levels.free.variants) addSecretRoom(variant);
   const buildEndless = (night, map, twists = []) => {
     const level = makeChallengeLevel(night);
     level.map = map;
@@ -234,8 +273,93 @@
       pts.push([level.width - 300, 470], [level.width, 470]);
       level.ground = ground(level.width, pts);
     }
+    if (map === 'pagoda') {
+      // Shallow stone flights: short level treads joined by gently sloped risers.
+      const stops = new Set([0, level.width]);
+      for (let x = 0; x <= level.width; x += 50) stops.add(Math.min(level.width, x));
+      for (const [a, b] of level.pits) for (const x of [a - 110, a, b, b + 110]) stops.add(Math.max(0, Math.min(level.width, x)));
+      level.ground = ground(level.width, [...stops].sort((a, b) => a - b).map(x => {
+        const nearPit = level.pits.some(([a, b]) => x >= a - 110 && x <= b + 110);
+        return [x, nearPit ? 470 : pagodaStepY(x)];
+      }));
+      // Oil lamps sit on optional stone plinths on safe ground. No plinth is a pit crossing.
+      const safe = []; let left = 320;
+      for (const [a, b] of level.pits) { if (a - 110 > left + 180) safe.push([left, a - 110]); left = b + 110; }
+      if (level.width - 260 > left + 180) safe.push([left, level.width - 260]);
+      for (const [a, b] of safe) for (let x = a + 40; x + 82 < b - 40; x += 560) {
+        level.platforms.push(platform(x, pagodaStepY(x) - 76, 82, 'static', { skin: 'oil-lamp' }));
+      }
+    }
     level.hazards = twists.flatMap(t => endlessHazards(level, t));
-    return level;
+    if (map === 'pagoda') {
+      const safe = []; let left = 320;
+      for (const [a, b] of level.pits) { if (a - 110 > left + 180) safe.push([left, a - 110]); left = b + 110; }
+      if (level.width - 260 > left + 180) safe.push([left, level.width - 260]);
+      safe.forEach(([a, b]) => {
+        const count = Math.max(1, Math.ceil((b - a) / 760));
+        for (let i = 0; i < count; i++) level.hazards.push({ kind: 'bell', x: a + (i + .5) * (b - a) / count, radius: 190 });
+      });
+    }
+    if (map === 'train') {
+      // A passing carriage is a bonus ride on solid station track. Keep it
+      // outside the safety margins around gaps so pit bridges stay unique.
+      const spans = []; let left = 260;
+      for (const [a, b] of level.pits.slice().sort((x, y) => x[0] - y[0])) {
+        if (a - 120 > left + 180) spans.push([left, a - 120]);
+        left = b + 120;
+      }
+      if (level.width - 260 > left + 180) spans.push([left, level.width - 260]);
+      const usable = spans.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]))[0] || [300, Math.max(520, level.width - 300)];
+      const [lo, hi] = usable, trainW = Math.min(250, Math.max(120, (hi - lo - 40) * .52));
+      const start = lo + 20, end = Math.max(start + 24, hi - trainW - 20);
+      level.platforms.push(platform(start, 414, trainW, 'moving', { path: [[start, 414], [end, 414]], speed: .011, skin: 'train' }));
+
+      const hideSpots = [];
+      spans.forEach(([a, b], i) => {
+        const span = b - a;
+        if (span >= 420) {
+          const step = span >= 1500 ? 2100 : span;
+          for (let x = a + Math.min(430, span * .3); x < b - 100; x += step) hideSpots.push(x);
+        }
+        if (span >= 220 && (i % 2 === 1 || i === spans.length - 1)) hideSpots.push((a + b) / 2);
+        if (span >= 520) level.props.push({ kind: 'bench', x: a + 100, w: 118 });
+      });
+      if (!level.props.some(p => p.kind === 'bench') && usable[1] - usable[0] >= 150) {
+        level.props.push({ kind: 'bench', x: usable[0] + 20, w: 110 });
+      }
+      if (!hideSpots.length && spans.length) hideSpots.push((spans[0][0] + spans[0][1]) / 2);
+      level.hideSpots = [...new Set(hideSpots.map(Math.round))];
+      for (const x of level.hideSpots) level.props.push({ kind: 'ticket-booth', x: x - 48, w: 96 });
+    }
+    if (map === 'market') {
+      // Every market route gets optional bounce awnings, safe to ignore for
+      // progression. Puddles and rope lanterns are placed only on solid spans;
+      // when pits exist, their moving bridge remains the only way across.
+      const spans = []; let left = 250;
+      for (const [a, b] of level.pits.slice().sort((x, y) => x[0] - y[0])) {
+        if (a - left > 220) spans.push([left, a - 90]);
+        left = b + 90;
+      }
+      if (level.width - 220 - left > 220) spans.push([left, level.width - 160]);
+      const marketRuns = spans.flatMap(([a, b]) => {
+        if (b - a < 760) return [[a, b]];
+        const out = [];
+        for (let x = a; x + 240 < b; x += 680) out.push([x, Math.min(b, x + 470)]);
+        return out;
+      });
+      marketRuns.forEach(([a, b], i) => {
+        if (b - a < 220) return;
+        const awningX = a + 34, awningW = 112;
+        level.platforms.push(platform(awningX, 390 - (i % 2) * 12, awningW, 'bouncy', { skin: 'awning' }));
+        const puddleX = Math.max(a + 30, b - 118);
+        if (puddleX > awningX + awningW + 26 || puddleX + 72 < awningX) level.hazards.push({ kind: 'puddle', x: puddleX, w: 72 });
+        if ((i % 2 === 1 || i === marketRuns.length - 1) && b - a >= 220) {
+          const anchorX = Math.min(b - 50, awningX + 206), anchorY = 292;
+          level.platforms.push(platform(anchorX - 21, anchorY + 50, 42, 'swinging', { anchor: [anchorX, anchorY], speed: .74 + (night - 18) * .006, skin: 'lantern-rope' }));
+        }
+      });
+    }
+    return addSecretRoom(level);
   };
   root.TC_ENDLESS_LEVEL = buildEndless;
   root.TC_LEVELS = levels;
