@@ -1,0 +1,35 @@
+/* TideCatcher logo + NextCrown x Digit7 Jam credit */
+.boot-logo{display:block;width:min(78vw,420px);height:auto;margin:0 auto .4rem;-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 70%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 70%,transparent 100%)}
+.boot-loading-card .boot-moon{width:56px;height:56px}
+.welcome-logo{display:block;width:min(88%,380px);height:auto;margin:.2rem auto .35rem;-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 70%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 70%,transparent 100%)}
+.team-credit{display:inline-flex;align-items:center;gap:.5rem;margin:.9rem auto 0;padding:.3rem .8rem .3rem .3rem;border-radius:999px;background:rgba(12,8,30,.55);border:1px solid rgba(255,214,120,.28);color:#ffd678;font:700 .78rem/1 Nunito,system-ui,sans-serif;letter-spacing:.04em}
+.team-credit img{width:30px;height:30px;border-radius:50%;object-fit:cover}
+.team-credit b{color:#fff}
+.boot-loading-card .team-credit{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);margin:0}
+.team-credit .team-credit-d7{background:#fff}
+/* Title screen with Play button (shown before the game) */
+.title-screen{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,2vh,20px);padding-bottom:clamp(40px,9vh,80px);background:radial-gradient(ellipse at 50% 40%,#2a1650 0%,#120b24 70%);overflow:hidden;transition:opacity .6s ease,transform .6s ease}
+.title-screen.leaving{opacity:0;transform:scale(1.06);pointer-events:none}
+.title-screen[hidden]{display:none}
+.title-art{width:min(100vw,calc(66vh * 16 / 9));height:auto;max-height:66vh;object-fit:contain;-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 72%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 72%,transparent 100%);animation:titleFloat 6s ease-in-out infinite}
+.title-play{margin-top:calc(-1 * clamp(10px,4vh,44px));display:inline-flex;align-items:center;gap:.6em;padding:.7em 2.4em;border:0;border-radius:999px;cursor:pointer;font:700 clamp(1.2rem,3.4vh,2rem)/1 Fredoka,Nunito,system-ui,sans-serif;letter-spacing:.08em;color:#2a1240;background:linear-gradient(180deg,#ffe49a,#ffb547);box-shadow:0 0 0 3px rgba(255,255,255,.18),0 10px 30px rgba(255,170,60,.45);animation:titlePulse 2.2s ease-in-out infinite;transition:transform .15s ease}
+.title-play:hover,.title-play:focus-visible{transform:scale(1.07);outline:none;box-shadow:0 0 0 4px #fff,0 12px 36px rgba(255,170,60,.6)}
+.title-play:active{transform:scale(.97)}
+.title-play svg{width:1em;height:1em;fill:currentColor}
+.title-hint{margin:0;color:rgba(255,236,200,.7);font:600 .85rem/1 Nunito,system-ui,sans-serif;letter-spacing:.06em}
+.title-screen .team-credit{position:absolute;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);margin:0}
+.title-stars{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(2px 2px at 12% 20%,#fff8,transparent),radial-gradient(2px 2px at 82% 14%,#fff9,transparent),radial-gradient(1.5px 1.5px at 66% 78%,#fff7,transparent),radial-gradient(2px 2px at 24% 82%,#ffd67899,transparent),radial-gradient(1.5px 1.5px at 92% 60%,#fff8,transparent),radial-gradient(1.5px 1.5px at 6% 56%,#fff6,transparent);animation:titleTwinkle 4s ease-in-out infinite alternate}
+@keyframes titleFloat{50%{transform:translateY(-8px)}}
+@keyframes titlePulse{50%{box-shadow:0 0 0 3px rgba(255,255,255,.28),0 10px 44px rgba(255,190,90,.75)}}
+@keyframes titleTwinkle{to{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.title-art,.title-play,.title-stars{animation:none}.title-screen{transition:opacity .2s}}
+@media (max-height:520px){.title-hint{display:none}}
+/* Home title: always colourful. Letters that progress has "lit" glow brighter */
+.hub-brand .hub-brand-copy strong{display:inline-flex;font-size:clamp(26px,3.2vw,44px)}
+.hub-brand .hub-brand-copy strong .sb-letter{display:inline-block;color:var(--c);-webkit-text-stroke:1.5px rgba(30,14,50,.55);paint-order:stroke fill;text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 10px color-mix(in srgb,var(--c) 55%,transparent);animation:sbBob 2.6s ease-in-out infinite;transition:text-shadow .6s,filter .6s}
+.hub-brand .hub-brand-copy strong .sb-letter.on{filter:brightness(1.15) saturate(1.2);text-shadow:0 2px 0 rgba(0,0,0,.35),0 0 14px var(--c),0 0 26px color-mix(in srgb,var(--c) 60%,transparent)}
+.hub-brand .hub-brand-copy strong .sb-letter:nth-child(1){animation-delay:0s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(2){animation-delay:.1s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(3){animation-delay:.2s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(4){animation-delay:.3s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(5){animation-delay:.4s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(6){animation-delay:.5s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(7){animation-delay:.6s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(8){animation-delay:.7s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(9){animation-delay:.8s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(10){animation-delay:.9s}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(11){animation-delay:1s}
+.hub-brand .hub-brand-copy strong .sb-letter:nth-child(odd){rotate:-3deg}.hub-brand .hub-brand-copy strong .sb-letter:nth-child(even){rotate:3deg}
+.hub-brand .hub-brand-kicker{background:linear-gradient(90deg,#ffd678,#ff9ec4,#9ad7ff,#a8f0c6);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+@keyframes sbBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.hub-brand .hub-brand-copy strong .sb-letter{animation:none}}

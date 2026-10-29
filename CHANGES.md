@@ -1,3 +1,8 @@
+# Wavy light trail
+
+- The light trail now flows like a ribbon: a gentle wave starts at Shwe's tail and travels down the string, so the lights bob and sway even while she stands still. On the ground each light rises up to about 14 px and its lowest point just touches the floor; in the air the wave ripples both ways and gets a little livelier when she runs.
+- Only the drawing moves. The lights' real positions (catching, delivering, Jealous stealing) are unchanged, and with reduced motion on, the trail stays still as before.
+
 # Hidden paper stars and bonus diary pages
 
 - Added three fixed paper-star collectibles to every story night. They sit on raised ledges or require a timed jump; stars placed on moving ledges travel with them.
