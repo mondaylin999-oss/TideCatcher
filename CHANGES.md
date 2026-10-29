@@ -310,3 +310,7 @@
 - Shwe can scratch each wall three times to open a softly lit alcove. Its reward is either a rare Frustrated/Nervous Moodling or a collectible diary page, selected for the map.
 - Secret diary pages save under a new `mk-secret-pages` localStorage key and appear on Thiri’s shelf; existing save keys, score, and Moodling rules are unchanged. Page text and prompts are available in English and Burmese.
 - Added placement and reward coverage for all story levels, Free Play variants, and Endless map families, and wired the check into GitHub Actions.
+
+## Cloudflare preview build fix
+
+- Added the required `previews` block to `wrangler.jsonc`. Cloudflare’s linked preview build had failed because `npx wrangler preview` requires this configuration block.
