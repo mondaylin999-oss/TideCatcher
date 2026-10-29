@@ -120,6 +120,20 @@
           },
           endlessPage: 'On {chapter}, Shwe found three paper stars hidden around {place}. I pressed them into my diary so this little adventure would always have a place to rest.'
         },
+        secretRooms: {
+          wallPrompt: 'Scratch the cracked wall · {count}/3 · {key}', opened: 'A secret room!',
+          pageFound: 'Secret diary page found!', pageTitle: 'Secret-room diary', pageCount: '{count} / 6 pages',
+          pagePrompt: 'Find the cracked walls hidden across the maps.', pageEmpty: 'A little memory is waiting behind a cracked wall.',
+          rareWaiting: 'A rare Moodling is hiding inside!', alreadyRead: 'You have already saved this memory.',
+          pages: {
+            school: 'I found this note tucked behind a loose classroom wall. Shwe waited while I read it twice.',
+            festival: 'The lanterns made the hidden room feel warm. I want to remember how safe the quiet felt.',
+            lake: 'The moon kept a little light for us behind the old wall. Shwe found it first.',
+            market: 'Rain tapped above the hidden room. We sat together until the last drops softened.',
+            pagoda: 'A quiet note beneath the hill reminded me to be gentle with every small thing.',
+            free: 'Shwe found a little memory in the Night Side, safe from the wind and the dark.'
+          }
+        },
         catchGuides: {
           F: 'Let it charge, dodge the rush, then pounce while it is dizzy.',
           N: 'Sneak or walk slowly within range. Avoid running and jumping; pounce while it wanders calmly.',
@@ -258,6 +272,20 @@
             7: 'မနက်ခင်းက နူးညံ့စွာ ရောက်လာတယ်။ Shwe က နောက်ဆုံးကြယ်သုံးပွင့်ကို ကျွန်မပုံဘေးမှာ ချထားခဲ့ပြီး အဲဒီမှာ ဆက်လက်တောက်ပနေတော့မယ်။'
           },
           endlessPage: '{chapter} မှာ Shwe က {place} အနီးက ဝှက်ထားတဲ့ စက္ကူကြယ်သုံးပွင့်ကို ရှာတွေ့ခဲ့တယ်။ ဒီစွန့်စားခန်းလေးမှာ အနားယူစရာနေရာ ရှိနေစေဖို့ ဒိုင်ယာရီထဲမှာ ထည့်သိမ်းလိုက်တယ်။'
+        },
+        secretRooms: {
+          wallPrompt: 'အက်နေသောနံရံကို ကုတ်ပါ · {count}/၃ · {key}', opened: 'လျှို့ဝှက်အခန်း ပွင့်သွားပြီ!',
+          pageFound: 'လျှို့ဝှက်ဒိုင်ယာရီစာမျက်နှာ ရပြီ!', pageTitle: 'လျှို့ဝှက်အခန်း ဒိုင်ယာရီ', pageCount: '{count} / ၆ စာမျက်နှာ',
+          pagePrompt: 'မြေပုံများအနှံ့ ဝှက်ထားသော အက်နံရံများကို ရှာပါ။', pageEmpty: 'အက်နံရံနောက်မှာ အမှတ်တရလေးတစ်ခု စောင့်နေပါတယ်။',
+          rareWaiting: 'အခန်းထဲမှာ ရှားပါး Moodling လေး ဝှက်နေပါတယ်!', alreadyRead: 'ဒီအမှတ်တရကို သိမ်းထားပြီးပါပြီ။',
+          pages: {
+            school: 'စာသင်ခန်းနံရံနောက်မှာ ဒီမှတ်စုလေးကို တွေ့ခဲ့တယ်။ ကျွန်မ နှစ်ခါဖတ်နေတုန်း Shwe က စောင့်ပေးခဲ့တယ်။',
+            festival: 'မီးပုံးတွေကြောင့် လျှို့ဝှက်အခန်းလေးက နွေးထွေးနေတယ်။ အေးချမ်းလုံခြုံတဲ့ခံစားချက်ကို မှတ်မိနေချင်တယ်။',
+            lake: 'နံရံဟောင်းနောက်မှာ လရောင်က ကျွန်မတို့အတွက် အလင်းလေးတစ်ခု သိမ်းထားတယ်။ Shwe က အရင်တွေ့ခဲ့တယ်။',
+            market: 'လျှို့ဝှက်အခန်းပေါ်မှာ မိုးစက်တွေ တောက်တောက်ကျနေတယ်။ မိုးသံပျော့သွားတဲ့အထိ အတူထိုင်နေခဲ့ကြတယ်။',
+            pagoda: 'တောင်ကုန်းအောက်က မှတ်စုလေးက သေးငယ်တဲ့အရာတိုင်းကို ညင်သာစွာ ဆက်ဆံဖို့ သတိပေးတယ်။',
+            free: 'ညဘက်ကမ္ဘာထဲမှာ လေနဲ့အမှောင်ကင်းဝေးတဲ့ မှတ်ဉာဏ်လေးကို Shwe ရှာတွေ့ခဲ့တယ်။'
+          }
         },
         catchGuides: {
           F: 'အနားသို့ ချဉ်းကပ်ပြီး တိုက်ခိုက်လာစေပါ။ ရှောင်ထွက်ပြီး မူးဝေနေချိန်တွင် ခုန်တိုက်ပါ။',

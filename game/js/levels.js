@@ -230,6 +230,35 @@
     if (twist === 'candle') chunks(240, 900).filter(([a]) => a >= 700).slice(0, 5).forEach(([a]) => out.push({ kind: 'lantern', x: a, w: 240 }));
     return out;
   };
+  const SECRET_ROOM_REWARDS = {
+    school: { kind: 'page' }, park: { kind: 'moodling', type: 'F', variant: 1 },
+    festival: { kind: 'page' }, hill: { kind: 'moodling', type: 'N', variant: 1 },
+    lake: { kind: 'page' }, free: { kind: 'page' }, rooftop: { kind: 'moodling', type: 'F', variant: 1 },
+    market: { kind: 'page' }, garden: { kind: 'moodling', type: 'N', variant: 1 },
+    pagoda: { kind: 'page' }, train: { kind: 'moodling', type: 'F', variant: 1 }
+  };
+  function addSecretRoom(level) {
+    const map = level.map || 'free', reward = SECRET_ROOM_REWARDS[map] || SECRET_ROOM_REWARDS.free;
+    const spans = []; let left = 100;
+    for (const [a, b] of (level.pits || []).slice().sort((a, b) => a[0] - b[0])) {
+      if (a - 130 > left + 190) spans.push([left, a - 130]);
+      left = b + 130;
+    }
+    if (level.width - 100 > left + 190) spans.push([left, level.width - 100]);
+    if (!spans.length) spans.push([100, Math.max(300, level.width - 100)]);
+    spans.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]));
+    const [lo, hi] = spans[0], width = hi - lo;
+    const candidates = [lo + width * .5, lo + width * .36, lo + width * .64]
+      .map(x => Math.round(x))
+      .filter(x => !(level.props || []).some(p => Math.abs(x - (p.x + (p.w || 80) / 2)) < 170));
+    const x = candidates[0] ?? Math.round((lo + hi) / 2);
+    level.secretRoom = { id: map, x, width: 190, scratches: 3, reward: { ...reward } };
+    return level;
+  }
+  // Place one scratchable room in every generated night and Free Play route.
+  // This runs after map layouts are complete so rooms can avoid the final pits.
+  for (let night = 1; night <= 50; night++) addSecretRoom(levels[night]);
+  for (const variant of levels.free.variants) addSecretRoom(variant);
   const buildEndless = (night, map, twists = []) => {
     const level = makeChallengeLevel(night);
     level.map = map;
@@ -330,7 +359,7 @@
         }
       });
     }
-    return level;
+    return addSecretRoom(level);
   };
   root.TC_ENDLESS_LEVEL = buildEndless;
   root.TC_LEVELS = levels;

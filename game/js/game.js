@@ -1268,7 +1268,7 @@
   let cat, mood = [], parts = [], floats = [], trail = [], driftingLights = [], hist = [], camX = 0, respawnQ = [], banner = null;
   // Workshop lights are banked only at the run's normal completion boundary.
   let workshopRun = [], goldenCollar = false;
-  let scratchSpots = [], scratchTarget = null, scratchAnim = 0, rocks = [], buriedHome = null, shake = 0;
+  let scratchSpots = [], scratchTarget = null, scratchAnim = 0, rocks = [], buriedHome = null, shake = 0, secretRooms = [];
   // Calm (4 AM, Lakeside): it sits dim on a lily pad. Shwe gathers FLY_NEED fireflies by walking slowly,
   // then brings them to Calm, which lights up and comes home. Running/jumping/pouncing near a firefly scatters it.
   const FLY_NEED = 3, FLY_SLOW = 140;
@@ -1286,8 +1286,32 @@
   let weather = WEATHER[0], hazards = [], keepsakes = [], paperStars = [], hazSeen = {}, buriedHintShown = false;
   let foundKeeps = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-keepsakes') || '[]')); } catch (e) { return new Set(); } })();
   let foundPaperStars = (() => { try { return new Set(JSON.parse(localStorage.getItem('mk-paper-stars') || '[]')); } catch (e) { return new Set(); } })();
+  const SECRET_PAGE_MAPS = ['school', 'festival', 'lake', 'market', 'pagoda', 'free'];
+  const SECRET_MAP_NAMES = { school: 'School', festival: 'Lighting Festival', lake: 'Lakeside', market: 'Night Market', pagoda: 'Pagoda Hill', free: 'Classic routes' };
+  let foundSecretPages = (() => { try { const pages = JSON.parse(localStorage.getItem('mk-secret-pages') || '[]'); return new Set(Array.isArray(pages) ? pages.filter(x => SECRET_PAGE_MAPS.includes(x)) : []); } catch (e) { return new Set(); } })();
   function saveKeeps() { try { localStorage.setItem('mk-keepsakes', JSON.stringify([...foundKeeps])); } catch (e) {} }
   function savePaperStars() { try { localStorage.setItem('mk-paper-stars', JSON.stringify([...foundPaperStars])); } catch (e) {} }
+  function saveSecretPages() { try { localStorage.setItem('mk-secret-pages', JSON.stringify([...foundSecretPages])); } catch (e) {} }
+  const secretRoomCopy = () => guideCopy().help?.secretRooms || {};
+  function initSecretRooms() {
+    const spec = currentLevel.secretRoom;
+    secretRooms = spec ? [{ ...spec, reward: { ...spec.reward }, progress: 0, open: false, openedAt: 0, rewardSpawned: false, rewardX: spec.x + 92, pageFound: foundSecretPages.has(spec.id) }] : [];
+  }
+  function collectSecretPage(room) {
+    if (!room || room.reward?.kind !== 'page' || foundSecretPages.has(room.id)) return;
+    foundSecretPages.add(room.id); room.pageFound = true; saveSecretPages();
+    burst(room.rewardX, terrainY(room.rewardX) - 56, '#ffe3a1', 24); sfx('ui', 'sparkle'); tone(988, .14, 'sine', .05); setTimeout(() => tone(1319, .2, 'sine', .04), 90);
+    const message = secretRoomCopy().pageFound || 'Secret diary page found!';
+    float(room.rewardX, terrainY(room.rewardX) - 90, message, '#ffe3a1'); announce(message, '#ffe3a1', 2.8);
+  }
+  function updateSecretRooms() {
+    if (state !== 'play' || cat.falling || cat.respawning) return;
+    for (const room of secretRooms) {
+      if (!room.open || room.reward.kind !== 'page' || room.pageFound) continue;
+      const y = terrainY(room.rewardX);
+      if (cat.on && Math.abs(cat.x - room.rewardX) < 34 && Math.abs(cat.y - y) < 70) collectSecretPage(room);
+    }
+  }
   function paperStarId(night, index) { return `n${night}-paper-${index}`; }
   function paperStarsFound(night) { let count = 0; for (let i = 0; i < 3; i++) if (foundPaperStars.has(paperStarId(night, i))) count++; return count; }
   function paperDiaryUnlocked(night) { return paperStarsFound(night) === 3; }
@@ -1770,6 +1794,9 @@
     }).join('');
     const diaryCopy = paperStarCopy(), diaryCount = (diaryCopy.diaryCount || '{count} / 50 pages').replace('{count}', String(diaryNights.length));
     rows.push(`<section class="item shelf-row"><h3>${diaryCopy.diaryTitle || 'Paper-star diary'}</h3><div class="side"><span class="shelf-count">${diaryCount}</span></div><p>${diaryCopy.diaryPrompt || 'Find all 3 hidden paper stars in a night to unlock its bonus page.'}</p>${diaryPages ? `<div class="paper-diary-pages">${diaryPages}</div>` : `<p class="muted">${diaryCopy.diaryEmpty || 'Your first page is waiting among the stars.'}</p>`}</section>`);
+    const secretCopy = secretRoomCopy(), secretPages = SECRET_PAGE_MAPS.filter(map => foundSecretPages.has(map));
+    const secretDiaryPages = secretPages.map(map => `<article class="paper-diary-page"><h4>${SECRET_MAP_NAMES[map]}</h4><p>“${secretCopy.pages?.[map] || 'Shwe found a small memory behind the cracked wall.'}”</p></article>`).join('');
+    rows.push(`<section class="item shelf-row"><h3>${secretCopy.pageTitle || 'Secret-room diary'}</h3><div class="side"><span class="shelf-count">${(secretCopy.pageCount || '{count} / 6 pages').replace('{count}', String(secretPages.length))}</span></div><p>${secretCopy.pagePrompt || 'Find the cracked walls hidden across the maps.'}</p>${secretDiaryPages ? `<div class="paper-diary-pages">${secretDiaryPages}</div>` : `<p class="muted">${secretCopy.pageEmpty || 'A little memory is waiting behind a cracked wall.'}</p>`}</section>`);
     $('#shelfList').innerHTML = rows.join('');
     document.querySelectorAll('#shelfList canvas.keep-ico').forEach(drawKeepIcon);
   }
@@ -2016,6 +2043,7 @@
     workshopRun = []; allHome = false; portal = null; bossEncounter = null; $('#bossIntroScreen').hidden = true;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; driftingLights = []; hist = []; respawnQ = []; camX = 0;
     scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false; breathTipShown = false;
+    initSecretRooms();
     const buryStyle = BURY_SPOTS[currentMapKey()];
     rocks = (currentLevel.burySpots || []).map((x, i) => {
       const variant = i % (buryStyle.labels?.length || 1), label = buryStyle.labels?.[variant] || buryStyle.label;
@@ -2767,6 +2795,7 @@
     checkScratchProximity();
     if (scratchQ) performScratch();
     scratchQ = false;
+    updateSecretRooms();
     if (activeItems.sand && state === 'play' && t > 2.6) { activeItems.sand = false; burst(cat.x - cat.face * 8, cat.y - 50, GOLD, 14); float(cat.x, cat.y - 78, '⏳ The sand poured into your clock', GOLD); }
     for (const m of mood) updMood(m, purrT > 0 && Math.abs(m.x - cat.x) < 6 * T ? dt * .4 : dt);
     updFireflies(dt);
@@ -2848,6 +2877,9 @@
     if (breathCalm) { scratchTarget = { type: 'breath', mood: breathCalm }; $('#bScratch').hidden = touchUI.hidden; return scratchTarget; }
     let best = 74;
     const reachableHeight = Math.abs(cat.y - terrainY(cat.x)) <= 115;
+    if (reachableHeight && cat.on) for (const room of secretRooms) {
+      if (!room.open && Math.abs(cat.x - room.x) <= 78) { scratchTarget = { kind: 'secret-wall', room }; $('#bScratch').hidden = touchUI.hidden; return scratchTarget; }
+    }
     for (const m of mood) {
       if (!reachableHeight) break;
       if (m.dead || !m.spot || m.state !== 'hide' || m.spot.used) continue;
@@ -2878,6 +2910,23 @@
     }
     const activeSkyChallenge = mood.find(m => !m.dead && m.sky && m.skyFeature === 'C' && m.skyPhase === 'scratchReq');
     if (activeSkyChallenge) { failSkyChallenge(activeSkyChallenge); return false; }
+    if (scratchTarget?.kind === 'secret-wall') {
+      const room = scratchTarget.room;
+      if (!room || room.open || !cat.on || Math.abs(cat.x - room.x) > 80 || Math.abs(cat.y - terrainY(room.x)) > 115) return false;
+      room.progress++; cat.vx = 0; cat.walk = 0; scratchAnim = .52; sfx('ui', 'scratch');
+      for (let i = 0; i < 8; i++) parts.push({ x: room.x + (Math.random() - .5) * 48, y: terrainY(room.x) - 34, vx: (Math.random() - .5) * 125, vy: -60 - Math.random() * 80, life: .45, max: .45, c: '#b7a89b', r: 2 + Math.random() * 2.5, g: 240 });
+      if (room.progress >= room.scratches) {
+        room.open = true; room.openedAt = t; shake = Math.max(shake, 4); burst(room.x, terrainY(room.x) - 54, '#ffe1a1', 20);
+        const copy = secretRoomCopy(); float(room.x, terrainY(room.x) - 104, copy.opened || 'A secret room!', '#ffe1a1'); tone(520, .16, 'triangle', .06, 320); sfx('ui', 'sparkle');
+        if (room.reward.kind === 'moodling' && !room.rewardSpawned) {
+          const rare = spawn(room.reward.type, room.rewardX); rare.v = room.reward.variant || 1; room.rewardSpawned = true;
+          announce(copy.rareWaiting || 'A rare Moodling is hiding inside!', GOLD, 2.7);
+        } else if (room.reward.kind === 'page' && room.pageFound) float(room.rewardX, terrainY(room.rewardX) - 62, copy.alreadyRead || 'You have already saved this memory.', '#d6c7a2');
+      } else {
+        float(room.x, terrainY(room.x) - 74, `${room.progress}/${room.scratches}`, '#d6c7a2'); tone(250, .08, 'triangle', .035, -35);
+      }
+      scratchTarget = null; return true;
+    }
     if (scratchTarget?.kind === 'rock') {
       const rock = scratchTarget.rock; if (!rock || rock.scratched || !cat.on || Math.abs(cat.y - rock.y) > 115) return false;
       rock.scratched = true; rock.holeDepth = 0; scratchAnim = .8; shake = Math.max(shake, rock.marked ? 0 : 10); sfx('ui', 'scratch');
@@ -3722,6 +3771,44 @@
       else if (prop.kind === 'bush') { for(const [dx,dy,r] of [[18,-20,20],[48,-30,25],[75,-18,20]]){ctx.fillStyle=mid;ctx.beginPath();ctx.arc(x+dx,gy+dy,r,0,Math.PI*2);ctx.fill();} }
       ctx.restore();
     }
+    for (const room of secretRooms) {
+      if (room.x < x0 - 150 || room.x > x1 + 150) continue;
+      const x = room.x, gy = terrainY(x), half = room.width / 2, top = gy - 118, pulse = .55 + .45 * Math.sin(t * 2.2);
+      ctx.save();
+      const halo = ctx.createRadialGradient(x, gy - 56, 4, x, gy - 56, room.open ? 145 : 86);
+      halo.addColorStop(0, `rgba(255,220,151,${room.open ? .23 : .08 + .04 * pulse})`); halo.addColorStop(1, 'rgba(255,220,151,0)');
+      ctx.fillStyle = halo; ctx.fillRect(x - 150, top - 36, 300, 180);
+      ctx.beginPath(); ctx.moveTo(x - half, gy); ctx.lineTo(x - half + 8, top + 38);
+      ctx.quadraticCurveTo(x, top - 34, x + half - 8, top + 38); ctx.lineTo(x + half, gy); ctx.closePath();
+      ctx.fillStyle = room.open ? 'rgba(12,12,28,.92)' : dark; ctx.fill();
+      ctx.strokeStyle = light; ctx.lineWidth = 4; ctx.stroke();
+      if (room.open) {
+        const inside = ctx.createLinearGradient(0, top, 0, gy);
+        inside.addColorStop(0, 'rgba(255,221,157,.16)'); inside.addColorStop(.65, 'rgba(94,76,94,.18)'); inside.addColorStop(1, 'rgba(18,15,34,.12)');
+        ctx.beginPath(); ctx.moveTo(x - half + 8, gy - 3); ctx.lineTo(x - half + 15, top + 40); ctx.quadraticCurveTo(x, top - 23, x + half - 15, top + 40); ctx.lineTo(x + half - 8, gy - 3); ctx.closePath(); ctx.fillStyle = inside; ctx.fill();
+        ctx.fillStyle = 'rgba(255,223,164,.78)'; ctx.fillRect(x - half + 13, gy - 5, room.width - 26, 4);
+        for (const side of [-1, 1]) { ctx.fillStyle = mid; ctx.beginPath(); ctx.moveTo(x + side * (half - 14), gy); ctx.lineTo(x + side * (half - 10), top + 44); ctx.lineTo(x + side * (half - 2), top + 62); ctx.lineTo(x + side * half, gy); ctx.closePath(); ctx.fill(); }
+        if (room.reward.kind === 'page' && !room.pageFound) {
+          const py = terrainY(room.rewardX) - 58 - Math.sin(t * 3) * 4;
+          ctx.fillStyle = `rgba(255,222,151,${.12 + pulse * .1})`; ctx.beginPath(); ctx.arc(room.rewardX, py, 26, 0, Math.PI * 2); ctx.fill();
+          ctx.save(); ctx.translate(room.rewardX, py); ctx.rotate(-.08);
+          ctx.fillStyle = '#f5e7bd'; ctx.beginPath(); canvasRoundRect(ctx, -9, -12, 18, 24, 2); ctx.fill();
+          ctx.strokeStyle = '#b39a76'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-5, -5); ctx.lineTo(5, -5); ctx.moveTo(-5, 0); ctx.lineTo(4, 0); ctx.moveTo(-5, 5); ctx.lineTo(2, 5); ctx.stroke(); ctx.restore();
+        }
+      } else {
+        // The stone/plaster slab is visibly split; each scratch adds a warm glint.
+        ctx.beginPath(); ctx.moveTo(x - half + 13, gy - 2); ctx.lineTo(x - half + 18, top + 43); ctx.quadraticCurveTo(x, top - 23, x + half - 18, top + 43); ctx.lineTo(x + half - 13, gy - 2); ctx.closePath();
+        ctx.fillStyle = mid; ctx.fill(); ctx.strokeStyle = 'rgba(20,15,35,.65)'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = 'rgba(20,15,35,.9)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+        const cracks = [[-4,-92,3,-70,-5,-55,2,-35],[24,-66,13,-52,20,-38,12,-20],[-34,-48,-22,-38,-30,-22]];
+        for (let i = 0; i < cracks.length; i++) {
+          const [a,b,c,d,e,f,g,h] = cracks[i]; ctx.beginPath(); ctx.moveTo(x + a, gy + b); ctx.lineTo(x + c, gy + d); ctx.lineTo(x + e, gy + f); ctx.lineTo(x + g, gy + h); ctx.stroke();
+          if (room.progress > i) { ctx.strokeStyle = `rgba(255,222,151,${.42 + pulse * .28})`; ctx.lineWidth = 2; ctx.stroke(); ctx.strokeStyle = 'rgba(20,15,35,.9)'; ctx.lineWidth = 3; }
+        }
+        ctx.fillStyle = `rgba(255,222,151,${.42 + pulse * .35})`; ctx.font = `800 14px ${DISP}`; ctx.textAlign = 'center'; ctx.fillText('✦', x, gy - 108);
+      }
+      ctx.restore();
+    }
     if (currentLevel.homeLight) {
       const [hx, hy] = currentLevel.homeLight;
       if (hx >= x0 - 60 && hx <= x1 + 60) { const glow=ctx.createRadialGradient(hx,hy,2,hx,hy,48);glow.addColorStop(0,'rgba(255,229,165,.42)');glow.addColorStop(1,'rgba(255,211,133,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(hx,hy,48,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffd98a';ctx.beginPath();ctx.arc(hx,hy,5+Math.sin(t*3)*.7,0,Math.PI*2);ctx.fill(); }
@@ -4533,9 +4620,9 @@
       const msg = touchUI && !touchUI.hidden ? 'Tap  Go home  to go through the moon door' : 'H  Go home through the moon door';
       ctx.strokeText(msg,VW/2,VH - 104 + bob);ctx.fillText(msg,VW/2,VH - 104 + bob);
     }
-    if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
+    if (scratchTarget && (scratchTarget.kind === 'rock' || scratchTarget.kind === 'secret-wall' || scratchTarget.type === 'sky' || scratchTarget.state === 'hide')) {
       ctx.textAlign='center';ctx.font=`800 17px ${DISP}`;ctx.lineWidth=4;ctx.strokeStyle='rgba(8,14,22,.92)';ctx.fillStyle='#f4e8c7';
-      const SK = window.TCControls ? TCControls.short('scratch') : 'S', prompt = scratchTarget.type === 'breath' ? (scratchTarget.mood.bphase < .5 ? `Hold ${SK} · breathe in…` : 'Let go · breathe out…') : scratchTarget.type === 'sky' ? `Scratch it! (${SK})` : scratchTarget.kind === 'rock' ? `${SK}  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? scratchTarget.rock.labelMarked : scratchTarget.rock.label}` : `${SK}  Scratch ${scratchTarget.caveX != null ? CAVE_LABELS[currentMapKey()] : 'hiding spot'}`, py=VH-74;
+      const SK = window.TCControls ? TCControls.short('scratch') : 'S', roomCopy = secretRoomCopy(), prompt = scratchTarget.kind === 'secret-wall' ? (roomCopy.wallPrompt || 'Scratch the cracked wall · {count}/3 · {key}').replace('{count}', `${scratchTarget.room.progress}/${scratchTarget.room.scratches}`).replace('{key}', SK) : scratchTarget.type === 'breath' ? (scratchTarget.mood.bphase < .5 ? `Hold ${SK} · breathe in…` : 'Let go · breathe out…') : scratchTarget.type === 'sky' ? `Scratch it! (${SK})` : scratchTarget.kind === 'rock' ? `${SK}  Scratch ${scratchTarget.rock.marked && eyesT > 0 ? scratchTarget.rock.labelMarked : scratchTarget.rock.label}` : `${SK}  Scratch ${scratchTarget.caveX != null ? CAVE_LABELS[currentMapKey()] : 'hiding spot'}`, py=VH-74;
       ctx.strokeText(prompt,VW/2,py);ctx.fillText(prompt,VW/2,py);
     } else if (scratchAnim>0) {
       ctx.textAlign='center';ctx.font=`800 16px ${DISP}`;ctx.fillStyle='#f4e8c7';ctx.fillText('Scratching…',VW/2,VH-74);

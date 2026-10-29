@@ -298,3 +298,10 @@
 - Each layout includes one slow moving train carriage that uses the game's existing moving-platform collision/carry behavior. Its route stays on solid track outside pit approaches, so required pit bridges remain the only gap crossings.
 - Added benches and ticket-booth hiding spots, including ticket-booth scenery and map-specific hiding prompts/keepsakes.
 - Added layout checks for Nights 39–50 covering carriage routes, pit clearance/bridge uniqueness, reachable ride height, and safe hiding spots.
+
+# Scratchable secret rooms
+
+- Added one cracked-wall secret room to every story night, Free Play route, and Endless map. Rooms are positioned on solid ground with clearance from pits.
+- Shwe can scratch each wall three times to open a softly lit alcove. Its reward is either a rare Frustrated/Nervous Moodling or a collectible diary page, selected for the map.
+- Secret diary pages save under a new `mk-secret-pages` localStorage key and appear on Thiri’s shelf; existing save keys, score, and Moodling rules are unchanged. Page text and prompts are available in English and Burmese.
+- Added placement and reward coverage for all story levels, Free Play variants, and Endless map families, and wired the check into GitHub Actions.
