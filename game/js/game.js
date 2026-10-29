@@ -5855,6 +5855,8 @@
   // Seeded variation gives each stretch its own shape and keeps it stable on revisit.
   const mapRandom = seed => { const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
   const mapStops = [];
+  let mapRouteSamples = [], mapRouteNightDistances = Array(LEVEL_MAP_LIMIT + 1).fill(0);
+  let mapWalkerLevel = unlockedLevel, mapWalkToken = 0, mapWalking = false;
   for (let level = 1, x = 140; level <= LEVEL_MAP_LIMIT; level++) {
     if (level > 1) x += 230 + mapRandom(level + 91) * 100;
     mapStops.push({ x, bend: mapRandom(level + 17) });
@@ -5863,6 +5865,57 @@
     const height = Math.max(180, $('#levelMapViewport').clientHeight);
     const stop = mapStops[level - 1];
     return { x: stop.x, y: height * (.25 + stop.bend * .41) };
+  }
+  function mapRoutePosition(distance) {
+    if (!mapRouteSamples.length) return { ...mapPoint(mapWalkerLevel), facing: 1 };
+    const max = mapRouteSamples[mapRouteSamples.length - 1].distance;
+    const at = clamp(distance, 0, max);
+    let lo = 0, hi = mapRouteSamples.length - 1;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (mapRouteSamples[mid].distance < at) lo = mid + 1; else hi = mid; }
+    const b = mapRouteSamples[lo], a = mapRouteSamples[Math.max(0, lo - 1)], span = Math.max(.001, b.distance - a.distance), u = (at - a.distance) / span;
+    return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u, facing: b.x >= a.x ? 1 : -1 };
+  }
+  function paintMapWalker(time = 0, facing = 1) {
+    const walker = $('#mapShweWalker'); if (!walker) return;
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5), width = 88, height = 68;
+    if (walker.width !== Math.round(width * ratio) || walker.height !== Math.round(height * ratio)) { walker.width = Math.round(width * ratio); walker.height = Math.round(height * ratio); }
+    const g = walker.getContext('2d'); g.setTransform(ratio, 0, 0, ratio, 0, 0); g.clearRect(0, 0, width, height);
+    window.TCCatchClipArt?.drawCat(g, { x: width / 2, y: height - 4, height: 52, action: 'walk', time, facing });
+  }
+  function placeMapWalker(distance) {
+    const walker = $('#mapShweWalker'); if (!walker) return;
+    const point = mapRoutePosition(distance);
+    walker.style.left = `${point.x}px`; walker.style.top = `${point.y + 3}px`;
+    return point;
+  }
+  function walkShweToNight(night, button) {
+    if (mapWalking) return;
+    const viewport = $('#levelMapViewport'), walker = $('#mapShweWalker');
+    if (!walker) { showLevelBriefing(night, button); return; }
+    const token = ++mapWalkToken, fromNight = mapWalkerLevel, fromDistance = mapRouteNightDistances[fromNight] || 0, toDistance = mapRouteNightDistances[night] || 0;
+    const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : clamp(.42 + Math.abs(night - fromNight) * .18, .5, 8);
+    $('#levelMapTrack').querySelectorAll('.map-destination').forEach(node => node.classList.remove('map-destination'));
+    button.classList.add('map-destination');
+    if (!duration) {
+      mapWalkerLevel = night; placeMapWalker(toDistance); paintMapWalker(0, night >= fromNight ? 1 : -1);
+      showLevelBriefing(night, button); return;
+    }
+    mapWalking = true; $('#levelMapTrack').classList.add('map-shwe-walking');
+    const started = performance.now(), direction = night >= fromNight ? 1 : -1;
+    const tick = now => {
+      if (token !== mapWalkToken) return;
+      if ($('#storyMapScreen').hidden) { mapWalking = false; $('#levelMapTrack').classList.remove('map-shwe-walking'); return; }
+      const raw = clamp((now - started) / (duration * 1000), 0, 1), eased = raw * raw * (3 - 2 * raw);
+      const routeDistance = fromDistance + (toDistance - fromDistance) * eased, point = placeMapWalker(routeDistance);
+      paintMapWalker((now - started) / 1000, direction);
+      if (point) viewport.scrollLeft = clamp(point.x - viewport.clientWidth * .46, 0, Math.max(0, viewport.scrollWidth - viewport.clientWidth));
+      if (raw < 1) requestAnimationFrame(tick);
+      else {
+        mapWalkerLevel = night; mapWalking = false; $('#levelMapTrack').classList.remove('map-shwe-walking');
+        setTimeout(() => { if (token === mapWalkToken && !$('#storyMapScreen').hidden) showLevelBriefing(night, button); }, 180);
+      }
+    };
+    requestAnimationFrame(tick);
   }
   // Pixel coordinates keep the illustrated terrain proportional at every screen size.
   function drawNightMap(width, height, river) {
@@ -5981,16 +6034,27 @@
     const height = Math.max(180, $('#levelMapViewport').clientHeight), width = mapStops[LEVEL_MAP_LIMIT - 1].x + 150;
     track.style.height = `${height}px`; track.style.width = `${width}px`;
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    let d = '', prev = null; const segs = [];
+    let d = '', prev = null, routeDistance = 0; const segs = [];
+    mapRouteSamples = []; mapRouteNightDistances = Array(LEVEL_MAP_LIMIT + 1).fill(0);
     for (let level = 1; level <= LEVEL_MAP_LIMIT; level++) {
       const point = mapPoint(level);
-      if (!prev) d = `M ${point.x} ${point.y}`;
+      if (!prev) { d = `M ${point.x} ${point.y}`; mapRouteSamples.push({ ...point, distance: 0 }); }
       else {
         const span = point.x - prev.x;
         const bend = .28 + mapRandom(level + 1800) * .4;
-        const seg = ` C ${prev.x + span * bend} ${prev.y} ${point.x - span * (1 - bend)} ${point.y} ${point.x} ${point.y}`;
+        const p0 = prev, p1 = { x: prev.x + span * bend, y: prev.y }, p2 = { x: point.x - span * (1 - bend), y: point.y }, p3 = point;
+        const seg = ` C ${p1.x} ${p1.y} ${p2.x} ${p2.y} ${p3.x} ${p3.y}`;
         d += seg; segs.push(`M ${prev.x} ${prev.y}${seg}`);
+        let last = p0;
+        for (let step = 1; step <= 24; step++) {
+          const t = step / 24, mt = 1 - t;
+          const sample = { x: mt ** 3 * p0.x + 3 * mt ** 2 * t * p1.x + 3 * mt * t ** 2 * p2.x + t ** 3 * p3.x,
+            y: mt ** 3 * p0.y + 3 * mt ** 2 * t * p1.y + 3 * mt * t ** 2 * p2.y + t ** 3 * p3.y };
+          routeDistance += Math.hypot(sample.x - last.x, sample.y - last.y);
+          mapRouteSamples.push({ ...sample, distance: routeDistance }); last = sample;
+        }
       }
+      mapRouteNightDistances[level] = routeDistance;
       prev = point;
     }
     drawSketchMap(width, height, segs, unlockedLevel);
@@ -6041,6 +6105,15 @@
       }
       track.appendChild(entry);
     }
+    let walker = $('#mapShweWalker');
+    if (!walker) {
+      walker = document.createElement('canvas'); walker.id = 'mapShweWalker'; walker.className = 'map-shwe-walker';
+      walker.width = 132; walker.height = 102; walker.setAttribute('aria-hidden', 'true');
+      walker.setAttribute('role', 'presentation');
+    }
+    track.appendChild(walker);
+    placeMapWalker(mapRouteNightDistances[mapWalkerLevel] || 0);
+    paintMapWalker(0, 1);
   }
   function focusLevelMap(level = unlockedLevel) {
     const viewport = $('#levelMapViewport');
@@ -7017,8 +7090,8 @@
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
   $('#levelMapTrack').addEventListener('click', e => {
-    const button = e.target.closest('button[data-level]'); if (!button || button.disabled) return;
-    const night = +button.dataset.level; if (night <= unlockedLevel) showLevelBriefing(night, button);
+    const button = e.target.closest('button[data-level]'); if (!button || button.disabled || mapWalking) return;
+    const night = +button.dataset.level; if (night <= unlockedLevel) walkShweToNight(night, button);
   });
   // Free Play opens a map picker: every map Shwe has reached in the story, plus the classic routes
   const FREE_MAP_ART = { school: 'assets/school/hallway-night.webp', park: 'assets/park/park-night.webp', festival: 'assets/festival/festival-back.webp', hill: 'assets/hill/hill-vista.webp' };

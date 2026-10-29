@@ -1,3 +1,9 @@
+# Shwe walks the chapter route
+
+- Picking an unlocked night now animates Shwe along the illustrated SVG trail before opening that night’s briefing.
+- The map uses the same customized cat rig and walking gait as gameplay, faces Shwe along the route, and keeps her visible by following the walk with the map viewport. The destination gets a soft highlight while she walks.
+- The walk respects reduced-motion settings and skips directly to the selected night when reduced motion is enabled. Locked nights remain unselectable.
+
 # Wavy light trail
 
 - The light trail now flows like a ribbon: a gentle wave starts at Shwe's tail and travels down the string, so the lights bob and sway even while she stands still. On the ground each light rises up to about 14 px and its lowest point just touches the floor; in the air the wave ripples both ways and gets a little livelier when she runs.

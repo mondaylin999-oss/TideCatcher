@@ -475,6 +475,9 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .story-map-panel>.level-map-window{flex:1 1 0;height:auto;min-height:0;overflow-x:auto;overflow-y:hidden;touch-action:pan-x;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--lilac) transparent;background:radial-gradient(circle at 22px 22px,#ffffff35 1px,transparent 2px) 0 0 / 113px 97px;border-radius:18px}
 .level-map-track{min-height:100%}
 .level-map-path{z-index:0}
+.map-shwe-walker{position:absolute;z-index:2;width:88px;height:68px;transform:translate(-50%,-100%);pointer-events:none;filter:drop-shadow(0 3px 3px #09131c99)}
+.level-node.map-destination{outline:3px solid #ffe9a4;outline-offset:5px;box-shadow:0 0 24px #ffe6a877,0 7px 0 #786d66}
+.map-shwe-walking .level-node{cursor:progress}
 .level-entry .level-node{width:60px;height:60px;font-size:23px}
 .level-entry .level-node.is-current{width:72px;height:72px;font-size:27px}
 .level-entry .level-caption{left:0;right:auto;top:49px;transform:translateX(-50%);width:208px;max-width:none;text-align:center;gap:8px;padding:12px;background:#17182dcc;border:1px solid #b9a3ff30;border-radius:14px;text-shadow:none}
