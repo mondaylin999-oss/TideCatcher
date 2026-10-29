@@ -37,6 +37,16 @@ for (const type of [...Object.keys(moods), 'C1']) {
   }
 }
 if (/setInterval\s*\(/.test(clips)) throw new Error('Catch guides must not use a timed auto-advance');
+const controls = readFileSync('game/js/controls.js', 'utf8');
+if (!controls.includes('data-l="size:+"') || !controls.includes('data-l="op:+"')) {
+  throw new Error('Touch layout editor must expose size and brightness controls');
+}
+if (!controls.includes('S.touch.btn') || !controls.includes('visualViewport')) {
+  throw new Error('Touch layout editor must support per-button size/brightness and visualViewport dragging');
+}
+if (!game.includes('function noteFrame') || !game.includes('gfxQ')) {
+  throw new Error('Game loop must adapt draw quality to keep 60fps on slower devices');
+}
 if (!game.includes("c.vy = -Math.max(jumpSpeed * 1.32, 1050)")) throw new Error('Wall jump impulse is missing');
 if (!game.includes("timer: .2")) throw new Error('Ledge grab auto-climb timing is missing');
 if ([...tips.matchAll(/mechanics: \{[\s\S]*?wallJump:/g)].length !== 2

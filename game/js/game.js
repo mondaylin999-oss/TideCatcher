@@ -94,14 +94,16 @@
 
   // ---------- sizing ----------
   let VW = 960, S = 1, OY = 0, dpr = 1, HUD_X = 68, HUD_CARD_W = 158;
+  let gfxQ = 1, gfxSlow = 0, gfxGood = 0, gfxMs = 16.7, gfxFrames = 0, needPaint = true;
   (function capGlow(c) {
     const d = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'shadowBlur');
     Object.defineProperty(c, 'shadowBlur', { get() { return d.get.call(this); }, set(v) { d.set.call(this, Math.min(v, 7)); } });
   })(ctx);
+  function pixelBudget() { return gfxQ < .8 ? 900000 : 1600000; }
   function resize() {
     const w = innerWidth, h = innerHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    if (w * h * dpr * dpr > 1600000) dpr = Math.max(.75, Math.sqrt(1600000 / (w * h)));
+    dpr = Math.min(window.devicePixelRatio || 1, gfxQ < .8 ? 1 : 1.5);
+    if (w * h * dpr * dpr > pixelBudget()) dpr = Math.max(.7, Math.sqrt(pixelBudget() / (w * h)));
     const pixelWidth = Math.round(w * dpr), pixelHeight = Math.round(h * dpr);
     // Assigning an unchanged size also clears the canvas.
     if (cv.width !== pixelWidth) cv.width = pixelWidth;
@@ -113,8 +115,25 @@
     const pauseWidth = parseFloat(pauseStyle.width) || 48;
     HUD_X = (pauseLeft + pauseWidth + 10) / S;
     HUD_CARD_W = innerWidth <= 400 ? 150 : 158;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = gfxQ < .8 ? 'low' : 'medium';
+    needPaint = true;
   }
-  addEventListener('resize', resize); resize();
+  addEventListener('resize', resize);
+  if (window.visualViewport) visualViewport.addEventListener('resize', resize);
+  resize();
+  function noteFrame(elapsed) {
+    gfxFrames++;
+    gfxMs = gfxMs * .88 + elapsed * .12;
+    if (gfxFrames < 90) return;
+    if (gfxMs > 19.5) {
+      gfxSlow++; gfxGood = 0;
+      if (gfxSlow > 24 && gfxQ > .7) { gfxQ = .7; gfxSlow = 0; resize(); }
+    } else if (gfxMs < 15.5) {
+      gfxGood++; gfxSlow = Math.max(0, gfxSlow - 1);
+      if (gfxGood > 180 && gfxQ < 1) { gfxQ = 1; gfxGood = 0; resize(); }
+    }
+  }
 
   // ---------- audio ----------
   let ac = null;
@@ -1940,11 +1959,13 @@
     for (const f of fireflies) {
       const tw = .7 + .3 * Math.sin(f.phase * 6), a = f.state === 'give' ? clamp(f.st / .4, 0, 1) : 1;
       const r = 15 * tw;
-      const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r * 1.8);
-      g.addColorStop(0, `rgba(255,251,194,${.95 * a})`); g.addColorStop(.35, `rgba(232,255,138,${.6 * a})`); g.addColorStop(1, 'rgba(200,255,106,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, r * 1.8, 0, 7); ctx.fill();
-      ctx.fillStyle = `rgba(255,253,224,${a})`; ctx.beginPath(); ctx.arc(f.x, f.y, 2.8, 0, 7); ctx.fill();
-      if (f.state === 'free') { ctx.strokeStyle = `rgba(255,255,255,${.35 * tw})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(f.x - 4, f.y - 3, 4, 2, -.5, 0, 7); ctx.ellipse(f.x + 4, f.y - 3, 4, 2, .5, 0, 7); ctx.stroke(); }
+      if (gfxQ >= .8) {
+        const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r * 1.8);
+        g.addColorStop(0, `rgba(255,251,194,${.95 * a})`); g.addColorStop(.35, `rgba(232,255,138,${.6 * a})`); g.addColorStop(1, 'rgba(200,255,106,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(f.x, f.y, r * 1.8, 0, 7); ctx.fill();
+      }
+      ctx.fillStyle = `rgba(255,253,224,${a})`; ctx.beginPath(); ctx.arc(f.x, f.y, gfxQ < .8 ? 3.4 : 2.8, 0, 7); ctx.fill();
+      if (f.state === 'free' && gfxQ >= .8) { ctx.strokeStyle = `rgba(255,255,255,${.35 * tw})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(f.x - 4, f.y - 3, 4, 2, -.5, 0, 7); ctx.ellipse(f.x + 4, f.y - 3, 4, 2, .5, 0, 7); ctx.stroke(); }
     }
     const n = carriedFlies().length;
     if (n && state === 'play') {
@@ -2087,7 +2108,10 @@
   // ---------- effects ----------
   function float(x, y, text, c) { if (!showNotes && String(text).length > 14 && !/^[+−\-×★]/.test(String(text))) return; floats.push({ x, y, text, c, life: 1.2 }); }
   function burst(x, y, c, n) {
+    const cap = gfxQ < .8 ? 36 : 88;
+    n = Math.min(n, gfxQ < .8 ? Math.max(4, Math.ceil(n * .45)) : n);
     for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, s = 80 + Math.random() * 260; parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 60, life: .7 + Math.random() * .4, max: 1.1, c, r: 2 + Math.random() * 3, g: 300 }); }
+    if (parts.length > cap) parts.splice(0, parts.length - cap);
   }
   function puff(m) { parts.push({ x: m.x + (Math.random() - .5) * 20, y: m.y - 18, vx: (Math.random() - .5) * 30, vy: -60 - Math.random() * 40, life: .6, max: .6, c: 'rgba(240,230,255,.55)', r: 4 + Math.random() * 4, g: -20 }); }
   function dust(m) { parts.push({ x: m.x - m.dir * 18, y: terrainY(m.x) - 4, vx: -m.dir * 60, vy: -30 * Math.random(), life: .4, max: .4, c: 'rgba(255,97,104,.5)', r: 3 + Math.random() * 3, g: 0 }); }
@@ -2782,7 +2806,7 @@
       return;
     }
     const last = hist[hist.length - 1];
-    if (!last || Math.hypot(last.x - cat.x, last.y - cat.y) > 3) { hist.push({ x: cat.x, y: cat.y }); if (hist.length > 500) hist.shift(); }
+    if (!last || Math.hypot(last.x - cat.x, last.y - cat.y) > 3) { hist.push({ x: cat.x, y: cat.y }); if (hist.length > 180) hist.shift(); }
     if (purrQ && upg.purr > 0 && purrCd <= 0) {
       purrT = purrDur(); purrCd = uv('purr');
       float(cat.x, cat.y - 70, 'Purrr…', '#c8ff8a'); sfx('cat', 'purr');
@@ -2856,6 +2880,8 @@
     }
     for (const p of parts) { p.life -= dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .98; }
     parts = parts.filter(p => p.life > 0);
+    const partCap = gfxQ < .8 ? 36 : 88;
+    if (parts.length > partCap) parts = parts.slice(-partCap);
     for (const f of floats) { f.life -= dt; f.y -= 40 * dt; }
     floats = floats.filter(f => f.life > 0);
     if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
@@ -3876,7 +3902,7 @@
     ctx.save();
     ctx.strokeStyle = 'rgba(190,220,255,.24)'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
     const drift = reduce ? 0 : t * 190;
-    for (let i = 0; i < 36; i++) {
+    for (let i = 0; i < (gfxQ < .8 ? 16 : 36); i++) {
       const x = ((i * 97 + drift) % VW + VW) % VW;
       const y = ((i * 61 + drift * 1.65) % (VH + OY * 2)) - OY;
       ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y + 11); ctx.stroke();
@@ -3938,7 +3964,7 @@
   function drawCuteMood(type, x, y, k, o = {}) {
     const A = MOOD_ART[type], body = o.color;
     ctx.save(); ctx.translate(x, y);
-    const gl = glowImg(o.glow || body); const gs = 120 * k; ctx.drawImage(gl, -gs / 2, -gs / 2, gs, gs);
+    if (gfxQ >= .8) { const gl = glowImg(o.glow || body); const gs = 120 * k; ctx.drawImage(gl, -gs / 2, -gs / 2, gs, gs); }
     ctx.scale(k * (o.flip || 1) * (o.sx || 1), k * (o.sy || 1)); ctx.translate(-60, -(o.cy || 66));
     const look = o.look || 0;
     if (type === 'F') {
@@ -4109,7 +4135,7 @@
           }
           ctx.restore(); continue;
         }
-        if (li < 1) { ctx.globalAlpha = m.alpha * (1 - li); ctx.filter = 'grayscale(.85) brightness(.8)'; drawCuteMood('C', m.x, m.y, .55, { color: '#7f9a88', glow: '#33413b', look: 0, cy: 70 }); ctx.filter = 'none'; }
+        if (li < 1) { ctx.globalAlpha = m.alpha * (1 - li); if (gfxQ >= .8) ctx.filter = 'grayscale(.85) brightness(.8)'; drawCuteMood('C', m.x, m.y, .55, { color: '#7f9a88', glow: '#33413b', look: 0, cy: 70 }); ctx.filter = 'none'; }
         if (li > 0) { ctx.globalAlpha = m.alpha * li; drawCuteMood('C', m.x, m.y, .55 + li * .05, { color: '#4FDB92', glow: CALM, look, cy: 70 }); }
         ctx.globalAlpha = m.alpha;
         if (m.state === 'dim' && near) {
@@ -4497,7 +4523,7 @@
     ctx.fillStyle = PAPER; ctx.strokeStyle = done ? '#2f9a63' : 'rgba(59,53,80,.18)'; ctx.lineWidth = done ? 2.5 : 1.5;
     ctx.beginPath(); ctx.roundRect ? canvasRoundRect(ctx, x, y, width, h, h / 2) : ctx.rect(x, y, width, h); ctx.fill(); ctx.stroke();
     // a feeling Shwe hasn't caught yet tonight stays in pencil grey
-    if (!have) { ctx.save(); ctx.filter = 'grayscale(1) opacity(.55)'; }
+    if (!have) { ctx.save(); if (gfxQ >= .8) ctx.filter = 'grayscale(1) opacity(.55)'; else ctx.globalAlpha = .55; }
     lightShape(type, x + iconX, y + iconY, compact ? .74 : .95);
     if (!have) ctx.restore();
     ctx.fillStyle = done ? '#2f7a52' : have ? SB_INK : '#6b6480'; ctx.font = `700 ${compact ? 17 : 26}px ${HAND}`; ctx.textAlign = 'left';
@@ -6969,7 +6995,9 @@
   let last = performance.now();
   function frame(now) {
     requestAnimationFrame(frame);
-    const dt = Math.min(.033, (now - last) / 1000); last = now;
+    const elapsed = now - last; last = now;
+    noteFrame(elapsed);
+    const dt = Math.min(.033, elapsed / 1000);
     if (document.hidden) return;
     pauseBtn.hidden = state !== 'play';
     if (goHomeBtn) goHomeBtn.hidden = !atPortal();   // only while Shwe is standing at the moon door
@@ -6988,7 +7016,8 @@
     }
     // DOM menus have their own artwork. Do not repaint the hidden game world
     // underneath them: it wastes mobile GPU memory and rendering time.
-    if (!cv.hidden) render(dt);
+    const playing = state === 'play' || state === 'ending';
+    if (!cv.hidden && (playing || needPaint)) { render(dt); needPaint = false; }
   }
   window.TCHeart?.bind({
     glow: () => glow,

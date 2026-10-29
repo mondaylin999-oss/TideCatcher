@@ -729,16 +729,16 @@
 
 /* ---------- phone controls: smaller, see-through, tucked into the corner so the night stays visible ---------- */
 #touch #hint{display:none}
-#touch .tbtn{background:rgba(20,16,40,.28)!important; border-width:2px!important; backdrop-filter:none; opacity:.72; color:#fff; text-shadow:0 1px 3px #000;
-  font-size:12px!important; transition:opacity .15s, transform .1s}
+#touch .tbtn{background:rgba(20,16,40,.28)!important; border-width:2px!important; backdrop-filter:none; -webkit-backdrop-filter:none; opacity:.72; color:#fff; text-shadow:0 1px 3px #000;
+  font-size:clamp(11px,2.4vh,13px)!important; transition:opacity .12s, transform .08s; min-width:44px; min-height:44px; contain:layout style; transform-origin:center center}
 #touch .tbtn:active,#touch .tbtn.is-touch-pressed{opacity:1}
-#touch #bPounce{width:clamp(54px,15vh,70px); height:clamp(54px,15vh,70px); right:calc(12px + env(safe-area-inset-right,0px)); bottom:calc(12px + env(safe-area-inset-bottom,0px))}
-#touch #bJump{width:clamp(46px,13vh,58px); height:clamp(46px,13vh,58px); right:calc(12px + clamp(54px,15vh,70px) + 10px + env(safe-area-inset-right,0px)); bottom:calc(8px + env(safe-area-inset-bottom,0px))}
-#touch #bEyes{width:clamp(38px,11vh,48px); height:clamp(38px,11vh,48px); right:calc(22px + env(safe-area-inset-right,0px)); bottom:calc(12px + clamp(54px,15vh,70px) + 10px + env(safe-area-inset-bottom,0px))}
-#touch #bScratch{width:clamp(44px,12vh,54px); height:clamp(44px,12vh,54px); right:calc(12px + clamp(54px,15vh,70px) + 14px + env(safe-area-inset-right,0px)); bottom:calc(8px + clamp(46px,13vh,58px) + 12px + env(safe-area-inset-bottom,0px)); opacity:.9}
-#touch #bPurr{width:clamp(38px,11vh,48px); height:clamp(38px,11vh,48px); right:calc(22px + clamp(38px,11vh,48px) + 40px + env(safe-area-inset-right,0px)); bottom:calc(12px + clamp(54px,15vh,70px) + 10px + env(safe-area-inset-bottom,0px))}
-#touch #stick{width:96px; height:96px; opacity:.6}
-#touch #knob{width:40px; height:40px}
+#touch #bPounce{width:clamp(56px,16vh,78px); height:clamp(56px,16vh,78px); right:calc(12px + env(safe-area-inset-right,0px)); bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+#touch #bJump{width:clamp(48px,14vh,64px); height:clamp(48px,14vh,64px); right:calc(12px + clamp(56px,16vh,78px) + 10px + env(safe-area-inset-right,0px)); bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+#touch #bEyes{width:clamp(44px,12vh,54px); height:clamp(44px,12vh,54px); right:calc(22px + env(safe-area-inset-right,0px)); bottom:calc(12px + clamp(56px,16vh,78px) + 10px + env(safe-area-inset-bottom,0px))}
+#touch #bScratch{width:clamp(48px,13vh,60px); height:clamp(48px,13vh,60px); right:calc(12px + clamp(56px,16vh,78px) + 14px + env(safe-area-inset-right,0px)); bottom:calc(8px + clamp(48px,14vh,64px) + 12px + env(safe-area-inset-bottom,0px)); opacity:.9}
+#touch #bPurr{width:clamp(44px,12vh,54px); height:clamp(44px,12vh,54px); right:calc(22px + clamp(44px,12vh,54px) + 40px + env(safe-area-inset-right,0px)); bottom:calc(12px + clamp(56px,16vh,78px) + 10px + env(safe-area-inset-bottom,0px))}
+#touch #stick{width:clamp(88px,22vh,112px); height:clamp(88px,22vh,112px); opacity:.6; transform-origin:center center}
+#touch #knob{width:clamp(36px,9vh,44px); height:clamp(36px,9vh,44px)}
 #heartScreen .lt-cost{font-weight:400; color:#a0835a}
 /* end of a night: Thiri's sleeping face, painted by the team, changes as she heals */
 #endScreen .night-storyline{display:grid; grid-template-columns:minmax(150px,38%) 1fr; gap:14px; align-items:center; margin:4px 0 8px}
@@ -788,14 +788,14 @@
 @keyframes ef-cap{from{opacity:0; transform:translate(-50%,8px)}to{opacity:1; transform:translate(-50%,0)}}
 @keyframes ef-rise{0%{opacity:0; transform:translateY(0)}15%{opacity:.9}100%{opacity:0; transform:translateY(-80vh) translateX(20px)}}
 @media (prefers-reduced-motion:reduce){#endlessFilm img[class]{animation:none}#endlessFilm .ef-sparks{display:none}}
-#endlessFilm .ef-canvas{position:absolute; inset:0; display:block}
-#endlessFilm .ef-bars::before,#endlessFilm .ef-bars::after{animation:ef-bars 1.4s cubic-bezier(.2,.7,.2,1) both}
-#endlessFilm .ef-caption span{display:inline-block; opacity:0; filter:blur(6px); transform:translateY(6px); animation:ef-word .9s ease forwards}
-#endlessFilm .ef-caption{opacity:1; letter-spacing:.01em; text-shadow:0 2px 18px rgba(0,0,0,.9),0 0 2px #000}
-#endlessFilm.ef-out{animation:ef-fade .65s ease forwards}
-@keyframes ef-word{to{opacity:1; filter:blur(0); transform:none}}
-@keyframes ef-bars{from{height:0}}
-@media (prefers-reduced-motion:reduce){#endlessFilm .ef-caption span{animation-duration:.01s}}
+#endlessFilm .ef-canvas{position:absolute; inset:0; display:block}
+#endlessFilm .ef-bars::before,#endlessFilm .ef-bars::after{animation:ef-bars 1.4s cubic-bezier(.2,.7,.2,1) both}
+#endlessFilm .ef-caption span{display:inline-block; opacity:0; filter:blur(6px); transform:translateY(6px); animation:ef-word .9s ease forwards}
+#endlessFilm .ef-caption{opacity:1; letter-spacing:.01em; text-shadow:0 2px 18px rgba(0,0,0,.9),0 0 2px #000}
+#endlessFilm.ef-out{animation:ef-fade .65s ease forwards}
+@keyframes ef-word{to{opacity:1; filter:blur(0); transform:none}}
+@keyframes ef-bars{from{height:0}}
+@media (prefers-reduced-motion:reduce){#endlessFilm .ef-caption span{animation-duration:.01s}}
 #endScreen #nightStoryline:not([hidden]){display:grid!important}
 #endScreen .thiri-mini.has-mood{max-height:22vh; width:auto; justify-self:center}
 @media (max-height:520px){#endScreen #nightStoryline{display:none!important}}
@@ -894,14 +894,34 @@
 #touch #stick{opacity:var(--tc-op,.6)!important; scale:var(--tc-size,1)}
 #touch .tbtn.tc-placed{left:var(--tc-x)!important; top:var(--tc-y)!important; right:auto!important; bottom:auto!important; translate:-50% -50%}
 #touch.tc-stick-right #stickZone{left:auto; right:0}
-#touch.tc-editing{z-index:3000; background:rgba(10,8,26,.55); pointer-events:auto}
+#touch.tc-editing{z-index:3000; background:rgba(10,8,26,.48); pointer-events:auto}
 #touch.tc-editing .tbtn{opacity:max(.55,var(--tc-op,.72))!important; cursor:grab; outline:2px dashed #ffe08a; outline-offset:4px; touch-action:none}
-#touch.tc-editing .tbtn.tc-dragging{cursor:grabbing; outline-style:solid}
+#touch.tc-editing .tbtn.tc-dragging{cursor:grabbing; outline-style:solid; z-index:2}
+#touch.tc-editing .tbtn.tc-selected{outline:3px solid #ffe08a; outline-offset:5px; box-shadow:0 0 0 6px rgba(255,224,138,.28)}
 #touch.tc-editing #stickZone{background:repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 10px,transparent 10px 20px); outline:2px dashed rgba(255,255,255,.35); outline-offset:-6px; pointer-events:none}
-#touch.tc-editing #stickZone::after{content:"Joystick area"; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); color:#fff; font:700 14px var(--body); opacity:.8}
-.tc-layout-bar{position:fixed; z-index:3001; left:50%; top:calc(10px + env(safe-area-inset-top,0px)); transform:translateX(-50%); display:flex; align-items:center; gap:12px; padding:8px 12px; background:var(--sb-paper-2); color:var(--sb-ink); border-radius:3px; box-shadow:var(--sb-shadow)}
-.tc-layout-bar p{margin:0; font-size:14px}
-.tc-layout-bar div{display:flex; gap:8px}
+#touch.tc-editing #stickZone::after{content:"Joystick area"; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); color:#fff; font:700 13px var(--body); opacity:.8; text-shadow:0 1px 4px #000}
+.tc-layout-bar{position:fixed; z-index:3001; left:max(8px,env(safe-area-inset-left,0px)); right:max(8px,env(safe-area-inset-right,0px)); top:calc(6px + env(safe-area-inset-top,0px)); display:flex; flex-direction:column; gap:8px; padding:8px 10px; max-height:calc(42dvh - env(safe-area-inset-top,0px)); overflow:auto; background:var(--sb-paper-2); color:var(--sb-ink); border-radius:10px; box-shadow:var(--sb-shadow); -webkit-user-select:none; user-select:none}
+.tc-layout-head{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap}
+.tc-layout-bar p{margin:0; font-size:13px; line-height:1.25}
+.tc-layout-sel{font-weight:800; color:#5a3f8a}
+.tc-layout-actions{display:flex; gap:8px; flex-wrap:wrap}
+.tc-layout-actions .btn{min-height:40px; padding:6px 14px}
+.tc-layout-tune{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px}
+.tc-stepper{display:grid; grid-template-columns:1fr 44px minmax(48px,auto) 44px; align-items:center; gap:6px; padding:6px 8px; background:#fff; border:2px solid #d9cfee; border-radius:10px; font-weight:700; font-size:12px}
+.tc-stepper span{grid-column:1/-1}
+.tc-stepper button{width:44px; height:44px; min-width:44px; min-height:44px; border-radius:10px; border:2px solid #2b2547; background:#2b2547; color:#ffe08a; font:800 22px/1 var(--body); padding:0; cursor:pointer}
+.tc-stepper button:active{transform:scale(.96)}
+.tc-stepper output{text-align:center; font-variant-numeric:tabular-nums; font-size:14px}
+@media (max-height:430px){
+  .tc-layout-bar{padding:6px 8px; gap:6px; max-height:46dvh}
+  .tc-layout-bar p{font-size:12px}
+  .tc-stepper{grid-template-columns:auto 40px minmax(40px,auto) 40px; padding:4px 6px}
+  .tc-stepper span{grid-column:auto; font-size:11px}
+  .tc-stepper button{width:40px; height:40px; min-width:40px; min-height:40px; font-size:20px}
+}
+@media (max-width:420px){
+  .tc-layout-tune{grid-template-columns:1fr}
+}
 .game-notes-btn{position:fixed; z-index:1000; top:calc(env(safe-area-inset-top,0px) + 64px); left:calc(env(safe-area-inset-left,0px) + 14px); width:40px; height:40px; border-radius:50%; border:2px solid var(--lilac,#b9a3ff); background:rgba(20,16,40,.55); color:#fff; font-size:18px; line-height:1; cursor:pointer; display:grid; place-items:center; padding:0}
 .game-notes-btn.off{opacity:.75; border-style:dashed}
 .game-notes-btn:focus-visible{outline:3px solid #ffe08a; outline-offset:2px}
@@ -929,7 +949,7 @@
 .ctl-msg{margin:0; color:#a0632a; font-weight:700; font-size:13px}
 .ctl-actions{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; margin-top:4px}
 .ctl-range{display:grid; grid-template-columns:110px 1fr 48px; align-items:center; gap:10px; font-weight:700; font-size:14px}
-.ctl-range input{accent-color:#8a5cd6}
+.ctl-range input{accent-color:#8a5cd6; width:100%; min-height:32px}
 .ctl-range output{font-variant-numeric:tabular-nums; color:var(--sb-ink-2)}
 .ctl-stick{grid-template-columns:1fr auto}
 .ctl-stick div{display:flex; gap:6px}
