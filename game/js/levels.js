@@ -115,11 +115,17 @@
       45: [{ x: 398, w: 66, h: 190 }, { x: 514, w: 70, h: 210 }],
       50: [{ x: 410, w: 70, h: 198 }, { x: 532, w: 74, h: 216 }]
     };
+    // Route numbers share the 1-based Night numbering used by game.js.
+    const moodlingUnlocks = { 11: ['O'], 14: ['U'], 17: ['P'] };
     return {
       night, map, width, pits, checkpoints, ground: ground(width, groundPoints), platforms,
       restSpots: map === 'rooftop' ? [220, ...checkpoints] : [],
       hideSpots, burySpots, spawnZones, catStart: 150, homeLight: [width - 150, 390], props: [], pitToBridgeRatio: 5,
-      wallJumps: wallRoutes[night] || []
+      wallJumps: wallRoutes[night] || [],
+      ...(night >= 11 ? {
+        introducedMoodlings: moodlingUnlocks[night] || [],
+        availableMoodlings: [...(night >= 11 ? ['O'] : []), ...(night >= 14 ? ['U'] : []), ...(night >= 17 ? ['P'] : [])]
+      } : {})
     };
   };
   const levels = {
@@ -266,6 +272,12 @@
     const skin = map === 'festival' ? 'boat' : map === 'lake' ? 'log' : map === 'hill' ? 'stone' : '';
     if (night % 5 !== 0) { level.pits = []; level.platforms = []; level.spawnZones = [[260, level.width - 200]]; }
     else level.platforms = level.platforms.filter(p => p[3] === 'moving' && p[4]?.path?.length > 1).map(p => { if (skin) p[4].skin = skin; else delete p[4].skin; return p; });
+    if (night === 17) {
+      // Proud's first route has a pair of broad, safe high perches to teach its height rule.
+      // They are static ledges, not pit bridges; the pit/roost schedule stays unchanged.
+      level.platforms.push(platform(Math.round(level.width * .34), 354, 150, 'static'), platform(Math.round(level.width * .63), 330, 156, 'static'));
+      level.proudPerches = level.platforms.slice(-2).map(p => p[0] + p[2] / 2);
+    }
     if (map === 'hill' && !level.pits.length) {
       // rolling hill steps instead of a flat street
       const pts = [[0, 470], [420, 470]];

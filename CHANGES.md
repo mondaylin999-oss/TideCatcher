@@ -1,3 +1,11 @@
+# Bored, Guilty, and Proud Moodlings
+
+- Added Bored, Guilty, and Proud as new Mood Book families with rare sparkle variants, custom cozy art, colors, catch bursts, and soft synthesized sound placeholders.
+- Numbered routes introduce only Bored on 11, Guilty on 14, and Proud on 17; later cards rotate in at most one of these new types at a time. Routes 1–10 keep their existing Moodling roster and layout data. Free Play adds each type only after Shwe has met it.
+- Bored now needs three different nearby actions before a short pounce window. Guilty hides, drops a dim light that Night Eyes reveal, and accepts it back after Shwe walks it home. Proud uses high ledges and requires a still, same-height-or-higher approach followed by a bow.
+- Added English and Burmese first-encounter and How to Play catch guides, plus three-step catch storyboards. The first Proud route includes two broad high perches.
+- Added route unlock, roster, card-plan, art, guide, and behavior coverage to `tests/new-moodlings.test.js` and the game-integrity workflow.
+
 # Shwe explores Thiri’s room
 
 - Shwe now wanders gently between a few open spots in the bedroom, using the same customized cat rig and walk cycle as gameplay.

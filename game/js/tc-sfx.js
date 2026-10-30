@@ -6,6 +6,7 @@
   const VOICE = { F: 'sfx_mood_frustrated_growl', N: 'sfx_mood_nervous_squeak', L: 'sfx_mood_lonely_sigh',
     C: 'sfx_mood_calm_chime', S: 'sfx_mood_shy_giggle', J: 'sfx_mood_jealous_hmph',
     E: 'sfx_mood_excited_boing', B: 'sfx_mood_shy_giggle', G: 'sfx_mood_golden_sparkle' };
+  const PLACEHOLDER_VOICE = { O: 'moodBored', U: 'moodGuilty', P: 'moodProud' };
   const CAT = { meow: 'sfx_cat_meow', trill: 'sfx_cat_happy_trill', purr: 'sfx_cat_purr', sad: 'sfx_cat_sad_mew', hiss: 'sfx_cat_hiss' };
   const LEVEL = { sfx_cat_purr: .5, sfx_mood_golden_sparkle: .55, sfx_mood_calm_chime: .7 };
   const names = [...new Set([...Object.values(VOICE), ...Object.values(CAT), 'sfx_catch_happy_chime', 'sfx_mood_frustrated_charge', 'sfx_mood_frustrated_dizzy'])];
@@ -33,6 +34,9 @@
     combo: { f: 620, to: 1240, d: .22, w: 'sine', v: .065 }, comboLost: { f: 330, to: 220, d: .16, w: 'triangle', v: .04 },
     hit: { f: 250, to: 120, d: .17, w: 'triangle', v: .055, noise: .18 }, appear: { f: 470, to: 710, d: .2, w: 'sine', v: .05 },
     sparkle: { f: 1047, to: 1568, d: .32, w: 'sine', v: .045, notes: [1047, 1318, 1568] },
+    moodBored: { f: 310, to: 230, d: .38, w: 'sine', v: .045 },
+    moodGuilty: { f: 392, to: 330, d: .34, w: 'triangle', v: .045 },
+    moodProud: { f: 587, to: 740, d: .28, w: 'sine', v: .045 },
     result: { f: 440, d: .38, w: 'sine', v: .06, notes: [440, 554, 659] }, resultTick: { f: 720, d: .05, w: 'sine', v: .022 }, reward: { f: 523.25, d: .5, w: 'sine', v: .075, notes: [523.25, 659, 784, 1047] },
   };
   const UI_ALIAS = { click: 'click', hover: 'hover', back: 'back', cancel: 'back', toggle: 'toggle', tab: 'tab', page: 'page',
@@ -100,9 +104,9 @@
   }
   const api = {
     play, preload: () => names.forEach(load),
-    moodling: (type, vol) => VOICE[type] && play(VOICE[type], vol),
+    moodling: (type, vol) => { const voice = VOICE[type] || PLACEHOLDER_VOICE[type]; if (voice) play(voice, vol); },
     cat: (what, vol) => CAT[what] && play(CAT[what], vol),
-    caught: type => { play('sfx_catch_happy_chime', .8); if (VOICE[type]) setTimeout(() => play(VOICE[type], .7), 140); },
+    caught: type => { play('sfx_catch_happy_chime', .8); const voice = VOICE[type] || PLACEHOLDER_VOICE[type]; if (voice) setTimeout(() => play(voice, .7), 140); },
     ui: (kind, strength = 1) => synth(UI_ALIAS[kind] || kind || 'click', strength),
     combo: count => synth('combo', .72, Math.pow(2, Math.max(0, Math.min(5, Number(count) || 1) - 1) / 12)),
     level: () => muted ? 0 : volume,

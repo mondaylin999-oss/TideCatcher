@@ -104,7 +104,10 @@
           J: ['Jealous steals a glowing light from your trail.', 'Chase after Jealous to get the light back.', 'Pounce when Jealous gets tired.'],
           C: ['Walk slowly through the reeds as fireflies appear.', 'Stop and sit still beside Calm.', 'Stay quietly together until the catch ring fills.'],
           C1: ['Hold S as the breathing ring grows.', 'Release S as the ring gently shrinks.', 'Match three slow breaths, then catch Calm.'],
-          G: ['Watch Golden swoop in a quick arc.', 'Press Space to jump and meet it in the air.', 'Press J or X to pounce mid-air and catch it.']
+          G: ['Watch Golden swoop in a quick arc.', 'Press Space to jump and meet it in the air.', 'Press J or X to pounce mid-air and catch it.'],
+          O: ['Bored is sleepy and fades if ignored.', 'Stay within three tiles and try three different actions.', 'When its eyes open, pounce before it dozes again.'],
+          U: ['Press E for Night Eyes to reveal Guilty’s dropped light.', 'Walk over to pick it up, then turn back without running.', 'Give Guilty the light and pounce after its thankful sigh.'],
+          P: ['Proud struts on the highest nearby ledge.', 'Stand at its height or higher, within two tiles, and stay still.', 'When Proud bows, pounce to bring it home.']
         },
         paperStars: {
           label: 'Paper stars', progress: 'Paper stars · {count} / 3', diaryUnlocked: 'bonus diary page unlocked',
@@ -145,7 +148,10 @@
           J: 'Let it steal a trail light, then pounce while it is tired to get the light back.',
           C: 'Walk slowly through three fireflies, then bring their light to Calm. For Breathing Calm, hold S as the bubble grows and release as it shrinks.',
           C1: 'Hold S as the bubble grows, then release as it shrinks. Match three slow breaths.',
-          G: 'Golden Moodlings fly quickly and fade. Jump after one and pounce when you are close.'
+          G: 'Golden Moodlings fly quickly and fade. Jump after one and pounce when you are close.',
+          O: 'Stay close to sleepy Bored and use three different actions. Pounce when its eyes open.',
+          U: 'Use Night Eyes to find Guilty’s dropped light. Carry it back without running, then pounce after it sighs.',
+          P: 'Meet Proud at the same height or higher. Stay still nearby until it bows, then pounce.'
         },
         controlNames: { move: 'Move', jump: 'Jump', sneak: 'Sneak', catch: 'Pounce / catch', eyes: 'Night Eyes', scratch: 'Scratch', purr: 'Purr (upgrade)', pause: 'Pause' },
         nextNight: 'Next night',
@@ -258,7 +264,10 @@
           J: ['Jealous က လမ်းကြောင်းရှိအလင်းလေးကို ခိုးယူသည်။', 'အလင်းပြန်ရရန် Jealous နောက်ကို လိုက်ပါ။', 'Jealous ပင်ပန်းလာလျှင် ခုန်တိုက်ပါ။'],
           C: ['ကျူပင်များကြား ပိုးစုန်းကြူးများနှင့်အတူ ဖြည်းဖြည်းလျှောက်ပါ။', 'Calm ဘေးတွင် ရပ်ပြီး ငြိမ်ငြိမ်ထိုင်ပါ။', 'ဖမ်းယူကွင်းပြည့်သည်အထိ အတူတူငြိမ်နေပါ။'],
           C1: ['အသက်ရှူကွင်းကြီးလာချိန် S ကိုဖိထားပါ။', 'ကွင်းကျုံ့လာချိန် S ကိုလွှတ်ပါ။', 'ဖြည်းဖြည်းအသက်ရှူမှု သုံးကြိမ်လိုက်လုပ်ပြီး ဖမ်းပါ။'],
-          G: ['Golden ပျံဝဲသည့် အကွေးလမ်းကြောင်းကို ကြည့်ပါ။', 'Space နှိပ်၍ ခုန်ပြီး လေထဲတွင် ဆုံပါ။', 'လေထဲတွင် J သို့မဟုတ် X နှိပ်၍ ခုန်တိုက်ဖမ်းပါ။']
+          G: ['Golden ပျံဝဲသည့် အကွေးလမ်းကြောင်းကို ကြည့်ပါ။', 'Space နှိပ်၍ ခုန်ပြီး လေထဲတွင် ဆုံပါ။', 'လေထဲတွင် J သို့မဟုတ် X နှိပ်၍ ခုန်တိုက်ဖမ်းပါ။'],
+          O: ['Bored အိပ်ငိုက်နေပြီး လျစ်လျူရှုထားလျှင် မှေးမှိန်သွားမည်။', 'အနားသုံးကွက်အတွင်းနေ၍ မတူညီသော လုပ်ဆောင်ချက် သုံးမျိုးလုပ်ပါ။', 'မျက်လုံးဖွင့်လာလျှင် ပြန်မအိပ်ခင် ခုန်တိုက်ပါ။'],
+          U: ['Night Eyes ဖွင့်ရန် E ကိုနှိပ်ပြီး Guilty ချထားသောအလင်းကို ရှာပါ။', 'လမ်းလျှောက်၍ ကောက်ယူပြီး မပြေးဘဲ ပြန်လှည့်ပါ။', 'Guilty ကို အလင်းပြန်ပေးပြီး ကျေးဇူးတင်သံကြားလျှင် ခုန်တိုက်ပါ။'],
+          P: ['Proud က အနီးဆုံး အမြင့်ဆုံးစင်ပေါ်မှာ လမ်းလျှောက်နေတယ်။', 'အမြင့်တူ သို့မဟုတ် ပိုမြင့်ရာမှာ နှစ်ကွက်အတွင်း ငြိမ်ငြိမ်နေပါ။', 'ဦးညွှတ်လာလျှင် အိမ်ပြန်ခေါ်ရန် ခုန်တိုက်ပါ။']
         },
         paperStars: {
           label: 'စက္ကူကြယ်များ', progress: 'စက္ကူကြယ်များ · {count} / 3', diaryUnlocked: 'အပိုဒိုင်ယာရီ စာမျက်နှာ ဖွင့်ပြီး',
@@ -299,7 +308,10 @@
           J: 'မီးလင်းလေးကို ခိုးယူခွင့်ပေးပြီး ပင်ပန်းနေချိန်တွင် ခုန်တိုက်ပါ။ မီးလင်းလေး ပြန်ရမည်။',
           C: 'ပိုးစုန်းကြူး သုံးကောင်ကို ဖြည်းဖြည်းစု၍ အလင်းကို Calm ထံ ယူသွားပါ။ အသက်ရှူ Calm အတွက် ပူဖောင်းကြီးလာချိန် S ကိုဖိပြီး သေးလာချိန် လွှတ်ပါ။',
           C1: 'ပူဖောင်းကြီးလာချိန် S ကိုဖိထားပြီး သေးလာချိန် လွှတ်ပါ။ အသက်ရှူမှု သုံးကြိမ်ကို ဖြည်းဖြည်း လိုက်လုပ်ပါ။',
-          G: 'Golden Moodling သည် မြန်မြန်ပျံပြီး ပျောက်ကွယ်တတ်သည်။ ခုန်လိုက်၍ အနားရောက်ချိန်တွင် ခုန်တိုက်ပါ။'
+          G: 'Golden Moodling သည် မြန်မြန်ပျံပြီး ပျောက်ကွယ်တတ်သည်။ ခုန်လိုက်၍ အနားရောက်ချိန်တွင် ခုန်တိုက်ပါ။',
+          O: 'အိပ်ငိုက်နေသော Bored အနားတွင်နေ၍ မတူညီသော လုပ်ဆောင်ချက် သုံးမျိုးလုပ်ပါ။ မျက်လုံးဖွင့်ချိန် ခုန်တိုက်ပါ။',
+          U: 'Night Eyes ဖြင့် Guilty ၏ အလင်းကိုရှာပါ။ မပြေးဘဲ ပြန်သယ်လာပြီး သက်ပြင်းချချိန် ခုန်တိုက်ပါ။',
+          P: 'Proud နဲ့ အမြင့်တူ သို့မဟုတ် ပိုမြင့်ရာမှာ တွေ့ပါ။ ဦးညွှတ်သည်အထိ ငြိမ်ငြိမ်နေပြီးနောက် ခုန်တိုက်ပါ။'
         },
         controlNames: { move: 'ရွေ့ပါ', jump: 'ခုန်ပါ', sneak: 'တိတ်တိတ်လေးသွားပါ', catch: 'ခုန်တိုက် / ဖမ်းပါ', eyes: 'Night Eyes', scratch: 'ကုတ်ပါ', purr: 'Purr (အဆင့်မြှင့်မှု)', pause: 'ခေတ္တရပ်ပါ' },
         nextNight: 'နောက်ည',

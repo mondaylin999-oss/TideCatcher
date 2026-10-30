@@ -23,3 +23,4 @@ jobs:
       - run: node tests/secret-rooms.test.js
       - run: node tests/night-preview.test.js
       - run: node tests/parallax-layers.test.js
+      - run: node tests/new-moodlings.test.js
