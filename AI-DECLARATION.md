@@ -1,31 +1,32 @@
 # AI declaration
 
-TideCatcher was made by the NextCrown team for Digit7 Jam 2026 (1–31 Oct 2026). This file lists every AI tool used and what it was used for.
+TideCatcher was made by the NextCrown team for Digit7 Jam 2026 (1–31 Oct 2026). This file lists every AI tool used, what it was used for, and which code and assets it affected. The team came up with the game, made the final decisions, tested every change and directed all AI work.
 
-_Team: check this list and add anything missing before submitting._
+## Claude (Anthropic): main assistant
+Used through Claude and Claude Code across the whole project.
 
-## Claude (Anthropic)
-
-| Area | What AI did | What the team did |
-|---|---|---|
-| Game idea and story | Helped write the story outline, chapter plan and design-role documents | Came up with the game concept, chose the story, made all final decisions |
-| Code | Helped build prototype features: name and breed setup, cat animation, new Moodling behaviours (Excited, Shy, Jealous), performance fixes, code reorganisation | Reviewed, tested and integrated the code |
-| Cat sprites | Cut out, recoloured, made "chibi" and animated the 8 cats (see `docs/proof/cats/`) | Supplied the source sheet, chose the breeds, gave feedback |
-| Moodling art | Designed the vector art for the 8 Moodlings (see `docs/proof/moodlings/`) | Defined each feeling, colour and behaviour, gave feedback |
-| Intro scenes | Edited 4 of the 8 opening images, wrote the cutscene dialogue and built the cutscene (see `docs/proof/intro-scenes/`) | _TEAM TO FILL — who made the base images_ |
-| Designer briefs | Made instruction pictures for designers (`docs/design/`) | Designed the backgrounds, places and characters |
-| Hilltop park map (Night 5) | Built the team's level design into the game: stepped terrace, platforms and hiding places drawn in code; city view taken from the team's picture, recoloured and upscaled (see `docs/proof/hill-map/`) | Designed the level layout, platforms and hiding places |
-| Lakeside map (Nights 6–7) | Painted entirely in code: dawn sky, rising sun, mountains, lake, reeds, jetties (see `docs/proof/lakeside-map/`) | Chose the place and the sunrise ending |
-| Team logo | Helped design the NextCrown team logo | Chose the direction |
+| Area | What Claude did | Affected files | What the team did |
+|---|---|---|---|
+| Game idea and story | Helped write the story outline, chapter plan, intro and ending dialogue, tips and Burmese/English UI text | `game/js/game.js` (INTRO_LINES, ENDING_LINES, chapter text), `game/js/tips.js` | Came up with the concept and story, chose the direction, made final decisions |
+| Core gameplay code | Wrote most of the JavaScript: movement and physics, Moodling behaviours, bosses, levels, Endless Nights 8–50, Free Play, Heart Workshop and Lantern Town, Mood Book, shop, missions, saves | `game/js/*.js` | Designed the rules and Moodling behaviours, playtested, reported bugs, chose what shipped |
+| Mood Tide and late features | Mood Tide, Night 6 tide pool, festival lanterns, story-night heights (`solidTops`), Nights 8–50 width cap, rolling ground, seeded hide/dig spots and map hazards, daily tasks checklist, button tour, catch clips | `game/js/mood-tide.js`, `game/js/levels.js`, `game/js/button-tour.js`, `game/js/game.js` | Asked for the features, tested them on their own devices |
+| Mobile and polish | Responsive layout, touch controls, zoom guard, sound start, performance and visual fixes | `game/css/mobile-fit.css`, `game/index.html`, `game/js/tc-sfx.js`, `game/js/tc-game-audio.js` | Tested on phones, tablets and laptops |
+| Tests and level tools | Wrote the automated tests and reachability checks | `tests/*.test.js` | Ran them before each commit |
+| Cat sprites | Cut out, recoloured, made "chibi" and animated the 8 cats | `game/assets/cats/`, `game/js/customization.js`, `docs/proof/cats/` | Supplied the source sheet, chose the breeds, gave feedback |
+| Moodling art | Designed the vector art for the Moodlings | `game/js/moodling-art.js`, `docs/proof/moodlings/` | Defined each feeling, colour and behaviour |
+| Intro scenes | Edited 4 of the 8 opening images and built the cutscene | `game/assets/intro/`, `docs/proof/intro-scenes/` | Made or supplied the base images |
+| Bedroom and Thiri | Upscaled and regraded the room, cut Thiri's six sleeping poses from the team's painting and made small edits | `game/assets/home/`, `docs/proof/bedroom/` | Designed the room and the girl |
+| Maps | Drew the hilltop and lakeside maps in code; edited the school, park and festival backgrounds | `game/js/*places*.js`, `game/assets/`, `docs/proof/*-map/` | Designed the level layouts, platforms and hiding places |
+| Audio | Wrote the Python scripts that synthesise the music and Moodling sounds (no AI audio model) | `docs/proof/audio/*.py`, `game/assets/audio/` | Chose the mood of each piece |
+| Designer briefs, team logo | Made instruction pictures for designers; helped design the NextCrown logo | `docs/design/`, `docs/brand/` | Chose the direction |
+| Documentation | Helped write README, CHANGES, level notes and this file | `*.md`, `docs/` | Checked and approved them |
 
 ## Other tools
-- **Real-ESRGAN** (open-source AI image upscaler, anime model) — used to sharpen the park and festival backgrounds.
-- **ChatGPT** (OpenAI) — generated the night park background (see `docs/proof/park-map/`). Claude removed the painted-in platforms, upscaled it, regraded it to indigo with warm lamp light, and added the grass, path, flowers, bushes and playground decks in code.
-- **ChatGPT** (OpenAI) — generated the lighting festival landscape (see `docs/proof/festival-map/`). Claude used its sky, moon, mountains and pagoda hill as the far background (darkened to 3 AM, floating lanterns removed); the boardwalk, stalls, lantern strings, palms and water are drawn in code.
-- **ChatGPT** (OpenAI) — generated the first school hallway background (see `docs/proof/school-map/`). Claude then removed the painted-in shelves, springs and balls, turned it into a night scene and fitted it to the game.
-- **Manus** — _TEAM TO FILL — this repo's `.gitignore` mentions Manus. Say what it was used for, or remove this line if it wasn't used._
-- **Image tool for the cat sheet / intro base images** — _TEAM TO FILL_
-- _Add any other AI tools here (music, sound, voice, images, code)._
+- **ChatGPT (OpenAI):** generated the starting images for the night park, the lighting festival landscape and the first school hallway (see `docs/proof/park-map/`, `festival-map/`, `school-map/`). Claude then edited them for the game.
+- **Real-ESRGAN** (open-source AI upscaler, anime model): sharpened the park, festival and bedroom backgrounds.
+- _TEAM TO FILL: the tool used for the 8-cat source sheet and the intro base images (or "drawn by hand by …")._
+- _TEAM TO FILL: Manus — say what it was used for, or delete this line if it was not used._
 
 ## Not made with AI
-_TEAM TO FILL — list what was made by hand, e.g. background art, girl character drawings, sound, level layouts._
+- Cat sounds: recorded by Kerzoven (CC0, OpenGameArt).
+- _TEAM TO FILL: anything drawn, written or recorded by hand (for example the bedroom design, the girl character, level layout sketches)._

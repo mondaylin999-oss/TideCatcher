@@ -116,6 +116,20 @@ assert.equal(LEVELS[5].pitToBridgeRatio, 5, 'Night 5 gaps use the five-to-one br
 assert.ok(LEVELS.free.variants.every(level => level.pits?.length), 'Every Free Play trail includes a fall-risk crossing');
 assert.deepEqual(LEVELS.free.variants.map(level => level.pitToBridgeRatio), [5,5,5], 'Free Play pits also require moving roost crossings');
 assert.ok([...Array(43)].every((_, i) => LEVELS[i + 8].pitToBridgeRatio === 5), 'Challenge levels keep the maximum five-to-one pit ratio');
-assert.ok([...Array(8)].every((_, i) => LEVELS[15 + i * 5].pits.length > LEVELS[10 + i * 5].pits.length), 'Pit count grows between challenge pit nights');
+// Pit count never drops between pit nights, but is capped at 5 so no night grows past ~6,000 units (the old rule made Night 49 about 16,000 wide).
+assert.ok([...Array(8)].every((_, i) => LEVELS[15 + i * 5].pits.length >= LEVELS[10 + i * 5].pits.length), 'Pit count never drops between challenge pit nights');
+assert.ok([...Array(9)].every((_, i) => LEVELS[10 + i * 5].pits.length >= 2 && LEVELS[10 + i * 5].pits.length <= 5), 'Pit nights have 2-5 pits');
+for (let n = 8; n <= 50; n++) {
+  const L = LEVELS[n];
+  assert.ok(n % 5 === 0 ? L.width <= 6000 : L.width >= 4500 && L.width <= 5500, `Night ${n}: width ${L.width} is within the cap`);
+  assert.ok(new Set(L.ground.points.map(p => p[1])).size > 1, `Night ${n}: ground is not flat`);
+  for (let i = 1; i < L.ground.points.length; i++) { const [x0, y0] = L.ground.points[i - 1], [x1, y1] = L.ground.points[i]; assert.ok(Math.abs(y1 - y0) / (x1 - x0) < .5, `Night ${n}: ground stays walkable`); }
+  for (const [a, b] of L.pits) for (const x of [a - 110, a, b, b + 110]) assert.equal(groundY(L, x), 470, `Night ${n}: ground is flat around pits`);
+  const hs = L.hideSpots, gaps = hs.slice(1).map((x, i) => x - hs[i]);
+  assert.ok(hs.length >= 4 && hs.length <= 8 && gaps.every(g => g >= 300), `Night ${n}: 4-8 hide spots, 300+ apart`);
+  assert.ok(new Set(gaps).size > 1, `Night ${n}: hide spots are not evenly repeating`);
+  assert.ok(L.burySpots.every(x => !L.pits.some(([a, b]) => x > a - 130 && x < b + 130)) && L.hideSpots.every(x => !L.pits.some(([a, b]) => x > a - 130 && x < b + 130)), `Night ${n}: spots clear of pits`);
+  assert.ok([...L.hideSpots, ...L.burySpots].every(x => !L.secretRoom || Math.abs(x - L.secretRoom.x) >= 170), `Night ${n}: spots clear of the secret room`);
+}
 assert.ok([...Array(8)].every((_, i) => LEVELS[15 + i * 5].platforms[0][4].speed > LEVELS[10 + i * 5].platforms[0][4].speed), 'Bridge speed rises between challenge pit nights');
 console.log(`Validated ${layouts().length} level layouts; ${MAX_JUMP_HEIGHT.toFixed(1)}px jump rise and ${MAX_FLAT_JUMP.toFixed(1)}px safe jump span.`);

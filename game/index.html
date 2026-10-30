@@ -2,7 +2,19 @@
 <html lang="en">
 <head>
 <meta charset=utf8>
-<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<script>
+/* iPad/iPhone Safari ignores "user-scalable=no", so block its zoom gestures directly. Text boxes keep normal taps. */
+(function () {
+  var lastTouch = 0, field = function (t) { return t && t.closest && t.closest('input,textarea,select,[contenteditable]'); };
+  document.addEventListener('touchend', function (e) {
+    var now = Date.now(); if (now - lastTouch < 350 && !field(e.target)) e.preventDefault(); lastTouch = now;
+  }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
+  document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  document.addEventListener('dblclick', function (e) { if (!field(e.target)) e.preventDefault(); }, { passive: false });
+})();
+</script>
 <title>TideCatcher · A little light to bring home</title>
 <meta name="description" content="TideCatcher: bring every feeling home. A cozy cat platformer by NextCrown for Digit7 Jam 2026.">
 <meta name="theme-color" content="#140b2e">
@@ -23,9 +35,9 @@
 <link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 <link rel="stylesheet" href="css/heart.css?v=20261024-heart-depth">
-<link rel="stylesheet" href="css/sketchbook.css?v=20261030-room-cat">
+<link rel="stylesheet" href="css/sketchbook.css?v=20261031-v7">
 <link rel="stylesheet" href="css/brand.css?v=20261029-colour">
-<link rel="stylesheet" href="css/mobile-fit.css?v=20261030-fit1">
+<link rel="stylesheet" href="css/mobile-fit.css?v=20261031-v7">
 </head>
 <body>
 <div class="title-screen" id="titleScreen" role="dialog" aria-label="TideCatcher title screen">
@@ -148,11 +160,11 @@
 <div class="overlay welcome-screen" id="welcomeScreen" hidden aria-labelledby="welcomeTitle">
   <div class="welcome-backdrop" aria-hidden="true"><span class="welcome-moon"></span><span class="welcome-tide"></span><span class="welcome-tide welcome-tide-back"></span></div>
   <section class="welcome-panel" aria-describedby="welcomeDescription">
-    <p class="eyebrow welcome-eyebrow">Thiri’s sketchbook · please don’t peek</p>
-    <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/ginger-toon.png" alt="Shwe, a cat ready to follow the night lights" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
+    <p class="eyebrow welcome-eyebrow">Her sketchbook · please don’t peek</p>
+    <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/ginger-toon.png" alt="" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
     <img class="welcome-logo" src="assets/brand/tidecatcher-logo.webp" alt="" width="900" height="506" decoding="async">
     <h1 id="welcomeTitle" class="welcome-title sr-only">TideCatcher</h1>
-    <p id="welcomeDescription" class="welcome-description">When Thiri falls asleep with a heavy heart, Shwe follows her little feelings into the Night Side.</p>
+    <p id="welcomeDescription" class="welcome-description">When a girl falls asleep with a heavy heart, her cat follows her little feelings into the Night Side.</p>
     <div class="welcome-loading" id="welcomeLoading" role="status" aria-live="polite">
       <div class="welcome-loading-copy"><span id="welcomeLoadStatus">Gathering the moonlight…</span><span class="sr-only" id="welcomeLoadCount">0 / 8</span></div>
       <div id="loadingStars" class="loading-stars" aria-hidden="true"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
@@ -191,7 +203,7 @@
     <div class="setup-grid">
       <div class="setup-preview" aria-hidden="true">
         <canvas id="setupCatCanvas" width="340" height="300"></canvas>
-        <div class="setup-tag" id="setupCatTag">Shwe</div>
+        <div class="setup-tag" id="setupCatTag">Your cat</div>
       </div>
       <div class="setup-fields">
         <label class="field"><span class="setup-step">01 · Who are you?</span>🐾 Her name<input type="text" id="girlNameInput" maxlength="12" autocomplete="off" spellcheck="false" placeholder="e.g. Thiri"></label>
@@ -446,12 +458,12 @@
 <script src="js/test-mode.js?v=20261030-test1"></script>
 <script src="js/customization.js?v=20261030-sharpcat"></script>
 <script src="js/controls.js?v=20261029-layout"></script>
-<script src="js/tips.js?v=20261030-night-pan"></script>
-<script src="js/levels.js?v=20261030-keepsakes"></script>
+<script src="js/tips.js?v=20261031-v7"></script>
+<script src="js/levels.js?v=20261031-v7"></script>
 <script src="js/visual-chapters.js?v=20261026-nolamps"></script>
 <script src="js/school-hallways.js?v=20261024-school-outdoors"></script>
-<script src="js/tc-sfx.js?v=2e3b239c26f8"></script>
-<script src="js/tc-game-audio.js?v=5a66f4ed7efc"></script>
+<script src="js/tc-sfx.js?v=20261031-v7"></script>
+<script src="js/tc-game-audio.js?v=20261031-v7"></script>
 <script src="js/moodling-art.js?v=20261026-art"></script>
 <script src="js/catch-clips.js?v=20261028-hd-clips"></script>
 <script src="js/endless-film.js?v=20261028-canvas"></script>
@@ -465,9 +477,11 @@
 <script src="js/jump-upgrade.js?v=20261028-second-leap"></script>
 <script src="js/paper-stars.js?v=20261028-paper-stars"></script>
 <script src="js/parallax-layers.js?v=20261030-map-depth"></script>
-<script src="js/game.js?v=20261030-mobile1"></script>
+<script src="js/mood-tide.js?v=20261031-v7"></script>
+<script src="js/game.js?v=20261031-v7"></script>
 <script src="js/cozy-ui.js?v=20261027-chill"></script>
 <script src="js/sketchbook.js?v=sb5"></script>
 <script src="js/afterstory.js?v=as2"></script>
+<script src="js/button-tour.js?v=20261031-v7"></script>
 </body>
 </html>

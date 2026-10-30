@@ -32,6 +32,21 @@
     sfx_land: 0.9, sfx_pounce: 1, sfx_pounce_2: 1, sfx_pounce_3: 1, sfx_scratch: 1, sfx_scratch_2: 1, sfx_scratch_3: 1, sfx_night_eyes: 1, sfx_button_click: 0.9, sfx_night_complete: 1,
     sfx_night_failed: 0.9, sfx_unlock: 1 };
   let ac = null, out = null, ambienceOut = null, effectsOut = null, analyser = null, unlocked = false, sneaking = false, duck = 1, want = null, stepIx = 0, sfxDuck = 1, duckTimer = 0;
+  // Opened straight from a file, browsers block fetch() and feed silence into the audio graph for media,
+  // so recorded effects and ambience play through plain <audio> elements there instead.
+  const FILE = location.protocol === 'file:';
+  const elBase = {}, elLive = {};
+  function playEl(name, url, vol, rate, lv) {
+    const now = performance.now();
+    if (now - (last[name] || 0) < 55 || (elLive[name] || 0) >= 3) return true;
+    last[name] = now;
+    const base = elBase[url] || (elBase[url] = Object.assign(new Audio(url), { preload: 'auto' }));
+    const a = base.cloneNode(); a.volume = Math.max(0, Math.min(1, vol * (LEVEL[name] || 1) * lv)); a.playbackRate = rate * (0.96 + Math.random() * 0.08);
+    elLive[name] = (elLive[name] || 0) + 1; const done = () => { elLive[name] = Math.max(0, elLive[name] - 1); };
+    a.addEventListener('ended', done, { once: true }); a.addEventListener('error', done, { once: true });
+    const pr = a.play(); if (pr && pr.catch) pr.catch(done);
+    duckForSfx(name); return true;
+  }
   const bufs = {}, loading = {}, last = {}, live = {}, failed = {};
   let cur = null;   // { name, gain, src, filter }
   const settings = () => { try { return JSON.parse(localStorage.getItem('tc-audio') || 'null') || {}; } catch (e) { return {}; } };
@@ -63,6 +78,7 @@
     const url = SFX + name + EXT, b = bufs[url];
     if (!unlocked || !ensure()) return false;
     const lv = TCSfx.level(); if (lv <= 0) return true;          // muted or effects at 0: stay silent
+    if (FILE) return playEl(name, url, vol, rate, lv);
     if (!b) { load(url).catch(() => {}); return false; }          // not ready yet -> original placeholder this time
     const now = performance.now();
     if (now - (last[name] || 0) < 55 || (live[name] || 0) >= 3) return true;   // never stack the same sound
@@ -103,12 +119,13 @@
   // gameplay effects briefly pull the ambience (and its music) down so they stay clearly audible
   const DUCKERS = /^sfx_(pounce|scratch|jump|land|night_eyes|night_complete|night_failed|unlock)/;
   function duckForSfx(name) {
-    if (!DUCKERS.test(name) || !cur || !ac) return;
+    if (!DUCKERS.test(name) || !cur || (!ac && !FILE)) return;
     sfxDuck = 0.55; applyAmbGain(0.03);
     clearTimeout(duckTimer);
     duckTimer = setTimeout(() => { sfxDuck = 1; applyAmbGain(0.35); }, /night_(complete|failed)|unlock/.test(name) ? 1400 : 420);
   }
   function applyAmbGain(tc = 0.2) {
+    if (FILE) { if (cur && cur.el) cur.el.volume = Math.max(0, Math.min(1, ambGain() * (AMB_LEVEL[cur.name] || 1))); return; }
     if (!ac) return;
     ambienceOut.gain.cancelScheduledValues(ac.currentTime);
     ambienceOut.gain.setTargetAtTime(ambGain(), ac.currentTime, tc);
@@ -118,6 +135,16 @@
   function startAmbience(name) {
     const file = AMB_MAP[name];
     if (!file) return;
+    if (FILE) {
+      if (cur && cur.name === file) return;
+      const prev = cur, el = new Audio(AMB + file + EXT); el.loop = true; el.volume = 0;
+      cur = { name: file, el };
+      el.addEventListener('loadedmetadata', () => { try { el.currentTime = Math.random() * (el.duration || 0); } catch (e) {} }, { once: true });
+      const pr = el.play(); if (pr && pr.catch) pr.catch(() => {});
+      applyAmbGain();
+      if (prev && prev.el) prev.el.pause();
+      return;
+    }
     load(AMB + file + EXT).then(buf => {
       if (want !== name || !ensure()) return;                    // user already moved on
       if (cur && cur.name === file) return;
@@ -136,6 +163,7 @@
     }).catch(() => { if (want === name) { stopAmbience(); origAmbience.call(TCMusic, name); } });        // file missing -> original placeholder bed
   }
   function stopAmbience() {
+    if (FILE) { if (cur && cur.el) cur.el.pause(); cur = null; return; }
     if (!cur || !ac) return;
     const old = cur, t = ac.currentTime; cur = null;
     old.gain.gain.cancelScheduledValues(t); old.gain.gain.setValueAtTime(Math.max(0.0001, old.gain.gain.value), t);
@@ -157,7 +185,7 @@
   // ---------- browser autoplay rule ----------
   const unlock = () => {
     unlocked = true; ensure();
-    SFX_FILES.forEach(n => load(SFX + n + EXT).catch(() => {}));
+    if (!FILE) SFX_FILES.forEach(n => load(SFX + n + EXT).catch(() => {}));
     if (want) startAmbience(want);
     removeEventListener('pointerdown', unlock); removeEventListener('keydown', unlock);
   };

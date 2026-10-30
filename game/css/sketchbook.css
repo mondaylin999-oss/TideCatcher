@@ -542,14 +542,14 @@
 .hub-currency-pill.is-link:focus-visible{outline:3px solid #fff; outline-offset:3px}
 /* Heart Workshop jar and Lantern Town model: drawn objects in Thiri's room */
 .rh-obj .rh-art{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; filter:drop-shadow(0 .3cqw .5cqw rgba(10,6,30,.45))}
-.rh-jar-halo,.rh-town-halo{animation:rh-breathe 3.2s ease-in-out infinite; transform-origin:center}
+.rh-jar-halo,.rh-town-halo{animation:rh-halo-pulse 3.2s ease-in-out infinite; transform-origin:center}
 .rh-jar-lights circle,.rh-jar-lights path{animation:rh-twinkle 2.4s ease-in-out infinite}
 .rh-jar-lights :nth-child(2n){animation-delay:-.8s}.rh-jar-lights :nth-child(3n){animation-delay:-1.6s}
 .rh-town-windows rect{animation:rh-twinkle 3s ease-in-out infinite}.rh-town-windows :nth-child(2n){animation-delay:-1.2s}
 .rh-town-lanterns rect{animation:rh-sway 2.6s ease-in-out infinite; transform-box:fill-box; transform-origin:50% 0}
 .rh-town-lanterns :nth-child(2n){animation-delay:-1.3s}
 .rh-obj:hover .rh-art,.rh-obj:focus-visible .rh-art{transform:translateY(-.25cqw); transition:transform .2s ease}
-@keyframes rh-breathe{50%{opacity:.55}}
+@keyframes rh-halo-pulse{50%{opacity:.55}}   /* own name: it used to reuse rh-breathe and made Thiri fade, showing the pillow behind her */
 @keyframes rh-twinkle{50%{opacity:.62}}
 @keyframes rh-sway{50%{transform:rotate(7deg)}}
 @media (prefers-reduced-motion:reduce){.rh-jar-halo,.rh-town-halo,.rh-jar-lights *,.rh-town-windows rect,.rh-town-lanterns rect{animation:none}}
@@ -557,7 +557,7 @@
 #startScreen .heart-home-links{display:none!important}
 /* Mood Book: Thiri's sketchbook lying open on the desk */
 .rh-book{top:auto!important; height:130%!important; bottom:0}
-.rh-book-halo{animation:rh-breathe 3.6s ease-in-out infinite}
+.rh-book-halo{animation:rh-halo-pulse 3.6s ease-in-out infinite}
 .rh-book-sparks *{animation:rh-twinkle 2.2s ease-in-out infinite}.rh-book-sparks :nth-child(2){animation-delay:-.7s}.rh-book-sparks :nth-child(3){animation-delay:-1.4s}
 @media (prefers-reduced-motion:reduce){.rh-book-halo,.rh-book-sparks *{animation:none}}
 /* ---------- Lantern Town: 50 places gathered into one night town ---------- */

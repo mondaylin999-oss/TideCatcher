@@ -116,6 +116,15 @@
     if (welcome && !welcome.hidden && begin?.disabled) { TCMusic.play('intro'); TCMusic.ambience('intro'); }
   };
   addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
+  // The title screen's PLAY tap is the first gesture: start the music for whatever screen is showing now.
+  document.addEventListener('tidecatcher:play', () => {
+    if (!unlocked) unlock();
+    ensure();
+    const shown = id => { const e = document.getElementById(id); return e && !e.hidden; };
+    if (shown('welcomeScreen') || shown('welcomeCardsScreen') || shown('setupScreen')) { if (music.cur !== 'intro') { TCMusic.play('intro'); TCMusic.ambience?.('intro'); } }
+    else if (!music.cur) { TCMusic.play('menu'); TCMusic.ambience?.('menu'); }
+    if (music.el && music.el.paused) startEl(music.el);
+  });
 
   // ---------- music: existing real place pieces plus procedural screen beds ----------
   const STYLE = 'piano';
@@ -135,7 +144,11 @@
     requestAnimationFrame(step);
   }
   function routeMusic(el) {
-    const ac = ensure(); if (!ac || el._tcGain) return;
+    // Opened from a file (double-clicking TideCatcher.html), browsers treat the music file as another site and
+    // feed silence into the audio graph, so play it straight from the element there. Also wait until sound is
+    // unlocked: routing into a still-suspended audio context keeps the track silent.
+    if (location.protocol === 'file:' || !unlocked) return;
+    const ac = ensure(); if (!ac || el._tcGain || ac.state !== 'running') return;
     try {
       const source = ac.createMediaElementSource(el), filter = ac.createBiquadFilter(), gain = ac.createGain();
       filter.type = 'lowpass'; filter.frequency.value = music.duck < 1 ? 1800 : 20000; gain.gain.value = 0;
@@ -144,7 +157,7 @@
   }
   function startEl(el) {
     const go = () => {
-      if (music.el !== el) return;
+      if (music.el !== el || !unlocked) return;   // browsers only allow sound after the first tap or key
       routeMusic(el); el.volume = el._tcGain ? 1 : 0;
       el.play().then(() => fadeTo(el, musicGain(), 1500)).catch(() => {});
     };

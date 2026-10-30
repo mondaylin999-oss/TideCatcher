@@ -10,7 +10,8 @@ button, [role=button], .tbtn, .rh-spot, label { touch-action: manipulation; -web
 input[type=text], input:not([type]), input[type=search], select, textarea { font-size: max(16px, 1em) !important; min-height: 44px; }
 
 /* ---- every screen can scroll if it doesn't fit, so no button is ever stuck off-screen ---- */
-.overlay > .panel, .overlay > .welcome-panel, .overlay > section,
+/* (only dialog panels: the home room sizes itself to its container, and a scrollbar there would loop) */
+.overlay:not(#startScreen) > .panel, .overlay:not(#startScreen) > .welcome-panel,
 :is(#welcomeScreen, #welcomeCardsScreen, #setupScreen, #pauseScreen, #leaveNightScreen) > :is(.panel, .welcome-panel) {
   max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
   overflow-y: auto !important; overflow-x: hidden !important;
@@ -63,4 +64,103 @@ input[type=text], input:not([type]), input[type=search], select, textarea { font
   .tip-coach-card p { font-size: 13px !important; line-height: 1.3 !important; }
   .tip-coach-card strong { font-size: 16px !important; }
   .shwe-teacher { display: none !important; }
+}
+
+/* ---- intro sketchbook: show the game logo only (no cat photo beside it) ---- */
+#welcomeScreen .welcome-mascot { display: none !important; }
+#welcomeScreen > .welcome-panel { grid-template-columns: 1fr !important; justify-items: center; text-align: center; }
+#welcomeScreen > .welcome-panel > * { grid-column: 1 / -1 !important; grid-row: auto !important; }
+#welcomeScreen .welcome-loading, #welcomeScreen .welcome-loading-copy { justify-self: stretch; text-align: center; justify-content: center; }
+
+/* ---- no double-tap or pinch zoom anywhere (it got stuck zoomed in on iPad and phones) ---- */
+html, body { touch-action: manipulation; -ms-touch-action: manipulation; overscroll-behavior: none; }
+
+/* ---- Notes button: tucked under the pause button, and the joystick area starts below it, so they never overlap ---- */
+.game-notes-btn { top: calc(env(safe-area-inset-top, 0px) + 64px) !important; left: calc(env(safe-area-inset-left, 0px) + 14px) !important; }
+@media (max-height: 520px) and (orientation: landscape) {
+  .game-notes-btn { top: calc(env(safe-area-inset-top, 0px) + 62px) !important; width: 44px !important; height: 44px !important; }
+}
+#touch #stickZone { top: max(20%, calc(env(safe-area-inset-top, 0px) + 118px)) !important; }
+#touch.tc-stick-right #stickZone { top: max(20%, calc(env(safe-area-inset-top, 0px) + 118px)) !important; }
+
+/* ---- "new tonight" catch clips on the night briefing ---- */
+.briefing-clips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.briefing-clips[hidden] { display: none; }
+.briefing-clips strong { font-size: 13px; letter-spacing: .02em; color: #6b3f5c; margin-right: 4px; }
+.briefing-clips .help-clip-button { min-height: 40px; padding: 4px 14px; border: 2px solid #c9922e; border-radius: 999px; background: #f6c453; color: #2b2547; font: 700 14px/1.1 "Gaegu", "Lexend", system-ui, sans-serif; box-shadow: inset 0 -3px 0 rgba(120,70,10,.2); cursor: pointer; }
+.briefing-clips .help-clip-button:hover, .briefing-clips .help-clip-button:focus-visible { background: #ffd877; outline: 3px solid #fff3c4; outline-offset: 1px; }
+#catchClipView { z-index: 2000; }
+
+/* ---- button guide (on-screen tour) ---- */
+.tc-tour { position: fixed; inset: 0; z-index: 5000; }
+.tc-tour[hidden] { display: none; }
+.tc-tour-ring { position: fixed; border-radius: 16px; border: 3px solid #ffd36e; box-shadow: 0 0 0 9999px rgba(12, 8, 30, .66), 0 0 22px 4px rgba(255, 211, 110, .55); pointer-events: none; transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease; }
+.tc-tour-card { position: fixed; background: #fffaf0; color: #2b2547; border-radius: 14px; padding: 12px 14px 10px; box-shadow: 0 10px 30px rgba(0,0,0,.35); font: 15px/1.4 "Lexend", system-ui, sans-serif; display: grid; gap: 4px; transition: left .25s ease, top .25s ease; }
+.tc-tour-card h3 { margin: 0; font: 700 21px/1.15 "Gaegu", "Lexend", system-ui, sans-serif; color: #6b3f5c; }
+.tc-tour-card p { margin: 0; }
+.tc-tour-count { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #7a6f8f; }
+.tc-tour-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.tc-tour-gap { flex: 1; }
+.tc-tour-actions button { min-height: 44px; min-width: 44px; padding: 6px 14px; border-radius: 999px; font: 600 14px/1 "Lexend", system-ui, sans-serif; cursor: pointer; }
+.tc-tour-next { background: #f6c453; color: #2b2547; border: 2px solid #c9922e; }
+.tc-tour-back { background: transparent; color: #2b2547; border: 2px solid #c9bfd9; }
+.tc-tour-skip { background: transparent; color: #7a6f8f; border: 0; text-decoration: underline; padding-inline: 4px !important; }
+.tc-tour-actions button:focus-visible { outline: 3px solid #8a5cf6; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .tc-tour-ring, .tc-tour-card { transition: none; } }
+
+/* ---- chapter map: big arrows on both sides, and clearly visible arrow buttons underneath ---- */
+.story-map-panel { position: relative; }
+.map-side-arrow { position: absolute; top: 52%; transform: translateY(-50%); z-index: 6; width: 56px; height: 56px; border-radius: 50%;
+  border: 3px solid #fff3c4; background: #f6c453; color: #2b2547; font: 700 40px/1 "Gaegu", system-ui, sans-serif; padding: 0 0 6px;
+  box-shadow: 0 6px 16px rgba(8,6,24,.45); cursor: pointer; touch-action: manipulation; display: grid; place-items: center; }
+.map-side-arrow.map-side-prev { left: 10px; } .map-side-arrow.map-side-next { right: 10px; }
+.map-side-arrow:hover, .map-side-arrow:focus-visible { background: #ffd877; outline: 3px solid #fff3c4; outline-offset: 2px; }
+.map-side-arrow:disabled { opacity: .3; cursor: default; }
+@media (max-height: 520px) { .map-side-arrow { width: 48px; height: 48px; font-size: 34px; } }
+.map-navigation .btn { opacity: 1 !important; background: rgba(255, 250, 240, .92) !important; color: #2b2547 !important; border: 2px solid #c9922e !important; }
+
+/* ---- Notes on phones and tablets: open it from the pause menu (Notes button there), so nothing floats over the
+   ability stickers or the touch controls ---- */
+@media (pointer: coarse) { .game-notes-btn { display: none !important; } #touch #stickZone, #touch.tc-stick-right #stickZone { top: 20% !important; } }
+
+/* ---- Notes on computers: bottom-left corner, away from the pause button, the ability stickers and every control ---- */
+.game-notes-btn { top: auto !important; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px) !important; left: calc(env(safe-area-inset-left, 0px) + 14px) !important; }
+body:has(#touch:not([hidden])) .game-notes-btn { display: none !important; }
+
+/* ---- home room: the cat sits on the window sill; tap it (or its name tag) to change names ---- */
+#hubHeroCat.rh-cat-tap { pointer-events: auto; cursor: pointer; z-index: 6; animation: rh-cat-breathe 4s ease-in-out infinite; transform-origin: 50% 100%; touch-action: manipulation; }
+#hubHeroCat.rh-cat-tap:hover, #hubHeroCat.rh-cat-tap:focus-visible { filter: drop-shadow(0 0 8px rgba(255, 225, 150, .9)) drop-shadow(0 6px 6px rgba(0,0,0,.45)); outline: none; }
+.rh-cattag.rh-cat-tap { pointer-events: auto; cursor: pointer; z-index: 6; }
+#roomRoamingCat { display: none !important; }
+@keyframes rh-cat-breathe { 50% { transform: scaleY(1.018); } }
+@media (prefers-reduced-motion: reduce) { #hubHeroCat.rh-cat-tap { animation: none; } }
+
+/* ---- daily tasks: a checklist pinned on the wall, opening its own panel ---- */
+.rh-tasks .rh-tasks-badge { position: absolute; right: -10%; top: -6%; min-width: 1.9cqw; height: 1.9cqw; padding: 0 .4cqw; border-radius: 999px; background: #8a5cf6; color: #fff;
+  font: 700 max(11px, 1.1cqw)/1.9cqw "Lexend", system-ui, sans-serif; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,.4); pointer-events: none; }
+.rh-tasks .rh-tasks-badge.ready { background: #2f9a63; animation: rh-badge-pop 1.6s ease-in-out infinite; }
+.rh-tasks .rh-tasks-badge[hidden] { display: none; }
+@keyframes rh-badge-pop { 50% { transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .rh-tasks .rh-tasks-badge.ready { animation: none; } }
+.daily-tasks-panel { max-width: min(560px, calc(100vw - 32px)); }
+.daily-tasks-panel .hub-missions { margin: 8px 0 12px; }
+.daily-tasks-panel .mrow { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 4px 10px; }
+.daily-tasks-panel .mrow .mbar { grid-column: 2 / -1; }
+.daily-tasks-panel .micon { width: 36px; height: 36px; grid-row: span 2; display: grid; place-items: center; font: 700 18px/1 "Lexend", system-ui, sans-serif; color: #6b3f5c; }
+img.micon { object-fit: contain; }
+.daily-tasks-panel .daily-actions { display: flex; justify-content: flex-end; }
+.daily-tasks-panel .claim { min-height: 40px; }
+.daily-tasks-panel #mTitle { display: none; }
+.daily-tasks-panel .mhead { justify-content: flex-end; }
+@media (max-height: 560px) {
+  .daily-tasks-panel { padding-top: 10px !important; padding-bottom: 10px !important; }
+  .daily-tasks-panel > .muted, .daily-tasks-panel > .eyebrow { display: none; }
+  .daily-tasks-panel h2 { margin: 0 !important; font-size: 22px !important; }
+  .daily-tasks-panel .hub-missions { margin: 4px 0 6px; padding-top: 6px !important; padding-bottom: 6px !important; }
+}
+@media (max-height: 420px) {
+  .daily-tasks-panel .mhead { display: none; }
+  .daily-tasks-panel .mrow { padding-block: 2px !important; gap: 2px 8px; font-size: 14px; }
+  .daily-tasks-panel .micon { width: 28px; height: 28px; }
+  .daily-tasks-panel .daily-actions .btn { min-height: 44px; padding-block: 6px; }
 }

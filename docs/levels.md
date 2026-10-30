@@ -4,6 +4,8 @@ Each run loads one `LEVELS` record from `game/js/levels.js`. The existing place 
 
 Legend: `=` walkable ground, `/` or `\\` slope/step, `v` lethal pit, `P` roost route, `~` water, `H` hide spot, `B` burial spot, `*` destination light. Shwe has three lives per story night; Gentle mode removes the life cost. Free Play falls cost five seconds. Sketches are schematic (not to scale); coordinates and authoritative geometry are in the data file.
 
+Story nights only have roosts on every fifth level. Nights 1-4 also have optional `solidTops`: desks, shelves, chairs, the slide, a bench and stall roofs that Shwe can stand on. They are one-way scenery tops, not platforms, so they do not change the roost rule; each is reachable with one jump from the ground (or from the top below it) and hides a keepsake. Night 6 has a tide-pool keepsake by the jetty that only shows once the Mood Tide is low.
+
 Story nights only have roosts on every fifth level. Levels 5, 10, 15, and so on contain pits that are wider than Shwe's unaided jump; each pit has exactly one moving roost bridge. All other story levels have continuous ground and no roost platforms.
 
 ## Night 1 — School hallway, width 2,500
@@ -83,8 +85,10 @@ A new Free Play run chooses one of the three records; continuing a paused run do
 
 ## Challenge routes — Levels 8–50
 
-After the seven story nights, 43 challenge routes continue the cozy campaign and rotate through five map settings. Only every fifth level has pits and roosts. Each pit is five times as wide as its single moving bridge, and the crossing count rises from four on Level 10 to eighteen on Level 50. Bridge speed increases by level. Checkpoints become more frequent on later pit routes; layouts are deterministic on replay.
+After the seven story nights, 43 challenge routes continue the campaign. Only every fifth level has pits and roosts; each pit is five times as wide as its single moving bridge. **Width cap (changed in late October):** pit nights have 2-5 pits (at most about 6,000 wide) and other nights are 4,500-5,500 wide. The old rule grew the pit count every pit night, up to 18, which also made non-pit nights very long (Night 49 was about 16,000 units of empty floor), so the count now never drops but stops at 5. Bridge speed still rises by level.
+
+Each night is built from a seeded random number generator, so it is identical on every load. The ground rolls gently (at most 16 units, kept flat within 140 of every pit). Hide and dig spots (4-8 each) are picked from safe ground at least 300 apart, clear of pits, checkpoints, props and the secret room. Nights without a twist get 1-3 hazards that fit the map (school squeak, park sprinkler, festival and market lanterns, hill and rooftop wind, lake puddles, pagoda and garden bells, train squeak), at least 110 from any pit.
 
 ## Reachability and safety
 
-The dependency-free regression test is `node tests/game-layouts.test.js`. It checks the 50 story layouts and three Free Play variants, including the every-fifth-level pit schedule, no roosts on other story nights, one moving bridge per pit, gaps too wide for Shwe to jump, spawn-zone exclusion, hide/burial/start/checkpoint clearance, and platform reach against the configured jump settings (`jumpSpeed=830`, `gravity=2300`).
+The dependency-free regression tests are `node tests/game-layouts.test.js`, `tests/endless-layouts.test.js` and `tests/solid-tops.test.js`. It checks the 50 story layouts and three Free Play variants, including the every-fifth-level pit schedule, no roosts on other story nights, one moving bridge per pit, gaps too wide for Shwe to jump, spawn-zone exclusion, hide/burial/start/checkpoint clearance, and platform reach against the configured jump settings (`jumpSpeed=830`, `gravity=2300`).

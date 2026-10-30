@@ -306,7 +306,7 @@
   // ---------- world ----------
   let currentLevel = window.TC_LEVELS?.[1] || { width: 4200, ground: { points: [[0, GROUND], [4200, GROUND]] }, pits: [], platforms: [], hideSpots: [], burySpots: [], spawnZones: [[120, 4080]], catStart: 200, props: [] };
   let activePlats = [];
-  let activeWalls = [];
+  let activeWalls = [], activeTops = [];
   let currentProps = [];
   const levelGroundY = x => {
     const pts = currentLevel.ground.points, px = clamp(x, 0, currentLevel.width);
@@ -332,6 +332,8 @@
       const bottom = terrainY(spec.x + spec.w / 2);
       return { ...spec, bottom, y: bottom - spec.h };
     });
+    // solid scenery tops (desk, shelf, slide, bench, stall roof): one-way, land on top only; never roosts
+    activeTops = (currentLevel.solidTops || []).map(spec => { const bottom = terrainY(spec.x + spec.w / 2); return { ...spec, bottom, y: bottom - spec.h }; });
   }
   function updateLevelPlatforms(dt) {
     for (const p of activePlats) {
@@ -817,7 +819,12 @@
     { id: 'scarf', icon: '🧣', name: 'Cozy Scarf', cost: 350, desc: 'The first time a Frustrated bumps you, you keep all your lights.' },
     { id: 'bell', icon: '🔔', name: 'Soft Bell', cost: 400, desc: 'Nervous Moodlings hear you 20% less far for the whole hour.' },
     { id: 'jar', icon: '🫙', name: 'Firefly Jar', cost: 250, desc: 'At the lake, the first firefly you scare stays with you instead of flying off.' },
-    { id: 'sand', icon: '⏳', name: 'Moon Sand', cost: 300, desc: '+10 seconds on the clock.' }
+    { id: 'sand', icon: '⏳', name: 'Moon Sand', cost: 300, desc: '+10 seconds on the clock.' },
+    { id: 'blanket', icon: '🧶', name: 'Warm Blanket', cost: 450, desc: 'One extra life for the night.' },
+    { id: 'cocoa', icon: '☕', name: 'Warm Cocoa', cost: 280, desc: 'Night Eyes stay open 50% longer.' },
+    { id: 'lantern', icon: '🏮', name: 'Paper Lantern', cost: 320, desc: 'Hidden keepsakes glow from twice as far away.' },
+    { id: 'feather', icon: '🪶', name: 'Feather Toy', cost: 300, desc: 'Shy Moodlings notice you from a shorter distance.' },
+    { id: 'treat', icon: '🐟', name: 'Fish Treat', cost: 380, desc: '25% more Glow when the night ends well.' }
   ];
   const TRAILS = {
     honey: { name: 'Honey', c: '246,196,83', cost: 0 },
@@ -877,7 +884,7 @@
   // Free mode is for practice: it brings home at most a few lights for the Heart Workshop per run, so the story stays the way to grow Lantern Town
   const FREE_LIGHT_CAP = 6;
   const purrDur = () => catPerk() === 'siamese' ? 4 : 3;
-  const eyesDur = () => (catPerk() === 'sphynx' ? 5.5 : 4) * (endlessOn() ? EN.eyesMul : 1);
+  const eyesDur = () => (catPerk() === 'sphynx' ? 5.5 : 4) * (endlessOn() ? EN.eyesMul : 1) * (activeItems.cocoa ? 1.5 : 1);
   const sitNeed = () => catPerk() === 'ragdoll' ? 1.4 : 2;
   let purrT = 0, purrCd = 0, purrQ = false, eyesT = 0, eyesCd = 0, eyesQ = false;
 
@@ -1095,11 +1102,12 @@
     b.timer -= dt;
     if (b.mode === 'windup' && b.timer <= 0) {
       b.mode = 'charge'; b.dir = Math.sign(cat.x - b.x) || -1; b.startX = b.x; b.travelled = 0; b.speed = 500 + b.phase * 75;
-      b.aimX = clamp(cat.x + b.dir * 175, 50, WORLD - 50); b.timer = 3.5;
+      // charge all the way across the screen to the far edge (it used to stop about halfway)
+      b.aimX = clamp(b.dir > 0 ? camX + VW - 70 : camX + 70, 50, WORLD - 50); if (b.dir * (b.aimX - cat.x) < 175) b.aimX = clamp(cat.x + b.dir * 175, 50, WORLD - 50); b.timer = 4.5;
     } else if (b.mode === 'charge') {
       const step = b.speed * dt; b.x = clamp(b.x + b.dir * step, 50, WORLD - 50); b.y = terrainY(b.x); b.travelled += step;
       if (Math.abs(cat.x - b.x) < 70 && cat.y > terrainY(cat.x) - 48) { bossContact(); return; }
-      if (b.dir * (b.x - b.aimX) >= 0 || b.travelled > 620 || b.timer <= 0) {
+      if (b.dir * (b.x - b.aimX) >= 0 || b.travelled > 1800 || b.timer <= 0) {
         b.mode = 'dizzy'; b.timer = 2.35; b.x = clamp(b.x, 50, WORLD - 50); b.y = terrainY(b.x);
         announce(stormBossCopy().dizzy || 'It is dizzy! Pounce now!', GOLD, 1.7); sfx('moodling', 'F');
       }
@@ -1410,7 +1418,7 @@
     hazards = []; keepsakes = []; paperStars = []; hazSeen = {}; buriedHintShown = false;
     if (mode === 'story' || currentLevel.map === 'market' || currentLevel.map === 'pagoda') hazards = (currentLevel.hazards || []).map((h, i) => ({ ...h, i, cd: 0, tt: 0, phase: 'idle', off: (i * 2.3) % 5, drops: [], squeakT: 0, puddleT: 0, ringT: 0, touched: false, sneakShown: false, splashShown: false }));
     if (mode !== 'story') return;
-    keepsakes = (currentLevel.keepsakes || []).map(([x, y], i) => ({ x, y, id: `n${storyNight}-${i}`, found: foundKeeps.has(`n${storyNight}-${i}`), bob: Math.random() * 6, got: 0 }));
+    keepsakes = (currentLevel.keepsakes || []).map(([x, y, tag], i) => ({ x, y, tide: tag === 'tide', id: `n${storyNight}-${i}`, found: foundKeeps.has(`n${storyNight}-${i}`), bob: Math.random() * 6, got: 0 }));
     const paperPositions = window.TCPaperStars?.positionsFor(currentLevel) || [];
     paperStars = paperPositions.map(p => ({ ...p, key: paperStarId(storyNight, p.id), found: foundPaperStars.has(paperStarId(storyNight, p.id)), bob: p.id * 1.7 }));
     // nights without Buried hide one keepsake under a dig spot instead (other spots still rumble)
@@ -1548,6 +1556,7 @@
     for (const k of keepsakes) {
       k.got = Math.max(0, k.got - dt);
       if (k.found) continue;
+      if (k.tide && window.TCMoodTide && !TCMoodTide.open()) continue;   // a tide pool: only reachable at low tide
       if (Math.abs(cat.x - k.x) < 34 && Math.abs(cat.y - 28 - k.y) < 48) { k.found = true; k.got = 1; collectKeepsake(k.id, k.x, k.y); }
     }
     for (const star of paperStars) {
@@ -1645,8 +1654,9 @@
     for (const k of keepsakes) {
       if (k.x < x0 || k.x > x1) continue;
       if (k.found && k.got <= 0) continue;
+      if (k.tide && !k.found && window.TCMoodTide && !TCMoodTide.open()) { TCMoodTide.drawPoolHint(ctx, k.x, k.y, t); continue; }
       const d = Math.hypot(cat.x - k.x, cat.y - 28 - k.y), eyes = eyesT > 0 && Math.abs(cat.x - k.x) <= eyesRange();
-      const a = k.found ? k.got : eyes ? 1 : clamp(1 - (d - 2.5 * T) / (2 * T), 0, 1) * .9;
+      const near = activeItems.lantern ? 5 : 2.5, a = k.found ? k.got : eyes ? 1 : clamp(1 - (d - near * T) / (2 * T), 0, 1) * .9;
       if (a <= .02) { if (Math.sin(t * 2.3 + k.bob) > .985) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.arc(k.x, k.y, 1.6, 0, 7); ctx.fill(); } continue; }
       const y = k.y + Math.sin(t * 2.4 + k.bob) * 3 - (k.found ? (1 - k.got) * 30 : 0);
       ctx.globalAlpha = a; ctx.drawImage(glowImg(kc), k.x - 30, y - 30, 60, 60);
@@ -2148,7 +2158,8 @@
     freeCapShown = false; freeLightCapShown = false; activeItems = {}; perkShield = catPerk() === 'mainecoon' ? 1 : 0;
     lives = 3; checkpointX = currentLevel.catStart ?? 200; fallDimT = 0; respawnT = 0; pitTipShown = false; edgeSoundAt = 0; pendingFallFail = false; jumpHeld = false;
     need = mode === 'story' ? { ...chapter.feelingsNeeded } : { F: 4, N: 4, L: 2 };
-    got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0; runNew = []; runDone = []; hits = 0; startles = 0;
+    got = Object.fromEntries(Object.keys(need).map(type => [type, 0])); runN = 0;
+    if (window.TCMoodTide) { TCMoodTide.start({ active: mode === 'story', gentle: gentleMode, reduce, lanterns: currentMapKey() === 'festival', indoor: currentMapKey() === 'school' }); TCMoodTide.onPoolOpen = () => { if (keepsakes.some(k => k.tide && !k.found)) { announce('The tide is low. Something glimmers by the water.', '#bfe8ff', 2.8); sfx('ui', 'sparkle'); } }; } runNew = []; runDone = []; hits = 0; startles = 0;
     workshopRun = []; allHome = false; portal = null; bossEncounter = null; $('#bossIntroScreen').hidden = true;
     goldDone = { a: false, b: false }; skyUsed = { A: 0, B: 0, C: 0 }; skyPerfect = chapter ? skyTotalFor(chapter) : 0; skySpawned = 0; skyNextAt = 15; lastTick = 99; cat = newCat(); mood = []; parts = []; floats = []; trail = []; driftingLights = []; hist = []; respawnQ = []; camX = 0;
     scratchSpots = []; scratchTarget = null; scratchAnim = 0; scratchQ = false; shake = 0; fireflies = []; flyMsgAt = -9; flyHintShown = false; breathTipShown = false;
@@ -2415,7 +2426,7 @@
     }
     if (m.type === 'G') { timeLeft += 5; slowmo = .6; announce('Golden catch! +5 seconds', GOLD, 1.4); }
     else if (mode === 'free') { timeLeft += 2; trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (trail.length > 12) trail.shift(); }
-    else { const chapter = chapterFor(storyNight); if (Object.prototype.hasOwnProperty.call(got, m.type)) { got[m.type]++; if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay * (weather.kind === 'rain' && m.type === 'L' ? .72 : 1) + Math.random() * .8 }); } trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } }
+    else { const chapter = chapterFor(storyNight); if (Object.prototype.hasOwnProperty.call(got, m.type)) { got[m.type]++; window.TCMoodTide?.caught(m.type, m.x - camX, m.y - 30); if (got[m.type] < need[m.type]) respawnQ.push({ type: m.type, at: chapter.respawnDelay * (weather.kind === 'rain' && m.type === 'L' ? .72 : 1) + Math.random() * .8 }); } trail.push({ type: m.type, v: m.v, x: m.x, y: m.y }); if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; } }
     const key = m.type + (m.v || 0), info = vinfo(m.type, m.v || 0);
     if (!book[key]) {
       const bonus = m.v ? 30 : m.type === 'G' ? 20 : 10;
@@ -2566,6 +2577,11 @@
       if (!landed) for (const wall of activeWalls) {
         if (c.x > wall.x - 12 && c.x < wall.x + wall.w + 12 && py <= wall.y + .5 && c.y >= wall.y) {
           c.y = wall.y; landed = true; c.wallSurface = wall; break;
+        }
+      }
+      if (!landed) for (const top of activeTops) {
+        if (c.x > top.x - 8 && c.x < top.x + top.w + 8 && py <= top.y + .5 && c.y >= top.y) {
+          c.y = top.y; landed = true; c.wallSurface = top; break;
         }
       }
     }
@@ -2762,7 +2778,7 @@
       } else if (m.state === 'turn') { m.st -= dt; if (m.st <= 0) { m.state = 'look'; m.st = 1.3; } }
       else if (m.state === 'look') {
         m.st -= dt; const moving = Math.abs(cat.vx) > 30 || !cat.on;
-        if (Math.abs(dx) < 6 * T && moving && t >= 3) { m.state = 'hide'; m.st = 2.2; float(m.x, m.y - 40, 'Shy saw you move and hid!', SHY); sfx('moodling', 'S'); startles++; }
+        if (Math.abs(dx) < (activeItems.feather ? 4 : 6) * T && moving && t >= 3) { m.state = 'hide'; m.st = 2.2; float(m.x, m.y - 40, 'Shy saw you move and hid!', SHY); sfx('moodling', 'S'); startles++; }
         else if (m.st <= 0) { m.state = 'walk'; m.st = 1.8 + Math.random() * 1.6; m.dir = -(Math.sign(dx) || 1); }
       } else if (m.state === 'hide') {
         m.alpha = Math.max(0, m.alpha - dt * 3); m.st -= dt;
@@ -2894,6 +2910,7 @@
     updateLevelPlatforms(dt);
     updateBossEncounter(dt);
     updCat(dt);
+    if (state === 'play' && mode === 'story' && window.TCMoodTide) TCMoodTide.update(dt, need, got, announce);
     if (cat.falling || cat.respawning) {
       for (const p of parts) { p.life -= dt; p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .98; }
       parts = parts.filter(p => p.life > 0);
@@ -3784,6 +3801,15 @@
       ctx.fillStyle = 'rgba(24,17,42,.92)'; ctx.strokeStyle = edgeColor; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc((a+b)/2, top - 22, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.font = `800 13px ${DISP}`; ctx.textAlign = 'center'; ctx.fillStyle = INK; ctx.fillText('!', (a+b)/2, top - 17);
     }
+    // solid tops: a simple plank with a bright edge and two legs, so it reads as something to stand on
+    for (const top of activeTops) {
+      if (top.x + top.w < x0 || top.x > x1) continue;
+      const wood = top.kind === 'roof' ? '#b0566a' : top.kind === 'slide' ? '#d8a54a' : top.kind === 'bench' ? '#8a6a4a' : '#9a7656';
+      ctx.fillStyle = 'rgba(20,14,30,.5)'; ctx.fillRect(top.x + 6, top.y + 8, 5, top.bottom - top.y - 8); ctx.fillRect(top.x + top.w - 11, top.y + 8, 5, top.bottom - top.y - 8);
+      ctx.fillStyle = wood; ctx.beginPath(); canvasRoundRect(ctx, top.x, top.y, top.w, 11, 4); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,236,190,.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(top.x + 3, top.y + 1.5); ctx.lineTo(top.x + top.w - 3, top.y + 1.5); ctx.stroke();
+      if (top.kind === 'roof') { ctx.fillStyle = 'rgba(255,240,220,.85)'; for (let sx = top.x + 8; sx < top.x + top.w - 8; sx += 22) ctx.fillRect(sx, top.y + 4, 10, 6); }
+    }
     // Wall-jump routes are separate collision scenery, never roost platforms.
     for (const wall of activeWalls) {
       if (wall.x + wall.w < x0 || wall.x > x1) continue;
@@ -3916,6 +3942,7 @@
     if (!debugLayout) return;
     ctx.save(); ctx.strokeStyle='#ff5c88'; ctx.fillStyle='#ffe78a'; ctx.lineWidth=2;
     for (const p of activePlats) { if (!p.active) continue; ctx.strokeRect(p[0],p[1],p[2],12); }
+    ctx.strokeStyle='#7fd0ff'; for (const top of activeTops) ctx.strokeRect(top.x, top.y, top.w, top.bottom - top.y); ctx.strokeStyle='#ff5c88';
     for (const [kx,ky] of currentLevel.keepsakes || []) { ctx.fillStyle='#ff9fd0';ctx.fillRect(kx-5,ky-5,10,10); }
     for (const x of currentLevel.hideSpots || []) { ctx.fillStyle='#80f0ce';ctx.beginPath();ctx.arc(x,terrainY(x)-8,6,0,Math.PI*2);ctx.fill(); }
     for (const x of currentLevel.burySpots || []) { ctx.fillStyle='#ffcf72';ctx.beginPath();ctx.moveTo(x,terrainY(x)-12);ctx.lineTo(x-6,terrainY(x));ctx.lineTo(x+6,terrainY(x));ctx.closePath();ctx.fill(); }
@@ -4411,7 +4438,8 @@
     // The shadow stays on the ground and fades with height, instead of popping on and off.
     { const gy = c.on ? 0 : c.platform || pitAt(c.x) ? 999 : Math.max(0, terrainY(c.x) - c.y), fade = clamp(1 - gy / 160, 0, 1);
       if (fade > 0) { ctx.fillStyle = `rgba(8,10,24,${(.35 * fade).toFixed(3)})`; ctx.beginPath(); ctx.ellipse(-2, 2 + gy, ww * .36 * (.6 + .4 * fade), 4.5 * (.6 + .4 * fade), 0, 0, 7); ctx.fill(); } }
-    if (eyesT > 0) { ctx.shadowColor = '#c8ff8a'; ctx.shadowBlur = 16; }
+    // Night Eyes glow: one soft halo behind the cat (a canvas shadow on the rig drew a glow around every tail strip, leaving fringes)
+    if (eyesT > 0) { const hg = ctx.createRadialGradient(-2, -hh * .5, hh * .15, -2, -hh * .5, hh * .78); hg.addColorStop(0, 'rgba(200,255,138,.30)'); hg.addColorStop(1, 'rgba(200,255,138,0)'); ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(-2, -hh * .5, ww * .62, hh * .78, 0, 0, 7); ctx.fill(); }
     // cat.y is the paw baseline; keep the sprite's bottom edge on that line.
     const spriteY = -hh + bob;
     // a gentle rock of the body with each step (and a lean into jumps) so the walk feels alive
@@ -4611,14 +4639,19 @@
     ctx.fillStyle = PAPER; ctx.strokeStyle = done ? '#2f9a63' : 'rgba(59,53,80,.18)'; ctx.lineWidth = done ? 2.5 : 1.5;
     ctx.beginPath(); ctx.roundRect ? canvasRoundRect(ctx, x, y, width, h, h / 2) : ctx.rect(x, y, width, h); ctx.fill(); ctx.stroke();
     // a feeling Shwe hasn't caught yet tonight stays in pencil grey
-    if (!have) { ctx.save(); if (gfxQ >= .8) ctx.filter = 'grayscale(1) opacity(.55)'; else ctx.globalAlpha = .55; }
-    lightShape(type, x + iconX, y + iconY, compact ? .74 : .95);
+    if (!have) { ctx.save(); if (gfxQ >= .8) ctx.filter = 'grayscale(.6) opacity(.8)'; else ctx.globalAlpha = .8; }
+    const narrow = !compact && width < 80, ix = narrow ? 17 : iconX;
+    lightShape(type, x + ix, y + iconY, compact ? .74 : narrow ? .72 : .95);
     if (!have) ctx.restore();
-    ctx.fillStyle = done ? '#2f7a52' : have ? SB_INK : '#6b6480'; ctx.font = `700 ${compact ? 17 : 26}px ${HAND}`; ctx.textAlign = 'left';
-    ctx.fillText(`${have}/${needN}`, x + (compact ? 31 : 44), y + (compact ? 21 : 29));
+    // the count always fits inside its pill (it was cut off on nights with many feelings)
+    const label = `${have}/${needN}`, tx = x + (compact ? 31 : narrow ? 31 : 44), room = x + width - tx - 7;
+    let fs = compact ? 17 : 26; ctx.font = `700 ${fs}px ${HAND}`;
+    while (fs > 12 && ctx.measureText(label).width > room) { fs -= 1; ctx.font = `700 ${fs}px ${HAND}`; }
+    ctx.fillStyle = done ? '#2f7a52' : have ? SB_INK : '#4a4360'; ctx.textAlign = 'left';
+    ctx.fillText(label, tx, y + (compact ? 21 : 29) - (26 - fs) * .3);
     if (done) {
       ctx.save(); ctx.strokeStyle = '#2f9a63'; ctx.lineWidth = compact ? 3 : 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      const cx = x + width - (compact ? 8 : 10), cy = y + (compact ? 2 : 0);
+      const cx = x + width - (compact ? 4 : 6), cy = y - (compact ? 3 : 4);
       ctx.beginPath(); ctx.moveTo(cx - 9, cy + 1); ctx.lineTo(cx - 4, cy + 6); ctx.lineTo(cx + 6, cy - 7); ctx.stroke(); ctx.restore();
     }
   }
@@ -4629,25 +4662,24 @@
     if (!showItemsHud) return;
     const parts = [];
     // only list a kind of item while some of it is still out on this map to find
-    if (trinkets.some(k => !k.taken) && !pouchFull()) parts.push({ kind: 't', text: `${trinkets.filter(k => k.taken).length}/${trinkets.length}` });
+    if (trinkets.some(k => !k.taken) && !pouchFull()) parts.push({ kind: 't', left: trinkets.filter(k => !k.taken).map(k => k.type), text: `${trinkets.filter(k => k.taken).length}/${trinkets.length}` });
     if (mode === 'story' && keepsakesFound(storyNight) < keepsakeTotal(storyNight)) parts.push({ kind: 'k', text: `${keepsakesFound(storyNight)}/${keepsakeTotal(storyNight)}` });
     if (!parts.length) return;
     ctx.save();
     ctx.font = `700 12px ${BODY}`; const lw = ctx.measureText('FOUND').width + 10;
     ctx.font = `700 19px ${HAND}`;
-    const widths = parts.map(p => 28 + ctx.measureText(p.text).width + 12), w = lw + widths.reduce((a, b) => a + b, 0) + 14, h = 30, x = VW - 22 - w, y = yTop;
+    // trinkets show one small picture per item still out there, so the counter always matches what is in the level
+    const widths = parts.map(p => (p.kind === 't' ? 14 + 15 * p.left.length : 28) + ctx.measureText(p.text).width + 12), w = lw + widths.reduce((a, b) => a + b, 0) + 14, h = 30, x = VW - 22 - w, y = yTop;
     sbPaper(x, y, w, h, .015, PAPER2);
     ctx.font = `700 12px ${BODY}`; ctx.textAlign = 'left'; ctx.fillStyle = SB_INK2; ctx.fillText('FOUND', x + 10, y + h / 2 + 4);
     let cx = x + 10 + lw;
     parts.forEach((p, i) => {
       const cy = y + h / 2;
       if (p.kind === 't') {
-        // show the trinket that is actually out there (the nearest one left), not always a button
-        const left = trinkets.filter(k => !k.taken); const near = left.reduce((a, k) => !a || Math.abs(k.x - cat.x) < Math.abs(a.x - cat.x) ? k : a, null);
-        drawTrinket(near ? near.type : 'button', cx + 10, cy, ctx);
+        p.left.forEach((type, j) => { ctx.save(); ctx.translate(cx + 8 + j * 15, cy); ctx.scale(.78, .78); drawTrinket(type, 0, 0, ctx); ctx.restore(); });
       }
       else { const [, c] = KEEPSAKE_ART[currentMapKey()] || KEEPSAKE_ART.free; ctx.save(); ctx.translate(cx + 10, cy); ctx.scale(.85, .85); drawKeepsake(currentMapKey(), 0, 0, c); ctx.restore(); }
-      ctx.font = `700 19px ${HAND}`; ctx.textAlign = 'left'; ctx.fillStyle = SB_INK; ctx.fillText(p.text, cx + 24, cy + 6);
+      ctx.font = `700 19px ${HAND}`; ctx.textAlign = 'left'; ctx.fillStyle = SB_INK; ctx.fillText(p.text, cx + (p.kind === 't' ? 10 + 15 * p.left.length : 24), cy + 6);
       cx += widths[i];
     });
     ctx.restore();
@@ -4673,15 +4705,16 @@
     }
     if (mode === 'story') {
       const lx = HUD_X + HUD_CARD_W + 10, ly = top + 8;
-      sbPaper(lx, ly, 74, 34, .03, PAPER2);
-      for (let i = 0; i < 3; i++) sbPaw(lx + 15 + i * 22, ly + 18, .82, i < lives);
+      const paws = Math.max(3, lives);   // the Warm Blanket can add a fourth life
+      sbPaper(lx, ly, 8 + paws * 22, 34, .03, PAPER2);
+      for (let i = 0; i < paws; i++) sbPaw(lx + 15 + i * 22, ly + 18, .82, i < lives);
     }
     const hudChapter = mode === 'story' ? chapterFor(storyNight) : null;
     const skyEnabled = !!hudChapter && skyTotalFor(hudChapter) > 0;
     const skyLive = skyEnabled && mood.some(m => m.sky && !m.dead && ['wait', 'falling', 'struck', 'scratchReq', 'scratched'].includes(m.skyPhase));
     const compactSky = VW < 900;
     if (skyEnabled) {
-      const sx = compactSky ? HUD_X : HUD_X + HUD_CARD_W + 86, sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
+      const sx = compactSky ? HUD_X : HUD_X + HUD_CARD_W + 86 + (mode === 'story' ? Math.max(0, lives - 3) * 22 : 0), sy = top + (compactSky ? 72 : 8), sw = 112, sh = 28;
       ctx.save(); ctx.globalAlpha = skyLive ? .84 + .16 * Math.sin(t * 5) : 1;
       ctx.fillStyle = PAPER2; ctx.strokeStyle = skyLive ? '#4d6fd6' : 'rgba(59,53,80,.25)'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.roundRect ? canvasRoundRect(ctx, sx, sy, sw, sh, 14) : ctx.rect(sx, sy, sw, sh); ctx.fill(); ctx.stroke();
@@ -4753,6 +4786,7 @@
       ctx.font = `700 11px ${BODY}`; ctx.textAlign = 'center'; ctx.fillStyle = '#f6eedc';
       ctx.fillText(`${weather.icon} ${weatherName}`, VW - 67, hy - 3);
       drawItemsFound(hy + 8);
+      window.TCMoodTide?.drawGauge(ctx, VW - 22, hy + 46, BODY);
     } else {
       const weatherName = guideCopy().weather?.titles?.[weather.kind] || weather.title;
       const freeLabel = `Nothing is counted here. Pause to go home. · ${weather.icon} ${weatherName}`;
@@ -4820,6 +4854,7 @@
     drawCat(); drawParts(); if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.front(ctx, endlessFxOpts()); drawLevelDebug();
     ctx.restore();
     drawWeather();
+    window.TCMoodTide?.drawWorld(ctx, VW, VH, OY);
     if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.screen(ctx, endlessFxOpts({ catX: cat.x - camX, catY: cat.y - 30, eyes: eyesT > 0, eyesR: eyesRange(), dt }));
     if (eyesT > 0) {
       const sx = cat.x - camX, sy = cat.y - 24, r = eyesRange(), fade = Math.min(1, eyesT / .4, (eyesDur() - eyesT) / .25);
@@ -4879,6 +4914,7 @@
       thiriSleepStage = clamp(Math.max(thiriSleepStage, storyNight), 0, 7);
       unlockedNow = unlockedLevel > before; saveStoryProgress();
     }
+    if (won && activeItems.treat && glowRun > 0) { const fish = Math.round(glowRun * .25); glowRun += fish; float(cat.x, cat.y - 90, `🐟 +${fish} Glow`, GOLD); }
     let enReward = null;
     if (endlessOn()) {
       enReward = { title: EN.title, piece: enPieceRun, mult: EN.glowMult, extra: 0, chest: null, badge: false, challenges: EN.challenges.slice() };
@@ -4954,6 +4990,19 @@
   function setupRoomCat() {
     const stage = $('#roomStage'), image = $('#hubHeroCat');
     if (!stage || !image) return;
+    // The cat sits still on the window sill (it used to wander, and fell asleep on Thiri's pillow, which looked like
+    // a ghost over her). Tap the cat or its name tag to change names.
+    image.style.visibility = 'visible';
+    if (!image.dataset.tap) {
+      image.dataset.tap = '1'; image.classList.add('rh-cat-tap'); image.setAttribute('role', 'button'); image.tabIndex = 0;
+      const open = () => { initAudio(); sfx('cat', 'meow'); $('#profileBtn')?.click(); };
+      image.addEventListener('click', open);
+      image.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+      const tag = $('#hubCatName'); if (tag) { tag.classList.add('rh-cat-tap'); tag.addEventListener('click', open); }
+    }
+    image.setAttribute('aria-label', `${MK_PROFILE.cat}: tap to change names`);
+    const old = $('#roomRoamingCat'); if (old) old.hidden = true;
+    return;
     let canvas = $('#roomRoamingCat');
     if (!canvas) {
       canvas = document.createElement('canvas'); canvas.id = 'roomRoamingCat'; canvas.className = 'rh-home-cat';
@@ -4968,6 +5017,7 @@
       toy.title = 'Tap for Shwe to chase';
       toy.innerHTML = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 29c-4-6 1-17 10-19 9-2 20 5 19 16-1 9-10 17-20 14-4-1-7-5-9-11Z" fill="#f4a8ca" stroke="#fff0cf" stroke-width="2.5"/><path d="M15 14c8 4 13 13 16 23M11 25c8 0 17-5 24-11M18 39c3-9 8-15 17-18" fill="none" stroke="#fff0cf" stroke-width="2.3" stroke-linecap="round"/><path d="M31 36c6 5 8 1 5-2" fill="none" stroke="#ffe28a" stroke-width="2.5" stroke-linecap="round"/><circle cx="22" cy="23" r="2" fill="#fff"/><circle cx="29" cy="29" r="2" fill="#fff"/></svg>';
       toy.style.left = `${roomToyStops[0].x}%`; toy.style.top = `${roomToyStops[0].y}%`;
+      toy.hidden = true; toy.style.display = 'none';   // removed from the room: it did nothing useful when the cat wasn't in view
       stage.appendChild(toy);
       toy.addEventListener('click', () => {
         if (!roomCatState || roomCatState.mode === 'chase' || roomCatState.mode === 'catch') return;
@@ -4980,7 +5030,12 @@
     if (!roomCatState) roomCatState = { x: 34, y: 31, facing: 1, mode: 'roam', stopIndex: 0, target: { ...roomRoamStops[0] }, elapsed: 0, activeTime: 0, restAt: 22 };
     if (!roomCatFrame && !$('#startScreen').hidden && !$('#menuHub').hidden) roomCatFrame = requestAnimationFrame(updateRoomCat);
   }
-  function drawRoomCat() {
+  // keep the home-room cat walking whenever the room is on screen, however the room was opened (title, back button, after a night)
+  { const kick = () => { if (!$('#startScreen').hidden && !$('#menuHub').hidden && $('#roomStage')) setupRoomCat(); };
+    const mo = new MutationObserver(kick); ['#startScreen', '#menuHub'].forEach(sel => { const el = $(sel); if (el) mo.observe(el, { attributes: true, attributeFilter: ['hidden'] }); });
+    setTimeout(kick, 0); }
+  // (named apart from drawRoomCat(x, y, pose) further down, which used to replace this one and left the home room without its cat)
+  function drawHomeRoomCat() {
     const canvas = $('#roomRoamingCat'); if (!canvas) return;
     const ratio = Math.min(window.devicePixelRatio || 1, 2), width = Math.max(1, canvas.clientWidth), height = Math.max(1, canvas.clientHeight);
     const pixelWidth = Math.round(width * ratio), pixelHeight = Math.round(height * ratio);
@@ -5041,7 +5096,8 @@
       state.stopIndex = 0; state.target = { ...roomRoamStops[state.stopIndex] };
     }
     if (reduce && state.mode === 'roam') { state.x = 34; state.y = 31; state.target = { x: 34, y: 31 }; }
-    drawRoomCat(); roomCatFrame = requestAnimationFrame(updateRoomCat);
+    try { drawHomeRoomCat(); } catch (e) { const im = $('#hubHeroCat'); if (im) im.style.visibility = 'visible'; }
+    roomCatFrame = requestAnimationFrame(updateRoomCat);
   }
   function sizeHubCat() {
     const w = heroArt.clientWidth, h = heroArt.clientHeight;
@@ -5095,16 +5151,41 @@
       const side = claimed ? '<span class="ok">Claimed ✓</span>'
         : done ? `<button class="claim" data-mid="${id}">Claim +${d.reward}</button>`
           : `<span>+${d.reward} Glow</span><span>${prog}</span>`;
-      return `<div class="mrow${done ? ' done' : ''}"><span class="mtext">${d.text}</span><div class="mside">${side}</div><div class="mbar"><i style="width:${Math.round(p / d.goal * 100)}%"></i></div></div>`;
+      const ty = { catchF: 'F', catchN: 'N', quietN: 'N', catchL: 'L', catchS: 'S', golden: 'G' }[id];
+      const icon = ty ? `<img class="micon" src="${bookPortrait(ty, 0, true)}" alt="">` : `<span class="micon" aria-hidden="true">${{ combo4: '×4', nohit: '🐾', rare: '✨', glow: '🕯️' }[id] || '⭐'}</span>`;
+      return `<div class="mrow${done ? ' done' : ''}">${icon}<span class="mtext">${d.text}</span><div class="mside">${side}</div><div class="mbar"><i style="width:${Math.round(p / d.goal * 100)}%"></i></div></div>`;
     }).join('');
+    const ready = ms.ids.filter(id => (ms.prog[id] || 0) >= mdef(id).goal && !ms.claimed[id]).length, left = ms.ids.filter(id => !ms.claimed[id]).length;
+    const badge = $('#roomTasksBadge'); if (badge) { badge.textContent = ready ? `${ready}!` : String(left); badge.classList.toggle('ready', ready > 0); badge.hidden = !left; }
+    const val = $('#roomTasksValue'); if (val) val.textContent = ready ? `${ready} to claim` : left ? `${left} left today` : 'All done today';
   }
+  // Daily tasks live on a checklist taped to the dresser in Thiri's room, not in Settings.
+  (() => {
+    const stage = $('#roomStage'), sec = document.querySelector('.hub-missions'); if (!stage || !sec) return;
+    const ov = document.createElement('div'); ov.className = 'overlay daily-tasks-screen'; ov.id = 'dailyTasksScreen'; ov.hidden = true;
+    ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'dailyTasksTitle');
+    ov.innerHTML = '<section class="panel daily-tasks-panel"><p class="eyebrow">TAPED TO THE DRESSER</p><h2 id="dailyTasksTitle">Today’s tasks</h2><p class="muted">Three little tasks each day. Finish one in any night, then come back here to claim its Glow.</p><div class="daily-slot"></div><div class="daily-actions"><button class="btn primary" id="dailyTasksClose" type="button">Back to the room</button></div></section>';
+    document.body.appendChild(ov); ov.querySelector('.daily-slot').appendChild(sec);
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'rh-spot rh-obj rh-tasks'; btn.id = 'roomTasksBtn';
+    btn.style.cssText = '--x:52.5%;--y:46.5%;--w:5.4%;--h:11.2%;--tx:50%;--ty:190%';   // taped to the dresser, clear of every other label
+    btn.setAttribute('aria-label', 'Today’s tasks: daily missions for bonus Glow');
+    btn.innerHTML = '<span class="rh-glow" aria-hidden="true"></span><svg class="rh-art" viewBox="0 0 60 76" aria-hidden="true"><rect x="6" y="8" width="48" height="64" rx="5" fill="#fff6dc" stroke="#6b4f3a" stroke-width="2.5"/><rect x="20" y="3" width="20" height="10" rx="3" fill="#c9a27a" stroke="#6b4f3a" stroke-width="2"/><g stroke="#6b4f3a" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M13 28l4 4 7-8"/><path d="M13 44l4 4 7-8"/><rect x="12" y="56" width="11" height="10" rx="2"/></g><g stroke="#9a8aa8" stroke-width="2.6" stroke-linecap="round"><path d="M29 29h18M29 45h18M29 61h14"/></g></svg><b class="rh-tasks-badge" id="roomTasksBadge">3</b><span class="rh-tag"><b>Today’s tasks</b><i id="roomTasksValue">3 left today</i></span>';
+    stage.appendChild(btn);
+    const close = () => { ov.hidden = true; btn.focus({ preventScroll: true }); };
+    btn.addEventListener('click', () => { initAudio(); sfx('ui', 'open'); renderMissions(); ov.hidden = false; $('#dailyTasksClose').focus({ preventScroll: true }); });
+    $('#dailyTasksClose').addEventListener('click', close);
+    ov.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); close(); } });
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    const h = $('#hubSettingsTitle'); if (h) h.textContent = 'Settings';
+    const intro = h?.nextElementSibling; if (intro && /missions|goals/i.test(intro.textContent)) intro.textContent = 'Sound, controls, tips and the button guide. Today’s tasks are on the checklist taped to the dresser in Thiri’s room.';
+  })();
   $('#mList').addEventListener('click', e => {
     const b = e.target.closest('button[data-mid]'); if (!b) return;
     const id = b.dataset.mid, d = mdef(id);
     if (!ms || ms.claimed[id] || (ms.prog[id] || 0) < d.goal) return;
     initAudio(); ms.claimed[id] = true; saveMissions(); glow += d.reward; saveUpg();
     tone(660, .15, 'triangle', .07); setTimeout(() => tone(990, .25, 'sine', .06), 90);
-    refreshShopBtns(); $('#settingsCloseBtn').focus({ preventScroll: true });
+    refreshShopBtns(); $('#dailyTasksClose')?.focus({ preventScroll: true });
   });
   // Mood Book portraits use the same Moodling art as the game, so every page matches what you catch.
   const bookPortraits = {};
@@ -5162,9 +5243,9 @@
       const details = document.createElement('div'); details.className = 'help-mood-copy';
       const title = document.createElement('strong'), desc = document.createElement('span');
       title.textContent = met ? info.n : (copy.unknown || '???');
-      desc.textContent = met ? (copy.catchGuides?.[key] || copy.catchGuides?.[type] || info.d) : (copy.unknownHint || 'Meet it in a night to unlock its catch guide.');
+      desc.textContent = met ? (copy.catchGuides?.[key] || copy.catchGuides?.[type] || info.d) : (copy.unknownHint || 'Not met yet. Watch the clip to learn how to catch it.');
       details.append(title, desc);
-      if (met) {
+      {   // every Moodling has a clip, even before you meet it, so players can learn the catch in advance
         const watch = document.createElement('button'); watch.type = 'button'; watch.className = 'help-clip-button'; watch.dataset.catchClip = key;
         watch.textContent = copy.catchClipButton || '▶ Watch catch clip';
         watch.setAttribute('aria-label', `${copy.catchClipButton || 'Watch catch clip'} · ${info.n}`);
@@ -5380,7 +5461,11 @@
     document.body.appendChild(nb);
     const syncNotesBtn = () => { nb.textContent = showNotes ? '🗒️' : '🚫'; nb.title = `Notes ${showNotes ? 'on' : 'off'} · tap to turn ${showNotes ? 'off' : 'on'}${window.TCControls ? ' (' + TCControls.short('notes') + ')' : ''}`; nb.setAttribute('aria-label', nb.title); nb.setAttribute('aria-pressed', String(showNotes)); nb.classList.toggle('off', !showNotes); };
     nb.addEventListener('click', () => { setNotes(!showNotes, true); syncNotesBtn(); });
-    new MutationObserver(() => { nb.hidden = pauseBtn.hidden; syncNotesBtn(); }).observe(pauseBtn, { attributes: true, attributeFilter: ['hidden'] });
+    // never float over the touch controls: whenever the on-screen buttons are showing, Notes lives in the pause menu only
+    const syncNotesVis = () => { nb.hidden = pauseBtn.hidden || !touchUI.hidden || matchMedia('(pointer: coarse)').matches; syncNotesBtn(); };
+    new MutationObserver(syncNotesVis).observe(pauseBtn, { attributes: true, attributeFilter: ['hidden'] });
+    new MutationObserver(syncNotesVis).observe(touchUI, { attributes: true, attributeFilter: ['hidden'] });
+    addEventListener('resize', syncNotesVis, { passive: true });
     const syncKeysUi = () => { syncNotesBtn(); const k = $('#goHomeBtn kbd'); if (k && window.TCControls) k.textContent = TCControls.short('home'); };
     addEventListener('tc-controls', syncKeysUi); syncKeysUi();
     $('#showNotesToggle')?.addEventListener('change', syncNotesBtn); $('#pauseNotesBtn')?.addEventListener('click', syncNotesBtn);
@@ -5709,7 +5794,7 @@
     if (H.canContinue) { finishHome(); return; }
     if (H.phase === 'give') { const L = H.lights.find(l => l.state === 'hover'); if (L) give(L); }
   }
-  let wakeTimer = 0, wakeRaf = 0, wakeStage = 0;
+  let wakeTimer = 0, wakeRaf = 0, wakeStage = 0, wakeNight = 0;
   function drawWakeCard(stage, blend = 1) {
     const c = $('#nightWakeCanvas'), main = ctx; ctx = c.getContext('2d');
     try {
@@ -5722,15 +5807,16 @@
   }
   function closeNightWake() {
     clearTimeout(wakeTimer); cancelAnimationFrame(wakeRaf); $('#nightWakeScreen').hidden = true;
-    if (wakeStage === 7 && !finalAwakeningSeen) playFinalAwakening(); else showEnd();
+    // the morning ending plays right after Night 7 is won (every time), never after other nights
+    if (wakeNight === 7) playFinalAwakening(); else showEnd();
   }
   function showNightWake(night) {
     music('play', 'bedroom'); music('ambience', null);
-    wakeStage = clamp(thiriSleepStage, 1, 7); const ch = chapterFor(night);
+    wakeStage = clamp(thiriSleepStage, 1, 7); wakeNight = night; const ch = chapterFor(night);
     $('#nightWakeEyebrow').textContent = `AFTER ${hourOf(night).toUpperCase()}`;
     $('#nightWakeTitle').textContent = night > 7 ? 'One more route brought home.' : wakeStage === 7 ? 'Morning is almost here.' : 'She stirs in her sleep.';
     $('#nightWakeDiary').textContent = `“${ch.diary}”`; $('#nightWakeLine').textContent = `Shwe: “${STAGE_LINES[wakeStage]}”`;
-    $('#nightWakeContinue').textContent = night <= 7 && wakeStage === 7 ? 'See the morning →' : 'Continue →';
+    $('#nightWakeContinue').textContent = night === 7 ? 'See the morning →' : 'Continue →';
     $('#nightWakeScreen').hidden = false; $('#nightWakeContinue').focus({ preventScroll: true });
     const from = SLEEP_STAGES[Math.max(0, wakeStage - 1)], to = SLEEP_STAGES[wakeStage], started = performance.now(), tween = reduce ? .1 : 1.5;
     const animateWake = now => { const q = clamp((now - started) / 1000 / tween, 0, 1); drawWakeCard(wakeStage, ease(q)); if (q < 1) wakeRaf = requestAnimationFrame(animateWake); };
@@ -5978,6 +6064,7 @@
     if (mode === 'story') {   // pack one of each comfort item for this hour
       ITEMS.forEach(i => { if (itemStock[i.id] > 0) { itemStock[i.id]--; activeItems[i.id] = true; } });
       if (activeItems.sand) { timeLeft += 10; float(cat.x, cat.y - 90, '⏳ +10 seconds', GOLD); }
+      if (activeItems.blanket && !gentleMode) { lives += 1; float(cat.x, cat.y - 110, '🧶 +1 life tonight', GOLD); }
       saveShop();
     }
     $('#startScreen').hidden = true; $('#endScreen').hidden = true; pauseScreen.hidden = true; pauseBtn.hidden = false;
@@ -6305,6 +6392,18 @@
     mapViewport.scrollBy({ left: direction * Math.max(LEVEL_MAP_STEP, mapViewport.clientWidth * .75), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   }
   $('#mapPrevious').addEventListener('click', () => panLevelMap(-1));
+  // big arrows on both sides of the map, so the chapters are easy to move through on phones and tablets
+  [['map-side-prev', -1, '‹', 'Previous chapters'], ['map-side-next', 1, '›', 'Next chapters']].forEach(([cls, dir, glyph, label]) => {
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = `map-side-arrow ${cls}`; btn.textContent = glyph; btn.setAttribute('aria-label', label);
+    btn.addEventListener('click', event => { event.stopPropagation(); panLevelMap(dir); });
+    mapViewport.parentElement.appendChild(btn);
+  });
+  const syncMapArrows = () => {
+    const max = mapViewport.scrollWidth - mapViewport.clientWidth - 4, host = mapViewport.parentElement;
+    host.querySelector('.map-side-prev')?.toggleAttribute('disabled', mapViewport.scrollLeft <= 4);
+    host.querySelector('.map-side-next')?.toggleAttribute('disabled', mapViewport.scrollLeft >= max);
+  };
+  mapViewport.addEventListener('scroll', syncMapArrows, { passive: true }); setTimeout(syncMapArrows, 500);
   $('#mapNext').addEventListener('click', () => panLevelMap(1));
   $('#mapCurrent').addEventListener('click', () => focusLevelMap());
   mapViewport.addEventListener('keydown', event => {
@@ -6331,15 +6430,7 @@
     $('#startScreen').hidden = false; $('#menuHub').hidden = true; $('#storyMapScreen').hidden = false;
     $('#hubSettingsScreen').hidden = true; $('#levelBriefingScreen').hidden = true;
     buildLevelMap(); requestAnimationFrame(() => { focusLevelMap(unlockedLevel); syncStoryMapBackdrop(); });
-    // once the story is finished, the ending can be watched again from the map
-    let endBtn = $('#watchEndingBtn');
-    if (!endBtn) {
-      endBtn = document.createElement('button'); endBtn.type = 'button'; endBtn.id = 'watchEndingBtn'; endBtn.className = 'btn ghost';
-      endBtn.textContent = '🌅 Watch the ending'; endBtn.style.cssText = 'margin-left:10px;padding:8px 16px;font-size:14px';
-      endBtn.addEventListener('click', () => playEnding());
-      $('#levelMapCount').after(endBtn);
-    }
-    endBtn.hidden = !(finalAwakeningSeen || thiriSleepStage >= 7);
+    // (no "Watch the ending" button: the ending plays after Night 7)
     let mapTipSeen = false;
     try { mapTipSeen = localStorage.getItem('mk-map-guide-seen') === '1'; } catch (e) {}
     if (mapGuidePending || !mapTipSeen) showMapGuide();
@@ -6699,7 +6790,6 @@
   }
   function playFinalAwakening() {
     music('duck', 1); music('play', 'ending'); music('ambience', null);
-    if (finalAwakeningSeen) { showEnd(); return; }
     finalAwakeningSeen = true;
     if (thiriSleepStage < 7) { thiriSleepStage = 7; saveStoryProgress(); }
     try { localStorage.setItem('mk-awakening-seen', '1'); } catch (e) {}
@@ -6812,7 +6902,7 @@
   function setupCoat() { const v = (setupEl.querySelector('input[name="coat"]:checked') || {}).value; return ownedCats.includes(v) ? v : 'ginger'; }
   function refreshSetupPreview() {
     paintCoat(MK_COATS[setupCoat()], setupEl);
-    $('#setupCatTag').textContent = catIn.value.trim() || 'Shwe';
+    $('#setupCatTag').textContent = catIn.value.trim() || 'Your cat';   // no default name until the player picks one
   }
   catIn.addEventListener('input', refreshSetupPreview);
   setupEl.querySelectorAll('input[name="coat"]').forEach(r => r.addEventListener('change', refreshSetupPreview));
@@ -7032,7 +7122,22 @@
     { const g = starGoals(briefingNight); $('#levelBriefingTime').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} before sunrise · ★★ ${g[1].toLocaleString()} · ★★★ ${g[2].toLocaleString()}`; }
     const paperCopy = paperStarCopy();
     $('#levelBriefingPaperStars').textContent = `✦ ${(paperCopy.progress || 'Paper stars · {count} / 3').replace('{count}', String(paperStarsFound(briefingNight)))}${paperDiaryUnlocked(briefingNight) ? ` · ${paperCopy.diaryUnlocked || 'bonus diary page unlocked'}` : ''}`;
+    renderBriefingClips(chapter);
     $('#levelBriefingScreen').hidden = false; $('#levelBriefingStart').focus({ preventScroll: true });
+  }
+  // Before a night that brings a Moodling you have not met yet, offer its short "how to catch" clip.
+  function renderBriefingClips(chapter) {
+    let box = $('#levelBriefingClips');
+    if (!box) {
+      const tip = $('#levelBriefingTip')?.closest('.briefing-tip'); if (!tip) return;
+      box = document.createElement('div'); box.id = 'levelBriefingClips'; box.className = 'briefing-clips'; tip.after(box);
+      box.addEventListener('click', e => { const b = e.target.closest('button[data-catch-clip]'); if (!b) return; const k = b.dataset.catchClip; if (VARS[k[0]]?.[+k.slice(1)]) openCatchClip(k[0], +k.slice(1), b); });
+    }
+    const fresh = Object.keys(chapter.feelingsNeeded || {}).filter(type => VARS[type] && !encounteredMoodlings[`${type}0`] && !(book[`${type}0`] > 0));
+    box.replaceChildren(); box.hidden = !fresh.length;
+    if (!fresh.length) return;
+    const label = document.createElement('strong'); label.textContent = fresh.length > 1 ? 'New tonight · watch how to catch them' : 'New tonight · watch how to catch it'; box.appendChild(label);
+    fresh.forEach(type => { const b = document.createElement('button'); b.type = 'button'; b.className = 'help-clip-button'; b.dataset.catchClip = `${type}0`; b.textContent = `▶ How to catch ${BRIEFING_FEELING_NAMES[type] || type}`; box.appendChild(b); });
   }
   function closeLevelBriefing() {
     $('#levelBriefingScreen').hidden = true;
