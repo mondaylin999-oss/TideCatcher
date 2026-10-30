@@ -1,3 +1,12 @@
+# Clean up school gameplay scenery
+
+- Removed the extra far skyline layer from indoor school scenes so dark building silhouettes no longer cover the hallway.
+- Replaced the oversized amber secret-room slab in school with a small wall crack; the hidden-room scratch interaction and reward remain available.
+
+# Stop Shwe sooner after releasing movement
+
+- Slippery movement now happens only in rain. Dry slick patches and the snowy-route slip effect are removed; rainy ground eases into movement and brakes firmly when the joystick or movement key is released.
+
 # Removed the post-level-10 Moodlings
 
 - Removed Bored, Guilty, and Proud from gameplay, Endless routes, Mood Book, art, catch guides, and related sound mappings.

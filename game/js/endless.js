@@ -40,7 +40,7 @@
     candle: { name: 'Candle', icon: '🕯️', twist: 'Candle lanterns drift down. Step out of their glow.' },
     foggy: { name: 'Foggy', icon: '🌫️', twist: 'Fog hides the Moodlings until you are close. Night Eyes cut through it.' },
     shooting: { name: 'Shooting-Star', icon: '🌠', twist: 'More feelings fall from the sky tonight.' },
-    snowy: { name: 'Snowy', icon: '❄️', twist: 'Snow makes the ground slippery.' },
+    snowy: { name: 'Snowy', icon: '❄️', twist: 'Snow drifts sparkle along the path.' },
     moonlit: { name: 'Moonlit', icon: '🌙', twist: 'A bright moon: Night Eyes last twice as long.' }
   };
   const CHALLENGES = [

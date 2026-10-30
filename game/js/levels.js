@@ -185,7 +185,6 @@
   // Themed traps and Thiri's hidden keepsakes, in final coordinates (after the pits are sized).
   //   squeak {x,w}: creaky floorboard (sneak across) · sprinkler {x} · lantern {x,w}: drops on its shadow
   //   wind {a,b,dir}: gusts push Shwe toward a (dir -1) or b (dir 1); zones end well before any pit
-  //   slick {a,b}: wet mossy stones, Shwe slides; zones end well before any pit
   //   keepsakes [x,y]: hidden until Shwe is close or uses Night Eyes; some sit above a moving bridge (grab it mid-ride)
   const EXTRAS = {
     1: { hazards: [], keepsakes: [[60,440],[1925,300]] },
@@ -193,8 +192,8 @@
     3: { hazards: [{kind:'sprinkler',x:1500},{kind:'sprinkler',x:3150}], keepsakes: [[580,195],[3680,425]] },
     4: { hazards: [{kind:'lantern',x:1412,w:250},{kind:'lantern',x:3626,w:260}], keepsakes: [[2080,400],[3866,285]] },
     5: { hazards: [{kind:'wind',a:380,b:800,dir:-1},{kind:'wind',a:1420,b:2350,dir:1},{kind:'wind',a:3400,b:4150,dir:-1}], keepsakes: [[700,385],[2195,385],[3280,252]] },
-    6: { hazards: [{kind:'slick',a:1350,b:1600},{kind:'slick',a:2450,b:2760},{kind:'slick',a:3600,b:4000}], keepsakes: [[920,400],[3906,282]] },
-    7: { hazards: [{kind:'slick',a:1500,b:2150},{kind:'wind',a:2900,b:3700,dir:-1},{kind:'lantern',x:5690,w:240}], keepsakes: [[3096,180],[4000,400],[6130,415]] }
+    6: { hazards: [], keepsakes: [[920,400],[3906,282]] },
+    7: { hazards: [{kind:'wind',a:2900,b:3700,dir:-1},{kind:'lantern',x:5690,w:240}], keepsakes: [[3096,180],[4000,400],[6130,415]] }
   };
   for (const [night, extra] of Object.entries(EXTRAS)) Object.assign(levels[night], extra);
   // Hilltop: every hill's middle stone pillar crumbles, not just the first one
@@ -216,7 +215,7 @@
     )).filter(Boolean);
   }
   // Endless Nights: the night card the player picks decides the place (and so the map art), and its
-  // version adds a twist made only of hazards the game already knows (wind, slick ground, falling lanterns).
+  // version adds a twist made only of hazards the game already knows (wind, rain puddles, falling lanterns).
   const endlessHazards = (level, twist) => {
     // spans of solid ground, well clear of every pit (hazard zones must end before a gap)
     const spans = []; let left = 320;
@@ -225,7 +224,6 @@
     const chunks = (len, gap) => { const out = []; for (const [a, b] of spans) for (let x = a; x + 160 < b; x += len + gap) out.push([x, Math.min(b, x + len)]); return out; };
     const out = [];
     if (twist === 'blossom') chunks(480, 700).filter(([a]) => a >= 600).slice(0, 5).forEach(([a, b], i) => out.push({ kind: 'wind', a, b, dir: i % 2 ? -1 : 1 }));
-    if (twist === 'snowy') spans.forEach(([a, b]) => out.push({ kind: 'slick', a, b }));
     if (twist === 'rain') chunks(420, 600).forEach(([a, b]) => out.push({ kind: 'slick', a, b }));
     if (twist === 'candle') chunks(240, 900).filter(([a]) => a >= 700).slice(0, 5).forEach(([a]) => out.push({ kind: 'lantern', x: a, w: 240 }));
     return out;

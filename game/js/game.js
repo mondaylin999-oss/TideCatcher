@@ -1506,7 +1506,7 @@
         } else if (h.phase === 'lit') { h.tt -= dt; if (h.tt <= 0) { h.phase = 'idle'; h.tt = 2.6 + Math.random() * 2.2; } }
       } else if (h.kind === 'slick') {
         if (cat.on && cat.x >= h.a && cat.x <= h.b && Math.abs(cat.vx) > 120) {
-          hazNotice('slick', 'Wet mossy stones! Shwe slides, so slow down early.', '#9fe8ff');
+          hazNotice('slick', 'Rain makes the path slippery. Ease off to stop safely.', '#9fe8ff');
           if (Math.random() < dt * 14) parts.push({ x: cat.x - Math.sign(cat.vx) * 14, y: cat.y - 2, vx: -cat.vx * .2, vy: -60 - Math.random() * 50, life: .45, max: .45, c: 'rgba(160,225,240,.8)', r: 1.6 + Math.random() * 1.6, g: 500 });
         }
       } else if (h.kind === 'wind') {
@@ -2437,7 +2437,7 @@
     c.sneak = sneaking;
     window.TCGameAudio?.setSneaking(sneaking);
     if (c.pounce > 0) c.pounce -= dt;
-    else { const slick = c.on && onSlick(c.x), acc = slick ? (Math.abs(target) > Math.abs(c.vx) && Math.sign(target) === Math.sign(c.vx || target) ? 700 : 220) : c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
+    else { const slick = c.on && onSlick(c.x), releasing = target === 0, acc = slick ? (releasing ? 2600 : Math.abs(target) > Math.abs(c.vx) && Math.sign(target) === Math.sign(c.vx || target) ? 700 : 220) : c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     const jumpSpeed = (chapter?.jumpSpeed || 830) * (weather.kind === 'wind' ? 1 + weather.wind * .035 : 1), gravity = chapter?.jumpGravity || 2300;
     if (c.ledgeGrab) {
@@ -3836,10 +3836,20 @@
       else if (prop.kind === 'bush') { for(const [dx,dy,r] of [[18,-20,20],[48,-30,25],[75,-18,20]]){ctx.fillStyle=mid;ctx.beginPath();ctx.arc(x+dx,gy+dy,r,0,Math.PI*2);ctx.fill();} }
       ctx.restore();
     }
+    const schoolRoomStyle = currentMapKey() === 'school';
     for (const room of secretRooms) {
       if (room.x < x0 - 150 || room.x > x1 + 150) continue;
       const x = room.x, gy = terrainY(x), half = room.width / 2, top = gy - 118, pulse = .55 + .45 * Math.sin(t * 2.2);
       ctx.save();
+      if (schoolRoomStyle) {
+        // Keep the secret scratch point, but blend its clue into the hallway wall
+        // instead of drawing a large amber stone slab over the school scenery.
+        ctx.strokeStyle = 'rgba(218,207,195,.62)'; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath(); ctx.moveTo(x + 1, gy - 29); ctx.lineTo(x - 4, gy - 39); ctx.lineTo(x + 3, gy - 48); ctx.lineTo(x - 2, gy - 57); ctx.lineTo(x + 5, gy - 70); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 3, gy - 48); ctx.lineTo(x - 12, gy - 52); ctx.lineTo(x - 16, gy - 60); ctx.moveTo(x + 1, gy - 56); ctx.lineTo(x + 11, gy - 61); ctx.stroke();
+        ctx.restore();
+        continue;
+      }
       const halo = ctx.createRadialGradient(x, gy - 56, 4, x, gy - 56, room.open ? 145 : 86);
       halo.addColorStop(0, `rgba(255,220,151,${room.open ? .23 : .08 + .04 * pulse})`); halo.addColorStop(1, 'rgba(255,220,151,0)');
       ctx.fillStyle = halo; ctx.fillRect(x - 150, top - 36, 300, 180);

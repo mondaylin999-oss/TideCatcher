@@ -28,6 +28,9 @@
   }
 
   function skyline(g, o, p, kind) {
+    // School hallways already provide a night skyline through their windows; an extra
+    // city silhouette here floats over the indoor walls like a row of dark towers.
+    if (kind === 'school') return;
     const base = o.ground - (kind === 'train' ? 144 : 132);
     g.fillStyle = p.far;
     if (['park', 'hill', 'lake', 'free'].includes(kind)) {
