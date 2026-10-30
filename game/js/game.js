@@ -270,29 +270,36 @@
   function stickMove(e) {
     let dx = clamp(e.clientX - sx, -58, 58);
     const distance = Math.abs(dx);
-    // Match the visible 64px inner ring; retain a small neutral centre.
-    touchAxis = distance < 7 ? 0 : Math.sign(dx) * (distance <= 32 ? .4 : 1);
-    stick.dataset.speed = distance < 7 ? 'idle' : distance <= 32 ? 'slow' : 'fast';
+    // Small centre = stand still, inner ring = sneak, outer ring = run. The sneak band is wide
+    // (7-40px) and sticky (stay in sneak until 46px, stay running until back under 34px), so a
+    // thumb wobbling on a phone doesn't flip between sneaking and running and scare Moodlings.
+    const wasFast = stick.dataset.speed === 'fast';
+    const fast = wasFast ? distance > 34 : distance > 46;
+    touchAxis = distance < 7 ? 0 : Math.sign(dx) * (fast ? 1 : .4);
+    stick.dataset.speed = distance < 7 ? 'idle' : fast ? 'fast' : 'slow';
     knob.style.transform = `translate(calc(-50% + ${dx}px),-50%)`;
   }
   zone.addEventListener('pointerdown', e => {
     if (sid !== null) return;
     e.preventDefault(); sid = e.pointerId; sx = e.clientX; sy = e.clientY;
     const r = zone.getBoundingClientRect();
-    stick.style.left = (sx - r.left) + 'px'; stick.style.top = (sy - r.top) + 'px'; stick.hidden = false;
+    stick.style.left = (sx - r.left) + 'px'; stick.style.top = (sy - r.top) + 'px'; stick.hidden = false; stick.dataset.speed = 'idle';
     try { zone.setPointerCapture(sid); } catch (err) {}
     stickMove(e);
   });
   zone.addEventListener('pointermove', e => { if (e.pointerId === sid) stickMove(e); });
   const stickEnd = e => { if (e.pointerId !== sid) return; sid = null; touchAxis = 0; stick.hidden = true; knob.style.transform = 'translate(-50%,-50%)'; };
   zone.addEventListener('pointerup', stickEnd); zone.addEventListener('pointercancel', stickEnd);
-  $('#bJump').addEventListener('pointerdown', e => { e.preventDefault(); jumpHeld = true; jumpQ = true; });
-  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('#bJump').addEventListener(ev, () => { jumpHeld = false; }));
+  // Hold buttons keep the finger: a thumb that drifts off the edge no longer cancels the hold
+  // (on phones that made hold-to-scratch, calm breathing and high jumps cut out).
+  const holdOn = (btn, e) => { e.preventDefault(); try { btn.setPointerCapture(e.pointerId); } catch (err) {} };
+  $('#bJump').addEventListener('pointerdown', e => { holdOn($('#bJump'), e); jumpHeld = true; jumpQ = true; });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => $('#bJump').addEventListener(ev, () => { jumpHeld = false; }));
   $('#bPounce').addEventListener('pointerdown', e => { e.preventDefault(); pounceQ = true; });
   $('#bPurr').addEventListener('pointerdown', e => { e.preventDefault(); purrQ = true; });
   $('#bEyes').addEventListener('pointerdown', e => { e.preventDefault(); eyesQ = true; });
-  $('#bScratch').addEventListener('pointerdown', e => { e.preventDefault(); scratchQ = true; scratchHeld = true; });
-  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('#bScratch').addEventListener(ev, () => { scratchHeld = false; }));
+  $('#bScratch').addEventListener('pointerdown', e => { holdOn($('#bScratch'), e); scratchQ = true; scratchHeld = true; });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => $('#bScratch').addEventListener(ev, () => { scratchHeld = false; }));
   const coarse = matchMedia('(pointer: coarse)').matches;
   addEventListener('touchstart', () => { if (state === 'play' && !nightPan.active) touchUI.hidden = false; }, { passive: true });
 
@@ -792,7 +799,7 @@
     for (const k in upg) if (Number.isInteger(s[k])) upg[k] = clamp(currentVersion ? s[k] : s[k] * 2, 0, UPG.find(u => u.id === k)?.max ?? UPG_MAX);
     glow = Math.max(0, +localStorage.getItem('mk-glow') || 0);
   } catch (e) {}
-  function saveUpg() { try { localStorage.setItem('mk-upg-v', '8'); localStorage.setItem('mk-upg', JSON.stringify(upg)); localStorage.setItem('mk-glow', String(glow)); } catch (e) {} }
+  function saveUpg() { if (window.TC_TEST) glow = Math.max(glow, 999999); try { localStorage.setItem('mk-upg-v', '8'); localStorage.setItem('mk-upg', JSON.stringify(upg)); localStorage.setItem('mk-glow', String(glow)); } catch (e) {} }
   // Cats: everyone starts with the story cat (Ginger Tabby, as in the intro). The others are bought with Glow; each has one small perk.
   const CAT_SHOP = {
     ginger: { cost: 0, perk: 'Shwe from the story. Good at everything, best at nothing.' },
@@ -846,6 +853,7 @@
     else if (MK_HAS_PROFILE && !['ginger', 'burmese'].includes(MK_PROFILE.coat)) ownedCats.push(MK_PROFILE.coat);   // keep a cat an older save chose
     const it = JSON.parse(localStorage.getItem('mk-items') || '{}'); ITEMS.forEach(i => { itemStock[i.id] = Math.max(0, Math.floor(+it[i.id] || 0)); });
     const tr = JSON.parse(localStorage.getItem('mk-trails') || 'null'); if (Array.isArray(tr)) ownedTrails = ['honey', ...tr.filter(k => k !== 'honey' && TRAILS[k])];
+    if (window.TC_TEST) { ownedCats = ['ginger', ...Object.keys(CAT_SHOP).filter(k => k !== 'ginger')]; ownedTrails = Object.keys(TRAILS); ITEMS.forEach(i => { itemStock[i.id] = Math.max(itemStock[i.id] || 0, 99); }); }
     const tp = localStorage.getItem('mk-trail'); if (TRAILS[tp] && ownedTrails.includes(tp)) trailPick = tp;
   } catch (e) {}
   if (!ownedCats.includes(MK_PROFILE.coat)) { MK_PROFILE.coat = 'ginger'; COAT = MK_COATS.ginger; }
@@ -1346,7 +1354,7 @@
   // Themed traps and hidden keepsakes (data in levels.js: hazards, keepsakes, 'sinking' platforms)
   const SINK_TIME = 1.6;
   const KEEPSAKE_GLOW = 25;
-  const KEEPSAKE_ART = { school: ['paper star', '#ffe39a'], rooftop: ['little bell', '#ffe1a3'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], market: ['lantern charm', '#ffb36b'], pagoda: ['bell charm', '#e4cc9c'], train: ['ticket stub', '#d6c7a2'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], free: ['star', '#ffe39a'] };
+  const KEEPSAKE_ART = { school: ['origami crane', '#ffe39a'], rooftop: ['little bell', '#ffe1a3'], park: ['lost marble', '#9fd7ff'], festival: ['lucky charm', '#ff9fb4'], market: ['lantern charm', '#ffb36b'], pagoda: ['bell charm', '#e4cc9c'], train: ['ticket stub', '#d6c7a2'], hill: ['acorn', '#e2b07a'], lake: ['seashell', '#ffe2c5'], garden: ['leaf charm', '#a8e6a0'], free: ['star', '#ffe39a'] };
   const WEATHER = [
     { kind: 'rain', icon: '☔', title: 'Light rain' },
     { kind: 'wind', icon: '〰', title: 'Soft wind' },
@@ -1668,6 +1676,33 @@
     else if (map === 'hill') { ctx.fillStyle = '#b97a45'; ctx.beginPath(); ctx.ellipse(0, 3, 6.5, 8, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#6e4a2c'; ctx.beginPath(); ctx.ellipse(0, -4, 8, 4.5, 0, Math.PI, Math.PI * 2); ctx.fill(); ctx.fillRect(-1, -11, 2, 4); ctx.fillStyle = 'rgba(255,240,210,.6)'; ctx.beginPath(); ctx.ellipse(-2.5, 2, 1.6, 3, 0, 0, 7); ctx.fill(); }
     else if (map === 'rooftop') { ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(-6,-4);ctx.quadraticCurveTo(-6,-10,0,-10);ctx.quadraticCurveTo(6,-10,6,-4);ctx.lineTo(8,5);ctx.lineTo(-8,5);ctx.closePath();ctx.fill();ctx.fillStyle='#856875';ctx.fillRect(-9,4,18,2);ctx.beginPath();ctx.arc(0,8,2,0,7);ctx.fill(); }
     else if (map === 'lake') { ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(-10, -3); ctx.quadraticCurveTo(0, -12, 10, -3); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#d39b7a'; ctx.lineWidth = 1.2; for (const a of [-.9, -.45, 0, .45, .9]) { ctx.beginPath(); ctx.moveTo(0, 7); ctx.lineTo(Math.sin(a) * 9, -6 + Math.abs(a) * 3); ctx.stroke(); } }
+    else if (map === 'school') {   // origami crane: two folded wings and a tail, so it never looks like a paper star
+      ctx.fillStyle = c; ctx.strokeStyle = '#a07a3a'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(-11, 1); ctx.lineTo(0, -9); ctx.lineTo(2, 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(11, 1); ctx.lineTo(0, -9); ctx.lineTo(2, 2); ctx.closePath(); ctx.fillStyle = '#fff3c4'; ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-11, 1); ctx.lineTo(2, 2); ctx.lineTo(11, 1); ctx.lineTo(4, 7); ctx.lineTo(-4, 7); ctx.closePath(); ctx.fillStyle = c; ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-4, 7); ctx.lineTo(-12, -4); ctx.lineTo(-7, 6); ctx.fill(); ctx.stroke();
+    }
+    else if (map === 'market') {   // lantern charm: a small paper lantern on a cord
+      ctx.strokeStyle = '#7a4a2a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(0, -8); ctx.stroke();
+      ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(0, 0, 7.5, 8.5, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#b4542a'; ctx.stroke();
+      ctx.fillStyle = '#b4542a'; ctx.fillRect(-4, -9, 8, 2.5); ctx.fillRect(-4, 7, 8, 2.5);
+      ctx.strokeStyle = 'rgba(180,84,42,.6)'; ctx.beginPath(); ctx.moveTo(-3.5, -6); ctx.lineTo(-3.5, 6); ctx.moveTo(3.5, -6); ctx.lineTo(3.5, 6); ctx.stroke();
+    }
+    else if (map === 'pagoda') {   // bell charm: a temple bell with a clapper
+      ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(-7, 5); ctx.quadraticCurveTo(-7, -9, 0, -9); ctx.quadraticCurveTo(7, -9, 7, 5); ctx.lineTo(9, 7); ctx.lineTo(-9, 7); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = 1.3; ctx.stroke(); ctx.fillStyle = '#8a6a3a'; ctx.beginPath(); ctx.arc(0, 9, 2.2, 0, 7); ctx.fill(); ctx.fillRect(-1, -12, 2, 3.5);
+    }
+    else if (map === 'train') {   // ticket stub: a punched paper ticket
+      ctx.rotate(-.18); ctx.fillStyle = c; ctx.strokeStyle = '#8c7a52'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(-11, -6); ctx.lineTo(11, -6); ctx.lineTo(11, -2); ctx.arc(11, 0, 2, -Math.PI / 2, Math.PI / 2, true); ctx.lineTo(11, 6); ctx.lineTo(-11, 6); ctx.lineTo(-11, 2); ctx.arc(-11, 0, 2, Math.PI / 2, -Math.PI / 2, true); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.moveTo(4, -6); ctx.lineTo(4, 6); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#8c7a52'; ctx.fillRect(-8, -2.5, 9, 1.6); ctx.fillRect(-8, .8, 6, 1.6);
+    }
+    else if (map === 'garden') {   // leaf charm
+      ctx.rotate(-.5); ctx.fillStyle = c; ctx.beginPath(); ctx.moveTo(0, -11); ctx.quadraticCurveTo(10, -2, 0, 11); ctx.quadraticCurveTo(-10, -2, 0, -11); ctx.fill();
+      ctx.strokeStyle = '#3f8a4a'; ctx.lineWidth = 1.3; ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(0, 12); ctx.stroke();
+    }
     else { ctx.fillStyle = c; ctx.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 4.2 : 10, a = -Math.PI / 2 + i * Math.PI / 5; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(160,120,60,.7)'; ctx.lineWidth = 1; ctx.stroke(); }
     ctx.restore();
   }
@@ -4606,7 +4641,11 @@
     let cx = x + 10 + lw;
     parts.forEach((p, i) => {
       const cy = y + h / 2;
-      if (p.kind === 't') drawTrinket('button', cx + 10, cy, ctx);
+      if (p.kind === 't') {
+        // show the trinket that is actually out there (the nearest one left), not always a button
+        const left = trinkets.filter(k => !k.taken); const near = left.reduce((a, k) => !a || Math.abs(k.x - cat.x) < Math.abs(a.x - cat.x) ? k : a, null);
+        drawTrinket(near ? near.type : 'button', cx + 10, cy, ctx);
+      }
       else { const [, c] = KEEPSAKE_ART[currentMapKey()] || KEEPSAKE_ART.free; ctx.save(); ctx.translate(cx + 10, cy); ctx.scale(.85, .85); drawKeepsake(currentMapKey(), 0, 0, c); ctx.restore(); }
       ctx.font = `700 19px ${HAND}`; ctx.textAlign = 'left'; ctx.fillStyle = SB_INK; ctx.fillText(p.text, cx + 24, cy + 6);
       cx += widths[i];
