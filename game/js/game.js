@@ -1067,8 +1067,10 @@
     if (!bossEncounter || cat.inv > 0 || cat.respawning || cat.falling) return;
     const copy = stormBossCopy();
     if (!gentleMode) { lives = Math.max(0, lives - 1); sfx('ui', 'lifeLost'); }
-    cat.pounce = 0; cat.vx = 0; cat.vy = 0; cat.on = false; cat.platform = null; cat.swinging = null;
-    cat.respawning = true; respawnT = .75; fallDimT = .5; bossEncounter.mode = 'recover'; bossEncounter.timer = 1.05; bossEncounter.x = bossEncounter.homeX; bossEncounter.y = terrainY(bossEncounter.x);
+    // Knock Shwe back a short way instead of sending her to the last checkpoint: no freeze, no screen dim, no long walk back.
+    const away = Math.sign(cat.x - bossEncounter.x) || -(bossEncounter.dir || 1);
+    cat.pounce = 0; cat.platform = null; cat.swinging = null; cat.vx = away * 430; cat.vy = -360; cat.on = false; cat.stun = .35; cat.inv = 1.2;
+    bossEncounter.mode = 'recover'; bossEncounter.timer = 1.05; bossEncounter.x = bossEncounter.homeX; bossEncounter.y = terrainY(bossEncounter.x);
     sfx('cat', 'sad'); sfx('ui', 'hit'); sfx('ui', 'poof'); burst(cat.x, cat.y - 24, GOLD, 26); burst(cat.x, cat.y - 36, CALM, 18);
     shake = Math.max(shake, 8);
     if (lives <= 0 && !gentleMode) { bossEncounter = null; finish(false, 'boss'); return; }
@@ -2438,7 +2440,8 @@
       c.leapSparkleCd = .075;
       for (let i = 0; i < 2; i++) parts.push({ x: c.x - c.face * (14 + Math.random() * 13), y: c.y - 18 + Math.random() * 12, vx: -c.face * 24 + (Math.random() - .5) * 26, vy: -18 - Math.random() * 34, life: .24 + Math.random() * .12, max: .36, c: i ? '#ffe9a6' : '#c8adff', r: 2 + Math.random() * 2, g: -4 });
     }
-    const a = axisNow(), sneaking = a !== 0 && Math.abs(a) < .55;
+    if (c.stun > 0) c.stun -= dt;
+    const a = c.stun > 0 ? 0 : axisNow(), sneaking = a !== 0 && Math.abs(a) < .55;
     if (a !== 0) onTutorialAction('move', c);
     if (sneaking) onTutorialAction('sneak', c);
     const target = a === 0 ? 0 : Math.sign(a) * (sneaking ? 2 * T : uv('swift') * T);
@@ -4396,7 +4399,7 @@
   function drawCat() {
     const c = cat; if (c.respawning) return; ctx.save();
     if (c.falling) ctx.globalAlpha = clamp(1 - c.fallTime / .38, 0, 1);
-    if (c.inv > 0 && Math.floor(c.inv * 12) % 2) ctx.globalAlpha = .45;
+    if (c.inv > 0 && !reduce) ctx.globalAlpha = .62 + .38 * Math.cos(c.inv * 9);
     { const px = dpr * S; ctx.translate(Math.round(c.x * px) / px, Math.round(c.y * px) / px); } ctx.scale(c.face, 1);
     let sxs = 1, sys = 1;
     if (c.pounce > 0) { sxs = 1.12; sys = .9; } else if (scratchAnim > 0 && c.on) { sxs = 1.03; sys = .92; } else if (c.squash > 0) { sxs = 1.04; sys = .95; } else if (c.sneak) { sys = .91; sxs = .98; } else if (!c.on) { sxs = .96; sys = 1.06; }
