@@ -1,0 +1,66 @@
+/* Mobile fit: loaded last. Makes every screen fit and every control easy to tap on phones,
+   tablets and desktops (iOS Safari, Android Chrome, Windows, macOS), without changing the art. */
+
+/* ---- touch behaviour: no double-tap zoom, no 300 ms tap delay, no text selection or long-press menus ---- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+button, [role=button], .tbtn, .rh-spot, label { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+#game, #touch, #stickZone { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+#touch .tbtn { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* iOS Safari zooms the whole page when a text box under 16px is tapped; keep inputs at 16px+ and finger height */
+input[type=text], input:not([type]), input[type=search], select, textarea { font-size: max(16px, 1em) !important; min-height: 44px; }
+
+/* ---- every screen can scroll if it doesn't fit, so no button is ever stuck off-screen ---- */
+.overlay > .panel, .overlay > .welcome-panel, .overlay > section,
+:is(#welcomeScreen, #welcomeCardsScreen, #setupScreen, #pauseScreen, #leaveNightScreen) > :is(.panel, .welcome-panel) {
+  max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  overflow-y: auto !important; overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+}
+
+/* ---- welcome sketchbook: compact on short screens so "Begin the story" is visible without scrolling ---- */
+@media (max-height: 820px) {
+  #welcomeScreen .welcome-logo { max-height: 30vh; width: auto; }
+  #welcomeScreen .welcome-note { display: none; }
+}
+@media (max-height: 560px) {
+  #welcomeScreen .welcome-panel { padding-top: 10px !important; padding-bottom: 10px !important; gap: 4px !important; }
+  #welcomeScreen .welcome-eyebrow { font-size: 13px !important; padding: 4px 10px !important; margin: 0 !important; }
+  #welcomeScreen .welcome-logo { max-height: 26vh; }
+  #welcomeScreen .welcome-mascot { transform: scale(.78); transform-origin: center; margin: -6% 0 !important; }
+  #welcomeScreen .welcome-description { font-size: 15px !important; line-height: 1.3 !important; margin: 0 !important; }
+  #welcomeScreen .welcome-loading { margin: 0 !important; }
+  #welcomeScreen .team-credit { display: none; }
+  #welcomeScreen .welcome-begin { min-height: 44px; font-size: 18px !important; padding: 6px 16px !important; }
+}
+
+/* ---- pause menu: two columns on short landscape phones so all six buttons fit ---- */
+@media (max-height: 520px) and (orientation: landscape) {
+  #pauseScreen .pause-panel { padding: 12px 18px !important; gap: 8px !important; }
+  #pauseScreen .pause-panel .muted { display: none; }
+  #pauseScreen .pause-actions { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px !important; }
+  #pauseScreen .pause-actions .btn { min-height: 44px; padding-block: 6px; }
+}
+
+/* ---- finger-sized tap areas (44 px, Apple and Android guidance) without moving any artwork ---- */
+.tip-coach-close { width: 44px !important; height: 44px !important; min-width: 44px !important; }
+.game-notes-btn { min-width: 44px !important; min-height: 44px !important; }
+.welcome-dot { min-width: 44px !important; min-height: 44px !important; }
+.hub-side-btn, .hub-avatar { min-width: 44px; min-height: 44px; }
+.guidance-toggle, label:has(> .cozy-toggle) { min-height: 44px; cursor: pointer; }
+/* small hotspots in the room picture get an invisible, bigger touch zone around them */
+.rh-spot { overflow: visible; }
+.rh-spot::before { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 48px); height: max(100%, 48px); transform: translate(-50%, -50%); }
+[aria-label="Open the Treat box"], [aria-label="Open the Mood Book"] { min-height: 44px; min-width: 44px; }
+
+/* ---- in-game touch buttons: never smaller than a fingertip, and clear of the iPhone home bar / notch ---- */
+#touch .tbtn { min-width: 52px; min-height: 52px; }
+#touch #stickZone { padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); }
+#setupScreen input[type=text], #girlNameInput, #catNameInput { min-height: 44px !important; height: auto !important; }
+
+/* ---- tips: smaller on small phones so they don't cover the play area ---- */
+@media (max-height: 430px) {
+  .tip-coach-card { max-width: min(330px, 46vw) !important; padding: 8px 10px !important; gap: 8px !important; }
+  .tip-coach-card p { font-size: 13px !important; line-height: 1.3 !important; }
+  .tip-coach-card strong { font-size: 16px !important; }
+  .shwe-teacher { display: none !important; }
+}

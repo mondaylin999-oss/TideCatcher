@@ -185,15 +185,16 @@
   // Themed traps and Thiri's hidden keepsakes, in final coordinates (after the pits are sized).
   //   squeak {x,w}: creaky floorboard (sneak across) · sprinkler {x} · lantern {x,w}: drops on its shadow
   //   wind {a,b,dir}: gusts push Shwe toward a (dir -1) or b (dir 1); zones end well before any pit
-  //   keepsakes [x,y]: hidden until Shwe is close or uses Night Eyes; some sit above a moving bridge (grab it mid-ride)
+  //   keepsakes [x,y]: hidden until Shwe is close or uses Night Eyes. Every one must sit inside the level and within
+  //   one normal jump (~150px) of the ground: story nights 1-4 and 6-7 have no ledges (see the roost rule below).
   const EXTRAS = {
     1: { hazards: [], keepsakes: [[60,440],[1925,300]] },
     2: { hazards: [{kind:'squeak',x:400,w:90},{kind:'squeak',x:1600,w:90},{kind:'squeak',x:2750,w:90}], keepsakes: [[1306,398],[2933,292]] },
-    3: { hazards: [{kind:'sprinkler',x:1500},{kind:'sprinkler',x:3150}], keepsakes: [[580,195],[3680,425]] },
+    3: { hazards: [{kind:'sprinkler',x:1500},{kind:'sprinkler',x:3150}], keepsakes: [[580,301],[3300,437]] },
     4: { hazards: [{kind:'lantern',x:1412,w:250},{kind:'lantern',x:3626,w:260}], keepsakes: [[2080,400],[3866,285]] },
     5: { hazards: [{kind:'wind',a:380,b:800,dir:-1},{kind:'wind',a:1420,b:2350,dir:1},{kind:'wind',a:3400,b:4150,dir:-1}], keepsakes: [[700,385],[2195,385],[3280,252]] },
-    6: { hazards: [], keepsakes: [[920,400],[3906,282]] },
-    7: { hazards: [{kind:'wind',a:2900,b:3700,dir:-1},{kind:'lantern',x:5690,w:240}], keepsakes: [[3096,180],[4000,400],[6130,415]] }
+    6: { hazards: [], keepsakes: [[920,400],[3600,345]] },
+    7: { hazards: [{kind:'wind',a:2900,b:3700,dir:-1},{kind:'lantern',x:5690,w:240}], keepsakes: [[3096,303],[4000,400],[5080,418]] }
   };
   for (const [night, extra] of Object.entries(EXTRAS)) Object.assign(levels[night], extra);
   // Hilltop: every hill's middle stone pillar crumbles, not just the first one
