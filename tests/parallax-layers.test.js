@@ -26,8 +26,8 @@ assert.ok(reduced.some(([name, x, y]) => name === 'translate' && x === 60 && y =
 assert.ok(reduced.some(([name, x, y]) => name === 'translate' && x === 0 && y === 0), 'reduced motion should stop near-layer drift and foliage sway');
 
 const game = fs.readFileSync('game/js/game.js', 'utf8');
-// (removed: the team took the parallax skyline out of the gameplay render on purpose; see CHANGES.md "Remove oversized and below-ground level scenery")
-// (removed: the team took the parallax skyline out of the gameplay render on purpose; see CHANGES.md "Remove oversized and below-ground level scenery")
+assert.doesNotMatch(game, /window\.TCParallaxLayers\?\.draw\(/, 'extra parallax overlays stay disabled so building-like silhouettes do not show through the playable floor');
+assert.match(game, /drawWorld\(\);[\s\S]*?drawHazards\(\)/, 'the map renderer should proceed from its real world art to gameplay objects without an overlay layer');
 const moduleSource = fs.readFileSync('game/js/parallax-layers.js', 'utf8');
 assert.match(moduleSource, /o\.pits \|\| \[\]/, 'near rails must respect pit coordinates');
 assert.match(moduleSource, /o\.reduced \? \.94 : \.12/, 'far layer should use a distinct slow camera factor');

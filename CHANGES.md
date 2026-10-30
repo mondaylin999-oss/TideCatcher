@@ -395,3 +395,18 @@
 - The skyline drifts slowly and near details track the camera more closely. Lightweight vector art is rasterized into small, on-demand tiles and reused each frame; the cache holds only the active map. Near railing tiles are omitted across pit spans so they cannot suggest a crossing.
 - Reduced-motion mode nearly aligns the layers with the camera and stops foliage sway. Both layers are drawn beneath Shwe and Moodlings and do not change collision geometry.
 - Added a regression check covering all map themes, draw paths, and pit-aware foregrounds.
+
+# All-unlocked test build
+
+- Added `game/test-all.html` as a separate launch route for testing the full game.
+- The test route unlocks nights 1–50, shop cats/items/trails/upgrades, Mood Book entries, paper stars, secret pages, and both town/workshop collections.
+- Test progress is isolated under a browser storage prefix and does not overwrite the regular TideCatcher save. The reset action in this mode clears only its test save.
+- Added `TideCatcher-All-Unlocked.html` as a self-contained download with game scripts, styles, and 297 runtime assets embedded; it starts with unlimited Glow (`∞`) and uses browser-safe media formats.
+
+# Gameplay tip placement
+
+- Docked gameplay tip cards at the right edge and constrained their width so they no longer stretch across the central play lane. Short landscape screens use the same edge placement rather than centering the card over the playfield.
+
+# Merge check repair
+
+- Updated the parallax regression test to match the intentional removal of the extra overlay renderer, keeping the check that the normal world and gameplay layers render without the old building silhouettes.
