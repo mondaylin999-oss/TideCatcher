@@ -424,6 +424,14 @@
 @keyframes rh-breathe{50%{transform:translateY(.12%)}}
 /* Shwe waits on the windowsill, ready to go */
 .rh-cat{position:absolute; left:30.6%; top:31.2%; height:15.2%; width:auto; pointer-events:none; filter:drop-shadow(0 6px 6px rgba(0,0,0,.45))}
+.rh-home-cat{position:absolute;left:34%;top:31%;width:9.5%;height:17%;z-index:1;transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 6px 6px rgba(0,0,0,.4))}
+.rh-room-toy{position:absolute;left:74%;top:68%;z-index:2;display:grid;place-items:center;width:clamp(38px,4.4cqw,74px);aspect-ratio:1;padding:5px;border:1px solid #fff0c8a8;border-radius:50%;background:radial-gradient(circle at 32% 27%,#554677,#241b3dcc 72%);box-shadow:0 0 18px #ffd98055,0 5px 12px #09071988;transform:translate(-50%,-50%);translate:0 0;animation:rh-toy-idle 2.8s ease-in-out infinite;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.rh-room-toy svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 2px 3px #120c22)}
+.rh-room-toy:focus-visible{outline:3px solid #ffe28a;outline-offset:4px}
+.rh-room-toy:hover{box-shadow:0 0 25px #ffd980aa,0 5px 12px #09071988}
+.rh-room-toy.is-hopping{animation:rh-toy-hop .42s ease-in-out infinite alternate}
+@keyframes rh-toy-idle{50%{translate:0 -3px}}
+@keyframes rh-toy-hop{to{margin-top:-1.8cqw;rotate:12deg}}
 .rh-cattag{position:absolute; left:33%; top:46.4%; transform:translateX(-50%) rotate(-3deg); padding:.1cqw .6cqw; background:#ffe28a; color:#2b2547; font-family:var(--sb-hand); font-weight:700; font-size:max(11px,1.05cqw); letter-spacing:0; border-radius:2px; pointer-events:none; box-shadow:0 2px 5px rgba(0,0,0,.35)}
 .rh-zzz{position:absolute; left:13.5%; top:44%; color:#e6dcff; font-family:var(--sb-hand); font-weight:700; pointer-events:none}
 .rh-zzz i{position:absolute; font-style:normal; font-size:max(12px,1.3cqw); opacity:0; animation:rh-z 4.2s ease-in-out infinite}
@@ -462,7 +470,7 @@
   .rh-tag i{display:none} .rh-main .rh-tag i{display:block}
   #roomHelpBtn .rh-tag,#roomBedBtn .rh-tag{display:none}
 }
-@media (prefers-reduced-motion:reduce){ .rh-thiri,.rh-zzz i,.rh-spot::after{animation:none} .rh-zzz i{opacity:.6} }
+@media (prefers-reduced-motion:reduce){ .rh-thiri,.rh-zzz i,.rh-spot::after,.rh-room-toy,.rh-room-toy.is-hopping{animation:none} .rh-zzz i{opacity:.6} }
 /* the team's Heart Workshop / Lantern Town buttons (heart-ui.js) are the ones shown on the home page */
 .hub-content-heading:has(.heart-home-links) .as-doors{display:none!important}
 #startScreen .heart-home-links{display:flex; flex-wrap:wrap; gap:10px; margin-top:8px}

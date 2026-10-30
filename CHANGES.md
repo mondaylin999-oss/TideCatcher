@@ -1,3 +1,10 @@
+# Shwe explores Thiri’s room
+
+- Shwe now wanders gently between a few open spots in the bedroom, using the same customized cat rig and walk cycle as gameplay.
+- Her idle routine brings her to the bed for a short nap, with a soft breathing pose and little floating z’s.
+- Added an accessible yarn toy button. Tap it and Shwe chases the toy as it hops to a couple of nearby spots, then settles before resuming her room stroll.
+- The home-room animation pauses while the home screen is hidden and reduces automatically with the device’s reduced-motion preference.
+
 # Shwe walks the chapter route
 
 - Picking an unlocked night now animates Shwe along the illustrated SVG trail before opening that night’s briefing.

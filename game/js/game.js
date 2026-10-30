@@ -4894,6 +4894,101 @@
     requestAnimationFrame(tick);
   }
   const heroArt = document.querySelector('.hub-hero-art');
+  const roomRoamStops = [{ x: 38, y: 53 }, { x: 54, y: 57 }, { x: 73, y: 57 }, { x: 81, y: 51 }, { x: 66, y: 55 }, { x: 47, y: 54 }, { x: 31, y: 54 }];
+  const roomToyStops = [{ x: 74, y: 68 }, { x: 55, y: 65 }, { x: 34, y: 66 }];
+  let roomCatState = null, roomCatFrame = 0;
+  function setupRoomCat() {
+    const stage = $('#roomStage'), image = $('#hubHeroCat');
+    if (!stage || !image) return;
+    let canvas = $('#roomRoamingCat');
+    if (!canvas) {
+      canvas = document.createElement('canvas'); canvas.id = 'roomRoamingCat'; canvas.className = 'rh-home-cat';
+      canvas.setAttribute('aria-hidden', 'true'); canvas.setAttribute('role', 'presentation');
+      stage.appendChild(canvas);
+    }
+    image.style.visibility = 'hidden';
+    let toy = $('#roomToyBtn');
+    if (!toy) {
+      toy = document.createElement('button'); toy.type = 'button'; toy.id = 'roomToyBtn'; toy.className = 'rh-room-toy';
+      toy.setAttribute('aria-label', 'Tap the toy for Shwe to chase it');
+      toy.title = 'Tap for Shwe to chase';
+      toy.innerHTML = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 29c-4-6 1-17 10-19 9-2 20 5 19 16-1 9-10 17-20 14-4-1-7-5-9-11Z" fill="#f4a8ca" stroke="#fff0cf" stroke-width="2.5"/><path d="M15 14c8 4 13 13 16 23M11 25c8 0 17-5 24-11M18 39c3-9 8-15 17-18" fill="none" stroke="#fff0cf" stroke-width="2.3" stroke-linecap="round"/><path d="M31 36c6 5 8 1 5-2" fill="none" stroke="#ffe28a" stroke-width="2.5" stroke-linecap="round"/><circle cx="22" cy="23" r="2" fill="#fff"/><circle cx="29" cy="29" r="2" fill="#fff"/></svg>';
+      toy.style.left = `${roomToyStops[0].x}%`; toy.style.top = `${roomToyStops[0].y}%`;
+      stage.appendChild(toy);
+      toy.addEventListener('click', () => {
+        if (!roomCatState || roomCatState.mode === 'chase' || roomCatState.mode === 'catch') return;
+        initAudio(); sfx('ui', 'sparkle');
+        roomCatState.mode = 'chase'; roomCatState.chaseIndex = 0; roomCatState.target = { ...roomToyStops[0] };
+        roomCatState.facing = roomCatState.target.x >= roomCatState.x ? 1 : -1;
+        roomCatState.elapsed = 0;
+      });
+    }
+    if (!roomCatState) roomCatState = { x: 34, y: 31, facing: 1, mode: 'roam', stopIndex: 0, target: { ...roomRoamStops[0] }, elapsed: 0, activeTime: 0, restAt: 22 };
+    if (!roomCatFrame && !$('#startScreen').hidden && !$('#menuHub').hidden) roomCatFrame = requestAnimationFrame(updateRoomCat);
+  }
+  function drawRoomCat() {
+    const canvas = $('#roomRoamingCat'); if (!canvas) return;
+    const ratio = Math.min(window.devicePixelRatio || 1, 2), width = Math.max(1, canvas.clientWidth), height = Math.max(1, canvas.clientHeight);
+    const pixelWidth = Math.round(width * ratio), pixelHeight = Math.round(height * ratio);
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) { canvas.width = pixelWidth; canvas.height = pixelHeight; }
+    const g = canvas.getContext('2d'); if (!g) return;
+    g.setTransform(ratio, 0, 0, ratio, 0, 0); g.clearRect(0, 0, width, height);
+    const state = roomCatState, sleeping = state.mode === 'sleep', reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const pouncing = !reduce && state.mode === 'catch' && state.elapsed < .3;
+    const drawn = window.TCCatchClipArt?.drawCat(g, { x: width / 2, y: height - 5, height: height * .83,
+      action: sleeping ? 'sit' : reduce ? 'idle' : pouncing ? 'pounce' : state.mode === 'roam' || state.mode === 'bedtime' || state.mode === 'chase' ? 'walk' : 'idle',
+      time: state.activeTime, facing: state.facing });
+    const fallback = $('#hubHeroCat');
+    if (!drawn && fallback?.complete && fallback.naturalWidth) g.drawImage(fallback, width * .08, height * .1, width * .84, height * .84);
+    if (sleeping) {
+      g.save(); g.font = `700 ${Math.max(14, width * .13)}px Fredoka, sans-serif`; g.fillStyle = '#e8d9ff'; g.textAlign = 'center';
+      const bob = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : Math.sin(state.activeTime * 2.4) * 3;
+      g.fillText('z z', width * .7, height * .26 - bob); g.restore();
+    }
+    canvas.style.left = `${state.x}%`; canvas.style.top = `${state.y}%`;
+    const name = $('#hubCatName'); if (name) { name.style.left = `${state.x}%`; name.style.top = `${state.y + 17}%`; }
+  }
+  function updateRoomCat(now) {
+    roomCatFrame = 0;
+    if ($('#startScreen').hidden || $('#menuHub').hidden) return;
+    const state = roomCatState;
+    // Clamp elapsed frame time so returning to the room never causes a teleport.
+    const step = Math.min(.05, Math.max(0, (now - (state.previousFrame || now)) / 1000)); state.previousFrame = now;
+    state.activeTime += step; state.elapsed += step;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (state.mode === 'roam' || state.mode === 'bedtime' || state.mode === 'chase') {
+      const dx = state.target.x - state.x, dy = state.target.y - state.y;
+      const distance = Math.hypot(dx * 10, dy * 8.5);
+      if (distance > .4) {
+        state.facing = dx >= 0 ? 1 : -1;
+        const amount = reduce && (state.mode === 'chase' || state.mode === 'bedtime') ? 1 : Math.min(1, (state.mode === 'chase' ? 31 : 18) * step / Math.max(distance, .001));
+        state.x += dx * amount; state.y += dy * amount;
+      } else if (state.mode === 'bedtime') {
+        state.mode = 'sleep'; state.elapsed = 0;
+      } else if (state.mode === 'chase') {
+        if (state.elapsed > .42) {
+          state.chaseIndex++;
+          if (state.chaseIndex < 3) {
+            const next = roomToyStops[state.chaseIndex]; state.target = { ...next }; state.elapsed = 0;
+            const toy = $('#roomToyBtn'); if (toy) { toy.style.left = `${next.x}%`; toy.style.top = `${next.y}%`; toy.classList.add('is-hopping'); }
+          } else { state.mode = 'catch'; state.elapsed = 0; }
+        }
+      } else if (state.elapsed > .9) {
+        state.elapsed = 0;
+        if (state.activeTime > state.restAt) { state.mode = 'bedtime'; state.target = { x: 17, y: 54 }; state.elapsed = 0; }
+        else { state.stopIndex = (state.stopIndex + 1) % roomRoamStops.length; state.target = { ...roomRoamStops[state.stopIndex] }; }
+      }
+    } else if (state.mode === 'catch' && state.elapsed > .85) {
+      state.mode = 'roam'; state.elapsed = 0; state.activeTime = 0; state.restAt = 18 + Math.random() * 10;
+      state.stopIndex = (state.stopIndex + 1) % roomRoamStops.length; state.target = { ...roomRoamStops[state.stopIndex] };
+      const toy = $('#roomToyBtn'); if (toy) toy.classList.remove('is-hopping');
+    } else if (state.mode === 'sleep' && state.elapsed > 8) {
+      state.mode = 'roam'; state.elapsed = 0; state.activeTime = 0; state.restAt = 18 + Math.random() * 10;
+      state.stopIndex = 0; state.target = { ...roomRoamStops[state.stopIndex] };
+    }
+    if (reduce && state.mode === 'roam') { state.x = 34; state.y = 31; state.target = { x: 34, y: 31 }; }
+    drawRoomCat(); roomCatFrame = requestAnimationFrame(updateRoomCat);
+  }
   function sizeHubCat() {
     const w = heroArt.clientWidth, h = heroArt.clientHeight;
     if (!w || !h) return;
@@ -6174,6 +6269,7 @@
     $('#startScreen').hidden = false; $('#menuHub').hidden = false; $('#storyMapScreen').hidden = true;
     $('#hubSettingsScreen').hidden = true;
     refreshHubStats();
+    setupRoomCat();
     if (focus) $('#storyBtn').focus({ preventScroll: true });
   }
   function showStoryMap(focus = true) {
