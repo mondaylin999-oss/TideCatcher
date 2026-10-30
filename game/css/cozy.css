@@ -378,6 +378,8 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 .tip-joystick-icon{position:relative;display:inline-block;width:25px;height:25px;flex:0 0 25px;border:2px solid var(--lilac);border-radius:50%;background:var(--bg-deep)}.tip-joystick-icon::after{content:"";position:absolute;left:7px;top:5px;width:8px;height:8px;border:2px solid var(--mint);border-radius:50%;background:var(--mint-haze)}
 .tip-touch-icon{display:inline-grid;place-items:center;min-width:48px;min-height:28px;padding:3px 7px;border:2px solid var(--mint);border-radius:9px;background:var(--bg-deep);color:var(--mint);font-size:9px;line-height:1}
 .tip-coach-skip{flex:0 0 auto;min-height:40px;padding:6px 10px;font-size:11px;white-space:nowrap}
+.tip-coach-close{flex:0 0 auto;width:30px;height:30px;min-width:30px;border:2px solid var(--line);border-radius:50%;background:var(--bg-deep);color:var(--cream);font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center;pointer-events:auto}
+.tip-coach-close:hover,.tip-coach-close:focus-visible{border-color:var(--lilac);color:var(--honey)}
 .tip-coach-card.tip-success{border-color:var(--honey);box-shadow:var(--shadow-card),0 0 26px var(--honey-haze)}
 
 /* Let the home cards fill the available space without an extra goals row. */

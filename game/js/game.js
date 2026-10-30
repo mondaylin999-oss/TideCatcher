@@ -94,7 +94,7 @@
 
   // ---------- sizing ----------
   let VW = 960, S = 1, OY = 0, dpr = 1, HUD_X = 68, HUD_CARD_W = 158;
-  let gfxQ = 1, gfxSlow = 0, gfxGood = 0, gfxMs = 16.7, gfxFrames = 0, needPaint = true;
+  let gfxQ = 1, gfxSlow = 0, gfxGood = 0, gfxDrops = 0, gfxMs = 16.7, gfxFrames = 0, needPaint = true;
   (function capGlow(c) {
     const d = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'shadowBlur');
     Object.defineProperty(c, 'shadowBlur', { get() { return d.get.call(this); }, set(v) { d.set.call(this, Math.min(v, 7)); } });
@@ -128,10 +128,12 @@
     if (gfxFrames < 90) return;
     if (gfxMs > 19.5) {
       gfxSlow++; gfxGood = 0;
-      if (gfxSlow > 24 && gfxQ > .7) { gfxQ = .7; gfxSlow = 0; resize(); }
+      if (gfxSlow > 24 && gfxQ > .7) { gfxQ = .7; gfxSlow = 0; gfxDrops++; resize(); }
     } else if (gfxMs < 15.5) {
       gfxGood++; gfxSlow = Math.max(0, gfxSlow - 1);
-      if (gfxGood > 180 && gfxQ < 1) { gfxQ = 1; gfxGood = 0; resize(); }
+      // Only climb back to full quality after a long smooth stretch, and stay low after two drops,
+      // so the canvas is not resized back and forth (each resize causes a visible hitch).
+      if (gfxGood > 600 && gfxQ < 1 && gfxDrops < 2) { gfxQ = 1; gfxGood = 0; resize(); }
     }
   }
 
@@ -945,10 +947,13 @@
     $('#tipCoachKicker').textContent = kicker; $('#tipCoachTitle').textContent = title; $('#tipCoachText').textContent = text;
     $('#tutorialSkipBtn').textContent = guideCopy().skipTutorial || 'Skip tutorial';
     $('#tipCoach').hidden = false; $('#tutorialSkipBtn').hidden = !skip;
+    $('#tipCoachClose').hidden = skip;   // the tutorial has its own Skip button; a jit-tip or struggle hint gets the × instead
     $('#tipCoach').querySelector('.tip-coach-card').classList.toggle('tip-success', !!success);
     renderTipControl(action);
   }
-  function hideCoachTip() { $('#tipCoach').hidden = true; $('#tutorialSkipBtn').hidden = true; $('#tipCoachControl').replaceChildren(); }
+  function hideCoachTip() { $('#tipCoach').hidden = true; $('#tutorialSkipBtn').hidden = true; $('#tipCoachClose').hidden = true; $('#tipCoachControl').replaceChildren(); }
+  function dismissJitTip() { if (!activeJitTip) return; activeJitTip = null; hideCoachTip(); showNextJitTip(); }
+  $('#tipCoachClose').addEventListener('click', dismissJitTip);
   function renderWelcomeCard(index, scroll = true) {
     const list = guideCopy().welcome || [], carousel = $('#welcomeCarousel');
     welcomeCardIndex = clamp(index, 0, Math.max(0, list.length - 1));
@@ -7232,8 +7237,13 @@
     if (mobileLandscapeRequired && !orientationGate.hidden) return;
     if (state === 'intro' || state === 'awakening') { t += dt; return; }
     if (state === 'play' || state === 'ending') {
-      if (hitstop > 0) hitstop -= dt;
-      else { let sdt = dt; if (slowmo > 0) { slowmo -= dt; sdt = dt * .35; } update(sdt); }
+      // Slow frames are split into small steps so Shwe keeps her real speed instead of moving in slow motion.
+      let rest = Math.min(elapsed / 1000, .1);
+      for (let steps = 0; rest > 0.0005 && steps < 6 && (state === 'play' || state === 'ending'); steps++) {
+        const step = Math.min(rest, 1 / 60); rest -= step;
+        if (hitstop > 0) hitstop -= step;
+        else { let sdt = step; if (slowmo > 0) { slowmo -= step; sdt = step * .35; } update(sdt); }
+      }
     } else if (state === 'menu') { t += dt; }
     else if (state === 'home' && H) homeUpdate(dt);
     if (state === 'home' && H) {

@@ -50,6 +50,25 @@ function mkSmallSprite(key, spr, px) {
   var og = out.getContext('2d'); og.imageSmoothingQuality = 'high'; og.drawImage(cur, 0, 0, tw, th);
   return (MK_SMALL[id] = out);
 }
+// Find where to separate the near and far paw of each leg pair: the emptiest column of the
+// leg area. Cutting anywhere else slices through a paw and tears it apart while walking.
+var MK_CUTS = {};
+function mkPawCuts(spr, splitS, hipS) {
+  var id = spr.width + 'x' + spr.height + ':' + splitS + ':' + hipS;
+  if (MK_CUTS[id]) return MK_CUTS[id];
+  var sw = spr.width, sh = spr.height, band = sh - hipS, cuts = [0, null, splitS, null, sw];
+  try {
+    var d = spr.getContext('2d').getImageData(0, hipS, sw, band).data, col = new Array(sw).fill(0);
+    for (var y = 0; y < band; y++) for (var x = 0; x < sw; x++) if (d[(y * sw + x) * 4 + 3] > 40) col[x]++;
+    var pick = function (a, b) {
+      var best = -1, bestN = Infinity;
+      for (var x = Math.round(a + (b - a) * .25); x <= Math.round(a + (b - a) * .75); x++) if (col[x] < bestN) { bestN = col[x]; best = x; }
+      return bestN <= Math.max(1, band * .06) ? best : null;
+    };
+    cuts[1] = pick(0, splitS); cuts[3] = pick(splitS, sw);
+  } catch (e) {}
+  return (MK_CUTS[id] = cuts);
+}
 function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   var big = mkGetSprite(key), r = MK_RIGS[key];
   if (!big || !big.complete || !big.naturalWidth || !r) return false;
@@ -77,10 +96,13 @@ function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   }
   // Separate each silhouette into near/far paws. A small overlap avoids seams where the
   // source painting has paws touching; each paw can now plant and lift on its own beat.
-  var ov = Math.max(2, Math.round(sh * .008)), pawCuts = [0, Math.round(splitS * .52), splitS,
-    splitS + Math.round((sw - splitS) * .52), sw];
+  var ov = Math.max(2, Math.round(sh * .008)), pawCuts = mkPawCuts(spr, splitS, hipS);
   var legAngles = pose.legAngles || [pose.back || 0, pose.back || 0, pose.front || 0, pose.front || 0];
   var legLifts = pose.legLifts || [pose.backLift || 0, pose.backLift || 0, pose.frontLift || 0, pose.frontLift || 0];
+  // A leg pair with no clear gap between its two paws moves as one piece, so a paw is never torn in half.
+  if (pawCuts[1] === null) { legAngles = [(legAngles[0] + legAngles[1]) / 2, 0, legAngles[2], legAngles[3]]; legLifts = [(legLifts[0] + legLifts[1]) / 2, 0, legLifts[2], legLifts[3]]; }
+  if (pawCuts[3] === null) { legAngles = [legAngles[0], legAngles[1], (legAngles[2] + legAngles[3]) / 2, 0]; legLifts = [legLifts[0], legLifts[1], (legLifts[2] + legLifts[3]) / 2, 0]; }
+  pawCuts = [0, pawCuts[1] === null ? splitS : pawCuts[1], splitS, pawCuts[3] === null ? sw : pawCuts[3], sw];
   for (var li = 0; li < 4; li++) {
     var x0 = Math.max(0, pawCuts[li] - (li ? 1 : 0)), x1 = Math.min(sw, pawCuts[li + 1] + (li < 3 ? 1 : 0));
     legPart(x0, x1, hipS, footS - hipS, legAngles[li] || 0, legLifts[li] || 0);
