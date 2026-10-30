@@ -4,9 +4,9 @@
   root.TC_TIPS = {
     en: {
       welcome: [
-        { title: 'A heavy heart', text: 'Thiri fell asleep with a heavy heart. Her feelings ran into the Night Side.' },
-        { title: 'Bring them home', text: 'Help Shwe bring them home. Catch Moodlings before sunrise; each feeling has its own way to be caught.' },
-        { title: 'Every night grows something', text: 'Earn Glow, upgrade Shwe, fill the Mood Book (17 feelings), complete 7 story nights, then take on 43 tougher moonlit routes.' }
+        { title: 'A heavy heart', text: 'A girl fell asleep with a heavy heart. Her feelings ran into the Night Side.' },
+        { title: 'Bring them home', text: 'Help her cat bring them home. Catch Moodlings before sunrise; each feeling has its own way to be caught.' },
+        { title: 'Every night grows something', text: 'Earn Glow, upgrade your cat, fill the Mood Book (17 feelings), complete 7 story nights, then take on 43 tougher moonlit routes.' }
       ],
       tutorial: [
         { title: 'Walk with me', text: 'Meow! Guide me toward the glowing paw circle. Move a few steps along the floor.', action: 'move' },
@@ -82,7 +82,7 @@
         story: 'Replay the story',
         close: 'Back',
         unknown: 'Unknown feeling',
-        unknownHint: 'Meet it in a night to unlock its catch guide.',
+        unknownHint: 'Not met yet. Watch the clip to learn how to catch it.',
         catchClipButton: '▶ Watch catch clip',
         catchClipLabel: 'CATCH GUIDE',
         catchClipNoButton: 'No button — watch Shwe', catchClipGalleryLabel: 'Catch clip and steps', catchClipPlay: 'Play clip', catchClipPause: 'Pause clip', catchClipVideoLabel: 'Gameplay clip', catchClipStepsLabel: 'How to catch, step by step', catchClipControlsLabel: 'Control for this step',
@@ -158,9 +158,9 @@
     },
     my: {
       welcome: [
-        { title: 'လေးလံသောနှလုံးသား', text: 'သီရိ လေးလံသောနှလုံးသားဖြင့် အိပ်ပျော်သွားသည်။ သူမ၏ခံစားချက်များ ညဘက်ကမ္ဘာထဲသို့ ပြေးဝင်သွားသည်။' },
-        { title: 'သူတို့ကို အိမ်ပြန်ပို့ပါ', text: 'Shwe ကိုကူညီပြီး သူတို့ကို အိမ်ပြန်ပို့ပါ။ နေမထွက်မီ Moodling များကိုဖမ်းပါ။ ခံစားချက်တိုင်းတွင် ဖမ်းနည်း မတူပါ။' },
-        { title: 'ညတိုင်း တစ်စုံတစ်ရာ ကြီးထွားလာသည်', text: 'Glow ရယူပါ၊ Shwe ကို အဆင့်မြှင့်ပါ၊ Mood Book တွင် ခံစားချက် ၁၇ မျိုးစုပါ၊ ည ၇ ညနှင့် နေထွက်အဆုံးသတ်ကို ဖွင့်ပါ။' }
+        { title: 'လေးလံသောနှလုံးသား', text: 'ကောင်မလေးတစ်ယောက် လေးလံသောနှလုံးသားဖြင့် အိပ်ပျော်သွားသည်။ သူမ၏ခံစားချက်များ ညဘက်ကမ္ဘာထဲသို့ ပြေးဝင်သွားသည်။' },
+        { title: 'သူတို့ကို အိမ်ပြန်ပို့ပါ', text: 'သူမ၏ကြောင်ကို ကူညီပြီး သူတို့ကို အိမ်ပြန်ပို့ပါ။ နေမထွက်မီ Moodling များကိုဖမ်းပါ။ ခံစားချက်တိုင်းတွင် ဖမ်းနည်း မတူပါ။' },
+        { title: 'ညတိုင်း တစ်စုံတစ်ရာ ကြီးထွားလာသည်', text: 'Glow ရယူပါ၊ ကြောင်ကို အဆင့်မြှင့်ပါ၊ Mood Book တွင် ခံစားချက် ၁၇ မျိုးစုပါ၊ ည ၇ ညနှင့် နေထွက်အဆုံးသတ်ကို ဖွင့်ပါ။' }
       ],
       tutorial: [
         { title: 'အတူလျှောက်ကြမယ်', text: 'ညောင်! တောက်ပတဲ့ စက်ဝိုင်းဘက်ကို ခြေလှမ်းအနည်းငယ် လျှောက်ကြမယ်။', action: 'move' },
@@ -236,7 +236,7 @@
         story: 'ဇာတ်လမ်း ပြန်ဖွင့်ပါ',
         close: 'ပြန်သွားမည်',
         unknown: 'မတွေ့ဖူးသေးသော ခံစားချက်',
-        unknownHint: 'ဖမ်းနည်းလမ်းညွှန်ဖွင့်ရန် ညတစ်ညတွင် တွေ့ဆုံပါ။',
+        unknownHint: 'မတွေ့ရသေးပါ။ ဖမ်းနည်းကို ဗီဒီယိုတွင် ကြည့်ပါ။',
         catchClipButton: '▶ ဖမ်းနည်းကလစ် ကြည့်ရန်',
         catchClipLabel: 'ဖမ်းနည်းပုံလမ်းညွှန်',
         catchClipNoButton: 'ခလုတ်မလိုပါ — Shwe ကိုကြည့်ပါ', catchClipGalleryLabel: 'ဖမ်းနည်းကလစ်နှင့် အဆင့်များ', catchClipPlay: 'ကလစ် ဖွင့်ရန်', catchClipPause: 'ကလစ် ခဏရပ်ရန်', catchClipVideoLabel: 'ကစားပုံ ကလစ်', catchClipStepsLabel: 'ဖမ်းနည်း အဆင့်ဆင့်', catchClipControlsLabel: 'ဤအဆင့်အတွက် ထိန်းချုပ်မှု',

@@ -13,10 +13,12 @@
 | _TEAM TO FILL_ | Moodling behaviour design |
 
 ## Fonts
-- [Grandstander](https://fonts.google.com/specimen/Grandstander) and [Lexend](https://fonts.google.com/specimen/Lexend), from Google Fonts, under the SIL Open Font License.
+- [Fredoka](https://fonts.google.com/specimen/Fredoka), [Nunito](https://fonts.google.com/specimen/Nunito) and [Padauk](https://fonts.google.com/specimen/Padauk), loaded from Google Fonts, and [Gaegu](https://fonts.google.com/specimen/Gaegu), self-hosted in `game/assets/fonts/`. All under the SIL Open Font License.
 
 ## AI tools
 See [AI-DECLARATION.md](AI-DECLARATION.md).
 
 ## Sound and music
-_TEAM TO FILL — the current sound effects are made in code with the Web Audio API._
+- Cat sounds (meow, purr, sad mew): Kerzoven, [*Cat Purr & Meow*](https://opengameart.org/content/cat-purr-meow), OpenGameArt, CC0 1.0.
+- Night music: five original pieces synthesised in code by the team (`docs/proof/audio/`).
+- Moodling voices, chimes and interface sounds: original, synthesised in code (Python scripts and the Web Audio API).

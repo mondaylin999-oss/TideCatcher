@@ -79,11 +79,76 @@
     level.pitToBridgeRatio = ratio;
     return level;
   };
+  // Seeded random numbers for Nights 8-50: the same night always builds the same way (never Math.random here).
+  const seeded = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  // Gentle rolling ground (at most 16 units up from the street), kept flat near pits, at the start and at the end.
+  const rollingGround = (width, pits, rand) => {
+    const pts = [[0, 470], [700, 470]], flat = x => pits.some(([a, b]) => x >= a - 140 && x <= b + 140) || x > width - 380;
+    const ph1 = rand() * 6.3, ph2 = rand() * 6.3, f1 = .0021 + rand() * .0012, f2 = .0047 + rand() * .002;
+    for (let x = 760; x < width - 340; x += 60) {
+      if (flat(x)) { pts.push([x, 470]); continue; }
+      const edge = Math.min(1, (x - 700) / 240, (width - 380 - x) / 240, ...pits.map(([a, b]) => Math.min(Math.abs(x - (a - 140)), Math.abs(x - (b + 140))) / 240));
+      const bump = (Math.sin(x * f1 + ph1) * .6 + Math.sin(x * f2 + ph2) * .4 + 1) / 2;   // 0..1
+      pts.push([x, Math.round(470 - 16 * bump * edge)]);
+    }
+    pts.push([width - 300, 470], [width, 470]);
+    for (const [pa, pb] of pits) pts.push([pa - 140, 470], [pb + 140, 470]);
+    const seen = new Set(); pts.sort((p, q) => p[0] - q[0]);
+    for (let i = pts.length - 1; i >= 0; i--) { if (seen.has(pts[i][0])) pts.splice(i, 1); else seen.add(pts[i][0]); }
+    return { points: [[0, 470], ...pts.filter(p => p[0] > 0 && p[0] < width), [width, 470]] };
+  };
+  // Hide and bury spots: picked from safe ground (min 300 apart), clear of pits, checkpoints, props, hazards and the secret room.
+  const seedSpots = (level, night, keepHide = false) => {
+    const rand = seeded(night * 7919 + 17), W = level.width, pits = level.pits || [];
+    const blocked = x => x < 320 || x > W - 280
+      || pits.some(([a, b]) => x > a - 130 && x < b + 130)
+      || (level.checkpoints || []).some(c => Math.abs(x - c) < 90)
+      || (level.props || []).some(p => x > p.x - 60 && x < p.x + (p.w || 80) + 60)
+      || (level.wallJumps || []).some(w => x > w.x - 80 && x < w.x + w.w + 80)
+      || (level.platforms || []).some(p => x > p[0] - 40 && x < p[0] + p[2] + 40 && p[3] !== 'moving')
+      || (level.secretRoom && Math.abs(x - level.secretRoom.x) < 170);
+    const pick = (count, avoid) => {
+      const cands = []; for (let x = 340; x < W - 280; x += 40) if (!blocked(x) && !avoid.some(o => Math.abs(o - x) < 160)) cands.push(x);
+      for (let i = cands.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [cands[i], cands[j]] = [cands[j], cands[i]]; }
+      const out = []; for (const x of cands) { if (out.length >= count) break; if (out.every(o => Math.abs(o - x) >= 300)) out.push(x); }
+      return out.sort((a, b) => a - b);
+    };
+    const n = Math.max(4, Math.min(8, Math.round(W / 900)));
+    if (!keepHide) level.hideSpots = pick(n, []);
+    level.burySpots = pick(n, level.hideSpots);
+    return level;
+  };
+  // A hazard that matches the map, for nights without a twist (1-3 per night, never near a pit).
+  const MAP_HAZARD = { school: 'squeak', park: 'sprinkler', festival: 'lantern', market: 'lantern', hill: 'wind', rooftop: 'wind', lake: 'slick', pagoda: 'bell', garden: 'bell', train: 'squeak' };
+  const mapHazards = (level, night) => {
+    const kind = MAP_HAZARD[level.map]; if (!kind) return [];
+    const rand = seeded(night * 104729 + 3), W = level.width, pits = level.pits || [];
+    const count = 1 + Math.min(2, Math.floor((night - 8) / 14)), out = [];
+    const span = kind === 'wind' || kind === 'slick' ? 360 : kind === 'lantern' ? 240 : kind === 'squeak' ? 90 : 0;
+    const clear = (a, b) => a > 700 && b < W - 360 && pits.every(([pa, pb]) => b <= pa - 120 || a >= pb + 120)
+      && !(level.secretRoom && a < level.secretRoom.x + 160 && b > level.secretRoom.x - 160)
+      && out.every(h => { const ha = h.a ?? h.x, hb = h.b ?? h.x + (h.w || 0); return b < ha - 300 || a > hb + 300; });
+    for (let tries = 0, last = 60 + Math.ceil(W / 40); tries < last && out.length < count; tries++) {
+      // random tries first, then a plain scan so every night gets at least one hazard
+      const a = tries < 60 ? Math.round(700 + rand() * (W - 1100)) : (out.length ? 9e9 : 701 + (tries - 60) * 40), b = a + span;
+      if (!clear(a - (kind === 'bell' ? 60 : 0), b + (kind === 'bell' ? 60 : 0))) continue;   // a bell is a point; its ring area may reach past a pit edge harmlessly
+      if (kind === 'wind') out.push({ kind, a, b, dir: rand() < .5 ? -1 : 1 });
+      else if (kind === 'slick') out.push({ kind, a, b });
+      else if (kind === 'sprinkler') out.push({ kind, x: a });
+      else if (kind === 'bell') out.push({ kind, x: a, radius: 190 });
+      else out.push({ kind, x: a, w: span });
+    }
+    return out.sort((p, q) => (p.a ?? p.x) - (q.a ?? q.x));
+  };
   const makeChallengeLevel = night => {
     const map = ['school', 'park', 'festival', 'rooftop', 'lake'][(night - 8) % 5];
-    const pitCount = Math.min(18, 4 + Math.floor((night - 8) / 3));
+    // Width cap: pit nights (every 5th) have 2-5 pits (at most ~5,400 wide); other nights are 4,500-5,500 wide.
+    // (The pits on non-pit nights are removed later; they only lay out checkpoints and spawn zones.)
+    const pitNight = night % 5 === 0, rand = seeded(night * 2654435761 % 2147483647);
     const bridgeWidth = 90, pitWidth = bridgeWidth * 5, safeRun = 440, firstPit = 680;
-    const width = firstPit + pitCount * (pitWidth + safeRun) - safeRun + 700;
+    const targetW = 4500 + Math.round(rand() * 1000);
+    const pitCount = pitNight ? Math.min(5, 2 + Math.floor((night - 8) / 10)) : Math.max(1, Math.floor((targetW - 940) / (pitWidth + safeRun)));
+    const width = pitNight ? Math.max(4500, firstPit + pitCount * (pitWidth + safeRun) - safeRun + 1300) : targetW;   // +600 of calm ground after the last pit
     const pits = [], checkpoints = [], platforms = [platform(280, 402, 130)];
     const groundPoints = [], hideSpots = [], burySpots = [], spawnZones = [];
     const bridgeSpeed = .36 + (night - 8) / 42 * .25;
@@ -116,7 +181,7 @@
       50: [{ x: 410, w: 70, h: 198 }, { x: 532, w: 74, h: 216 }]
     };
     return {
-      night, map, width, pits, checkpoints, ground: ground(width, groundPoints), platforms,
+      night, map, width, pits, checkpoints, ground: rollingGround(width, pitNight ? pits : [], rand), platforms,
       restSpots: map === 'rooftop' ? [220, ...checkpoints] : [],
       hideSpots, burySpots, spawnZones, catStart: 150, homeLight: [width - 150, 390], props: [], pitToBridgeRatio: 5,
       wallJumps: wallRoutes[night] || []
@@ -186,15 +251,23 @@
   //   squeak {x,w}: creaky floorboard (sneak across) · sprinkler {x} · lantern {x,w}: drops on its shadow
   //   wind {a,b,dir}: gusts push Shwe toward a (dir -1) or b (dir 1); zones end well before any pit
   //   keepsakes [x,y]: hidden until Shwe is close or uses Night Eyes. Every one must sit inside the level and within
-  //   one normal jump (~150px) of the ground: story nights 1-4 and 6-7 have no ledges (see the roost rule below).
+  //   one normal jump (~150px) of the ground or of a solidTop below it (Nights 1-4 have optional solidTops; see below).
   const EXTRAS = {
-    1: { hazards: [], keepsakes: [[60,440],[1925,300]] },
-    2: { hazards: [{kind:'squeak',x:400,w:90},{kind:'squeak',x:1600,w:90},{kind:'squeak',x:2750,w:90}], keepsakes: [[1306,398],[2933,292]] },
-    3: { hazards: [{kind:'sprinkler',x:1500},{kind:'sprinkler',x:3150}], keepsakes: [[580,301],[3300,437]] },
-    4: { hazards: [{kind:'lantern',x:1412,w:250},{kind:'lantern',x:3626,w:260}], keepsakes: [[2080,400],[3866,285]] },
-    5: { hazards: [{kind:'wind',a:380,b:800,dir:-1},{kind:'wind',a:1420,b:2350,dir:1},{kind:'wind',a:3400,b:4150,dir:-1}], keepsakes: [[700,385],[2195,385],[3280,252]] },
-    6: { hazards: [], keepsakes: [[920,400],[3600,345]] },
-    7: { hazards: [{kind:'wind',a:2900,b:3700,dir:-1},{kind:'lantern',x:5690,w:240}], keepsakes: [[3096,303],[4000,400],[5080,418]] }
+    // solidTops {x,w,h,kind}: scenery tops Shwe can stand on (desk, shelf, slide, bench, stall roof). One-way: she walks
+    // under/through them and lands on top. They are not platforms, so the roost rule above still holds. Every one is optional.
+    // New keepsakes are added at the end of each list so already-found keepsakes keep their ids.
+    1: { hazards: [], keepsakes: [[60,440],[1835,280],[680,352]],
+         solidTops: [{x:620,w:120,h:80,kind:'desk'},{x:1740,w:130,h:80,kind:'desk'},{x:1800,w:70,h:160,kind:'shelf'}] },
+    2: { hazards: [{kind:'squeak',x:400,w:90},{kind:'squeak',x:1600,w:90},{kind:'squeak',x:2750,w:90}], keepsakes: [[1306,398],[2885,350],[2090,286]],
+         solidTops: [{x:2010,w:130,h:80,kind:'desk'},{x:2060,w:60,h:150,kind:'chairs'},{x:2850,w:70,h:90,kind:'shelf'}] },
+    3: { hazards: [{kind:'sprinkler',x:1500},{kind:'sprinkler',x:3150}], keepsakes: [[580,301],[3300,437],[2885,338]],
+         solidTops: [{x:560,w:70,h:105,kind:'slide'},{x:2820,w:130,h:70,kind:'bench'}] },
+    4: { hazards: [{kind:'lantern',x:1412,w:250},{kind:'lantern',x:3626,w:260}], keepsakes: [[2080,400],[3866,285],[610,350]],
+         solidTops: [{x:500,w:150,h:90,kind:'roof'},{x:2420,w:150,h:90,kind:'roof'}] },
+    5: { hazards: [{kind:'wind',a:380,b:800,dir:-1},{kind:'wind',a:1510,b:2350,dir:1},{kind:'wind',a:3510,b:4150,dir:-1}], keepsakes: [[700,385],[2195,385],[3280,252]] },
+    // Night 6's third keepsake is a tide pool under the jetty: it shows once the Mood Tide is low (js/mood-tide.js).
+    6: { hazards: [], keepsakes: [[920,400],[3600,345],[530,440,'tide']] },
+    7: { hazards: [{kind:'wind',a:2900,b:3700,dir:-1},{kind:'lantern',x:4930,w:240}], keepsakes: [[3096,303],[4000,400],[5080,418]] }
   };
   for (const [night, extra] of Object.entries(EXTRAS)) Object.assign(levels[night], extra);
   // Hilltop: every hill's middle stone pillar crumbles, not just the first one
@@ -257,6 +330,7 @@
   // Place one scratchable room in every generated night and Free Play route.
   // This runs after map layouts are complete so rooms can avoid the final pits.
   for (let night = 1; night <= 50; night++) addSecretRoom(levels[night]);
+  for (let night = 8; night <= 50; night++) seedSpots(levels[night], night);
   for (const variant of levels.free.variants) addSecretRoom(variant);
   const buildEndless = (night, map, twists = []) => {
     const level = makeChallengeLevel(night);
@@ -358,7 +432,9 @@
         }
       });
     }
-    return addSecretRoom(level);
+    addSecretRoom(level);
+    if (!level.hazards.length) level.hazards = mapHazards(level, night);
+    return seedSpots(level, night, map === 'train');
   };
   root.TC_ENDLESS_LEVEL = buildEndless;
   root.TC_LEVELS = levels;
