@@ -141,7 +141,7 @@
     else if(action==='play'){close();bridge.play();}
     else if(action==='mix') {
       const out=store.mix(...slots);
-      if(out.error)announce(out.error);
+      if(out.error){slots=[];announce(out.error);render();}
       else {result=out.recipe;slots=[];hint=null;bridge.chime();announce(`${out.fresh?'New feeling!':'Made another light:'} ${result.name}. Saved to your shelf.`);render();}
     } else if(action==='hint') {
       if(hint){announce(hint+' Your current hint is still here; no more Glow spent.');return;}
