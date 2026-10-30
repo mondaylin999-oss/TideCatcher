@@ -58,15 +58,7 @@
     50: { id: 'finale', icon: '🏆', name: 'Finale', note: 'Every Moodling comes out. Bring them all home to become Keeper of Dreams.' }
   };
   const FINALE_NEED = { F: 3, N: 3, L: 3, S: 3, E: 2, J: 2, B: 2, C: 2 };
-  const NAMES = { F: 'Frustrated', N: 'Nervous', L: 'Lonely', S: 'Shy', E: 'Excited', J: 'Jealous', B: 'Buried', C: 'Calm', G: 'Golden', O: 'Bored', U: 'Guilty', P: 'Proud' };
-  const NEW_MOODLINGS = [{ type: 'O', night: 11 }, { type: 'U', night: 14 }, { type: 'P', night: 17 }];
-  function moodlingsForNight(night) {
-    const first = NEW_MOODLINGS.find(item => item.night === night);
-    if (first) return [first.type];
-    if (night < 11 || night % 2) return [];
-    const unlocked = NEW_MOODLINGS.filter(item => item.night < night);
-    return unlocked.length ? [unlocked[Math.floor(night / 2) % unlocked.length].type] : [];
-  }
+  const NAMES = { F: 'Frustrated', N: 'Nervous', L: 'Lonely', S: 'Shy', E: 'Excited', J: 'Jealous', B: 'Buried', C: 'Calm', G: 'Golden' };
   const CAPS = { C: 4, B: 4 }, CAP = 8;
   const DRAWING_PLACES = ['school', 'park', 'festival', 'hill', 'lake'];
   const PIECES = 6;
@@ -115,10 +107,8 @@
       const open = variantsOpen(place, night);
       let variant = forced && forced.place === place ? forced.variant : open[Math.floor(r() * open.length)].id;
       const nTypes = d.count < 13 ? 2 : d.count < 18 ? 3 : 4;
-      const added = moodlingsForNight(night);
-      const types = [...new Set([...PLACES[place].types.slice().sort(() => r() - .5).slice(0, nTypes), ...added])];
+      const types = PLACES[place].types.slice().sort(() => r() - .5).slice(0, nTypes);
       const need = split(types, d.count, r);
-      for (const type of added) need[type] = 1;
       const drawing = DRAWING_PLACES.includes(place) ? place : null;
       const done = drawing ? piecesOf(drawing).length >= PIECES : true;
       const piece = drawing && !done && (forced?.place === place || r() < .6) ? drawing : null;
@@ -132,9 +122,6 @@
     if (sp?.id === 'rush') { const others = Object.keys(need).filter(t => t !== 'F'), f = Math.ceil(d.count * .65); need = { F: f, ...split(others.length ? others : ['N'], d.count - f, rng(night)) }; }
     if (sp?.id === 'finale') need = { ...FINALE_NEED };
     if (card.variant === 'autumn') need.B = Math.min(CAPS.B, (need.B || 0) + 1);
-    // Keep the three first appearances locked to the numbered routes, including
-    // the Finale card's authored all-feelings list. Later cards rotate at most one.
-    for (const type of moodlingsForNight(night)) need[type] = 1;
     let time = d.time;
     if (card.variant === 'sunrise') time -= 15;
     if (ch.has('short')) time = Math.round(time * .75);

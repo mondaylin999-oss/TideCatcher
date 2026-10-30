@@ -182,15 +182,6 @@
       d => twoEyes('happy', 52, 11, 42) + mouth.smile(42, 62, 6) + cheeks(60, 15, .7, 42) +
         `<path d="M66 92l6-30M88 92l-6-30M70 80h14" stroke="#a57145" stroke-width="2.6" stroke-linecap="round"/><rect x="62" y="40" width="30" height="26" rx="2" fill="#fffaf0" stroke="#a57145" stroke-width="2.4"/><path d="M66 60c6-12 10-4 14-10s6 2 8 8" fill="none" stroke="#7cc6ff" stroke-width="2"/><circle cx="72" cy="48" r="3" fill="#ffd34d"/>` + miniHeart(84, 50, .45)],
 
-    // New Night Side faces. Full gameplay poses are drawn by game.js; these
-    // named portraits share their palette and silhouette language with this art set.
-    'Bored': ['#b9b4c8', '#d9d0e6', 'squish', '',
-      d => twoEyes('closed', 58, 8) + mouth.o(50, 72, 4) + cheeks(62, 15, .35) + `<text x="73" y="30" font-size="11" font-weight="700" fill="#f3edff" font-family="sans-serif">z</text><text x="82" y="22" font-size="8" font-weight="700" fill="#f3edff" font-family="sans-serif">z</text>`],
-    'Guilty': ['#59658f', '#9ca8d1', 'drop', '',
-      d => twoEyes('dot', 54, 8) + mouth.wavy(50, 72) + cheeks(64, 15, .3) + `<path d="M77 29c7 10 8 14 3 17-6 2-9-3-5-8Z" fill="#bdeaff" stroke="${INK}" stroke-width="1.5"/>`],
-    'Proud': ['#efa94e', '#ffd166', 'tall', '',
-      d => `<path d="M33 34l5-14 12 9 12-9 5 14Z" fill="#ffd34d" stroke="#9a641c" stroke-width="2" stroke-linejoin="round"/>` + twoEyes('happy', 52, 9) + mouth.flat(50, 70) + cheeks(63, 15, .4)],
-
     // ---- layer 4 ----
     'Whole Heart': ['#ff8fb1', '#ffd34d', 'heart', `<g>${['#ff727d', '#b59aff', '#79c7ff', '#ff91c5', '#ffdc68', '#ffa569', '#c5a17a', '#83deb0', '#ffe99a'].map((c, i) => `<circle cx="${50 + Math.cos(i / 9 * 6.283 - 1.57) * 42}" cy="${56 + Math.sin(i / 9 * 6.283 - 1.57) * 42}" r="5" fill="${c}" stroke="#fff" stroke-width="1.4"/>`).join('')}</g>`,
       d => `<path d="M36 22l5 7 9-11 9 11 5-7 2 12H34Z" fill="#ffd34d" stroke="#c78b1f" stroke-width="1.6" stroke-linejoin="round"/><circle cx="50" cy="18" r="2" fill="#ff6b93"/>` +

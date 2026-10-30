@@ -79,7 +79,7 @@
   const DISP = uiToken('--display'), BODY = uiToken('--body');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const col = ty => ty === 'F' ? RED : ty === 'N' ? VIOLET : ty === 'L' ? BLUE : ty === 'C' ? CALM : ty === 'B' ? '#a67646' : ty === 'E' ? EXC : ty === 'S' ? SHY : ty === 'J' ? JEAL : ty === 'O' ? '#b9b4c8' : ty === 'U' ? '#59658f' : ty === 'P' ? '#efa94e' : GOLD;
+  const col = ty => ty === 'F' ? RED : ty === 'N' ? VIOLET : ty === 'L' ? BLUE : ty === 'C' ? CALM : ty === 'B' ? '#a67646' : ty === 'E' ? EXC : ty === 'S' ? SHY : ty === 'J' ? JEAL : GOLD;
 
   // Scalar-radius fallback for older mobile WebViews.
   function canvasRoundRect(c, x, y, w, h, radius) {
@@ -722,24 +722,6 @@
       chaosSize: { ...finalChapter.chaosSize },
       sky: { ...finalChapter.sky, hintShown: false }
     };
-    if (night >= 11) {
-      const layout = window.TC_LEVELS?.[night], unlocked = layout?.availableMoodlings || [];
-      const intro = layout?.introducedMoodlings || [];
-      const rotation = unlocked.length ? unlocked[Math.floor(night / 2) % unlocked.length] : null;
-      // Only new route numbers carry these types; introductions are scripted,
-      // while later appearances rotate in as a single optional feeling.
-      const additions = intro.length ? intro : night % 2 === 0 && rotation ? [rotation] : [];
-      additions.slice(0, 1).forEach(type => {
-        chapter.feelingsNeeded[type] = 1;
-        chapter.initialSpawns[type] = 1;
-      });
-      if (intro.length) {
-        const names = { O: 'Bored', U: 'Guilty', P: 'Proud' };
-        chapter.newMoodling = `${names[intro[0]]} is new tonight. ${intro[0] === 'O' ? 'Try three different actions nearby.' : intro[0] === 'U' ? 'Find its light and walk it back.' : 'Reach its height and wait calmly.'}`;
-        chapter.tutorialHint = chapter.newMoodling;
-        chapter.tutorialHints = true;
-      }
-    }
     NIGHT_CHAPTERS.push(chapter);
   }
   // These match the original movement curve; keeping them authored with the chapters lets the
@@ -833,7 +815,7 @@
     moon: { name: 'Moonlight', c: '214,226,255', cost: 0, stars: 12 },
     starlight: { name: 'Starlight', c: '255,226,140', cost: 0, stars: 21 }
   };
-  const SCORE_PTS = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170, O: 145, U: 165, P: 180 };
+  const SCORE_PTS = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170 };
   const STAR_GLOW = [0, 0, 25, 50];   // Glow for reaching 2 and 3 stars on an hour (first time only)
   let nightStars = (() => { try { return JSON.parse(localStorage.getItem('mk-stars') || '{}') || {}; } catch (e) { return {}; } })();
   function saveStars() { try { localStorage.setItem('mk-stars', JSON.stringify(nightStars)); } catch (e) {} }
@@ -913,21 +895,9 @@
       { n: 'Buried', c: '#a67646', r: 'Common', d: 'Hides beneath a place-specific object. Reveal it with Night Eyes, then scratch the marked spot. A wrong spot shakes the ground.', line: '“I put it somewhere deep so I wouldn’t have to look at it.”' },
       { n: 'Petrified Buried', c: '#8c5a3a', r: 'Rare', d: 'So deep it has almost turned to stone. Same scratch rules.', line: '“It was easier to be numb than to feel it.”' },
       { n: 'Fossil Buried', c: '#c8a56a', r: 'Rare', d: 'Leaves a faint amber trail when it flees.', line: '“Some things stay with you even after you bury them.”' }
-    ],
-    O: [
-      { n: 'Bored', c: '#b9b4c8', r: 'Common', d: 'Stay close and try three different actions. Then pounce while it is bright.', line: '“Everything felt far away until you stayed awhile.”' },
-      { n: 'Dreamy Bored', c: '#d9d0e6', r: 'Rare', d: 'A sleepy sparkle drifts above it. Three different actions wake its light.', line: '“I thought nothing would change. Then you came by.”' }
-    ],
-    U: [
-      { n: 'Guilty', c: '#59658f', r: 'Common', d: 'Find its dropped light with Night Eyes. Carry it back while walking, then give it back.', line: '“I took it because I felt small. Thank you for bringing it home.”' },
-      { n: 'Tender Guilty', c: '#9ca8d1', r: 'Rare', d: 'A faint moonlit light is easy to miss. Reveal it, return it gently, and listen.', line: '“I can say sorry when someone gives me a little time.”' }
-    ],
-    P: [
-      { n: 'Proud', c: '#efa94e', r: 'Common', d: 'Reach the same height or higher, stand still nearby, and wait for its bow.', line: '“I worked hard for this. I can be proud and still be kind.”' },
-      { n: 'Radiant Proud', c: '#ffd166', r: 'Rare', d: 'Its little crown sparkles. Meet it at its height and wait calmly for the bow.', line: '“I do not have to be taller than anyone to feel proud.”' }
     ]
   };
-  const BOOK_ORDER = ['F0', 'F1', 'F2', 'N0', 'N1', 'N2', 'L0', 'L1', 'L2', 'B0', 'B1', 'B2', 'E0', 'S0', 'J0', 'C0', 'C1', 'G0', 'O0', 'O1', 'U0', 'U1', 'P0', 'P1'];
+  const BOOK_ORDER = ['F0', 'F1', 'F2', 'N0', 'N1', 'N2', 'L0', 'L1', 'L2', 'B0', 'B1', 'B2', 'E0', 'S0', 'J0', 'C0', 'C1', 'G0'];
   let book = {};
   try { book = JSON.parse(localStorage.getItem('mk-book') || '{}') || {}; } catch (e) { book = {}; }
   let encounteredMoodlings = {};
@@ -940,7 +910,7 @@
   }
   const saveBook = () => { try { localStorage.setItem('mk-book', JSON.stringify(book)); } catch (e) {} };
   const vinfo = (ty, v = 0) => VARS[ty][v] || VARS[ty][0];
-  const vcol = (ty, v = 0) => window.TCMoodArt?.color(vinfo(ty, v).n) || vinfo(ty, v).c;
+  const vcol = (ty, v = 0) => vinfo(ty, v).c;
   const BOOK_GOAL_KEYS = BOOK_ORDER.filter(key => key !== 'G0');
   const guideCopy = () => { const bank = window.TC_TIPS || {}, c = bank[MK_PROFILE.tipLanguage] || bank.en || {}; return window.TCControls ? TCControls.patchCopy(c) : c; };
   function persistGuidanceProgress() {
@@ -2041,26 +2011,6 @@
       const s = `✦ ${Math.min(n, FLY_NEED)}/${FLY_NEED}`; ctx.strokeText(s, cat.x, cat.y - 88); ctx.fillText(s, cat.x, cat.y - 88);
     }
   }
-  function registerBoredAction(action) {
-    for (const m of mood) {
-      if (m.dead || m.type !== 'O' || m.state === 'primed' || m.state === 'fading' || m.state === 'rest') continue;
-      if (Math.abs(cat.x - m.x) > 3 * T || m.actions?.includes(action)) continue;
-      m.actions ||= [];
-      m.actions.push(action);
-      tone(440 + m.actions.length * 110, .12, 'sine', .035);
-      if (m.actions.length >= 3) {
-        m.state = 'primed'; m.st = 3; m.alpha = 1;
-        m.primedByPounce = cat.pounceSerial || 0;
-        float(m.x, m.y - 54, 'Awake! Pounce now', '#e8d9ff');
-        sfx('moodling', 'O');
-      }
-    }
-  }
-  function proudPlatformAt(x) {
-    const candidates = activePlats.filter(p => p.active && p.type !== 'swinging' && Math.abs(p[0] + p[2] / 2 - x) < 7 * T);
-    candidates.sort((a, b) => a[1] - b[1]);
-    return candidates[0] || null;
-  }
   function spawn(type, x) {
     const hidesInCave = type === 'C' || (type === 'L' && moonHollow());
     x = safeLevelX(x ?? (hidesInCave ? pickCaveX() : pickX()));
@@ -2069,7 +2019,6 @@
     const rareChance = mode === 'story' ? chapterFor(storyNight).rareChance : .1;
     m.v = (type === 'F' || type === 'N' || type === 'L' || type === 'B') && Math.random() < rareChance ? (Math.random() < .5 ? 1 : 2) : 0;
     if (type === 'C') m.v = Math.random() < rareChance ? 1 : 0;   // rare Calm = Breathing Calm
-    if (['O', 'U', 'P'].includes(type)) m.v = Math.random() < rareChance ? 1 : 0;
     if (type === 'F') { m.y = terrainY(x) - 20; m.state = 'patrol'; }
     if (type === 'N') { m.y = terrainY(x) - 46; m.state = 'wander'; }
     if (type === 'G') { m.y = 200; m.state = 'fly'; m.life = 6.5; }
@@ -2077,22 +2026,6 @@
     if (type === 'S') { m.y = terrainY(x) - 26; m.state = 'walk'; m.st = 2 + Math.random() * 1.5; }
     if (type === 'J') { m.y = terrainY(x) - 30; m.state = 'wander'; m.cd = 3; m.stolen = []; }
     if (type === 'B') { const rock = rocks.find(r => r.marked) || rocks[0]; m.x = rock.x; m.y = rock.y - 12; m.state = 'buried'; m.alpha = 0; m.rock = rock; m.chime = 0; }
-    if (type === 'O') { m.y = terrainY(x) - 28; m.state = 'doze'; m.life = 12; m.actions = []; m.st = 0; }
-    if (type === 'U') {
-      const spots = currentLevel.hideSpots || [];
-      m.hideX = spots.length ? spots.reduce((best, spot) => Math.abs(spot - x) < Math.abs(best - x) ? spot : best, spots[0]) : x;
-      m.x = m.hideX; m.y = terrainY(m.x) - 28; m.state = 'peek'; m.alpha = .82; m.st = 0; m.lookT = Math.random() * 2;
-      const side = m.x > WORLD - 13 * T ? -1 : 1, distance = (7 + Math.random() * 4) * T;
-      m.lightX = safeSpawnX(clamp(m.x + side * distance, 40, WORLD - 40));
-      if (Math.abs(m.lightX - m.x) < 6 * T) m.lightX = safeSpawnX(clamp(m.x - side * distance, 40, WORLD - 40));
-      m.lightState = 'dropped'; m.fleeCooldown = 0;
-    }
-    if (type === 'P') {
-      const introPerch = mode === 'story' && storyNight === 17 ? currentLevel.proudPerches?.map(perchX => activePlats.find(p => Math.abs(p[0] + p[2] / 2 - perchX) < 2))?.filter(Boolean) : null;
-      m.platform = introPerch?.length ? introPerch[Math.floor(Math.random() * introPerch.length)] : proudPlatformAt(x);
-      m.x = m.platform ? m.platform[0] + m.platform[2] / 2 : x;
-      m.y = (m.platform ? m.platform[1] : terrainY(m.x)) - 26; m.state = 'strut'; m.sit = 0; m.st = 0; m.hopCd = 0;
-    }
     if (type === 'C') {
       m.x = x = clamp(x + 125, 80, WORLD - 80); m.alpha = 0; m.st = 0; m.sit = 0;
       if (m.v === 1) { m.y = terrainY(x) - 74; m.state = 'bubble'; m.light = 1; resetBreath(m); m.bphase = Math.random(); }
@@ -2197,13 +2130,11 @@
       const atZone = i => { const [a, b] = zones[i % zones.length]; return safeLevelX(a + (b - a) * (.28 + .44 * ((i * .37) % 1))); };
       for (let i = 0; i < 6; i++) spawn(i % 2 ? 'N' : 'F', atZone(i));
       [0, 2].forEach(i => spawn('L', atZone(i + 1)));
-      const hasMet = type => Object.keys(encounteredMoodlings).some(key => key.startsWith(type));
-      ['O', 'U', 'P'].filter(hasMet).forEach((type, i) => spawn(type, atZone(7 + i)));
       return;
     }
     for (const type of Object.keys(need)) {
       const base = chapter.initialSpawns?.[type] || 0;
-      const count = ['F', 'N', 'L', 'E', 'S', 'J', 'O', 'U', 'P'].includes(type) ? Math.max(base, Math.min(need[type], 2)) + (weather.kind === 'rain' && type === 'L' && need[type] > 0 ? 1 : 0) : base;
+      const count = ['F', 'N', 'L', 'E', 'S', 'J'].includes(type) ? Math.max(base, Math.min(need[type], 2)) + (weather.kind === 'rain' && type === 'L' && need[type] > 0 ? 1 : 0) : base;
       for (let i = 0; i < count; i++) {
         if (!need[type]) continue;
         spawn(type);
@@ -2405,7 +2336,7 @@
     if (mode === 'story' && m.type !== 'G' && got[m.type] >= need[m.type]) {
       // an extra catch (this feeling is already home): no penalty, half the usual Glow, and it floats home too
       cat.pounce = 0; cat.bounced = true;
-      const extra = Math.ceil({ F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16, O: 14, U: 16, P: 18 }[m.type] / 2);
+      const extra = Math.ceil({ F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16 }[m.type] / 2);
       glowRun += extra; bump('glow', extra);
       float(m.x, m.y - 34, `+${extra} Glow · extra`, col(m.type)); burst(m.x, m.y, col(m.type), 16);
       if (m.type === 'B' && m.rock) { m.rock.scratched = false; m.rock.holeDepth = 0; }
@@ -2417,8 +2348,8 @@
     }
     if (m.sky) { m.skyPhase = 'cleared'; m.skyTimer = 0; }
     combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 4; bestCombo = Math.max(bestCombo, combo); sfx('combo', combo);
-    const pts = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170, O: 145, U: 165, P: 180, G: 500 }[m.type] * combo; score += pts;
-    const gain = { F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16, O: 14, U: 16, P: 18, G: 40 }[m.type] + 2 * (combo - 1) + (m.type === 'G' && catPerk() === 'burmese' ? 10 : 0);
+    const pts = { F: 100, N: 120, L: 150, C: 180, B: 160, E: 140, S: 150, J: 170, G: 500 }[m.type] * combo; score += pts;
+    const gain = { F: 10, N: 12, L: 14, C: 16, B: 13, E: 13, S: 14, J: 16, G: 40 }[m.type] + 2 * (combo - 1) + (m.type === 'G' && catPerk() === 'burmese' ? 10 : 0);
     // Free mode is for fun and practice: half Glow, and at most FREE_GLOW_CAP per run, so the story stays the best way to earn
     let glowGain = gain;
     if (mode === 'free') {
@@ -2461,7 +2392,7 @@
   function startWallJump(c, side, jumpSpeed) {
     c.ledgeGrab = null; c.wallTouch = null; c.on = false; c.platform = null;
     c.vx = -side * Math.max(330, uv('swift') * T * .9); c.vy = -Math.max(jumpSpeed * 1.32, 1050);
-    c.face = -side; c.coyote = 0; c.jumpBuffer = 0; c.squash = .08; registerBoredAction('jump');
+    c.face = -side; c.coyote = 0; c.jumpBuffer = 0; c.squash = .08;
     queueJitTip('wallJump', c, guideCopy().mechanicTitles?.wallJump || 'Wall jump & ledge grab');
     sfx('ui', 'jump');
   }
@@ -2501,7 +2432,7 @@
     }
     const a = axisNow(), sneaking = a !== 0 && Math.abs(a) < .55;
     if (a !== 0) onTutorialAction('move', c);
-    if (sneaking) { onTutorialAction('sneak', c); registerBoredAction('sneak'); }
+    if (sneaking) onTutorialAction('sneak', c);
     const target = a === 0 ? 0 : Math.sign(a) * (sneaking ? 2 * T : uv('swift') * T);
     c.sneak = sneaking;
     window.TCGameAudio?.setSneaking(sneaking);
@@ -2537,13 +2468,13 @@
       startWallJump(c, c.wallTouch.side, jumpSpeed);
     } else if (c.jumpBuffer > 0 && (c.on || c.coyote > 0) && c.pounce <= 0) {
       c.vy = -jumpSpeed; c.on = false; c.coyote = 0; c.jumpBuffer = 0; window.TCJumpUpgrade?.prime(c, upg.secondLeap > 0);
-      onTutorialAction('jump', c); registerBoredAction('jump'); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240);
+      onTutorialAction('jump', c); if (window.TCSfx) sfx('ui', 'jump'); else tone(380, .12, 'triangle', .05, 240);
     } else if (c.jumpBuffer > 0 && !c.on && c.coyote <= 0 && !c.wallTouch && !c.ledgeGrab && !c.swinging && c.pounce <= 0 && window.TCJumpUpgrade?.canUse(c, upg.secondLeap > 0)) {
       c.vy = -jumpSpeed * .78; c.on = false; c.coyote = 0; c.jumpBuffer = 0; window.TCJumpUpgrade.consume(c); c.leapSparkle = reduce ? 0 : .48; c.leapSparkleCd = 0; c.squash = reduce ? 0 : .09;
       if (!reduce) burst(c.x, c.y - 22, '#c8adff', 9); sfx('ui', 'jump');
     }
     jumpQ = false;
-    if (pounceQ && c.pcd <= 0) { c.pounceSerial = (c.pounceSerial || 0) + 1; registerBoredAction('pounce-miss'); c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) { sfx('ui', 'pounce'); catVoice('trill', .25); } else tone(240, .1, 'square', .035, 320); }
+    if (pounceQ && c.pcd <= 0) { c.pounce = .3; c.pcd = .55; c.bounced = false; c.vx = c.face * 560; c.vy = c.on ? -360 : Math.min(c.vy, -220); c.on = false; if (window.TCSfx) { sfx('ui', 'pounce'); catVoice('trill', .25); } else tone(240, .1, 'square', .035, 320); }
     pounceQ = false;
     c.pcd -= dt; c.inv -= dt; c.squash = Math.max(0, c.squash - dt);
     if (c.platform && !c.platform.active) c.platform = null;
@@ -2638,78 +2569,7 @@
       }
       return;
     }
-    if (m.type === 'O') {
-      m.y = terrainY(m.x) - 28 + Math.sin(t * 1.7 + m.phase) * 2;
-      if (m.state === 'doze') {
-        m.life -= dt;
-        if (m.life <= 0) { m.state = 'fading'; m.st = .65; }
-      } else if (m.state === 'primed') {
-        m.st -= dt;
-        if (m.st <= 0) { m.state = 'doze'; m.actions = []; m.life = 12; }
-      } else if (m.state === 'fading') {
-        m.alpha = Math.max(0, m.alpha - dt * 1.6); m.st -= dt;
-        if (m.st <= 0) { m.state = 'rest'; m.st = 3 + Math.random() * 2; m.alpha = 0; }
-      } else if (m.state === 'rest') {
-        m.st -= dt;
-        if (m.st <= 0) { m.x = safeSpawnX(pickX()); m.y = terrainY(m.x) - 28; m.actions = []; m.life = 12; m.state = 'doze'; m.alpha = 0; }
-      }
-      if (m.state === 'doze' && m.alpha < 1) m.alpha = Math.min(1, m.alpha + dt * 1.4);
-    } else if (m.type === 'U') {
-      const dx = cat.x - m.x, running = !cat.sneak && Math.abs(cat.vx) > 3.2 * T;
-      m.lookT -= dt;
-      if (m.state === 'flee') {
-        m.x += (m.targetX - m.x) * Math.min(1, dt * 4.5); m.y = terrainY(m.x) - 28; m.st -= dt; m.alpha = Math.max(.2, m.alpha - dt * .65);
-        if (m.st <= 0 || Math.abs(m.targetX - m.x) < 3) { m.x = m.targetX; m.hideX = m.x; m.y = terrainY(m.x) - 28; m.state = 'peek'; m.alpha = .68; m.fleeCooldown = .8; }
-      } else {
-        m.fleeCooldown = Math.max(0, (m.fleeCooldown || 0) - dt);
-        if (m.state === 'peek') { m.y = terrainY(m.x) - 28 + Math.sin(t * 2 + m.phase) * 2; m.alpha = Math.min(.86, m.alpha + dt * .4); }
-        if (Math.abs(dx) < 4 * T && running && m.fleeCooldown <= 0 && m.state !== 'catchable' && m.state !== 'grateful') {
-          const spots = (currentLevel.hideSpots || []).filter(x => Math.abs(x - m.x) > 4 * T);
-          const away = spots.filter(x => Math.sign(x - m.x) === -Math.sign(dx));
-          const options = away.length ? away : spots;
-          m.targetX = options.length ? options[Math.floor(Math.random() * options.length)] : clamp(m.x - Math.sign(dx || 1) * 6 * T, 40, WORLD - 40);
-          m.state = 'flee'; m.st = .75; m.alpha = .9; m.dir = Math.sign(m.targetX - m.x) || 1;
-          float(m.x, m.y - 42, 'Guilty ducked behind a prop', '#aab7e6'); sfx('moodling', 'U');
-        }
-      }
-      if (m.lightState === 'dropped' && cat.on && !running && Math.abs(cat.x - m.lightX) < 24 && Math.abs(cat.y - terrainY(m.lightX)) < 70) {
-        m.lightState = 'carried'; cat.guiltyLight = m; float(cat.x, cat.y - 72, 'A little light to return', '#ffe99a'); sfx('ui', 'sparkle');
-      }
-      if (m.lightState === 'carried' && cat.on && !running && Math.abs(cat.x - m.x) < 3 * T && Math.abs(cat.y - terrainY(cat.x)) < 70) {
-        m.lightState = 'given'; cat.guiltyLight = null; m.state = 'grateful'; m.st = .75;
-        float(m.x, m.y - 52, '…thank you', '#cfd7ff'); sfx('moodling', 'U');
-      } else if (m.state === 'grateful') {
-        m.st -= dt;
-        if (m.st <= 0) { m.state = 'catchable'; m.st = 3; }
-      } else if (m.state === 'catchable') {
-        m.st -= dt;
-        if (m.st <= 0) { m.state = 'peek'; m.lightState = 'dropped'; cat.guiltyLight = null; }
-      }
-    } else if (m.type === 'P') {
-      if (!m.platform || !m.platform.active) m.platform = proudPlatformAt(m.x);
-      if (m.platform) {
-        const strut = m.state === 'strut' ? Math.sin(t * 1.4 + m.phase) * 12 : 0;
-        m.x += (m.platform[0] + m.platform[2] / 2 + strut - m.x) * Math.min(1, dt * 8);
-      }
-      const floor = m.platform ? m.platform[1] : terrainY(m.x);
-      m.y = floor - 26 - (m.hopT > 0 ? Math.sin((.6 - m.hopT) / .6 * Math.PI) * 34 : 0);
-      m.hopT = Math.max(0, (m.hopT || 0) - dt); m.hopCd = Math.max(0, (m.hopCd || 0) - dt);
-      if (m.state === 'catchable') {
-        m.st -= dt;
-        if (m.st <= 0) { m.state = 'strut'; m.sit = 0; }
-      } else if (m.state === 'strut' || m.state === 'bowed') {
-        const dx = Math.abs(cat.x - m.x), higherOrSame = cat.y <= floor + 3;
-        if (cat.on && higherOrSame && dx < 2 * T && Math.abs(cat.vx) < 18 && cat.pounce <= 0) {
-          m.sit += dt;
-          if (m.sit >= 2) { m.state = 'catchable'; m.st = 3; m.sit = 0; float(m.x, m.y - 50, 'A gracious bow', '#ffd166'); sfx('moodling', 'P'); }
-        } else m.sit = Math.max(0, m.sit - dt * 1.8);
-        if (cat.y > floor + 30 && dx < 7 * T && m.hopCd <= 0) {
-          const higher = activePlats.filter(p => p.active && p.type !== 'swinging' && p[1] < floor - 16 && p[1] >= floor - 100 && Math.abs(p[0] + p[2] / 2 - m.x) < 7 * T).sort((a, b) => a[1] - b[1])[0];
-          if (higher) m.platform = higher;
-          m.hopT = .6; m.hopCd = 2.4; float(m.x, m.y - 48, 'hmph', '#ffd166');
-        }
-      }
-    } else if (m.type === 'F') {
+    if (m.type === 'F') {
       if (!m.ambush || m.state !== 'charge') m.y = terrainY(m.x) - 20;
       const dx = cat.x - m.x, dy = cat.y - (m.y + 20);
       if (m.state === 'patrol') {
@@ -2913,15 +2773,6 @@
       if (Math.hypot(m.x - cx, m.y - cy) > uv('pounce')) continue;
       if (m.type === 'B' && m.state === 'buried') { cat.bounced = true; cat.vx = -cat.face * 260; cat.pounce = 0; const label = (m.rock || buriedHome)?.label || 'marked spot'; float(cat.x, cat.y - 70, `It’s still buried. Scratch the ${label}.`, '#a67646'); tone(150, .12, 'square', .05); continue; }
       if (m.alpha < .5) continue;
-      if (m.type === 'O' && m.state !== 'primed') { cat.bounced = true; cat.vx = -cat.face * 180; cat.pounce = 0; float(m.x, m.y - 40, `${m.actions?.length || 0}/3 different actions`, '#cfc5df'); continue; }
-      if (m.type === 'O' && m.primedByPounce && m.primedByPounce === cat.pounceSerial) continue;
-      if (m.type === 'U' && m.state !== 'catchable') continue;
-      if (m.type === 'P' && m.state !== 'catchable') {
-        cat.bounced = true; cat.vx = -cat.face * 260; cat.pounce = 0; m.sit = 0;
-        const higher = activePlats.filter(p => p.active && p.type !== 'swinging' && p[1] < (m.platform?.[1] ?? terrainY(m.x)) - 16 && Math.abs(p[0] + p[2] / 2 - m.x) < 7 * T).sort((a, b) => a[1] - b[1])[0];
-        if (higher) m.platform = higher; else { m.x = clamp(m.x - cat.face * T * 1.5, 40, WORLD - 40); m.platform = proudPlatformAt(m.x); }
-        m.state = 'strut'; float(m.x, m.y - 42, 'Proud puffed up!', '#efa94e'); puff(m); sfx('moodling', 'P'); continue;
-      }
       if (m.type === 'F' && m.state !== 'dizzy') {
         if (!cat.bounced) { cat.bounced = true; cat.vx = -cat.face * 300; cat.pounce = 0; float(m.x, m.y - 40, "Wait until it's dizzy", RED); sfx('cat', 'hiss'); }
         continue;
@@ -3001,7 +2852,7 @@
     }
     purrQ = false; purrT = Math.max(0, purrT - dt); purrCd = Math.max(0, purrCd - dt);
     if (eyesQ && endlessOn() && EN.noEyes) { eyesQ = false; if (!enNoEyesShown) { enNoEyesShown = true; float(cat.x, cat.y - 80, '🙈 No Night Eyes tonight', '#cfc4ff'); } }
-    if (eyesQ && eyesCd <= 0) { eyesT = eyesDur(); eyesCd = 9; onTutorialAction('eyes', cat); registerBoredAction('eyes'); if (window.TCSfx) sfx('ui', 'eyes'); else tone(740, .25, 'sine', .05, 300); }
+    if (eyesQ && eyesCd <= 0) { eyesT = eyesDur(); eyesCd = 9; onTutorialAction('eyes', cat); if (window.TCSfx) sfx('ui', 'eyes'); else tone(740, .25, 'sine', .05, 300); }
     eyesQ = false; eyesT = Math.max(0, eyesT - dt); eyesCd = Math.max(0, eyesCd - dt);
     scratchAnim = Math.max(0, scratchAnim - dt);
     checkScratchProximity();
@@ -3104,22 +2955,10 @@
     if (nightGuide.active && (guideCopy().tutorial || [])[nightGuide.step]?.action === 'scratch' && reachableHeight) {
       const x = tutorialSpotX(); if (Math.abs(cat.x - x) <= 74) scratchTarget = { kind: 'tutorial', x, y: terrainY(x) };
     }
-    if (!scratchTarget && reachableHeight && cat.on) {
-      const bored = mood.find(m => !m.dead && m.type === 'O' && !['primed', 'fading', 'rest'].includes(m.state) && Math.abs(cat.x - m.x) <= 3 * T);
-      if (bored) scratchTarget = { kind: 'bored', mood: bored };
-    }
     $('#bScratch').hidden = !scratchTarget || touchUI.hidden;
     return scratchTarget;
   }
   function performScratch() {
-    registerBoredAction('scratch');
-    if (scratchTarget?.kind === 'bored') {
-      const target = scratchTarget.mood;
-      if (!target || target.dead || !cat.on || Math.abs(cat.x - target.x) > 3 * T) return false;
-      cat.vx = 0; cat.walk = 0; scratchAnim = .58; sfx('ui', 'scratch');
-      float(target.x, target.y - 58, 'A little scratch wakes Bored', '#d9d0e6');
-      scratchTarget = null; return true;
-    }
     if (scratchTarget?.kind === 'tutorial') {
       const target = scratchTarget; if (!cat.on || Math.abs(cat.y - target.y) > 115 || Math.abs(cat.x - target.x) > 76) return false;
       cat.vx = 0; cat.walk = 0; scratchAnim = .58; sfx('ui', 'scratch'); burst(target.x, target.y - 18, GOLD, 14); float(target.x, target.y - 58, 'A little light was hiding here', GOLD); tone(520, .18, 'triangle', .07, 300);
@@ -4119,10 +3958,7 @@
     C: { stem: MP('M60 42 Q58 32 62 26'), leafR: MP('M62 28 Q72 16 86 22 Q78 36 62 28 Z'), leafL: MP('M60 30 Q52 20 40 24 Q46 36 60 30 Z'), eyes: MP('M44 70 q6 -7 12 0 M64 70 q6 -7 12 0'), mouth: MP('M55 80 q5 5 10 0') },
     J: { tail: MP('M86 86 Q106 90 102 70 Q99 60 91 65'), body: MP('M60 28 C64 36 70 38 72 44 C76 40 76 34 78 32 C86 42 90 56 90 70 C90 88 76 98 60 98 C44 98 30 88 30 70 C30 56 36 46 44 40 C46 46 48 48 50 48 C50 40 54 34 60 28 Z'), lids: MP('M44.5 66 Q51 64 57.5 66 M62.5 66 Q69 64 75.5 66'), mouth: MP('M56 85 q4 -3 8 0') },
     B: { body: MP('M30 74 C28 56 42 46 60 46 C80 46 92 58 90 75 C89 91 76 99 60 99 C42 99 31 91 30 74 Z'), cap: MP('M31 64 C29 45 43 34 60 34 C78 34 91 45 89 64 C82 58 74 61 67 56 C59 62 51 57 45 61 C40 58 35 61 31 64 Z'), crack: MP('M58 35 L62 43 L57 48 L61 55'), mouth: MP('M55 88 Q60 93 65 88') },
-    G: { body: MP('M60 42 L67 57 L84 59 L71.5 70.5 L75 87 L60 79 L45 87 L48.5 70.5 L36 59 L53 57 Z'), eyes: MP('M51 66 q3.5 -4 7 0 M62 66 q3.5 -4 7 0'), mouth: MP('M57 72 q3 3 6 0') },
-    O: { body: MP('M28 71 Q27 50 43 43 Q51 34 67 41 Q88 42 92 62 Q98 81 80 91 Q61 101 40 91 Q26 84 28 71 Z'), mouth: MP('M53 81 Q60 91 67 81 Q60 75 53 81Z') },
-    U: { body: MP('M31 75 Q28 58 40 50 Q44 39 60 42 Q76 39 83 51 Q94 61 87 78 Q80 93 62 94 Q44 96 34 86 Z'), sweat: MP('M85 35 Q96 48 88 52 Q80 52 85 35Z'), mouth: MP('M54 83 Q60 79 66 83') },
-    P: { body: MP('M27 74 Q26 51 43 42 Q52 31 69 40 Q92 43 94 68 Q95 89 76 95 Q60 101 42 94 Q27 89 27 74Z'), crown: MP('M38 42 L43 23 L56 34 L66 22 L72 42 Z'), mouth: MP('M54 81 Q61 84 68 80') }
+    G: { body: MP('M60 42 L67 57 L84 59 L71.5 70.5 L75 87 L60 79 L45 87 L48.5 70.5 L36 59 L53 57 Z'), eyes: MP('M51 66 q3.5 -4 7 0 M62 66 q3.5 -4 7 0'), mouth: MP('M57 72 q3 3 6 0') }
   };
   const glowCache = {};
   function glowImg(c) {
@@ -4246,25 +4082,6 @@
       mStroke(A.body, '#8A5A00', 13); mStroke(A.body, '#FFE27A', 7); ctx.fillStyle = '#FFE27A'; ctx.fill(A.body);
       mEll(55, 52, 5, 3, 0, 'rgba(255,255,255,.85)'); mStroke(A.eyes, '#8A5A00', 2.4);
       mEll(48, 72, 3.6, 2.4, 0, '#FFAE8A'); mEll(72, 72, 3.6, 2.4, 0, '#FFAE8A'); mStroke(A.mouth, '#8A5A00', 2.2);
-    } else if (type === 'O') {
-      const sleepy = !o.awake;
-      mEll(43, 97, 8, 4.5, 0, '#a39caf', '#625c70', 2); mEll(76, 97, 8, 4.5, 0, '#a39caf', '#625c70', 2);
-      mEll(60, 68, 34, 29, 0, body, '#625c70', 3); mEll(49, 50, 10, 6, -.2, 'rgba(255,255,255,.5)');
-      if (sleepy) { ctx.strokeStyle = '#625c70'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(50, 69, 6, .08 * Math.PI, .92 * Math.PI); ctx.moveTo(65, 71); ctx.arc(72, 69, 6, .08 * Math.PI, .92 * Math.PI); ctx.stroke(); }
-      else mEyes(50, 70, 68, 6.5, 7, '#625c70', look, 2.4);
-      mEll(42, 82, 5, 3, 0, 'rgba(228,172,194,.5)'); mEll(78, 82, 5, 3, 0, 'rgba(228,172,194,.5)');
-      ctx.fillStyle = '#625c70'; ctx.fill(A.mouth); mStroke(A.mouth, '#625c70', 2.3);
-    } else if (type === 'U') {
-      mEll(44, 97, 7, 4, 0, '#394365', '#30354d', 2); mEll(75, 97, 7, 4, 0, '#394365', '#30354d', 2);
-      ctx.fillStyle = body; ctx.fill(A.body); mStroke(A.body, '#30354d', 3); mEll(49, 51, 8, 5, 0, 'rgba(210,220,255,.32)');
-      mEyes(50, 69, 70, 5.2, 7.2, '#20283f', look - 1.5, 2); mStroke(A.mouth, '#20283f', 2.2);
-      ctx.fillStyle = '#bdeaff'; ctx.fill(A.sweat); mStroke(A.sweat, '#3c4565', 1.5);
-    } else if (type === 'P') {
-      mEll(43, 98, 8, 4.5, 0, '#d58634', '#754716', 2.3); mEll(77, 98, 8, 4.5, 0, '#d58634', '#754716', 2.3);
-      ctx.fillStyle = body; ctx.fill(A.body); mStroke(A.body, '#754716', 3); mEll(49, 48, 10, 6, -.2, 'rgba(255,255,255,.55)');
-      ctx.fillStyle = '#ffd34d'; ctx.fill(A.crown); mStroke(A.crown, '#8b5b18', 2.4);
-      ctx.strokeStyle = '#754716'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(42 + look, 66); ctx.lineTo(55 + look, 69); ctx.moveTo(78 + look, 66); ctx.lineTo(65 + look, 69); ctx.stroke();
-      mEyes(50, 70, 73, 5.3, 6.5, '#3d2d1e', look, 1.6); mStroke(A.mouth, '#754716', 2.4);
     }
     ctx.restore();
   }
@@ -4310,34 +4127,7 @@
         if (m.v) drawRare(m);
         ctx.restore(); continue;
       }
-      if (m.type === 'O') {
-        const awake = m.state === 'primed', color = awake ? lerpC(vcol('O', m.v), '#efe2ff', .62) : vcol('O', m.v);
-        const bob = m.state === 'doze' ? Math.sin(t * 2 + m.phase) * 2 : 0;
-        drawCuteMood('O', m.x, m.y + bob, .52, { color, glow: awake ? '#e8d9ff' : color, look, awake, sy: m.state === 'doze' ? .94 : 1, cy: 70 });
-        for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(m.x - 17 + i * 17, m.y - 46, 4.5, 0, 7); ctx.fillStyle = i < (m.actions?.length || 0) ? '#e9ddff' : 'rgba(243,236,255,.25)'; ctx.fill(); ctx.strokeStyle = 'rgba(48,39,65,.7)'; ctx.lineWidth = 1.2; ctx.stroke(); }
-        if (m.state === 'primed') { ctx.font = `800 18px ${DISP}`; ctx.textAlign = 'center'; ctx.fillStyle = '#fff6d6'; ctx.fillText('!', m.x + 24, m.y - 30); }
-        else { ctx.font = `700 12px ${DISP}`; ctx.textAlign = 'center'; ctx.fillStyle = '#e7dfef'; ctx.fillText('z  z', m.x + 21, m.y - 30 - Math.sin(t * 2 + m.phase) * 3); }
-        if (near && m.state !== 'primed') moodLabel(m, 'Try 3 different actions', '#d8cce8', 40);
-      } else if (m.type === 'U') {
-        drawCuteMood('U', m.x, m.y, .48, { color: vcol('U', m.v), look: m.lookT < .4 ? look * .5 : look, cy: 70 });
-        if (m.state === 'peek' && m.lookT <= 0) { m.lookT = 2 + Math.random() * 1.6; ctx.font = `700 12px ${DISP}`; ctx.textAlign = 'center'; ctx.fillStyle = '#cfd7ff'; ctx.fillText('…', m.x + 20, m.y - 35); }
-        if (m.state === 'grateful') moodLabel(m, '…thank you', '#cfd7ff', 44);
-        else if (m.state === 'catchable') moodLabel(m, 'Pounce gently', '#cfd7ff', 44);
-        if (m.lightState === 'dropped') {
-          const visible = eyesT > 0, close = Math.abs(cat.x - m.lightX) < 2.5 * T, a = visible ? .95 : close ? .27 : .08;
-          ctx.save(); ctx.globalAlpha = a; const ly = terrainY(m.lightX) - 11, pulse = .7 + .3 * Math.sin(t * 4);
-          const glow = ctx.createRadialGradient(m.lightX, ly, 1, m.lightX, ly, visible ? 28 : 18); glow.addColorStop(0, '#fff3b0'); glow.addColorStop(1, 'rgba(255,225,135,0)');
-          ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(m.lightX, ly, visible ? 28 : 18, 0, 7); ctx.fill();
-          ctx.fillStyle = '#fff0ad'; ctx.beginPath(); ctx.arc(m.lightX, ly, 5 * pulse, 0, 7); ctx.fill();
-          if (visible && close) { ctx.font = `700 11px ${BODY}`; ctx.textAlign = 'center'; ctx.fillStyle = '#fff3c4'; ctx.fillText('walk over the light', m.lightX, ly - 18); }
-          ctx.restore();
-        }
-      } else if (m.type === 'P') {
-        drawCuteMood('P', m.x, m.y, .5, { color: vcol('P', m.v), look, cy: 70 });
-        if (m.sit > 0) { ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(m.x, m.y + 2, 32, 0, 7); ctx.stroke(); ctx.strokeStyle = '#ffd166'; ctx.beginPath(); ctx.arc(m.x, m.y + 2, 32, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, m.sit / 2)); ctx.stroke(); }
-        if (m.state === 'catchable') moodLabel(m, 'A little bow for you', '#ffd166', 46);
-        else if (near && Math.abs(cat.y - (m.platform?.[1] ?? terrainY(m.x))) > 30) moodLabel(m, 'Meet me up here', '#ffd166', 44);
-      } else if (m.type === 'F') {
+      if (m.type === 'F') {
         let x = m.x, y = m.y;
         if (m.state === 'windup') x += (Math.random() - .5) * 5;
         if (m.state === 'charge') { ctx.strokeStyle = 'rgba(255,97,104,.45)'; ctx.lineWidth = 3; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(x - m.dir * (26 + k * 10), y - 10 + k * 10); ctx.lineTo(x - m.dir * (60 + k * 14), y - 10 + k * 10); ctx.stroke(); } }
@@ -4424,16 +4214,6 @@
       if (m.v && m.alpha > .05) drawRare(m);
       ctx.restore();
     }
-  }
-  function drawGuiltyCarry() {
-    const m = cat?.guiltyLight;
-    if (!m || m.dead) return;
-    const x = cat.x - cat.face * 24, y = cat.y - 64 + Math.sin(t * 4) * 2;
-    const glow = ctx.createRadialGradient(x, y, 1, x, y, 22);
-    glow.addColorStop(0, 'rgba(255,241,170,.8)'); glow.addColorStop(1, 'rgba(255,220,120,0)');
-    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, 22, 0, 7); ctx.fill();
-    ctx.fillStyle = '#fff0ad'; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,247,203,.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 8 + Math.sin(t * 4) * 2, 0, 7); ctx.stroke();
   }
 
   // Comfort items packed for this hour are worn by the cat: scarf + bell on the neck, jar + hourglass on the back.
@@ -4983,7 +4763,7 @@
     drawWorld();
     window.TCParallaxLayers?.draw(ctx, currentLevel?.map || currentMapKey(), { cam: camX, width: VW, ground: GROUND, time: t, reduced: reduce, pits: currentLevel?.pits || [] });
     drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawBossEncounter(); drawGuidanceMarker(); drawFireflies(); drawTrail();
-    drawCat(); drawGuiltyCarry(); drawParts(); if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.front(ctx, endlessFxOpts()); drawLevelDebug();
+    drawCat(); drawParts(); if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.front(ctx, endlessFxOpts()); drawLevelDebug();
     ctx.restore();
     drawWeather();
     if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.screen(ctx, endlessFxOpts({ catX: cat.x - camX, catY: cat.y - 30, eyes: eyesT > 0, eyesR: eyesRange(), dt }));

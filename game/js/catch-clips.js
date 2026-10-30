@@ -22,10 +22,7 @@
     J: [{keys:[],action:'NOTICE',pose:'steal'}, {keys:['A','D'],action:'CHASE',pose:'chase'}, {keys:['J','X'],action:'POUNCE',pose:'catch'}],
     C: [{keys:['SHIFT'],action:'SLOW WALK',pose:'reeds'}, {keys:[],action:'WAIT',pose:'wait'}, {keys:[],action:'WAIT',pose:'catch'}],
     C1: [{keys:['S'],action:'HOLD',pose:'breathe',held:true,motion:true}, {keys:['S'],action:'RELEASE',pose:'breathe',motion:true}, {keys:[],action:'WAIT',pose:'catch'}],
-    G: [{keys:[],action:'NOTICE',pose:'arc'}, {keys:['SPACE'],action:'JUMP',pose:'top',motion:true}, {keys:['J','X'],action:'POUNCE',pose:'catch'}],
-    O: [{keys:[],action:'NOTICE',pose:'sleepy'}, {keys:['SPACE'],or:['S','E','SHIFT','J/X'],action:'MIX',inputs:['jump','scratch','eyes','sneak','pounce'],pose:'different-actions',motion:true}, {keys:['J','X'],action:'POUNCE',pose:'awake',motion:true}],
-    U: [{keys:['E'],action:'EYES',pose:'hiding'}, {keys:['A','D'],action:'MOVE',pose:'light'}, {keys:['J','X'],action:'POUNCE',pose:'thankful'}],
-    P: [{keys:[],action:'NOTICE',pose:'crown'}, {keys:['A','D'],action:'MOVE',pose:'height'}, {keys:['J','X'],action:'POUNCE',pose:'bow'}]
+    G: [{keys:[],action:'NOTICE',pose:'arc'}, {keys:['SPACE'],action:'JUMP',pose:'top',motion:true}, {keys:['J','X'],action:'POUNCE',pose:'catch'}]
   };
   const touchInput = { RUN:'move', DODGE:'jump', JUMP:'jump', POUNCE:'pounce', EYES:'eyes', SCRATCH:'scratch', HOLD:'sneak', RELEASE:'release', 'MOVE + POUNCE':'pounce', CHASE:'move', 'SLOW WALK':'sneak' };
   function isTouch() { return !!touchControls && !touchControls.hidden; }
@@ -34,10 +31,6 @@
     const type = isTouch() ? 'touch' : 'keys';
     if (step.keys.length === 0 && !step.or) return `<span class="catch-clip-no-input">${data.copy.catchClipNoButton || 'No button — watch Shwe'}</span>`;
     if (type === 'touch') {
-      if (step.action === 'MIX') {
-        const labels = (step.inputs || []).map(input => `<b>${escapeHtml(data.touchLabels?.[input] || input)}</b>`).join('<span class="catch-clip-or">·</span>');
-        return `<span class="catch-clip-touch-badge catch-clip-touch-options">${labels}</span>`;
-      }
       if (data.type==='C'&&data.variant===1&&['HOLD','RELEASE'].includes(step.action)) {
         const scratch=data.touchLabels?.scratch||'SCRATCH',action=data.copy.catchClipActionLabels?.[step.action]||step.action;
         return `<span class="catch-clip-touch-badge"><b>${escapeHtml(scratch)}</b><span>${escapeHtml(action)}</span></span>`;
@@ -73,16 +66,13 @@
     gallery.replaceChildren();
     const story = data.type === 'C' && data.variant === 1 ? 'C1' : data.type, steps = storyboard[story] || storyboard.F, file = clipFile(data.type, data.variant);
     const wrap = document.createElement('div'); wrap.className = 'catch-clip-video-wrap';
-    const illustratedGuide = ['O', 'U', 'P'].includes(data.type);
     video = document.createElement('video'); video.className = 'catch-clip-video';
     video.muted = true; video.loop = true; video.playsInline = true; video.setAttribute('playsinline', ''); video.preload = 'auto';
-    video.poster = illustratedGuide ? data.moodSrc : `assets/clips/${file}.jpg?v=${CLIP_VERSION}`;
-    if (!illustratedGuide) video.src = `assets/clips/${file}.${canWebm() ? 'webm' : 'mp4'}?v=${CLIP_VERSION}`;
+    video.poster = `assets/clips/${file}.jpg?v=${CLIP_VERSION}`; video.src = `assets/clips/${file}.${canWebm() ? 'webm' : 'mp4'}?v=${CLIP_VERSION}`;
     video.setAttribute('aria-label', `${data.copy.catchClipVideoLabel || 'Gameplay clip'}: ${data.moodName || ''}`);
     video.addEventListener('click', () => { video.paused ? play() : (video.pause(), syncToggle()); });
     video.addEventListener('play', syncToggle); video.addEventListener('pause', syncToggle);
     toggle = document.createElement('button'); toggle.type = 'button'; toggle.className = 'catch-clip-toggle';
-    toggle.hidden = illustratedGuide;
     toggle.addEventListener('click', () => { video.paused ? play() : (video.pause(), syncToggle()); });
     wrap.append(video, toggle);
     const list = document.createElement('ol'); list.className = 'catch-clip-steps';
@@ -103,7 +93,7 @@
     [back, next, dots, document.querySelector('.catch-clip-mobile-nav')].forEach(el => { if (el) el.hidden = true; }); if (tag) tag.hidden = true;
     stage.classList.add('is-video');
     syncToggle();
-    if (!illustratedGuide && !reducedMotion.matches) play();
+    if (!reducedMotion.matches) play();
   }
   function open(options) { close(); data = { ...options }; build(); }
   function close() {
