@@ -1421,7 +1421,7 @@
     timeLeft = Math.max(0, timeLeft - 1); shake = Math.max(shake, 8);
     sfx('ui', 'hit'); sfx('cat', 'sad'); float(cat.x, cat.y - 80, msg + '  −1s', RED);
   }
-  function onSlick(x) { return weather.kind === 'rain' || hazards.some(h => h.kind === 'slick' && x >= h.a && x <= h.b); }
+  function onSlick() { return weather.kind === 'rain'; }
   function hazNotice(kind, text, c) { if (hazSeen[kind]) return; hazSeen[kind] = true; announce(text, c, 2.4); }
   function hazPhase(h, period, idle, warn) { const q = ((t + h.off) % period + period) % period; return q < idle ? 'idle' : q < idle + warn ? 'warn' : 'on'; }
   function updHazards(dt) {
@@ -1866,8 +1866,8 @@
     school: { kind: 'school supplies', label: 'book pile', labelMarked: 'marked book pile', labels: ['book pile', 'school bag', 'lost-and-found box'], xs: [100, 550, 850, 1200, 1770, 2630, 3000, 3440, 3720], draw: drawSchoolBurySpot, debris: [{ shape: 'paper', color: '#f4dce8' }, { shape: 'paper', color: '#fff0bd' }, { shape: 'paper', color: '#b8c9eb' }], glow: '#a8dfff' },
     rooftop: { kind: 'roof finds', label: 'loose tiles', labelMarked: 'marked loose tiles', labels: ['loose tiles', 'folded cloth', 'roof basket'], xs: [], draw: drawRoofBurySpot, debris: [{ shape: 'chip', color: '#b59a92' }, { shape: 'paper', color: '#c9c3d4' }, { shape: 'straw', color: '#b69c79' }], glow: '#f3d9ac' },
     park: { kind: 'park groundcover', label: 'leaf pile', labelMarked: 'marked leaf pile', labels: ['leaf pile', 'sand mound', 'flower-bed mound'], xs: [100, 550, 850, 1140, 1800, 2630, 3000, 3440, 3740], draw: drawParkBurySpot, debris: [{ shape: 'leaf', color: '#86bd77' }, { shape: 'petal', color: '#ffb4d3' }, { shape: 'leaf', color: '#d2a85f' }], glow: '#9bf0c5' },
-    festival: { kind: 'festival goods', label: 'bamboo basket', labelMarked: 'marked bamboo basket', labels: ['bamboo basket', 'clay pots', 'folded mat'], xs: [150, 600, 810, 1200, 1700, 2600, 3000, 3500, 4150], draw: drawFestivalBurySpot, debris: [{ shape: 'straw', color: '#d9b66f' }, { shape: 'spark', color: '#ffd58a' }, { shape: 'straw', color: '#b88952' }], glow: '#ffc887' },
-    market: { kind: 'market goods', label: 'dropped snack basket', labelMarked: 'marked snack basket', labels: ['snack basket', 'paper lantern box', 'dropped fruit'], xs: [], draw: drawFestivalBurySpot, debris: [{ shape: 'straw', color: '#d9b66f' }, { shape: 'spark', color: '#ffd58a' }, { shape: 'paper', color: '#ffb36b' }], glow: '#ffb36b' },
+    festival: { kind: 'festival ground', label: 'quiet earth', labelMarked: 'marked quiet earth', labels: ['quiet earth', 'soft ground', 'loose soil'], xs: [150, 600, 810, 1200, 1700, 2600, 3000, 3500, 4150], draw: drawFestivalBurySpot, debris: [], glow: '#ffc887' },
+    market: { kind: 'market ground', label: 'soft ground', labelMarked: 'marked soft ground', labels: ['soft ground', 'lantern-side patch', 'loose soil'], xs: [], draw: drawFestivalBurySpot, debris: [], glow: '#ffb36b' },
     hill: { kind: 'hilltop finds', label: 'mossy stones', labelMarked: 'marked mossy stones', labels: ['mossy stones', 'fallen branch', 'leaf pile'], xs: [80, 350, 450, 550, 800, 910, 1020, 1130], draw: drawHillBurySpot, debris: [{ shape: 'moss', color: '#77a77c' }, { shape: 'twig', color: '#9b7659' }, { shape: 'leaf', color: '#83ad70' }], glow: '#c0b1ff' },
     pagoda: { kind: 'quiet hillside finds', label: 'loose stone chips', labelMarked: 'marked loose stone chips', labels: ['loose stone chips', 'fallen leaves', 'small seed pods'], xs: [], draw: drawHillBurySpot, debris: [{ shape: 'chip', color: '#a7a298' }, { shape: 'leaf', color: '#86917c' }, { shape: 'twig', color: '#9d896a' }], glow: '#e4cc9c' },
     train: { kind: 'platform keepsakes', label: 'lost ticket', labelMarked: 'marked lost ticket', labels: ['lost ticket', 'paper timetable', 'dropped mitten'], xs: [], draw: drawSchoolBurySpot, debris: [{ shape: 'paper', color: '#d6c7a2' }, { shape: 'paper', color: '#f0d39a' }, { shape: 'chip', color: '#9ca4a2' }], glow: '#b8e4dc' },
@@ -2088,7 +2088,10 @@
   }
   function reset() {
     currentLevel = selectLevelForRun();
-    weather = currentLevel.map === 'market' ? { ...WEATHER.find(item => item.kind === 'rain') } : { ...WEATHER[Math.floor(Math.random() * WEATHER.length)] };
+    const rainAllowed = (window.TCEndless?.RAIN_MAPS || ['park', 'festival', 'lake', 'garden']).includes(currentLevel.map);
+    const rainTwist = rainAllowed && (currentLevel.twists?.includes('rain') || currentLevel.challenges?.includes('rainy'));
+    const weatherPool = rainAllowed ? WEATHER : WEATHER.filter(item => item.kind !== 'rain');
+    weather = rainTwist ? { ...WEATHER.find(item => item.kind === 'rain') } : { ...weatherPool[Math.floor(Math.random() * weatherPool.length)] };
     if (weather.kind === 'wind') weather.wind = Math.random() < .5 ? -1 : 1;
     loadLevelGeometry();
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
@@ -3251,17 +3254,8 @@
     ctx.restore();
   }
   function drawFestivalBurySpot(x, y, spot) {
-    ctx.save(); ctx.translate(x, y);
-    ctx.fillStyle='rgba(18,9,20,.35)'; ctx.beginPath(); ctx.ellipse(0,1,40,5,0,0,7); ctx.fill();
-    if (spot.variant === 0) {
-      for(const [bx,by,w,h] of [[-18,-23,34,22],[15,-17,28,16]]) { ctx.fillStyle='#9d6747';ctx.beginPath();ctx.moveTo(bx-w/2,by-h);ctx.lineTo(bx+w/2,by-h);ctx.lineTo(bx+w*.42,by);ctx.quadraticCurveTo(bx,by+5,bx-w*.42,by);ctx.closePath();ctx.fill();ctx.fillStyle='#d3a76a';ctx.beginPath();ctx.ellipse(bx,by-h,w/2,5,0,0,7);ctx.fill();ctx.strokeStyle='rgba(237,194,125,.8)';ctx.lineWidth=1;for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(bx+k*7,by-h+2);ctx.lineTo(bx+k*6,by-2);ctx.stroke();}ctx.beginPath();ctx.moveTo(bx-w*.4,by-h*.48);ctx.lineTo(bx+w*.4,by-h*.48);ctx.stroke();}
-    } else if (spot.variant === 1) {
-      for(const [px,py,r,c] of [[-19,-13,15,'#a85d52'],[9,-11,18,'#8e514d'],[22,-7,12,'#bb755d']]) {ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(px-r,py-2);ctx.quadraticCurveTo(px-r,py-r,px,py-r);ctx.quadraticCurveTo(px+r,py-r,px+r,py-2);ctx.quadraticCurveTo(px+r,py+r,px,py+r);ctx.quadraticCurveTo(px-r,py+r,px-r,py-2);ctx.closePath();ctx.fill();ctx.fillStyle='#d89577';ctx.beginPath();ctx.ellipse(px,py-r+2,r*.55,3,0,0,7);ctx.fill();ctx.fillStyle='rgba(56,29,34,.5)';ctx.beginPath();ctx.ellipse(px,py+1,r*.45,2,0,0,7);ctx.fill();}
-    } else {
-      ctx.fillStyle='#9d704c'; ctx.beginPath(); canvasRoundRect(ctx, -37,-20,74,18,3); ctx.fill(); ctx.strokeStyle='#d0aa73';ctx.lineWidth=1.4;for(let xx=-28;xx<38;xx+=8){ctx.beginPath();ctx.moveTo(xx,-19);ctx.lineTo(xx,-3);ctx.stroke();}for(let yy=-15;yy<-2;yy+=6){ctx.beginPath();ctx.moveTo(-35,yy);ctx.lineTo(35,yy);ctx.stroke();}
-      for(const [lx,ly,c] of [[-20,-41,'#ffb569'],[20,-45,'#ffc7a2']]) {ctx.strokeStyle='#765249';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(lx,ly-7);ctx.lineTo(lx,ly-1);ctx.stroke();ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(lx-7,ly);ctx.lineTo(lx+7,ly);ctx.lineTo(lx+5,ly+17);ctx.lineTo(lx-5,ly+17);ctx.closePath();ctx.fill();ctx.strokeStyle='#8f554e';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(lx-6,ly+5);ctx.lineTo(lx+6,ly+5);ctx.moveTo(lx-5,ly+12);ctx.lineTo(lx+5,ly+12);ctx.stroke();ctx.fillStyle='#8f554e';ctx.fillRect(lx-2,ly+17,4,3);}
-    }
-    ctx.restore();
+    // Festival and market dig spots stay clear of bulky baskets and pots. Their
+    // Night Eyes glow, Moodling wisps, and scratch prompt remain the interaction cues.
   }
   function drawHillBurySpot(x, y, spot) {
     ctx.save(); ctx.translate(x, y);
@@ -6882,6 +6876,9 @@
   }
   function renderNightCards() {
     const E = window.TCEndless, night = briefingNight, NAMES = E.NAMES;
+    const selectedMap = E.PLACES[enCards[enPick]?.place]?.map;
+    const rainAllowed = E.RAIN_MAPS.includes(selectedMap);
+    if (!rainAllowed) enChosen.delete('rainy');
     $('#ncCards').innerHTML = enCards.map((c, k) => {
       const tw = c.variant ? E.TWISTS[c.variant].twist : 'The place as Shwe remembers it.';
       const needs = Object.entries(c.need).map(([ty, n]) => `<span class="nc-need" title="${NAMES[ty]} ×${n}"><img src="${bookPortrait(ty, 0, true)}" alt="">${NAMES[ty]} <b>×${n}</b></span>`).join('');
@@ -6890,7 +6887,7 @@
         ${c.newMap ? '<span class="nc-new">✨ new map!</span>' : ''}<span class="nc-place"><i>${c.icon}</i><b>${enName(c.name)}</b></span>
         <span class="nc-needs">${needs}</span><span class="nc-twist">${enName(tw)}</span>${piece}</button>`;
     }).join('');
-    $('#ncChal').innerHTML = E.CHALLENGES.map(ch => `<button type="button" class="nc-ch${enChosen.has(ch.id) ? ' on' : ''}" aria-pressed="${enChosen.has(ch.id)}" data-chal="${ch.id}" title="${ch.note}"><i>${ch.icon}</i>${ch.name} <b>${ch.reward}</b></button>`).join('');
+    $('#ncChal').innerHTML = E.CHALLENGES.filter(ch => ch.id !== 'rainy' || rainAllowed).map(ch => `<button type="button" class="nc-ch${enChosen.has(ch.id) ? ' on' : ''}" aria-pressed="${enChosen.has(ch.id)}" data-chal="${ch.id}" title="${ch.note}"><i>${ch.icon}</i>${ch.name} <b>${ch.reward}</b></button>`).join('');
     const p = E.plan(night, enCards[enPick], [...enChosen]), total = Object.values(p.need).reduce((a, b) => a + b, 0);
     const g = (() => { const keep = NIGHT_CHAPTERS[night - 1].feelingsNeeded; NIGHT_CHAPTERS[night - 1].feelingsNeeded = p.need; const r = starGoals(night); NIGHT_CHAPTERS[night - 1].feelingsNeeded = keep; return r; })();
     const mult = p.glowMult !== 1 ? ` · ×${p.glowMult.toFixed(1).replace('.0', '')} Glow` : '';

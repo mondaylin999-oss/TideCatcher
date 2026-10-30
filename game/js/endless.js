@@ -18,16 +18,17 @@
     train: { name: 'Night Train Platform', icon: '🚂', map: 'train', types: ['N', 'L', 'J', 'S'], color: '#9fd6d2', from: 39 }
   };
   const PLACE_ORDER = ['school', 'park', 'festival', 'hill', 'lake', 'rooftop', 'market', 'garden', 'pagoda', 'train'];
+  const RAIN_MAPS = ['park', 'festival', 'lake', 'garden'];
   // Each card selects its place and version; painted and code-drawn maps share the same level flow.
   const VARIANTS = {
-    school: [{ id: '', from: 8 }, { id: 'rainy', from: 12 }, { id: 'sunrise', from: 36 }],
-    park: [{ id: '', from: 8 }, { id: 'blossom', from: 16 }, { id: 'autumn', from: 38 }],
-    festival: [{ id: '', from: 8 }, { id: 'fireworks', from: 22 }, { id: 'candle', from: 42 }],
+    school: [{ id: '', from: 8 }, { id: 'sunrise', from: 36 }],
+    park: [{ id: '', from: 8 }, { id: 'rainy', from: 12 }, { id: 'blossom', from: 16 }, { id: 'autumn', from: 38 }],
+    festival: [{ id: '', from: 8 }, { id: 'rainy', from: 16 }, { id: 'fireworks', from: 22 }, { id: 'candle', from: 42 }],
     hill: [{ id: '', from: 8 }, { id: 'foggy', from: 26 }, { id: 'shooting', from: 44 }],
-    lake: [{ id: '', from: 8 }, { id: 'snowy', from: 32 }, { id: 'moonlit', from: 47 }],
+    lake: [{ id: '', from: 8 }, { id: 'rainy', from: 24 }, { id: 'snowy', from: 32 }, { id: 'moonlit', from: 47 }],
     rooftop: [{ id: '', from: 11 }],
     market: [{ id: '', from: 18 }],
-    garden: [{ id: '', from: 28 }],
+    garden: [{ id: '', from: 28 }, { id: 'rainy', from: 36 }],
     pagoda: [{ id: '', from: 34 }],
     train: [{ id: '', from: 39 }]
   };
@@ -118,6 +119,7 @@
   // ---------- one level, from a card and the chosen challenges ----------
   function plan(night, card, chosen = []) {
     const d = difficulty(night), sp = SPECIALS[night] || null, ch = new Set(chosen);
+    if (!RAIN_MAPS.includes(PLACES[card.place]?.map)) ch.delete('rainy');
     let need = { ...card.need };
     if (sp?.id === 'rush') { const others = Object.keys(need).filter(t => t !== 'F'), f = Math.ceil(d.count * .65); need = { F: f, ...split(others.length ? others : ['N'], d.count - f, rng(night)) }; }
     if (sp?.id === 'finale') need = { ...FINALE_NEED };
@@ -171,7 +173,7 @@
   UNLOCKS.sort((a, b) => a.level - b.level);
 
   root.TCEndless = {
-    PLACES, VARIANTS, TWISTS, CHALLENGES, SPECIALS, NAMES, DRAWING_PLACES, PIECES, UNLOCKS,
+    PLACES, VARIANTS, RAIN_MAPS, TWISTS, CHALLENGES, SPECIALS, NAMES, DRAWING_PLACES, PIECES, UNLOCKS,
     difficulty, cards, plan, markPlayed, mapName, mapIcon,
     piecesOf, nextPiece, addPiece, piecesTotal, drawingsDone,
     chest, claimChest, giveBadge, hasBadge: () => !!S.badge,

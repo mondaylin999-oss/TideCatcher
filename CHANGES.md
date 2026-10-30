@@ -1,3 +1,14 @@
+# Remove bulky festival and market dig props
+
+- Removed the large baskets, clay pots, folded mat, and ground debris from Festival and Night Market buried spots across their levels.
+- Kept the dig locations and buried Moodling logic. Night Eyes highlights marked ground, while wisps and the scratch prompt continue to guide the interaction.
+
+# Rain restricted to four map themes
+
+- Rainy weather and Rainy variants now occur only in Park, Festival, Lake, and Pagoda Garden. Other maps, including the Night Market, choose only wind or fog.
+- Moved the Rainy Endless variant off School and added it to the four eligible map families. The optional Rainy challenge is hidden on other maps and rejected by level planning if passed for an ineligible map.
+- Rain is forced only for an eligible Rainy variant/challenge; other eligible nights retain randomized weather. Slippery movement remains tied to actual rain.
+
 # Remove oversized and below-ground level scenery
 
 - Removed the extra parallax skyline and near-edge props from the gameplay render on every level. This clears the vertical silhouettes, stems and railing posts that were poking through or hanging below the ground.
@@ -17,6 +28,7 @@
 # Stop Shwe sooner after releasing movement
 
 - Slippery movement now happens only in rain. Dry slick patches and the snowy-route slip effect are removed; rainy ground eases into movement and brakes firmly when the joystick or movement key is released.
+- Rainy variants and the Rainy challenge now set the weather to rain, so their puddles cannot cause slippery movement under clear, foggy, or windy weather.
 
 # Removed the post-level-10 Moodlings
 
