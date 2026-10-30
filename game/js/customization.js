@@ -37,7 +37,7 @@ var MK_RIGS = {
 // made once (halving step by step, which keeps the picture clean) and the rig draws from that.
 var MK_SMALL = {};
 function mkSmallSprite(key, spr, px) {
-  var bucket = Math.max(24, Math.round(px / 6) * 6), id = key + ':' + bucket;
+  var bucket = Math.max(24, Math.round(px / 2) * 2), id = key + ':' + bucket;
   if (MK_SMALL[id]) return MK_SMALL[id];
   var cur = spr, w = spr.naturalWidth, h = spr.naturalHeight;
   var tw = Math.round(w * bucket / h), th = bucket;
@@ -50,30 +50,31 @@ function mkSmallSprite(key, spr, px) {
   var og = out.getContext('2d'); og.imageSmoothingQuality = 'high'; og.drawImage(cur, 0, 0, tw, th);
   return (MK_SMALL[id] = out);
 }
-// Find where to separate the near and far paw of each leg pair: the emptiest column of the
-// leg area. Cutting anywhere else slices through a paw and tears it apart while walking.
-var MK_CUTS = {};
-function mkPawCuts(spr, splitS, hipS) {
-  var id = spr.width + 'x' + spr.height + ':' + splitS + ':' + hipS;
-  if (MK_CUTS[id]) return MK_CUTS[id];
-  var sw = spr.width, sh = spr.height, band = sh - hipS, cuts = [0, null, splitS, null, sw];
-  try {
-    var d = spr.getContext('2d').getImageData(0, hipS, sw, band).data, col = new Array(sw).fill(0);
-    for (var y = 0; y < band; y++) for (var x = 0; x < sw; x++) if (d[(y * sw + x) * 4 + 3] > 40) col[x]++;
-    var pick = function (a, b) {
-      var best = -1, bestN = Infinity;
-      for (var x = Math.round(a + (b - a) * .25); x <= Math.round(a + (b - a) * .75); x++) if (col[x] < bestN) { bestN = col[x]; best = x; }
-      return bestN <= Math.max(1, band * .06) ? best : null;
-    };
-    cuts[1] = pick(0, splitS); cuts[3] = pick(splitS, sw);
-  } catch (e) {}
-  return (MK_CUTS[id] = cuts);
+// Where each leg sits in each cat painting, measured once from the images:
+// [left, right, paw bottom] as fractions of the sprite, plus which gait slot it follows
+// (0/1 hind paws, 2/3 fore paws). Stored as data so the walk works in every browser, including
+// Firefox opening the game straight from a file, where reading image pixels is blocked.
+var MK_LEG_MAP = {
+  ginger: [[0.0, 0.271, 0.963, 0], [0.271, 0.574, 0.96, 1], [0.574, 1.0, 0.997, 2]],
+  burmese: [[0.0, 0.265, 0.937, 0], [0.265, 0.565, 0.923, 1], [0.565, 0.721, 0.957, 2], [0.721, 1.0, 0.997, 3]],
+  siamese: [[0.0, 0.244, 0.943, 0], [0.244, 0.523, 0.923, 1], [0.523, 0.697, 0.957, 2], [0.697, 1.0, 0.997, 3]],
+  persian: [[0.0, 0.278, 0.96, 0], [0.278, 0.531, 0.957, 1], [0.531, 1.0, 0.997, 2]],
+  mainecoon: [[0.0, 0.291, 0.96, 0], [0.291, 0.591, 0.957, 1], [0.591, 1.0, 0.997, 2]],
+  ragdoll: [[0.0, 0.267, 0.927, 0], [0.267, 0.52, 0.913, 1], [0.52, 1.0, 0.997, 2]],
+  british: [[0.0, 0.288, 0.933, 0], [0.288, 0.599, 0.927, 1], [0.599, 1.0, 0.997, 2]],
+  bengal: [[0.0, 0.247, 0.933, 0], [0.247, 0.562, 0.93, 1], [0.562, 0.779, 0.997, 2], [0.779, 1.0, 0.99, 3]],
+  sphynx: [[0.0, 0.254, 0.943, 0], [0.254, 0.599, 0.933, 1], [0.599, 1.0, 0.993, 2]]
+};
+function mkFindLegs(key, sw, sh) {
+  var m = MK_LEG_MAP[key]; if (!m) return null;
+  return m.map(function (l) { return { x0: Math.round(l[0] * sw), x1: Math.round(l[1] * sw), bottom: Math.round(l[2] * sh), slot: l[3] }; });
 }
 function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   var big = mkGetSprite(key), r = MK_RIGS[key];
   if (!big || !big.complete || !big.naturalWidth || !r) return false;
   var m = g.getTransform ? g.getTransform() : null, scl = m ? Math.hypot(m.c, m.d) || 1 : 1;
-  var spr = mkSmallSprite(key, big, Math.min(big.naturalHeight, dh * scl * 1.5));
+  // draw from a copy made at exactly the on-screen size, so the browser does not shrink it again (sharper fur and face)
+  var spr = mkSmallSprite(key, big, Math.min(big.naturalHeight, dh * scl));
   var sw = spr.width, sh = spr.height, kx = dw / sw, ky = dh / sh;
   var hipS = Math.round(sh * r.hip), splitS = Math.round(sw * r.split);
   var tW = Math.round(sw * r.tailW), tH = Math.round(sh * r.tailH);
@@ -83,31 +84,37 @@ function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   var bodyY = pose.bodyY || 0;
   function piece(sx, sy, sW, sH) { g.drawImage(spr, sx, sy, sW, sH, dx + sx * kx, dy + bodyY + sy * ky, sW * kx, sH * ky); }
   // legs first (behind the body edge), with a static belly patch to hide the gap between them
-  var mid0 = Math.max(0, splitS - Math.round(sw * .08)), mid1 = Math.min(sw, splitS + Math.round(sw * .08));
-  piece(mid0, hipS, mid1 - mid0, Math.round(legS * .22));
+  // a static strip of thigh fur just under the body, so no gap opens at the hip as a leg swings
+  piece(0, hipS - 2, sw, Math.round(legS * .2) + 2);
   // Start the paw crops slightly above the visible feet so the rig's joints stay hidden.
   var footS = hipS + Math.round(legS * .22);
-  // each paw hangs from the hip and reaches down to the ground, or a little above it while lifted
-  function legPart(x0, x1, sy, sH, shear, lift) {
-    if (x1 <= x0 || sH <= 0) return;
-    var reach = legD - (lift || 0) * legD - bodyY, sc = Math.max(.55, reach / legD);
-    g.save(); g.translate(dx + x0 * kx, dy + dHip + bodyY); g.transform(1, 0, shear * sc, sc, 0, 0);
-    g.drawImage(spr, x0, sy, x1 - x0, sH, 0, (sy - hipS) * ky, (x1 - x0) * kx, sH * ky); g.restore();
+  // Each leg is a two-joint limb cut from the painting: the thigh swings from the hip and the
+  // shin folds at the knee, so a stepping paw really lifts and plants instead of just leaning.
+  var ov = Math.max(2, Math.round(sh * .012));
+  function leg(x0, x1, swing, lift, bottom) {
+    if (x1 <= x0) return;
+    var kneeS = hipS + Math.round((bottom - hipS) * .5);
+    var px = dx + (x0 + x1) / 2 * kx, hy = dy + dHip + bodyY, w = (x1 - x0) * kx;
+    var upper = (kneeS - hipS) * ky, lower = (sh - kneeS) * ky;
+    var a = -swing * .62, bend = Math.min(1.1, (lift || 0) * 2.6);
+    // a swung leg is shorter vertically; push a planted leg down by that much so its paw stays on the ground
+    var plant = Math.max(0, 1 - (lift || 0) * 5), drop = (upper + lower) * (1 - Math.cos(a)) * plant;
+    g.save(); g.translate(px, hy + drop); g.rotate(a);
+    g.save(); g.translate(0, upper); g.rotate(bend);
+    g.drawImage(spr, x0, kneeS - ov, x1 - x0, sh - kneeS + ov, -w / 2, -ov * ky, w, lower + ov * ky);
+    g.restore();
+    var up = Math.round(legS * .12);   // the thigh starts a little inside the body, so the hip joint stays hidden
+    g.drawImage(spr, x0, hipS - up, x1 - x0, kneeS - hipS + up + 1, -w / 2, -up * ky, w, upper + (up + 1) * ky);
+    g.restore();
   }
-  // Separate each silhouette into near/far paws. A small overlap avoids seams where the
-  // source painting has paws touching; each paw can now plant and lift on its own beat.
-  var ov = Math.max(2, Math.round(sh * .008)), pawCuts = mkPawCuts(spr, splitS, hipS);
   var legAngles = pose.legAngles || [pose.back || 0, pose.back || 0, pose.front || 0, pose.front || 0];
   var legLifts = pose.legLifts || [pose.backLift || 0, pose.backLift || 0, pose.frontLift || 0, pose.frontLift || 0];
-  // A leg pair with no clear gap between its two paws moves as one piece, so a paw is never torn in half.
-  if (pawCuts[1] === null) { legAngles = [(legAngles[0] + legAngles[1]) / 2, 0, legAngles[2], legAngles[3]]; legLifts = [(legLifts[0] + legLifts[1]) / 2, 0, legLifts[2], legLifts[3]]; }
-  if (pawCuts[3] === null) { legAngles = [legAngles[0], legAngles[1], (legAngles[2] + legAngles[3]) / 2, 0]; legLifts = [legLifts[0], legLifts[1], (legLifts[2] + legLifts[3]) / 2, 0]; }
-  pawCuts = [0, pawCuts[1] === null ? splitS : pawCuts[1], splitS, pawCuts[3] === null ? sw : pawCuts[3], sw];
-  for (var li = 0; li < 4; li++) {
-    var x0 = Math.max(0, pawCuts[li] - (li ? 1 : 0)), x1 = Math.min(sw, pawCuts[li + 1] + (li < 3 ? 1 : 0));
-    legPart(x0, x1, hipS, footS - hipS, legAngles[li] || 0, legLifts[li] || 0);
-    legPart(x0, x1, footS - ov, sh - footS + ov, legAngles[li] || 0, legLifts[li] || 0);
-  }
+  var found = mkFindLegs(key, sw, sh), regions = [];
+  if (found) found.forEach(function (l) { regions.push([l.x0, l.x1, legAngles[l.slot], legLifts[l.slot], l.bottom]); });
+  else { regions.push([0, splitS, legAngles[0], legLifts[0], sh]); regions.push([splitS, sw, legAngles[2], legLifts[2], sh]); }
+  // legs mid-stride (lifted) are drawn first, so the planted legs sit in front
+  regions.sort(function (p, q) { return (q[3] || 0) - (p[3] || 0); });
+  for (var li = 0; li < regions.length; li++) leg(regions[li][0], regions[li][1], regions[li][2], regions[li][3], regions[li][4]);
   // upper body (breathes from the hip line), then the tail swaying from its base
   g.save(); g.translate(0, dy + dHip + bodyY); g.scale(1, 1 + (pose.breath || 0)); g.translate(0, -(dy + dHip + bodyY));
   piece(tW, 0, sw - tW, hipS + 1);

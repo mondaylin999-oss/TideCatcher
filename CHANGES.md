@@ -1,3 +1,10 @@
+# Fix Shwe's paws tearing while walking
+
+- The walk rig now separates the four paws by tracing the painted silhouette up from the floor, instead of cutting the legs with straight vertical lines. The old front/back split ran through the middle of a hind paw, so that paw ripped apart whenever the front and back legs moved differently.
+- Paws painted overlapping (for example the Persian and British Shorthair front legs) move as one piece, so no seam can open through them; small specks follow the paw they touch.
+- Each leg now bends gradually from the hip instead of sliding as one rigid block, so no step or gap opens at the hip line. Leg pairs that cannot be separated follow one paw's stride rather than cancelling out to a near-still pose.
+- Falls back to the previous straight-line cuts only if the sprite pixels cannot be read (e.g. the game opened straight from a local file).
+
 # Remove bulky festival and market dig props
 
 - Removed the large baskets, clay pots, folded mat, and ground debris from Festival and Night Market buried spots across their levels.

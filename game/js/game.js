@@ -94,15 +94,20 @@
 
   // ---------- sizing ----------
   let VW = 960, S = 1, OY = 0, dpr = 1, HUD_X = 68, HUD_CARD_W = 158;
-  let gfxQ = 1, gfxSlow = 0, gfxGood = 0, gfxDrops = 0, gfxMs = 16.7, gfxFrames = 0, needPaint = true;
+  // Weak devices (few CPU cores or little memory) start at the lighter quality level, so they don't
+  // stutter for the first seconds while the game measures its speed.
+  const lowEndDevice = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3;
+  let gfxQ = lowEndDevice ? .7 : 1, gfxSlow = 0, gfxGood = 0, gfxDrops = 0, gfxMs = 16.7, gfxFrames = 0, needPaint = true;
   (function capGlow(c) {
     const d = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'shadowBlur');
     Object.defineProperty(c, 'shadowBlur', { get() { return d.get.call(this); }, set(v) { d.set.call(this, Math.min(v, 7)); } });
   })(ctx);
-  function pixelBudget() { return gfxQ < .8 ? 900000 : 1600000; }
+  // Full quality renders at the screen's real resolution (up to 1440p-class screens, or 2x on phones);
+  // the reduced level still stays near HD instead of dropping to a blurry ~0.9 MP canvas.
+  function pixelBudget() { return gfxQ < .8 ? 2100000 : 4200000; }
   function resize() {
     const w = innerWidth, h = innerHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, gfxQ < .8 ? 1 : 1.5);
+    dpr = Math.min(window.devicePixelRatio || 1, gfxQ < .8 ? 1.25 : 2);
     if (w * h * dpr * dpr > pixelBudget()) dpr = Math.max(.7, Math.sqrt(pixelBudget() / (w * h)));
     const pixelWidth = Math.round(w * dpr), pixelHeight = Math.round(h * dpr);
     // Assigning an unchanged size also clears the canvas.
@@ -116,7 +121,7 @@
     HUD_X = (pauseLeft + pauseWidth + 10) / S;
     HUD_CARD_W = innerWidth <= 400 ? 150 : 158;
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = gfxQ < .8 ? 'low' : 'medium';
+    ctx.imageSmoothingQuality = gfxQ < .8 ? 'medium' : 'high';
     needPaint = true;
   }
   addEventListener('resize', resize);
@@ -2448,7 +2453,13 @@
     c.sneak = sneaking;
     window.TCGameAudio?.setSneaking(sneaking);
     if (c.pounce > 0) c.pounce -= dt;
-    else { const slick = c.on && onSlick(c.x), releasing = target === 0, acc = slick ? (releasing ? 2600 : Math.abs(target) > Math.abs(c.vx) && Math.sign(target) === Math.sign(c.vx || target) ? 700 : 220) : c.on ? 2600 : 1500; c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a); }
+    else {
+      // Turning around must feel instant: reversing direction uses a much stronger brake than starting
+      // to walk (it used to take ~0.25 s on dry ground and ~2.6 s in the rain).
+      const slick = c.on && onSlick(c.x), releasing = target === 0, turning = !releasing && c.vx !== 0 && Math.sign(target) !== Math.sign(c.vx);
+      const acc = turning ? (c.on ? (slick ? 2200 : 9000) : 3200) : slick ? (releasing ? 2600 : 900) : c.on ? 3200 : 1700;
+      c.vx += clamp(target - c.vx, -acc * dt, acc * dt); if (a) c.face = Math.sign(a);
+    }
     const chapter = mode === 'story' ? chapterFor(storyNight) : null;
     const jumpSpeed = (chapter?.jumpSpeed || 830) * (weather.kind === 'wind' ? 1 + weather.wind * .035 : 1), gravity = chapter?.jumpGravity || 2300;
     if (c.ledgeGrab) {
@@ -2507,6 +2518,9 @@
     const pit = pitAt(c.x);
     // the ground is solid everywhere except the pits; a step up of up to 40px (a steep stone step) is climbed
     // instead of letting Shwe slip under it and fall through the map
+    // Walking down a slope: stay glued to the ground instead of hopping off it every few frames
+    // (that flipped the shadow and the walk/air pose on and off, which looked like flicker and lag).
+    if (!pit && wasOn && !c.platform && c.vy >= 0 && c.y < floorY && floorY - c.y <= 26) { c.y = floorY; c.vy = 0; }
     if (!pit && c.vy >= 0 && py <= floorY + (wasOn ? 40 : 4) && c.y >= floorY) { c.y = floorY; landed = true; }
     else if (c.vy >= 0) {
       for (const p of activePlats) {
@@ -4359,13 +4373,16 @@
     const speed = Math.abs(c.vx), moving = c.on && speed > 10;
     const pose = gameCatRigPose(c);
     const bob = 0;
-    if (c.on) { ctx.fillStyle = 'rgba(8,10,24,.35)'; ctx.beginPath(); ctx.ellipse(-2, 2, ww * .36, 4.5, 0, 0, 7); ctx.fill(); }
+    // The shadow stays on the ground and fades with height, instead of popping on and off.
+    { const gy = c.on ? 0 : c.platform || pitAt(c.x) ? 999 : Math.max(0, terrainY(c.x) - c.y), fade = clamp(1 - gy / 160, 0, 1);
+      if (fade > 0) { ctx.fillStyle = `rgba(8,10,24,${(.35 * fade).toFixed(3)})`; ctx.beginPath(); ctx.ellipse(-2, 2 + gy, ww * .36 * (.6 + .4 * fade), 4.5 * (.6 + .4 * fade), 0, 0, 7); ctx.fill(); } }
     if (eyesT > 0) { ctx.shadowColor = '#c8ff8a'; ctx.shadowBlur = 16; }
     // cat.y is the paw baseline; keep the sprite's bottom edge on that line.
     const spriteY = -hh + bob;
     // a gentle rock of the body with each step (and a lean into jumps) so the walk feels alive
     const ph = c.walk, pace = clamp((speed - 10) / 280, 0, 1);
-    const tilt = c.on ? (moving ? Math.sin(ph * 2 + .6) * .018 * (1 + pace) : 0) : clamp(c.vy / 9000, -.06, .06);
+    // no rocking while walking (it read as shaking); only a small lean in the air
+    const tilt = c.on ? 0 : clamp(c.vy / 9000, -.06, .06);
     ctx.save(); ctx.translate(0, -2); ctx.rotate(tilt); ctx.translate(0, 2);
     const ok = mkDrawRig(ctx, MK_PROFILE.coat, -ww / 2 - 2, spriteY, ww, hh, pose);
     if (!ok) ctx.drawImage(spr, -ww / 2 - 2, spriteY, ww, hh);
@@ -4400,7 +4417,9 @@
     const c = cat; if (c.respawning) return; ctx.save();
     if (c.falling) ctx.globalAlpha = clamp(1 - c.fallTime / .38, 0, 1);
     if (c.inv > 0 && !reduce) ctx.globalAlpha = .62 + .38 * Math.cos(c.inv * 9);
-    { const px = dpr * S; ctx.translate(Math.round(c.x * px) / px, Math.round(c.y * px) / px); } ctx.scale(c.face, 1);
+    // Snap the cat's ON-SCREEN position (cat minus camera) to the pixel grid. Rounding the cat and the
+    // camera separately made her jump a pixel back and forth every frame while the camera followed.
+    { const px = dpr * S, camS = Math.round(camX * px) / px; ctx.translate(camS + Math.round((c.x - camX) * px) / px, Math.round(c.y * px) / px); } ctx.scale(c.face, 1);
     let sxs = 1, sys = 1;
     if (c.pounce > 0) { sxs = 1.12; sys = .9; } else if (scratchAnim > 0 && c.on) { sxs = 1.03; sys = .92; } else if (c.squash > 0) { sxs = 1.04; sys = .95; } else if (c.sneak) { sys = .91; sxs = .98; } else if (!c.on) { sxs = .96; sys = 1.06; }
     // (removed: a lean that switched on and off right at top speed and made the cat flicker)
@@ -7232,7 +7251,8 @@
   function frame(now) {
     requestAnimationFrame(frame);
     const elapsed = now - last; last = now;
-    noteFrame(elapsed);
+    // Only judge speed during real play; menu and loading hitches must not lower the gameplay quality.
+    if (state === 'play') noteFrame(elapsed); else gfxFrames = 0;
     const dt = Math.min(.033, elapsed / 1000);
     if (document.hidden) return;
     pauseBtn.hidden = state !== 'play';
