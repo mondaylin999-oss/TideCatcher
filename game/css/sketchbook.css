@@ -86,15 +86,15 @@
 .overlay .panel .briefing-time{display:inline-block; padding:4px 12px; background:#ffe28a; color:var(--sb-ink); border-radius:2px; font-weight:800; transform:rotate(-1deg)}
 .overlay .panel input[type=text],.overlay .panel select{background:var(--sb-paper-2); color:var(--sb-ink); border:2px solid rgba(59,53,80,.35)}
 
-/* ---------- tips: a sticky note near the bottom, away from the counters ---------- */
-.tip-coach{top:auto!important; bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
+/* ---------- tips: dock the note at the right edge, outside the middle play lane ---------- */
+.tip-coach{top:auto!important; bottom:calc(env(safe-area-inset-bottom,0px) + 12px); left:auto!important; right:12px; width:min(360px,calc(100vw - 24px)); transform:none!important}
 .tip-coach-card{border:0!important; border-radius:2px!important; background:#fff3a8!important; color:var(--sb-ink)!important;
   box-shadow:0 8px 16px rgba(8,5,25,.4)!important; transform:rotate(-.8deg); clip-path:polygon(0 0,100% 0,100% 74%,94% 100%,0 100%)}
 .tip-coach-kicker{color:#8a4a5a!important}
 .tip-coach-copy strong{font-family:var(--sb-hand); font-size:20px!important; color:var(--sb-ink)!important}
 .tip-coach-copy p,.tip-coach-control{color:var(--sb-ink-2)!important}
 .tip-coach-skip{background:transparent!important; color:var(--sb-ink)!important; border:2px dashed rgba(59,53,80,.5)!important; box-shadow:none!important}
-@media (hover:none) and (pointer:coarse){ .tip-coach{width:min(330px,calc(100vw - 300px))} }
+@media (hover:none) and (pointer:coarse){ .tip-coach{width:min(330px,calc(100vw - 24px))} }
 
 /* ---------- home: Thiri's bedroom behind the menu ---------- */
 #startScreen.hub-screen{background:#120d24; isolation:isolate}
@@ -147,8 +147,8 @@
 .hub-story-copy strong,.hub-small-head>span,.hub-brand-copy strong,.hub-content-heading h1,.level-caption strong,.tip-coach-copy strong{letter-spacing:-.5px!important}
 .overlay .panel .briefing-objective strong{color:#9c6610}
 .overlay .panel .briefing-tip strong{color:#8a4a5a}
-/* phone held sideways: keep the tip note between the move stick and the action buttons */
-@media (max-height:520px){ .tip-coach{width:min(300px,calc(100vw - 360px))!important; left:46%!important} }
+/* phone held sideways: keep the tip note in a narrow edge dock */
+@media (max-height:520px){ .tip-coach{top:auto!important; bottom:calc(env(safe-area-inset-bottom,0px) + 8px); left:auto!important; right:8px; width:min(340px,calc(100vw - 24px))!important; transform:none!important} }
 
 /* ==========================================================================
    After the story: Heart Workshop and Lantern Town (js/afterstory.js)
