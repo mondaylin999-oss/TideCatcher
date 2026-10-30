@@ -19,8 +19,8 @@ function mkGetSprite(key) {
   if (!MK_SPRITES[key] && MK_COATS[key]) { var im = new Image(); MK_SPRITES[key] = im; im.src = MK_COATS[key].img; }
   return MK_SPRITES[key];
 }
-/* Cat animation rig: each sprite is cut into body, tail, back legs and front legs,
-   which bend separately to make walk, jump, pounce, scratch and idle poses. */
+/* Cat animation rig: each sprite is cut into body, tail and four paw regions,
+   which can follow a staggered, natural four-beat walk cycle. */
 var MK_RIGS = {
   ginger: { hip: 0.763, split: .519, tailW: .318, tailH: 0.639, tailAmp: .75, low: 0.565 },
   burmese: { hip: 0.741, split: .452, tailW: .286, tailH: 0.589, tailAmp: 1, low: 0.562 },
@@ -66,20 +66,26 @@ function mkDrawRig(g, key, dx, dy, dw, dh, pose) {
   // legs first (behind the body edge), with a static belly patch to hide the gap between them
   var mid0 = Math.max(0, splitS - Math.round(sw * .08)), mid1 = Math.min(sw, splitS + Math.round(sw * .08));
   piece(mid0, hipS, mid1 - mid0, Math.round(legS * .22));
-  // Below the belly the far hind leg can cross the split line; there the legs are cut at r.low
-  // (the gap between that leg and the front legs) so no piece of a paw moves with the wrong leg.
-  var footS = hipS + Math.round(legS * .22), lowS = r.low ? Math.round(sw * r.low) : splitS;
-  // each leg hangs from the (moving) hip and reaches down to the ground, or a little above it while lifted
+  // Start the paw crops slightly above the visible feet so the rig's joints stay hidden.
+  var footS = hipS + Math.round(legS * .22);
+  // each paw hangs from the hip and reaches down to the ground, or a little above it while lifted
   function legPart(x0, x1, sy, sH, shear, lift) {
     if (x1 <= x0 || sH <= 0) return;
     var reach = legD - (lift || 0) * legD - bodyY, sc = Math.max(.55, reach / legD);
     g.save(); g.translate(dx + x0 * kx, dy + dHip + bodyY); g.transform(1, 0, shear * sc, sc, 0, 0);
     g.drawImage(spr, x0, sy, x1 - x0, sH, 0, (sy - hipS) * ky, (x1 - x0) * kx, sH * ky); g.restore();
   }
-  // the lower parts start a few pixels higher, so no hairline shows where the two cuts meet
-  var bl = pose.backLift || 0, fl = pose.frontLift || 0, ov = Math.max(2, Math.round(sh * .008));
-  legPart(0, splitS, hipS, footS - hipS, pose.back || 0, bl); legPart(0, lowS, footS - ov, sh - footS + ov, pose.back || 0, bl);
-  legPart(splitS, sw, hipS, footS - hipS, pose.front || 0, fl); legPart(lowS, sw, footS - ov, sh - footS + ov, pose.front || 0, fl);
+  // Separate each silhouette into near/far paws. A small overlap avoids seams where the
+  // source painting has paws touching; each paw can now plant and lift on its own beat.
+  var ov = Math.max(2, Math.round(sh * .008)), pawCuts = [0, Math.round(splitS * .52), splitS,
+    splitS + Math.round((sw - splitS) * .52), sw];
+  var legAngles = pose.legAngles || [pose.back || 0, pose.back || 0, pose.front || 0, pose.front || 0];
+  var legLifts = pose.legLifts || [pose.backLift || 0, pose.backLift || 0, pose.frontLift || 0, pose.frontLift || 0];
+  for (var li = 0; li < 4; li++) {
+    var x0 = Math.max(0, pawCuts[li] - (li ? 1 : 0)), x1 = Math.min(sw, pawCuts[li + 1] + (li < 3 ? 1 : 0));
+    legPart(x0, x1, hipS, footS - hipS, legAngles[li] || 0, legLifts[li] || 0);
+    legPart(x0, x1, footS - ov, sh - footS + ov, legAngles[li] || 0, legLifts[li] || 0);
+  }
   // upper body (breathes from the hip line), then the tail swaying from its base
   g.save(); g.translate(0, dy + dHip + bodyY); g.scale(1, 1 + (pose.breath || 0)); g.translate(0, -(dy + dHip + bodyY));
   piece(tW, 0, sw - tW, hipS + 1);

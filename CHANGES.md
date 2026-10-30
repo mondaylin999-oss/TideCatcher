@@ -1,3 +1,14 @@
+# Remove oversized and below-ground level scenery
+
+- Removed the extra parallax skyline and near-edge props from the gameplay render on every level. This clears the vertical silhouettes, stems and railing posts that were poking through or hanging below the ground.
+- Replaced the oversized secret-room arch on every map with a small wall crack, matching the cleaner school treatment. The scratch interaction, hidden rewards, and a compact diary-page cue remain intact.
+
+# Natural four-paw walk cycle
+
+- Split Shwe's animated lower-body art into four independently posed paw regions, while keeping the existing rig shared by gameplay, catch guides, bedroom roaming, and the level map.
+- Replaced the rigid front/back leg swing with a smooth, staggered feline walk rhythm: right hind, right fore, left hind, left fore. Each paw lifts and plants at its own point in the stride, with the existing eased body bob and tail movement retained.
+- Non-walking poses and older two-group rig callers keep their previous pose behavior.
+
 # Clean up school gameplay scenery
 
 - Removed the extra far skyline layer from indoor school scenes so dark building silhouettes no longer cover the hallway.

@@ -3836,51 +3836,23 @@
       else if (prop.kind === 'bush') { for(const [dx,dy,r] of [[18,-20,20],[48,-30,25],[75,-18,20]]){ctx.fillStyle=mid;ctx.beginPath();ctx.arc(x+dx,gy+dy,r,0,Math.PI*2);ctx.fill();} }
       ctx.restore();
     }
-    const schoolRoomStyle = currentMapKey() === 'school';
     for (const room of secretRooms) {
       if (room.x < x0 - 150 || room.x > x1 + 150) continue;
-      const x = room.x, gy = terrainY(x), half = room.width / 2, top = gy - 118, pulse = .55 + .45 * Math.sin(t * 2.2);
+      const x = room.x, gy = terrainY(x), pulse = .55 + .45 * Math.sin(t * 2.2);
       ctx.save();
-      if (schoolRoomStyle) {
-        // Keep the secret scratch point, but blend its clue into the hallway wall
-        // instead of drawing a large amber stone slab over the school scenery.
-        ctx.strokeStyle = 'rgba(218,207,195,.62)'; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-        ctx.beginPath(); ctx.moveTo(x + 1, gy - 29); ctx.lineTo(x - 4, gy - 39); ctx.lineTo(x + 3, gy - 48); ctx.lineTo(x - 2, gy - 57); ctx.lineTo(x + 5, gy - 70); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x - 3, gy - 48); ctx.lineTo(x - 12, gy - 52); ctx.lineTo(x - 16, gy - 60); ctx.moveTo(x + 1, gy - 56); ctx.lineTo(x + 11, gy - 61); ctx.stroke();
-        ctx.restore();
-        continue;
-      }
-      const halo = ctx.createRadialGradient(x, gy - 56, 4, x, gy - 56, room.open ? 145 : 86);
-      halo.addColorStop(0, `rgba(255,220,151,${room.open ? .23 : .08 + .04 * pulse})`); halo.addColorStop(1, 'rgba(255,220,151,0)');
-      ctx.fillStyle = halo; ctx.fillRect(x - 150, top - 36, 300, 180);
-      ctx.beginPath(); ctx.moveTo(x - half, gy); ctx.lineTo(x - half + 8, top + 38);
-      ctx.quadraticCurveTo(x, top - 34, x + half - 8, top + 38); ctx.lineTo(x + half, gy); ctx.closePath();
-      ctx.fillStyle = room.open ? 'rgba(12,12,28,.92)' : dark; ctx.fill();
-      ctx.strokeStyle = light; ctx.lineWidth = 4; ctx.stroke();
+      // Keep the secret-room clue subtle on every map: a small wall crack instead
+      // of a large freestanding arch that blocks the scenery and overlaps Shwe.
+      ctx.strokeStyle = currentMapKey() === 'school' ? 'rgba(218,207,195,.66)' : 'rgba(42,29,47,.84)';
+      ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(x + 1, gy - 10); ctx.lineTo(x - 4, gy - 18); ctx.lineTo(x + 3, gy - 26); ctx.lineTo(x - 2, gy - 34); ctx.lineTo(x + 5, gy - 43); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - 3, gy - 25); ctx.lineTo(x - 12, gy - 29); ctx.lineTo(x - 16, gy - 36); ctx.moveTo(x + 1, gy - 33); ctx.lineTo(x + 11, gy - 38); ctx.stroke();
       if (room.open) {
-        const inside = ctx.createLinearGradient(0, top, 0, gy);
-        inside.addColorStop(0, 'rgba(255,221,157,.16)'); inside.addColorStop(.65, 'rgba(94,76,94,.18)'); inside.addColorStop(1, 'rgba(18,15,34,.12)');
-        ctx.beginPath(); ctx.moveTo(x - half + 8, gy - 3); ctx.lineTo(x - half + 15, top + 40); ctx.quadraticCurveTo(x, top - 23, x + half - 15, top + 40); ctx.lineTo(x + half - 8, gy - 3); ctx.closePath(); ctx.fillStyle = inside; ctx.fill();
-        ctx.fillStyle = 'rgba(255,223,164,.78)'; ctx.fillRect(x - half + 13, gy - 5, room.width - 26, 4);
-        for (const side of [-1, 1]) { ctx.fillStyle = mid; ctx.beginPath(); ctx.moveTo(x + side * (half - 14), gy); ctx.lineTo(x + side * (half - 10), top + 44); ctx.lineTo(x + side * (half - 2), top + 62); ctx.lineTo(x + side * half, gy); ctx.closePath(); ctx.fill(); }
-        if (room.reward.kind === 'page' && !room.pageFound) {
-          const py = terrainY(room.rewardX) - 58 - Math.sin(t * 3) * 4;
-          ctx.fillStyle = `rgba(255,222,151,${.12 + pulse * .1})`; ctx.beginPath(); ctx.arc(room.rewardX, py, 26, 0, Math.PI * 2); ctx.fill();
-          ctx.save(); ctx.translate(room.rewardX, py); ctx.rotate(-.08);
-          ctx.fillStyle = '#f5e7bd'; ctx.beginPath(); canvasRoundRect(ctx, -9, -12, 18, 24, 2); ctx.fill();
-          ctx.strokeStyle = '#b39a76'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-5, -5); ctx.lineTo(5, -5); ctx.moveTo(-5, 0); ctx.lineTo(4, 0); ctx.moveTo(-5, 5); ctx.lineTo(2, 5); ctx.stroke(); ctx.restore();
-        }
-      } else {
-        // The stone/plaster slab is visibly split; each scratch adds a warm glint.
-        ctx.beginPath(); ctx.moveTo(x - half + 13, gy - 2); ctx.lineTo(x - half + 18, top + 43); ctx.quadraticCurveTo(x, top - 23, x + half - 18, top + 43); ctx.lineTo(x + half - 13, gy - 2); ctx.closePath();
-        ctx.fillStyle = mid; ctx.fill(); ctx.strokeStyle = 'rgba(20,15,35,.65)'; ctx.lineWidth = 2; ctx.stroke();
-        ctx.strokeStyle = 'rgba(20,15,35,.9)'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-        const cracks = [[-4,-92,3,-70,-5,-55,2,-35],[24,-66,13,-52,20,-38,12,-20],[-34,-48,-22,-38,-30,-22]];
-        for (let i = 0; i < cracks.length; i++) {
-          const [a,b,c,d,e,f,g,h] = cracks[i]; ctx.beginPath(); ctx.moveTo(x + a, gy + b); ctx.lineTo(x + c, gy + d); ctx.lineTo(x + e, gy + f); ctx.lineTo(x + g, gy + h); ctx.stroke();
-          if (room.progress > i) { ctx.strokeStyle = `rgba(255,222,151,${.42 + pulse * .28})`; ctx.lineWidth = 2; ctx.stroke(); ctx.strokeStyle = 'rgba(20,15,35,.9)'; ctx.lineWidth = 3; }
-        }
-        ctx.fillStyle = `rgba(255,222,151,${.42 + pulse * .35})`; ctx.font = `800 14px ${DISP}`; ctx.textAlign = 'center'; ctx.fillText('✦', x, gy - 108);
+        ctx.fillStyle = `rgba(255,222,151,${.3 + pulse * .35})`; ctx.beginPath(); ctx.arc(x, gy - 22, 2.5, 0, Math.PI * 2); ctx.fill();
+      }
+      if (room.open && room.reward.kind === 'page' && !room.pageFound) {
+        const py = terrainY(room.rewardX) - 28 - Math.sin(t * 3) * 2;
+        ctx.fillStyle = '#f5e7bd'; ctx.beginPath(); canvasRoundRect(ctx, room.rewardX - 6, py - 8, 12, 16, 2); ctx.fill();
+        ctx.strokeStyle = '#b39a76'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(room.rewardX - 3, py - 3); ctx.lineTo(room.rewardX + 3, py - 3); ctx.moveTo(room.rewardX - 3, py + 1); ctx.lineTo(room.rewardX + 2, py + 1); ctx.stroke();
       }
       ctx.restore();
     }
@@ -4347,6 +4319,7 @@
     // ground. Only the body bobs; the standing paws never leave the floor.
     const pace = clamp((speed - 10) / 280, 0, 1), amp = c.sneak ? .22 : .32 + .22 * pace;
     let back = 0, front = 0, tail, breath = 0, bodyY = 0, backLift = 0, frontLift = 0;
+    let legs = null, legLifts = null;
     const scratching = (c.scratchAnim ?? scratchAnim) > 0;
     if (scratching && c.on) { front = Math.sin(now * 20) * .58; frontLift = Math.max(0, Math.sin(now * 20)) * .25; back = -.08; tail = .28 + Math.sin(now * 8) * .12; breath = .01; bodyY = 1.3; }
     else if (c.pounce > 0) { back = -.62; front = .72; tail = -.42; backLift = .12; frontLift = .2; }
@@ -4354,18 +4327,28 @@
     else if (moving) {
       const lift = c.sneak ? .12 : .2 + .1 * pace;
       const vary = 1 + .1 * Math.sin(ph * .37) + .05 * Math.sin(ph * .91 + 2);   // no two steps exactly alike
-      back = Math.sin(ph) * amp * vary; backLift = Math.max(0, Math.cos(ph)) ** 1.5 * lift * vary;
-      front = -Math.sin(ph + 1.2) * amp * .95 * vary; frontLift = Math.max(0, -Math.cos(ph + 1.2)) ** 1.5 * lift;
+      // Four-beat feline walk: right hind, right fore, left hind, left fore.
+      // The two paws on each side are related but staggered, so Shwe never moves
+      // both same-side paws as one rigid pair.
+      const pawPhases = [ph, ph + Math.PI, ph + Math.PI * 1.5, ph + Math.PI / 2];
+      legs = pawPhases.map((p, i) => Math.sin(p) * amp * vary * (i >= 2 ? .95 : 1));
+      legLifts = pawPhases.map((p, i) => Math.max(0, Math.cos(p)) ** 1.5 * lift * vary * (i >= 2 ? .96 : 1));
+      back = (legs[0] + legs[1]) * .5; backLift = (legLifts[0] + legLifts[1]) * .5;
+      front = (legs[2] + legs[3]) * .5; frontLift = (legLifts[2] + legLifts[3]) * .5;
       tail = Math.sin(ph * .5 + 1.1) * (.12 + .12 * pace);
       bodyY = -(1 - Math.cos(ph * 2)) * .5 * (c.sneak ? .4 : .6 + .8 * pace);
     }
     else { tail = Math.sin(now * 1.7) * .12 + Math.pow(Math.max(0, Math.sin(now * .83 + .7)), 8) * .28; breath = Math.sin(now * 2.2) * .016; }
     // ease every pose change (start, stop, jump, land) over a few frames instead of snapping
-    const P = c.rigPose || (c.rigPose = { back, front, tail, bodyY, backLift, frontLift, at: now });
+    const targets = { back, front, tail, bodyY, backLift, frontLift };
+    const poseLegs = legs || [back, back, front, front], poseLifts = legLifts || [backLift, backLift, frontLift, frontLift];
+    for (let i = 0; i < 4; i++) { targets['leg' + i] = poseLegs[i]; targets['lift' + i] = poseLifts[i]; }
+    const P = c.rigPose || (c.rigPose = Object.assign({ at: now }, targets));
     const k = scratching ? 1 : 1 - Math.exp(-Math.max(0, Math.min(.1, now - P.at)) * (moving ? 30 : 16));
-    for (const [key, v] of [['back', back], ['front', front], ['tail', tail], ['bodyY', bodyY], ['backLift', backLift], ['frontLift', frontLift]]) P[key] += (v - P[key]) * k;
+    for (const [key, v] of Object.entries(targets)) P[key] += (v - P[key]) * k;
     P.at = now;
-    return { back: P.back, front: P.front, tail: P.tail, breath, bodyY: P.bodyY, backLift: P.backLift, frontLift: P.frontLift };
+    return { back: P.back, front: P.front, tail: P.tail, breath, bodyY: P.bodyY, backLift: P.backLift, frontLift: P.frontLift,
+      legAngles: [P.leg0, P.leg1, P.leg2, P.leg3], legLifts: [P.lift0, P.lift1, P.lift2, P.lift3] };
   }
   function mkDrawSprite(c) {
     const spr = mkGetSprite(MK_PROFILE.coat);
@@ -4771,7 +4754,8 @@
     // stripes shimmer (like 'lllll') as the town scrolls, especially on screens scaled to 125% or 150%
     { const px = dpr * S; ctx.save(); ctx.translate(-Math.round(camX * px) / px, 0); }
     drawWorld();
-    window.TCParallaxLayers?.draw(ctx, currentLevel?.map || currentMapKey(), { cam: camX, width: VW, ground: GROUND, time: t, reduced: reduce, pits: currentLevel?.pits || [] });
+    // Extra skyline and foreground posts were visible through the playable floor and
+    // added unwanted vertical silhouettes across every map; use each map's own art only.
     drawHazards(); drawTrinkets(); if (endlessOn()) drawEndlessPiece(); drawPortal(); drawMoods(); drawBossEncounter(); drawGuidanceMarker(); drawFireflies(); drawTrail();
     drawCat(); drawParts(); if (endlessOn() && window.TCEndlessFX) window.TCEndlessFX.front(ctx, endlessFxOpts()); drawLevelDebug();
     ctx.restore();
