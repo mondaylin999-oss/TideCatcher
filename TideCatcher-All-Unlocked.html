@@ -2156,7 +2156,7 @@ html,body{height:100%;height:100dvh;overflow:hidden}
 @media (max-height:520px){
   .rh-caption>span{display:none} .rh-caption h1{font-size:20px!important}
   .rh-tag i{display:none} .rh-main .rh-tag i{display:block}
-  #roomHelpBtn .rh-tag,#roomBedBtn .rh-tag{display:none}
+  #roomBedBtn .rh-tag{display:none}
 }
 @media (prefers-reduced-motion:reduce){ .rh-thiri,.rh-zzz i,.rh-spot::after,.rh-room-toy,.rh-room-toy.is-hopping{animation:none} .rh-zzz i{opacity:.6} }
 /* the team's Heart Workshop / Lantern Town buttons (heart-ui.js) are the ones shown on the home page */
@@ -7451,8 +7451,12 @@ function mkName(str) {
   function pixelBudget() { return gfxQ < .6 ? 1250000 : gfxQ < .8 ? 2000000 : 3200000; }
   function resize() {
     const w = innerWidth, h = innerHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, gfxQ < .6 ? 1 : gfxQ < .8 ? 1.25 : 2);
-    if (w * h * dpr * dpr > pixelBudget()) dpr = Math.max(.7, Math.sqrt(pixelBudget() / (w * h)));
+    // Phone-sized screens are small, so they keep a sharp 2x canvas (1.5x at the lightest step): Shwe and the
+    // Moodlings stay crisp, and a quality drop on a phone only trims effects, never the resolution.
+    const small = w * h <= 560000;
+    dpr = Math.min(window.devicePixelRatio || 1, small ? (gfxQ < .6 ? 1.5 : 2) : gfxQ < .6 ? 1 : gfxQ < .8 ? 1.25 : 2);
+    const budget = small ? 2300000 : pixelBudget();
+    if (w * h * dpr * dpr > budget) dpr = Math.max(.7, Math.sqrt(budget / (w * h)));
     const pixelWidth = Math.round(w * dpr), pixelHeight = Math.round(h * dpr);
     // Assigning an unchanged size also clears the canvas.
     if (cv.width !== pixelWidth) cv.width = pixelWidth;
@@ -11817,6 +11821,13 @@ function mkName(str) {
       ctx.fillStyle = 'rgba(8,10,24,.35)'; ctx.beginPath(); ctx.ellipse(cvs.width / 2, y0 + hh - 6, ww * .34, 9, 0, 0, 7); ctx.fill();
       if (!mkDrawRig(ctx, MK_PROFILE.coat, x0, y0, ww, hh, { back: 0, front: 0, tail: 0, breath: 0 })) ctx.drawImage(spr, x0, y0, ww, hh);
       drawCatGear(null, x0, y0, ww, hh, false, items);
+      // a big, clear badge of the item itself, so the player sees exactly what Shwe will carry
+      const ids = Object.keys(items || {}).filter(k => items[k]), it = ids.length === 1 ? ITEMS.find(i => i.id === ids[0]) : null;
+      if (it) {
+        const bx = cvs.width - 46, by = 46;
+        ctx.fillStyle = '#fff3c4'; ctx.strokeStyle = '#c9922e'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(bx, by, 38, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.font = '44px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(it.icon, bx, by + 2);
+      }
     } finally { ctx = main; }
   }
   function gameCatRigPose(c, now = t) {
@@ -12028,6 +12039,11 @@ function mkName(str) {
   }
 
   // ---- sketchbook HUD helpers: paper notes, washi tape, crayon ink ----
+  // Paper notes are drawn with the Gaegu hand font. Safari draws canvas text invisibly while a web font is still
+  // loading (the white box showed first, the words later), so notes wait until the font is ready (at most 1.5 s).
+  let bannerFontOk = !document.fonts, bannerFontWaitUntil = performance.now() + 1500;
+  if (document.fonts) { Promise.all([document.fonts.load('700 30px "Gaegu"'), document.fonts.load(`700 20px ${uiToken('--display')}`)]).catch(() => {}).finally(() => { bannerFontOk = true; }); }
+  function bannerFontReady() { return bannerFontOk || performance.now() > bannerFontWaitUntil; }
   const HAND = '"Gaegu", ' + DISP, PAPER = '#f6eedc', PAPER2 = '#fffdf6', SB_INK = '#2b2547', SB_INK2 = '#4a4460';
   function sbPaper(x, y, w, h, rot = 0, fill = PAPER) {
     ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.rotate(rot);
@@ -12236,7 +12252,8 @@ function mkName(str) {
     } else if (scratchAnim>0) {
       ctx.textAlign='center';ctx.font=`800 16px ${DISP}`;ctx.fillStyle='#f4e8c7';ctx.fillText('Scratching…',VW/2,VH-74);
     }
-    if (banner) {
+    if (banner && !bannerFontReady()) banner.life = Math.max(banner.life, Math.min(banner.max, .35));   // hold the note until its font is ready
+    if (banner && bannerFontReady()) {
       const a = clamp(banner.life / .3, 0, 1) * clamp((banner.max - banner.life) / .2, 0, 1);
       ctx.globalAlpha = a; ctx.textAlign = 'center';
       // wrap long tips onto several lines so they always fit the screen
@@ -12727,6 +12744,7 @@ function mkName(str) {
   function openCatchClip(type, variant, trigger) {
     catchClipReturnFocus = trigger || document.activeElement;
     $('#helpPanel').setAttribute('aria-hidden', 'true');
+    { const view = $('#catchClipView'); if (view.parentElement !== document.body) document.body.appendChild(view); view.style.zIndex = '2147483100'; }   // always above the level card and How to play
     $('#catchClipView').hidden = false;
     runCatchClip(type, variant);
     $('#catchClipClose').focus({ preventScroll: true });

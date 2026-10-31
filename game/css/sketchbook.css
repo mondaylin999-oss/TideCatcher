@@ -468,7 +468,7 @@
 @media (max-height:520px){
   .rh-caption>span{display:none} .rh-caption h1{font-size:20px!important}
   .rh-tag i{display:none} .rh-main .rh-tag i{display:block}
-  #roomHelpBtn .rh-tag,#roomBedBtn .rh-tag{display:none}
+  #roomBedBtn .rh-tag{display:none}
 }
 @media (prefers-reduced-motion:reduce){ .rh-thiri,.rh-zzz i,.rh-spot::after,.rh-room-toy,.rh-room-toy.is-hopping{animation:none} .rh-zzz i{opacity:.6} }
 /* the team's Heart Workshop / Lantern Town buttons (heart-ui.js) are the ones shown on the home page */
