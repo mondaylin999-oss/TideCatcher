@@ -200,3 +200,14 @@ body:has(#touch:not([hidden])) .tip-coach { top: calc(env(safe-area-inset-top, 0
 /* ---- the cat sits on the rug, away from the Story Mode window, so a tap on one never hits the other ---- */
 #hubHeroCat.rh-cat { left: 42% !important; top: 62.5% !important; }
 #hubCatName.rh-cattag { left: 44.6% !important; top: 77.6% !important; }
+
+/* Landscape advice on short phone screens: compact card, both buttons always visible. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .orientation-card { gap: 6px !important; padding: 12px 20px !important; width: min(100%, 560px) !important; grid-template-columns: 1fr 1fr; }
+  .orientation-card > :not(.btn) { grid-column: 1 / -1; }
+  .orientation-symbol { display: none; }
+  .orientation-card h2 { font-size: 22px !important; }
+  .orientation-copy, .orientation-status { font-size: 12px !important; min-height: 0 !important; margin: 0; }
+  .orientation-card .btn { min-height: 42px !important; width: 100% !important; }
+  .orientation-card #orientationTryBtn:only-of-type, .orientation-card:has(#orientationContinueBtn[hidden]) #orientationTryBtn { grid-column: 1 / -1; }
+}

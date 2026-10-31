@@ -17,8 +17,42 @@
   const mobileLandscapeRequired = window.matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints || 0) > 0;
   const mobileScreenOrientation = window.screen && window.screen.orientation;
   let orientationReturnFocus = null;
+  // Phones and tablets always get landscape advice: upright, play waits until the screen turns; already sideways,
+  // a gentle offer of full-screen landscape (hides the browser bars) that the player can skip with Continue.
+  const orientationContinueBtn = document.getElementById('orientationContinueBtn');
+  let landscapeAdviceDone = false;
+  try { landscapeAdviceDone = sessionStorage.getItem('tc-landscape-advice') === '1'; } catch (error) {}
+  const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  function setOrientationCopy(portrait) {
+    const kicker = orientationGate.querySelector('.orientation-kicker');
+    if (kicker) kicker.textContent = portrait ? 'LANDSCAPE ONLY' : 'BEST IN LANDSCAPE';
+    $('#orientationTitle').textContent = portrait ? 'Turn your phone sideways' : 'Play in full-screen landscape';
+    $('#orientationDescription').textContent = portrait
+      ? 'TideCatcher is designed for landscape play. Tap once to try automatic rotation; if your browser blocks it, rotate your device manually.'
+      : 'TideCatcher plays best in landscape with the browser bars hidden. Tap below to go full screen, or continue as you are.';
+    if (!orientationTryBtn.disabled) orientationStatus.textContent = portrait ? 'Portrait play is paused until the screen is landscape.' : 'You can change this any time by turning your phone.';
+    orientationTryBtn.textContent = portrait ? 'Try landscape mode' : 'Go full-screen landscape';
+    orientationContinueBtn.hidden = portrait;
+  }
+  function finishLandscapeAdvice() {
+    landscapeAdviceDone = true;
+    try { sessionStorage.setItem('tc-landscape-advice', '1'); } catch (error) {}
+    syncMobileOrientationGate();
+  }
+  orientationContinueBtn.addEventListener('click', finishLandscapeAdvice);
+  // The first tap on PLAY is the browser's required user gesture: use it to go full-screen landscape right away.
+  document.addEventListener('click', e => {
+    if (!mobileLandscapeRequired || isFullscreen() || !e.target.closest?.('#titlePlayBtn')) return;
+    const root = document.documentElement, fs = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (!fs) return;
+    Promise.resolve().then(() => fs.call(root)).then(() => {
+      if (mobileScreenOrientation && typeof mobileScreenOrientation.lock === 'function') return mobileScreenOrientation.lock('landscape').catch(() => {});
+    }).catch(() => {}).finally(syncMobileOrientationGate);
+  }, true);
   function syncMobileOrientationGate() {
-    const showGate = mobileLandscapeRequired && mobilePortraitQuery.matches;
+    const portrait = mobilePortraitQuery.matches;
+    const showGate = mobileLandscapeRequired && (portrait || (!landscapeAdviceDone && !isFullscreen()));
+    if (showGate) setOrientationCopy(portrait);
     const wasVisible = !orientationGate.hidden;
     orientationGate.hidden = !showGate;
     if (showGate && !wasVisible) {
@@ -33,6 +67,10 @@
   async function tryMobileLandscape() {
     if (!mobileLandscapeRequired) return;
     if (!mobileScreenOrientation || typeof mobileScreenOrientation.lock !== 'function') {
+      // No rotation lock (for example iPhone Safari): still try full screen where the browser allows it.
+      const root = document.documentElement, fs = root.requestFullscreen || root.webkitRequestFullscreen;
+      if (fs && !isFullscreen()) { try { await fs.call(root); } catch (error) {} }
+      if (!mobilePortraitQuery.matches) { finishLandscapeAdvice(); return; }
       orientationStatus.textContent = 'Automatic rotation is unavailable in this browser. Turn your device sideways to continue.';
       return;
     }
@@ -46,11 +84,13 @@
       }
       await mobileScreenOrientation.lock('landscape');
       orientationStatus.textContent = 'Landscape requested. If the screen does not rotate, turn your device sideways.';
+      if (!mobilePortraitQuery.matches || isFullscreen()) landscapeAdviceDone = true;
     } catch (error) {
       if (enteredFullscreen && document.fullscreenElement && typeof document.exitFullscreen === 'function') {
         try { await document.exitFullscreen(); } catch (exitError) {}
       }
       orientationStatus.textContent = 'Your browser blocked automatic rotation. Turn your device sideways to continue.';
+      if (!mobilePortraitQuery.matches) landscapeAdviceDone = true;
     } finally {
       orientationTryBtn.disabled = false;
       syncMobileOrientationGate();
@@ -65,6 +105,8 @@
   window.addEventListener('resize', syncMobileOrientationGate, { passive: true });
   window.addEventListener('orientationchange', syncMobileOrientationGate, { passive: true });
   document.addEventListener('visibilitychange', syncMobileOrientationGate);
+  document.addEventListener('fullscreenchange', syncMobileOrientationGate);
+  document.addEventListener('webkitfullscreenchange', syncMobileOrientationGate);
   if (typeof mobilePortraitQuery.addEventListener === 'function') mobilePortraitQuery.addEventListener('change', syncMobileOrientationGate);
   else mobilePortraitQuery.addListener(syncMobileOrientationGate);
   if (mobileScreenOrientation && typeof mobileScreenOrientation.addEventListener === 'function') mobileScreenOrientation.addEventListener('change', syncMobileOrientationGate);
