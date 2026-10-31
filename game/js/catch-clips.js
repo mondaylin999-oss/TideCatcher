@@ -51,7 +51,7 @@
     return `${keys}${alt}${then}${action}`;
   }
   function escapeHtml(text) { return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  const CLIP_VERSION = 'sd30';   // bump when the clips in assets/clips are re-recorded
+  const CLIP_VERSION = 'sd30n';   // bump when the clips in assets/clips are re-recorded
   const clipFile = (type, variant) => type === 'C' ? (variant === 1 ? 'C1' : 'C0') : type;
   const canWebm = () => !!document.createElement('video').canPlayType?.('video/webm; codecs="vp9"');
   function syncToggle() {

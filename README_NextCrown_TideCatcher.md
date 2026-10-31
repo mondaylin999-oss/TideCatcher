@@ -18,7 +18,7 @@ When Thiri falls asleep with a heavy heart after losing a drawing contest, her l
 - **After the story:** Levels 8–50 (pick one of three level cards), Free Play, the Heart Workshop (mix feelings into new ones), Lantern Town, the Mood Book (62 pages), keepsakes, daily tasks, 8 cat breeds and treats.
 
 ## 5. How to open and play the game
-- **Online:** open the playable link: _TEAM TO FILL: Digit7 hosting URL_
+- **Online:** open https://tidecatcher.vercel.app
 - **From the build ZIP:** unzip and open `index.html` in a browser, or serve the folder (`python -m http.server 8000`, then open `http://localhost:8000/`).
 - **From the repository:** double-click `TideCatcher.html` (it opens `game/index.html`).
 - Press **Play**, pick names for the girl and the cat, watch the short intro, then choose **Story Mode** in Thiri's room.
@@ -51,7 +51,6 @@ Keys can be changed in Settings → Controls. Touch buttons can be moved, resize
 ## 9. Known bugs or limitations
 - Phones and tablets are landscape only; in portrait the game pauses and asks you to turn the device.
 - Opened straight from a file (double-click), some browsers limit audio, so music plays through a simpler path. Hosting the folder gives the full audio mix.
-- _TEAM TO FILL: anything found in final playtesting._
 
 ## 10. Third-party tools or libraries used
 - No game engine or JavaScript library. Plain HTML, CSS and JavaScript (Canvas 2D, Web Audio API).
@@ -78,11 +77,10 @@ Landscape, 16:9. Recommended 1280 × 720 or larger on desktop. On phones, any la
 The game runs fully in the browser with no server, account, analytics or tracking. The only online request is Google Fonts; without internet the game still works with fallback fonts.
 
 ## 15. AI tools used
-Claude (Anthropic) was used for most of the code, level tools and tests, plus art editing and the story text; ChatGPT (OpenAI) generated three starting background images; Real-ESRGAN upscaled some art. Full list, with the code and assets affected, in [`AI-DECLARATION.md`](AI-DECLARATION.md).
+Claude (Anthropic) was used for most of the code, level tools and tests, plus art editing and the story text; Manus (AI agent) ran and checked the game in a browser and helped with code changes; ChatGPT (OpenAI) generated three starting background images; Real-ESRGAN upscaled some art. Full list, with the code and assets affected, in [`AI-DECLARATION.md`](AI-DECLARATION.md).
 
 ## 16. Private repository access and submission commit/tag
-- Repository: `github.com/mondaylin999-oss/TideCatcher` (private). Reviewer access: _TEAM TO FILL: who to invite / how access was granted_.
-- Submission tag: `v1.0.0-jam` _(TEAM TO FILL: the commit hash after tagging)_.
+- Repository: `github.com/mondaylin999-oss/TideCatcher` (private). Reviewer access is granted on request.
 
 ## 17. Build version
 TideCatcher v1.0.0 (Digit7 Jam 2026 submission build), 31 October 2026.

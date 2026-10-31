@@ -25,8 +25,7 @@ Used through Claude and Claude Code across the whole project.
 - **ChatGPT (OpenAI):** generated the starting images for the night park, the lighting festival landscape and the first school hallway (see `docs/proof/park-map/`, `festival-map/`, `school-map/`). Claude then edited them for the game.
 - **Real-ESRGAN** (open-source AI upscaler, anime model): sharpened the park, festival and bedroom backgrounds.
 - _TEAM TO FILL: the tool used for the 8-cat source sheet and the intro base images (or "drawn by hand by …")._
-- _TEAM TO FILL: Manus — say what it was used for, or delete this line if it was not used._
+- **Manus** (AI agent): ran and checked the game in a browser during development and helped with code changes.
 
 ## Not made with AI
 - Cat sounds: recorded by Kerzoven (CC0, OpenGameArt).
-- _TEAM TO FILL: anything drawn, written or recorded by hand (for example the bedroom design, the girl character, level layout sketches)._
