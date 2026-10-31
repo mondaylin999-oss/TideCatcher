@@ -9,7 +9,7 @@ TideCatcher
 NextCrown
 
 ## 3. Main contact person
-_TEAM TO FILL: name, email, phone_
+Contact the team through the Digit7 Jam submission page.
 
 ## 4. Short game description
 When Thiri falls asleep with a heavy heart after losing a drawing contest, her little feelings (Moodlings) run away into the night. You play Shwe, her cat, and bring them home before sunrise. Each feeling is caught in its own way: dodge Frustrated's charge, sneak up on Nervous, sit beside Lonely, freeze when Shy looks back, catch Excited at the top of its bounce, dig up buried feelings with Night Eyes.

@@ -5,12 +5,12 @@
 ## Team
 | Name | Role |
 |---|---|
-| _TEAM TO FILL_ | Game concept, story, project lead |
-| _TEAM TO FILL_ | Programming |
-| _TEAM TO FILL_ | Girl and cat design |
-| _TEAM TO FILL_ | Places and backgrounds |
-| _TEAM TO FILL_ | Barriers, hiding places and levels |
-| _TEAM TO FILL_ | Moodling behaviour design |
+| Ye Mann Aung | Game concept, story, project lead |
+| Monday Lin Paing Kee, Ye Mann Aung | Programming |
+| May Phu Pwint Nan Paing (with ChatGPT assistance) | Girl and cat design |
+| Yoon Lae Wai (with Claude assistance) | Places and backgrounds |
+| Monday Lin Paing Kee (with Manus assistance) | Barriers, hiding places and levels |
+| Ye Mann Aung (with Claude assistance) | Moodling behaviour design |
 
 ## Fonts
 - [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Nunito](https://fonts.google.com/specimen/Nunito), loaded from Google Fonts, and [Gaegu](https://fonts.google.com/specimen/Gaegu), self-hosted in `game/assets/fonts/`. All under the SIL Open Font License.
