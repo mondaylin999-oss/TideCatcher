@@ -18,6 +18,10 @@
 <title>TideCatcher · A little light to bring home</title>
 <meta name="description" content="TideCatcher: bring every feeling home. A cozy cat platformer by NextCrown for Digit7 Jam 2026.">
 <meta name="theme-color" content="#140b2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TideCatcher">
 <link rel="icon" href="assets/brand/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
@@ -28,16 +32,16 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Padauk:wght@400;700&display=swap">
-<link rel="stylesheet" href="css/theme.css?v=ae0a5a6e0e1a">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/theme.css?v=20261031-v2">
 <link rel="stylesheet" href="css/styles.css?v=d56824e6fa9c">
-<link rel="stylesheet" href="css/cozy.css?v=20261030-shwe-map-walk">
+<link rel="stylesheet" href="css/cozy.css?v=20261031-v2">
 <link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 <link rel="stylesheet" href="css/heart.css?v=20261024-heart-depth">
-<link rel="stylesheet" href="css/sketchbook.css?v=20261031-v10">
+<link rel="stylesheet" href="css/sketchbook.css?v=20261031-v11">
 <link rel="stylesheet" href="css/brand.css?v=20261029-colour">
-<link rel="stylesheet" href="css/mobile-fit.css?v=20261031-v17">
+<link rel="stylesheet" href="css/mobile-fit.css?v=20261031-v18">
 <script src="js/test-all-mode.js?v=3"></script>
 </head>
 <body>
@@ -284,21 +288,10 @@
       <label class="guidance-toggle"><span>Notes during play · paper messages and tips (press N)</span><input class="cozy-toggle" id="showNotesToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
       <label class="guidance-toggle"><span>Show items found (top right)</span><input class="cozy-toggle" id="showItemsToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
       <label class="guidance-toggle"><span>Gentle mode · no life lost on falls</span><input class="cozy-toggle" id="gentleModeToggle" type="checkbox" role="switch" data-sfx="toggle"></label>
-      <div class="guidance-language"><span>Tip language</span><button class="language-picker-trigger" id="languagePickerBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="languagePickerScreen"><span class="language-current-flag" id="languageCurrentFlag" aria-hidden="true">🇬🇧</span><span id="languageCurrentLabel">English</span><span class="language-trigger-chevron" aria-hidden="true">⌄</span></button></div>
       <p class="muted guidance-status" id="settingsGuidanceStatus" aria-live="polite"></p>
       <div class="guidance-actions"><button class="btn ghost" id="settingsHelpBtn" type="button" data-sfx="toggle">How to play</button><button class="btn ghost" id="settingsReplayTutorial" type="button" data-sfx="toggle">Replay tutorial</button></div>
     </div>
     <button class="btn ghost" id="settingsCloseBtn" type="button">Back to home</button>
-  </section>
-</div>
-<div class="overlay language-picker-screen" id="languagePickerScreen" hidden role="dialog" aria-modal="true" aria-labelledby="languagePickerTitle">
-  <section class="panel language-picker-panel">
-    <button class="language-picker-close" id="languagePickerClose" type="button" aria-label="Close language selection">×</button>
-    <h2 id="languagePickerTitle">Language</h2>
-    <div class="language-options" role="group" aria-label="Tip language">
-      <button class="language-option" id="languageOptionMy" type="button" data-language="my" aria-pressed="false"><span class="language-flag" aria-hidden="true">🇲🇲</span><span class="language-option-name" lang="my">မြန်မာ</span><span class="language-check" aria-hidden="true">✓</span></button>
-      <button class="language-option" id="languageOptionEn" type="button" data-language="en" aria-pressed="false"><span class="language-flag" aria-hidden="true">🇬🇧</span><span class="language-option-name">English</span><span class="language-check" aria-hidden="true">✓</span></button>
-    </div>
   </section>
 </div>
 <div class="overlay help-screen" id="helpScreen" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
@@ -458,16 +451,16 @@
 </div>
 
 <script src="js/test-mode.js?v=20261030-test1"></script>
-<script src="js/customization.js?v=20261030-sharpcat"></script>
+<script src="js/customization.js?v=20261031-v2"></script>
 <script src="js/controls.js?v=20261029-layout"></script>
-<script src="js/tips.js?v=20261031-v13"></script>
+<script src="js/tips.js?v=20261031-v15"></script>
 <script src="js/levels.js?v=20261031-v16"></script>
 <script src="js/visual-chapters.js?v=20261026-nolamps"></script>
 <script src="js/school-hallways.js?v=20261024-school-outdoors"></script>
 <script src="js/tc-sfx.js?v=20261031-v10"></script>
 <script src="js/tc-game-audio.js?v=20261031-v10"></script>
 <script src="js/moodling-art.js?v=20261026-art"></script>
-<script src="js/catch-clips.js?v=20261028-hd-clips"></script>
+<script src="js/catch-clips.js?v=20261031-sd30"></script>
 <script src="js/endless-film.js?v=20261031-v12"></script>
 <script src="js/endless.js?v=20261031-v15"></script>
 <script src="js/endless-fx.js?v=20261028-vivid"></script>
@@ -480,10 +473,10 @@
 <script src="js/jump-upgrade.js?v=20261028-second-leap"></script>
 <script src="js/paper-stars.js?v=20261028-paper-stars"></script>
 <script src="js/parallax-layers.js?v=20261030-map-depth"></script>
-<script src="js/game.js?v=20261031-v20"></script>
+<script src="js/game.js?v=20261031-v22"></script>
 <script src="js/cozy-ui.js?v=20261031-v13"></script>
 <script src="js/sketchbook.js?v=sb5"></script>
 <script src="js/afterstory.js?v=20261031-v12"></script>
-<script src="js/button-tour.js?v=20261031-v13"></script>
+<script src="js/button-tour.js?v=20261031-v14"></script>
 </body>
 </html>

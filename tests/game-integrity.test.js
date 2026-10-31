@@ -32,8 +32,8 @@ for (const type of Object.keys(moods)) {
 if (!storyboards.C1 || storyboards.C1.length !== 3) throw new Error('Breathing Calm guide must have three pictures');
 for (const type of [...Object.keys(moods), 'C1']) {
   const guides = [...tips.matchAll(/catchClipSteps: \{([\s\S]*?)\n        \},/g)].map(match => match[1]);
-  if (guides.length < 2 || guides.some(guide => !new RegExp(`^\\s*${type}:`, 'm').test(guide))) {
-    throw new Error(`English and Burmese catch captions are required for ${type}`);
+  if (guides.length < 1 || guides.some(guide => !new RegExp(`^\\s*${type}:`, 'm').test(guide))) {
+    throw new Error(`English catch captions are required for ${type}`);
   }
 }
 if (/setInterval\s*\(/.test(clips)) throw new Error('Catch guides must not use a timed auto-advance');
@@ -49,9 +49,9 @@ if (!game.includes('function noteFrame') || !game.includes('gfxQ')) {
 }
 if (!game.includes("c.vy = -Math.max(jumpSpeed * 1.32, 1050)")) throw new Error('Wall jump impulse is missing');
 if (!game.includes("timer: .2")) throw new Error('Ledge grab auto-climb timing is missing');
-if ([...tips.matchAll(/mechanics: \{[\s\S]*?wallJump:/g)].length !== 2
-  || [...tips.matchAll(/mechanicTitles: \{[^\n]*wallJump:/g)].length !== 2) {
-  throw new Error('English and Burmese wall-jump guidance and titles are required');
+if ([...tips.matchAll(/mechanics: \{[\s\S]*?wallJump:/g)].length !== 1
+  || [...tips.matchAll(/mechanicTitles: \{[^\n]*wallJump:/g)].length !== 1) {
+  throw new Error('English wall-jump guidance and titles are required');
 }
 
 console.log(`Game source integrity passed (${files.length} files).`);

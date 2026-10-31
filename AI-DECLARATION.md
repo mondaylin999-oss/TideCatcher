@@ -7,7 +7,7 @@ Used through Claude and Claude Code across the whole project.
 
 | Area | What Claude did | Affected files | What the team did |
 |---|---|---|---|
-| Game idea and story | Helped write the story outline, chapter plan, intro and ending dialogue, tips and Burmese/English UI text | `game/js/game.js` (INTRO_LINES, ENDING_LINES, chapter text), `game/js/tips.js` | Came up with the concept and story, chose the direction, made final decisions |
+| Game idea and story | Helped write the story outline, chapter plan, intro and ending dialogue, tips and UI text | `game/js/game.js` (INTRO_LINES, ENDING_LINES, chapter text), `game/js/tips.js` | Came up with the concept and story, chose the direction, made final decisions |
 | Core gameplay code | Wrote most of the JavaScript: movement and physics, Moodling behaviours, bosses, levels, Endless Nights 8–50, Free Play, Heart Workshop and Lantern Town, Mood Book, shop, missions, saves | `game/js/*.js` | Designed the rules and Moodling behaviours, playtested, reported bugs, chose what shipped |
 | Late features | Story-level heights (`solidTops`), Nights 8–50 width cap, rolling ground, seeded hide/dig spots and map hazards, daily tasks checklist, button tour, catch clips | `game/js/levels.js`, `game/js/button-tour.js`, `game/js/game.js` | Asked for the features, tested them on their own devices |
 | Mobile and polish | Responsive layout, touch controls, zoom guard, sound start, performance and visual fixes | `game/css/mobile-fit.css`, `game/index.html`, `game/js/tc-sfx.js`, `game/js/tc-game-audio.js` | Tested on phones, tablets and laptops |

@@ -15,7 +15,6 @@ assert.match(game, /copy\.title \|\| 'Tonight’s route'/, 'the overlay should i
 assert.match(game, /Press any key or tap to skip/, 'the overlay should explain how to skip');
 assert.match(game, /nightPan\.goal = clamp\(\(currentLevel\.homeLight\?\.\[0\] \?\? WORLD - 80\)/, 'the route pan should use the authored home goal');
 assert.match(tips, /nightPreview: \{ title: 'Tonight’s route/, 'English route guidance is required');
-assert.match(tips, /nightPreview: \{ title: 'ဒီညသွားမည့်လမ်း/, 'Burmese route guidance is required');
 
 for (let night = 1; night <= 50; night++) {
   const level = levels[night];

@@ -13,7 +13,7 @@
 | _TEAM TO FILL_ | Moodling behaviour design |
 
 ## Fonts
-- [Fredoka](https://fonts.google.com/specimen/Fredoka), [Nunito](https://fonts.google.com/specimen/Nunito) and [Padauk](https://fonts.google.com/specimen/Padauk), loaded from Google Fonts, and [Gaegu](https://fonts.google.com/specimen/Gaegu), self-hosted in `game/assets/fonts/`. All under the SIL Open Font License.
+- [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Nunito](https://fonts.google.com/specimen/Nunito), loaded from Google Fonts, and [Gaegu](https://fonts.google.com/specimen/Gaegu), self-hosted in `game/assets/fonts/`. All under the SIL Open Font License.
 
 ## AI tools
 See [AI-DECLARATION.md](AI-DECLARATION.md).

@@ -51,12 +51,11 @@ Keys can be changed in Settings → Controls. Touch buttons can be moved, resize
 ## 9. Known bugs or limitations
 - Phones and tablets are landscape only; in portrait the game pauses and asks you to turn the device.
 - Opened straight from a file (double-click), some browsers limit audio, so music plays through a simpler path. Hosting the folder gives the full audio mix.
-- Myanmar language covers the tips, welcome cards and button tour; some other screens are still in English.
 - _TEAM TO FILL: anything found in final playtesting._
 
 ## 10. Third-party tools or libraries used
 - No game engine or JavaScript library. Plain HTML, CSS and JavaScript (Canvas 2D, Web Audio API).
-- Google Fonts: Fredoka, Nunito, Padauk (loaded online; the game falls back to system fonts offline). Gaegu is self-hosted in `game/assets/fonts/`. All under the SIL Open Font License.
+- Google Fonts: Fredoka, Nunito (loaded online; the game falls back to system fonts offline). Gaegu is self-hosted in `game/assets/fonts/`. All under the SIL Open Font License.
 - Asset tools: Python (Pillow, OpenCV, NumPy, SciPy) for image cut-outs and audio synthesis; Real-ESRGAN (open-source upscaler) for some backgrounds; ffmpeg for audio/video conversion.
 
 ## 11. Asset credit summary

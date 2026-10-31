@@ -22,17 +22,22 @@
   const orientationContinueBtn = document.getElementById('orientationContinueBtn');
   let landscapeAdviceDone = false;
   try { landscapeAdviceDone = sessionStorage.getItem('tc-landscape-advice') === '1'; } catch (error) {}
-  const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement || navigator.standalone || matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches);
+  // iPhone Safari (and some others) cannot hide the browser bars from a web page; Add to Home Screen can.
+  const canFullscreen = (() => { const r = document.documentElement; return typeof (r.requestFullscreen || r.webkitRequestFullscreen) === 'function'; })();
   function setOrientationCopy(portrait) {
     const kicker = orientationGate.querySelector('.orientation-kicker');
     if (kicker) kicker.textContent = portrait ? 'LANDSCAPE ONLY' : 'BEST IN LANDSCAPE';
     $('#orientationTitle').textContent = portrait ? 'Turn your phone sideways' : 'Play in full-screen landscape';
     $('#orientationDescription').textContent = portrait
       ? 'TideCatcher is designed for landscape play. Tap once to try automatic rotation; if your browser blocks it, rotate your device manually.'
-      : 'TideCatcher plays best in landscape with the browser bars hidden. Tap below to go full screen, or continue as you are.';
+      : canFullscreen
+        ? 'TideCatcher plays best in landscape with the browser bars hidden. Tap below to go full screen, or continue as you are.'
+        : 'This browser can’t hide its bars. For full screen, tap Share, then “Add to Home Screen”, and open TideCatcher from your home screen.';
     if (!orientationTryBtn.disabled) orientationStatus.textContent = portrait ? 'Portrait play is paused until the screen is landscape.' : 'You can change this any time by turning your phone.';
     orientationTryBtn.textContent = portrait ? 'Try landscape mode' : 'Go full-screen landscape';
     orientationContinueBtn.hidden = portrait;
+    orientationTryBtn.hidden = !portrait && !canFullscreen;
   }
   function finishLandscapeAdvice() {
     landscapeAdviceDone = true;
@@ -1456,8 +1461,7 @@
     const chapterName = special?.name || window.TCVisualChapters?.forLevel(night)?.name || 'the Night Side';
     const map = window.TC_LEVELS?.[night]?.map || 'night';
     const places = { school: 'the quiet school', rooftop: 'the rooftops', park: 'the moonlit park', festival: 'the lantern festival', market: 'the rainy night market', hill: 'the hilltop', lake: 'the lakeshore', free: 'the Night Side' };
-    const my = { school: 'တိတ်ဆိတ်သော စာသင်ကျောင်း', rooftop: 'အိမ်ခေါင်မိုးများ', park: 'လရောင်အောက်က ပန်းခြံ', festival: 'မီးထွန်းပွဲတော်', market: 'မိုးရွာနေသော ညဈေး', hill: 'တောင်ကုန်း', lake: 'ရေကန်ကမ်းစပ်' };
-    const place = MK_PROFILE.tipLanguage === 'my' ? (my[map] || 'ညဘက်ကမ္ဘာ') : (places[map] || 'the Night Side');
+    const place = places[map] || 'the Night Side';
     return (copy.endlessPage || 'On {chapter}, Shwe found three paper stars around {place}.').replaceAll('{chapter}', chapterName).replaceAll('{place}', place);
   }
   function keepsakeTotal(night) { const L = window.TC_LEVELS?.[night]; return L ? (L.keepsakes || []).length + ((chapterFor(night)?.feelingsNeeded?.B || 0) ? 0 : 1) : 0; }
@@ -5386,9 +5390,14 @@
       const details = document.createElement('div'); details.className = 'help-mood-copy';
       const title = document.createElement('strong'), desc = document.createElement('span');
       title.textContent = met ? info.n : (copy.unknown || '???');
-      desc.textContent = met ? (copy.catchGuides?.[key] || copy.catchGuides?.[type] || info.d) : (copy.unknownHint || 'Not met yet. Watch the clip to learn how to catch it.');
+      desc.textContent = met ? (copy.catchGuides?.[key] || copy.catchGuides?.[type] || info.d) : 'Not met yet. Its catch clip unlocks when you meet it.';
       details.append(title, desc);
-      if (variant === 0) {   // one clip per Moodling (rare variants are caught the same way), even before you meet it
+      const typeMet = variants.some((_, v) => (book[`${type}${v}`] || 0) > 0 || !!encounteredMoodlings[`${type}${v}`]);
+      if (variant === 0 && !typeMet) {   // locked: the clip unlocks once Shwe has met this Moodling (it also plays before its first level)
+        const lock = document.createElement('span'); lock.className = 'help-clip-button help-clip-locked'; lock.textContent = copy.catchClipLocked || '🔒 Clip unlocks when you meet it';
+        details.appendChild(lock);
+      }
+      if (variant === 0 && typeMet) {   // one clip per Moodling (rare variants are caught the same way)
         const watch = document.createElement('button'); watch.type = 'button'; watch.className = 'help-clip-button'; watch.dataset.catchClip = key;
         watch.textContent = copy.catchClipButton || '▶ Watch catch clip';
         watch.setAttribute('aria-label', `${copy.catchClipButton || 'Watch catch clip'} · ${info.n}`);
@@ -7432,44 +7441,8 @@
     }
   });
   $('#profileBtn').addEventListener('click', () => showSetup(false));
-  function refreshLanguagePicker() {
-    const language = MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en';
-    const myanmar = language === 'my';
-    $('#languageCurrentFlag').textContent = myanmar ? '🇲🇲' : '🇬🇧';
-    $('#languageCurrentLabel').textContent = myanmar ? 'မြန်မာ' : 'English';
-    $('#languageOptionMy').classList.toggle('is-selected', myanmar);
-    $('#languageOptionMy').setAttribute('aria-pressed', String(myanmar));
-    $('#languageOptionEn').classList.toggle('is-selected', !myanmar);
-    $('#languageOptionEn').setAttribute('aria-pressed', String(!myanmar));
-  }
-  function closeLanguagePicker(restoreFocus = true) {
-    $('#languagePickerScreen').hidden = true;
-    $('#languagePickerBtn').setAttribute('aria-expanded', 'false');
-    if (restoreFocus) $('#languagePickerBtn').focus({ preventScroll: true });
-  }
-  $('#languagePickerBtn').addEventListener('click', () => {
-    refreshLanguagePicker();
-    $('#languagePickerScreen').hidden = false;
-    $('#languagePickerBtn').setAttribute('aria-expanded', 'true');
-    $(`#languagePickerScreen [data-language="${MK_PROFILE.tipLanguage === 'my' ? 'my' : 'en'}"]`).focus({ preventScroll: true });
-  });
-  $('#languagePickerScreen').addEventListener('click', event => {
-    if (event.target.id === 'languagePickerScreen' || event.target.id === 'languagePickerClose') closeLanguagePicker();
-    const option = event.target.closest('[data-language]');
-    if (!option) return;
-    MK_PROFILE.tipLanguage = option.dataset.language === 'my' ? 'my' : 'en';
-    persistGuidanceProgress(); refreshLanguagePicker();
-  });
-  $('#languagePickerScreen').addEventListener('keydown', event => {
-    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeLanguagePicker(); return; }
-    if (event.key !== 'Tab') return;
-    const buttons = Array.from($('#languagePickerScreen').querySelectorAll('button:not([disabled])'));
-    const first = buttons[0], last = buttons[buttons.length - 1];
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-  });
   $('#settingsBtn').addEventListener('click', () => {
-    $('#showTipsToggle').checked = MK_PROFILE.showTips !== false; refreshLanguagePicker();
+    $('#showTipsToggle').checked = MK_PROFILE.showTips !== false;
     $('#gentleModeToggle').checked = gentleMode;
     $('#settingsReplayTutorial').disabled = MK_PROFILE.showTips === false;
     $('#settingsGuidanceStatus').textContent = ''; $('#hubSettingsScreen').hidden = false; $('#settingsCloseBtn').focus({ preventScroll: true });

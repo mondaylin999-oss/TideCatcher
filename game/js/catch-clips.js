@@ -51,7 +51,7 @@
     return `${keys}${alt}${then}${action}`;
   }
   function escapeHtml(text) { return String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  const CLIP_VERSION = 'hd60';   // bump when the clips in assets/clips are re-recorded
+  const CLIP_VERSION = 'sd30';   // bump when the clips in assets/clips are re-recorded
   const clipFile = (type, variant) => type === 'C' ? (variant === 1 ? 'C1' : 'C0') : type;
   const canWebm = () => !!document.createElement('video').canPlayType?.('video/webm; codecs="vp9"');
   function syncToggle() {
@@ -68,7 +68,7 @@
     const wrap = document.createElement('div'); wrap.className = 'catch-clip-video-wrap';
     video = document.createElement('video'); video.className = 'catch-clip-video';
     video.muted = true; video.loop = true; video.playsInline = true; video.setAttribute('playsinline', ''); video.preload = 'auto';
-    video.poster = `assets/clips/${file}.jpg?v=${CLIP_VERSION}`; video.src = `assets/clips/${file}.${canWebm() ? 'webm' : 'mp4'}?v=${CLIP_VERSION}`;
+    video.poster = `assets/clips/${file}.jpg?v=${CLIP_VERSION}`; video.src = `assets/clips/${file}.mp4?v=${CLIP_VERSION}`;   // 480p/30fps H.264: hardware-decoded on every phone
     video.setAttribute('aria-label', `${data.copy.catchClipVideoLabel || 'Gameplay clip'}: ${data.moodName || ''}`);
     video.addEventListener('click', () => { video.paused ? play() : (video.pause(), syncToggle()); });
     video.addEventListener('play', syncToggle); video.addEventListener('pause', syncToggle);

@@ -12,7 +12,7 @@
  --shadow-secondary:0 5px 0 var(--secondary-lip); --shadow-secondary-pressed:0 1px 0 var(--secondary-lip);
  --shadow-danger:0 5px 0 var(--danger-lip); --shadow-danger-pressed:0 1px 0 var(--danger-lip);
  --shadow-glow:0 0 30px var(--honey-haze); --shadow-title:0 5px 0 var(--lip),0 0 40px var(--honey-haze);
- --display:"Fredoka","Padauk",system-ui,sans-serif; --body:"Nunito","Padauk",system-ui,sans-serif;
+ --display:"Fredoka",system-ui,sans-serif; --body:"Nunito",system-ui,sans-serif;
  --night:var(--bg-deep); --night-2:var(--bg-card); --panel:var(--glass); --ink:var(--cream);
  --gold:var(--honey); --red:var(--coral); --violet:var(--lilac); --blue:var(--sky);
  --sea-ink:var(--bg-deep); --sea-slate:var(--bg-card); --sea-mist:var(--muted); --sea-foam:var(--cream);

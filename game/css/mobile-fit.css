@@ -211,3 +211,18 @@ body:has(#touch:not([hidden])) .tip-coach { top: calc(env(safe-area-inset-top, 0
   .orientation-card .btn { min-height: 42px !important; width: 100% !important; }
   .orientation-card #orientationTryBtn:only-of-type, .orientation-card:has(#orientationContinueBtn[hidden]) #orientationTryBtn { grid-column: 1 / -1; }
 }
+
+/* Locked catch clips in How to Play: a quiet label, not a button. */
+.help-mood-copy .help-clip-locked { opacity: .7; border-style: dashed; cursor: default; pointer-events: none; background: transparent; }
+
+/* The home room fills the whole screen on every device (old layouts reserved space for a top bar that no longer exists). */
+#menuHub.room-hub { height: auto !important; min-height: 0 !important; inset: 0 !important; padding: 0 !important; }
+#menuHub.room-hub > .rh-wrap { height: 100% !important; }
+
+.orientation-card .btn[hidden] { display: none !important; }
+.orientation-card #orientationTryBtn[hidden] + #orientationContinueBtn { grid-column: 1 / -1; }
+
+/* Storm boss card: the two control chips were dark text on dark pills. Light chips with dark ink read clearly on the paper. */
+#bossIntroScreen .boss-intro-controls span { background: #fff3c4 !important; color: #2b2547 !important; border: 2px solid #c9922e !important; opacity: 1 !important; font-weight: 800; font-size: clamp(14px, 2.2vw, 17px); text-shadow: none !important; }
+#bossIntroScreen .boss-intro-panel { align-items: center; }
+#bossIntroScreen .boss-intro-panel .btn { align-self: center; }

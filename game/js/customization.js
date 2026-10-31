@@ -147,7 +147,7 @@ try {
     MK_PROFILE.tutorialDone = typeof _p.tutorialDone === 'boolean' ? _p.tutorialDone : true;
     MK_PROFILE.tipsSeen = Array.isArray(_p.tipsSeen) ? _p.tipsSeen.filter(function (key) { return typeof key === 'string' && key.length < 60; }).slice(-100) : [];
     MK_PROFILE.showTips = _p.showTips !== false;
-    MK_PROFILE.tipLanguage = _p.tipLanguage === 'my' ? 'my' : 'en';
+    MK_PROFILE.tipLanguage = 'en';
   }
 } catch (e) {}
 if (!MK_HAS_PROFILE) {
@@ -158,7 +158,6 @@ if (!MK_HAS_PROFILE) {
       if (typeof _o.tutorialDone === 'boolean') MK_PROFILE.tutorialDone = _o.tutorialDone;
       if (Array.isArray(_o.tipsSeen)) MK_PROFILE.tipsSeen = _o.tipsSeen.filter(function (key) { return typeof key === 'string' && key.length < 60; }).slice(-100);
       if (typeof _o.showTips === 'boolean') MK_PROFILE.showTips = _o.showTips;
-      if (_o.tipLanguage === 'my') MK_PROFILE.tipLanguage = 'my';
     }
   } catch (e) {}
 }

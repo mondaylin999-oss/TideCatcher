@@ -114,7 +114,7 @@
 
 - Each run rolls one steady weather condition: light rain, a gentle wind, or moon fog. Its icon and localized name appear in the HUD, with an accessible canvas label.
 - Rain makes Shwe slide more on the ground and brings Lonely back sooner, with an extra early Lonely where the night calls for one. Wind shifts jump height slightly in either direction. Fog extends Night Eyes' reveal radius by 35%.
-- Outdoor rain uses a soft falling-rain effect; school interiors keep their established indoor scenery. Weather tips are localized in English and Burmese and appear once per weather type using the existing saved tip history.
+- Outdoor rain uses a soft falling-rain effect; school interiors keep their established indoor scenery. Weather tips appear once per weather type using the existing saved tip history.
 - Catch, scoring, and existing save data formats are unchanged. Reduced-motion mode keeps rain still.
 
 # Gameplay catch clips and a trail that follows Shwe
@@ -139,7 +139,7 @@
 
 - Added wall-jump routes on Nights 12, 23, 34, 45 and 50, with the walls becoming taller as the challenge advances. Their themed stone surfaces are separate collision scenery, so non-pit nights still have no roost platforms.
 - Shwe can spring away from a wall with Jump, catch the edge of a wall or static shelf, and automatically climb onto it after 0.2 seconds. Moving, crumbling, bouncy and swinging platforms keep their existing behavior.
-- Added a first-use wall-jump tip in English and Burmese. It uses the existing tips-seen save, sound cues and reduced-motion-compatible game rendering; no save format, scoring or Moodling rules changed.
+- Added a first-use wall-jump tip. It uses the existing tips-seen save, sound cues and reduced-motion-compatible game rendering; no save format, scoring or Moodling rules changed.
 - Added layout checks for route placement, reachability, selected nights and separation from pits/roosts; the existing integrity test also checks the mechanic and translations.
 
 # Voices, bedroom Thiri and Persian tail
@@ -324,7 +324,7 @@
 
 ## Shared implementation
 
-`game/css/theme.css` centralizes palette, font stacks, radii and shadows, including original CSS art details. `cozy.css` supplies the presentation layer; `cozy-ui.js` handles presentation steps, progress and dynamic `data-sfx` hooks. Existing IDs/classes and illustrated assets are retained. Google Fonts: Fredoka, Nunito and Padauk fallback. Reduced-motion disables decorative animation. Keyboard focus uses honey outlines; interactive targets are at least 44px.
+`game/css/theme.css` centralizes palette, font stacks, radii and shadows, including original CSS art details. `cozy.css` supplies the presentation layer; `cozy-ui.js` handles presentation steps, progress and dynamic `data-sfx` hooks. Existing IDs/classes and illustrated assets are retained. Google Fonts: Fredoka and Nunito. Reduced-motion disables decorative animation. Keyboard focus uses honey outlines; interactive targets are at least 44px.
 
 ## Validation
 
@@ -341,7 +341,7 @@
 - **Why to play:** First launches now progress from the existing intro into three swipeable Welcome cards before setup. The cards explain Thiri and the Night Side, the before-sunrise goal, Glow and upgrades, the 17-feeling Mood Book, seven nights, and the sunrise ending. A compact, linked **Your goals** card on the hub points to the next chapter, Mood Book progress, and the next available upgrade.
 - **Guided Night 1:** The real Night 1 pauses its countdown while each accessible coach step waits for movement, jumping, sneaking, a harmless practice catch, a Frustrated dodge and dizzy pounce, Night Eyes, scratching, and completing the required lights. Each step has an on-canvas target marker, device-specific keyboard/touch control art, a success sparkle/chime, and an always-visible Skip tutorial control.
 - **Later help:** New-mechanic, Free Play, combo, and gentle struggle hints use one-time four-second coach bubbles and the existing chapter hint state; a per-run struggle hint appears after three hits from one Moodling or 30 seconds without a catch. The Info button and pause menu both open a full How to play guide with keyboard/touch controls, known and unknown Moodlings, upgrades, and combos.
-- **Preferences and saves:** `mk-profile`/`mk-onboarding` now safely retain `welcomeSeen`, `tutorialDone`, `tipsSeen`, Show tips, and the English/Burmese-ready copy choice. Reset still removes every `mk-` key. Settings includes Show tips, an English/Burmese-ready tip language selector, and Replay tutorial. All editable Welcome, tutorial, just-in-time, struggle, and sky-tip copy lives in `game/js/tips.js`.
+- **Preferences and saves:** `mk-profile`/`mk-onboarding` now safely retain `welcomeSeen`, `tutorialDone`, `tipsSeen`, Show tips, and the tip copy choice. Reset still removes every `mk-` key. Settings includes Show tips, an English/Burmese-ready tip language selector, and Replay tutorial. All editable Welcome, tutorial, just-in-time, struggle, and sky-tip copy lives in `game/js/tips.js`.
 
 ## Cloudflare deployment
 
@@ -356,8 +356,8 @@
 - Rebuilt the catch guide as a canvas mini-player using the game's live cat rig and Moodling portraits, with eased movement, facing, gait, jump/landing effects, scene highlights and a catch-to-trail Glow ending.
 - Each complete clip now runs in two seconds, with three timed caption beats, synchronized input badges for keyboard or touch, segmented progress, pause/play, beat stepping, manual replay and playback speed. Closing or hiding the tab pauses playback; reduced-motion users get still frames with manual beat navigation.
 - Added illustrated storyboards for Frustrated, Nervous, Lonely, Buried, Excited, Shy, Jealous, Calm, breathing Calm and Golden. Kept existing catch rules, scoring and Moodling behavior unchanged.
-- Localized clip controls and catch captions in English and Burmese. Removed the former CSS slide keyframes and kept the stage at 16:9 on mobile and desktop.
-- Verified JavaScript syntax and game-source integrity. Browser-checked the Frustrated clip at 375px and 1280px, including its Space-or-A/D badge, final catch and Glow animation, exact 16:9 scene, and Burmese captions/controls.
+- Added clip controls and catch captions. Removed the former CSS slide keyframes and kept the stage at 16:9 on mobile and desktop.
+- Verified JavaScript syntax and game-source integrity. Browser-checked the Frustrated clip at 375px and 1280px, including its Space-or-A/D badge, final catch and Glow animation, exact 16:9 scene, and captions/controls.
 
 ## Storm Moodling encounters
 
@@ -381,7 +381,7 @@
 # Pagoda Hill map
 
 - Added Pagoda Hill as a new Endless place unlocked at Night 34, with its own moonlit ridge scenery and subdued colors alongside the existing Pagoda Garden.
-- Pagoda routes use shallow repeating stone-step terrain, safe oil-lamp platforms, and hanging bells. Touching a bell plays a soft chime, briefly stills nearby Moodlings, and clears Nervous panic; the first bell tip is available in English and Burmese.
+- Pagoda routes use shallow repeating stone-step terrain, safe oil-lamp platforms, and hanging bells. Touching a bell plays a soft chime, briefly stills nearby Moodlings, and clears Nervous panic; the first bell tip appears once.
 - Kept all lamps and bells on solid ground and retained each pit's single moving bridge. Added the map to existing keep-sake and burial-site art so Endless setup remains compatible.
 - Added Pagoda Hill layout and unlock checks to game-integrity CI.
 # Night Train Platform map
@@ -395,7 +395,7 @@
 
 - Added one cracked-wall secret room to every story night, Free Play route, and Endless map. Rooms are positioned on solid ground with clearance from pits.
 - Shwe can scratch each wall three times to open a softly lit alcove. Its reward is either a rare Frustrated/Nervous Moodling or a collectible diary page, selected for the map.
-- Secret diary pages save under a new `mk-secret-pages` localStorage key and appear on Thiri’s shelf; existing save keys, score, and Moodling rules are unchanged. Page text and prompts are available in English and Burmese.
+- Secret diary pages save under a new `mk-secret-pages` localStorage key and appear on Thiri’s shelf; existing save keys, score, and Moodling rules are unchanged. Page text and prompts are included.
 - Added placement and reward coverage for all story levels, Free Play variants, and Endless map families, and wired the check into GitHub Actions.
 
 ## Cloudflare preview build fix

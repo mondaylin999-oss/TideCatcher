@@ -1,6 +1,6 @@
 /* Button guide: a short on-screen tour that rings one button at a time and says what it does.
    Plays once on the home screen and once in the pause menu, and can be replayed from Settings or Pause.
-   English and Burmese follow the game's tip language (MK_PROFILE.tipLanguage). */
+   Text is English. */
 (function () {
   'use strict';
   const EN = {
@@ -32,36 +32,7 @@
       ['pauseTourBtn', 'Button guide', 'Show this guide again any time.']
     ]
   };
-  const MY = {
-    next: 'ရှေ့သို့', back: 'နောက်သို့', done: 'နားလည်ပြီ', skip: 'လမ်းညွှန် ကျော်မည်', of: '{total} ထဲမှ {n}',
-    hub: [
-      ['storyBtn', 'ဇာတ်လမ်း', 'ည ၇ ညကို အစဉ်လိုက် ကစားပါ။ ဇာတ်လမ်း ဒီမှာ ဖြစ်သည်။'],
-      ['freeBtn', 'လွတ်လပ်စွာ ကစားရန်', 'ဖွင့်ပြီးသော နေရာများကို နာရီမပါဘဲ လျှောက်ကြည့်ပါ။ လေ့ကျင့်ရန် ကောင်းသည်။'],
-      ['bookBtn', 'Mood Book', 'ဖမ်းပြီးသော Moodling အားလုံးနှင့် ဖမ်းနည်းများ။'],
-      ['shopBtn', 'ဆိုင်', 'Glow ဖြင့် အဆင့်မြှင့်ခြင်း၊ ပစ္စည်းများ၊ trail များနှင့် ကြောင်အသစ် ဝယ်ပါ။ ပစ္စည်းငယ်များ ဒီမှာ ရောင်းပါ။'],
-      ['roomShelfBtn', 'စင်', 'ညတိုင်းတွင် ရှာတွေ့သော အမှတ်တရပစ္စည်းများ။ အစုံပြည့်ရင် Glow ဆုရမည်။'],
-      ['roomHeartBtn', 'နှလုံးသား အလုပ်ရုံ', 'ဖမ်းထားသော ခံစားချက်များကို ရောပြီး အသစ်ဖန်တီးပါ။'],
-      ['roomTownBtn', 'မီးအိမ်မြို့', 'ဖန်တီးထားသော ခံစားချက်များဖြင့် မြို့ထဲက နေရာများကို မီးထွန်းပြီး ဆုယူပါ။'],
-      ['roomBedBtn', 'အမည်နှင့် ကြောင်', 'ကောင်မလေးအမည်၊ ကြောင်အမည် သို့မဟုတ် ကြောင်ကို ပြောင်းပါ။'],
-      ['roomTasksBtn', 'ယနေ့ အလုပ်များ', 'နေ့စဉ် အလုပ် ၃ ခု။ ညတစ်ည၌ ပြီးအောင်လုပ်ပြီး ဤနေရာတွင် Glow ယူပါ။'],
-      ['hubHeroCat', 'သင့်ကြောင်', 'ပြတင်းပေါက်ပေါ်ရှိ ကြောင်ကို နှိပ်ပြီး အမည်ပြောင်းပါ။'],
-      ['roomHelpBtn', 'ကစားနည်း', 'ထိန်းချုပ်ပုံများနှင့် Moodling တစ်ကောင်ချင်း ဖမ်းနည်း ဗီဒီယို။'],
-      ['profileBtn', 'ပရိုဖိုင်', 'သင့်အမည်များနှင့် ရွေးထားသော ကြောင်။'],
-      ['settingsBtn', 'ဆက်တင်', 'အသံ၊ ထိန်းချုပ်ပုံ၊ အကြံပြုချက်၊ ဘာသာစကားနှင့် ဤလမ်းညွှန်။'],
-      ['infoBtn', 'အချက်အလက်', 'ဂိမ်းနှင့် အဖွဲ့အကြောင်း။'],
-      ['resetBtn', 'အစမှ ပြန်စရန်', 'တိုးတက်မှုအားလုံး ဖျက်ပြီး အစမှ ပြန်စသည်။ မဖျက်ခင် မေးပါမည်။']
-    ],
-    pause: [
-      ['pauseContinueBtn', 'ဆက်ကစားရန်', 'ရပ်ထားသည့်နေရာမှ ညထဲ ပြန်သွားပါ။'],
-      ['pauseRestartBtn', 'ပြန်စရန်', 'ဒီညကို အစမှ ပြန်စပါ။'],
-      ['pauseChaptersBtn', 'အခန်းများသို့', 'ဒီညမှ ထွက်ပြီး မြေပုံပေါ်တွင် နောက်တစ်ည ရွေးပါ။'],
-      ['pauseHelpBtn', 'ကစားနည်း', 'ညထဲမှ မထွက်ဘဲ ထိန်းချုပ်ပုံနှင့် ဖမ်းနည်း ဗီဒီယို။'],
-      ['pauseNotesBtn', 'မှတ်စုများ', 'Moodling များအပေါ်ရှိ အကြံပြုမှတ်စု ဖွင့်/ပိတ်။'],
-      ['pauseQuitBtn', 'မီနူးသို့', 'အိမ်ပြန်ပါ။ ဒီညယူလာသော အလင်းများ ပျောက်မည်။'],
-      ['pauseTourBtn', 'ခလုတ် လမ်းညွှန်', 'ဤလမ်းညွှန်ကို အချိန်မရွေး ပြန်ကြည့်ပါ။']
-    ]
-  };
-  const copy = () => (window.MK_PROFILE && MK_PROFILE.tipLanguage === 'my') ? MY : EN;
+  const copy = () => EN;
   const seenKey = name => 'tc-tour-' + name;
   const seen = name => { try { return localStorage.getItem(seenKey(name)) === '1'; } catch (e) { return false; } };
   const markSeen = name => { try { localStorage.setItem(seenKey(name), '1'); } catch (e) {} };
@@ -133,12 +104,12 @@
     // "Button guide" replay buttons: one in the pause menu, one in home Settings
     const pauseActions = document.querySelector('#pauseScreen .pause-actions');
     if (pauseActions && !document.getElementById('pauseTourBtn')) {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = 'pauseTourBtn'; b.textContent = copy() === MY ? 'ခလုတ် လမ်းညွှန်' : 'Button guide';
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = 'pauseTourBtn'; b.textContent = 'Button guide';
       b.addEventListener('click', () => start('pause')); pauseActions.appendChild(b);
     }
     const settingsPanel = document.querySelector('#hubSettingsScreen .panel, #hubSettingsScreen section');
     if (settingsPanel && !document.getElementById('settingsTourBtn')) {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = 'settingsTourBtn'; b.textContent = copy() === MY ? 'ခလုတ် လမ်းညွှန် ပြန်ကြည့်ရန်' : 'Show the button guide again';
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.id = 'settingsTourBtn'; b.textContent = 'Show the button guide again';
       b.addEventListener('click', () => { const s = document.getElementById('hubSettingsScreen'); if (s) s.hidden = true; const hub = document.getElementById('startScreen'); if (hub) hub.hidden = false; setTimeout(() => start('hub'), 250); });
       settingsPanel.appendChild(b);
     }

@@ -15,7 +15,7 @@
   --sb-paper:#f6eedc; --sb-paper-2:#fffdf6; --sb-paper-shade:#e9dfc8;
   --sb-ink:#2b2547; --sb-ink-2:#4a4460; --sb-pencil:#6b6480; --sb-rule:rgba(86,112,170,.16);
   --sb-tape:rgba(185,163,255,.72); --sb-tape-2:rgba(255,207,92,.7); --sb-tape-3:rgba(255,143,184,.6);
-  --sb-hand:"Gaegu","Fredoka","Padauk",system-ui,sans-serif;
+  --sb-hand:"Gaegu","Fredoka",system-ui,sans-serif;
   --sb-colour:1;
   --sb-shadow:0 14px 28px rgba(8,5,25,.42),0 2px 0 rgba(255,255,255,.5) inset;
   --sb-ticket:polygon(0 0,100% 0,98.5% 22%,100% 44%,98.5% 66%,100% 88%,100% 100%,0 100%,0 88%,1.5% 66%,0 44%,1.5% 22%);
