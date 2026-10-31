@@ -7109,7 +7109,7 @@
   function renameAll() {
     nameOrig.forEach((orig, node) => { if (!node.isConnected) { nameOrig.delete(node); return; } const nd = mkName(orig); nameSet.set(node, nd); node.data = nd; });
     nameTree(document.body);
-    document.title = mkName('TideCatcher Prototype');
+    document.title = mkName('TideCatcher');
   }
   new MutationObserver(list => {
     for (const m of list) {
