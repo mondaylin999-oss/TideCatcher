@@ -1,6 +1,26 @@
+# Upper levels: tougher Moodlings, favourite hiding places, heights
+
+- From Level 15 some Frustrated wear a helmet (the first dizzy pounce knocks it off) and some Nervous slip away once to a nearby hiding spot.
+- From Level 25 some Lonely need company twice, with a short walk in between. From Level 20 Lonely's mark only shows with Night Eyes.
+- Shy and Nervous like to stay near hiding spots; Jealous likes to sit on high places. A short hint explains each one the first time.
+- Levels 8-50 have 3-5 optional heights (benches, roofs, rocks, desks); torn drawing pieces often sit up there.
+- Torn drawing pieces are rarer, only show up close or with Night Eyes, and are only kept if the level is beaten.
+- Lights reach the Heart Workshop only when a level is beaten for the first time (no farming replays or Free Play).
+- Calm's breathing bubble needs no button on phones: stand still beside it. Levels 8-50 skip the bring-home room scene.
+- A "Next for you" card on the results screen shows the closest goals: new places, special levels and chests, today's tasks, collections.
+
+# Final polish before submission
+
+- Removed the Mood Tide (rain/tint, fireflies overlay, tide gauge, Night 6 tide-pool keepsake) and the festival sky lanterns: players did not notice them and the lanterns cost frame time.
+- Pagoda Garden levels crashed on start (the map had no entry in the dig-spot table); added it, with a safe fallback for any map.
+- Levels without pits no longer show checkpoint lanterns (there is nothing to fall into).
+- How to Play shows one catch clip per Moodling (rare variants are caught the same way). A level with a Moodling you have not met plays its clip automatically, once.
+- Lake fireflies (for Calm) are bigger and brighter, with a pulsing ring.
+- Paper stars saved as found no longer break drawing in the all-unlocked build.
+
 # Mood Tide, story heights and better Nights 8-50
 
-- **Mood Tide** (`game/js/mood-tide.js`, new): the tide is the share of tonight's feelings still loose (0 = all home, 1 = none caught), smoothed. High tide adds soft rain (not indoors), a cool tint and a vignette; low tide warms the sky and brings out fireflies; each catch sends a small wave across the bottom of the screen. A gauge sits under the FOUND box. A one-time tip explains it. Cosmetic only, apart from the Night 6 tide pool.
+- **Mood Tide** (`game/js/mood-tide.js`, new): the tide is the share of tonight's feelings still loose (0 = all home, 1 = none caught), smoothed. High tide adds soft rain (not indoors), a cool tint and a vignette; low tide warms the sky and brings out fireflies; each catch sends a small wave across the bottom of the screen. (The gauge and its tip were later removed: the feeling counters already show what is left.) Cosmetic only, apart from the Night 6 tide pool.
 - **Night 6 tide pool:** a third keepsake by the jetty (x 530) that can only be seen and picked up once the tide is below 0.4. A shimmer marks the spot while the tide is high. Gentle mode keeps it open.
 - **Festival lanterns:** on festival maps each catch releases a paper lantern that rises and stays in the sky (capped at 40, fixed pool, no per-frame allocation).
 - **Heights on Nights 1-4:** new optional `solidTops` level field (desk, shelf, chairs, slide, bench, stall roof). They are one-way tops: Shwe walks under them and lands on top. They are not platforms, so the roost rule is unchanged. Each night gains a keepsake on a height (3 keepsakes per night); Night 1's shelf keepsake moved up onto the shelf, Night 2's moved onto a shelf top. New keepsakes are appended so already-found ones keep their ids. Shown in the `?debug=1` F2 overlay.

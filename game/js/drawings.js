@@ -1,5 +1,5 @@
 /* Thiri's Sketchbook: six crayon drawings, one for each place she loved (and a last one for all of her
-   feelings). Each is torn into 6 pieces that Shwe finds on Endless Nights. Drawn as SVG in a child's crayon
+   feelings). Each is torn into 6 pieces that Shwe finds on Endless Levels. Drawn as SVG in a child's crayon
    style (wobbly lines, waxy grain) and shown as images, so the filters work anywhere on the page. */
 (function (root) {
   'use strict';

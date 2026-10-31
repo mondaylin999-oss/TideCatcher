@@ -1,10 +1,44 @@
-﻿<link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset=utf8>
+<meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<script>
+/* iPad/iPhone Safari ignores "user-scalable=no", so block its zoom gestures directly. Text boxes keep normal taps. */
+(function () {
+  var lastTouch = 0, field = function (t) { return t && t.closest && t.closest('input,textarea,select,[contenteditable]'); };
+  document.addEventListener('touchend', function (e) {
+    var now = Date.now(), tap = e.target && e.target.closest && e.target.closest('button,a,[role=button],.rh-spot,label,canvas,#touch'); if (now - lastTouch < 350 && !field(e.target) && !tap) e.preventDefault(); lastTouch = now;   /* never swallow a tap on a button: iPad then lost the click */
+  }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (n) { document.addEventListener(n, function (e) { e.preventDefault(); }, { passive: false }); });
+  document.addEventListener('touchmove', function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  document.addEventListener('dblclick', function (e) { if (!field(e.target)) e.preventDefault(); }, { passive: false });
+})();
+</script>
+<title>TideCatcher · A little light to bring home</title>
+<meta name="description" content="TideCatcher: bring every feeling home. A cozy cat platformer by NextCrown for Digit7 Jam 2026.">
+<meta name="theme-color" content="#140b2e">
+<link rel="icon" href="assets/brand/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:title" content="TideCatcher · Bring every feeling home">
+<meta property="og:description" content="A cozy cat platformer by NextCrown for Digit7 Jam 2026.">
+<meta property="og:image" content="assets/brand/share-card.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Padauk:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/theme.css?v=ae0a5a6e0e1a">
+<link rel="stylesheet" href="css/styles.css?v=d56824e6fa9c">
+<link rel="stylesheet" href="css/cozy.css?v=20261030-shwe-map-walk">
+<link rel="stylesheet" href="css/single-screen.css?v=aec8bd8f3f0a">
 <link rel="stylesheet" href="css/back-navigation.css?v=cce5e445c38f">
 <link rel="stylesheet" href="css/heart.css?v=20261024-heart-depth">
-<link rel="stylesheet" href="css/sketchbook.css?v=20261031-v7">
+<link rel="stylesheet" href="css/sketchbook.css?v=20261031-v10">
 <link rel="stylesheet" href="css/brand.css?v=20261029-colour">
-<link rel="stylesheet" href="css/mobile-fit.css?v=20261031-v7">
-<script src="js/test-all-mode.js?v=1"></script>
+<link rel="stylesheet" href="css/mobile-fit.css?v=20261031-v16">
+<script src="js/test-all-mode.js?v=3"></script>
 </head>
 <body>
 <div class="title-screen" id="titleScreen" role="dialog" aria-label="TideCatcher title screen">
@@ -12,7 +46,7 @@
   <img class="title-art" src="assets/brand/title-card.webp" alt="TideCatcher: Bring every feeling home" width="1600" height="900" decoding="async" fetchpriority="high">
   <button class="title-play" id="titlePlayBtn" type="button" autofocus><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>PLAY</button>
   <p class="title-hint">Press Enter or Space</p>
-  <div class="team-credit"><img src="assets/brand/nextcrown.webp" alt="" width="30" height="30"><span><b>NextCrown</b> Ã—</span><img class="team-credit-d7" src="assets/brand/digit7.webp" alt="" width="30" height="30"><span>Digit7 Jam 2026</span></div>
+  <div class="team-credit"><img src="assets/brand/nextcrown.webp" alt="" width="30" height="30"><span><b>NextCrown</b> ×</span><img class="team-credit-d7" src="assets/brand/digit7.webp" alt="" width="30" height="30"><span>Digit7 Jam 2026</span></div>
 </div>
 <script>
 (function(){
@@ -36,9 +70,9 @@
     </div></div>
     <img class="boot-logo" src="assets/brand/tidecatcher-logo.webp" alt="TideCatcher: Bring every feeling home" width="900" height="506" decoding="async" fetchpriority="high">
     <h1>Following the pawprints</h1>
-    <p class="boot-loading-message">Waking Shwe and gathering the moonlightâ€¦</p>
+    <p class="boot-loading-message">Waking Shwe and gathering the moonlight…</p>
     <div class="boot-loading-bar" aria-hidden="true"><span></span></div>
-    <div class="team-credit"><img src="assets/brand/nextcrown.webp" alt="" width="30" height="30"><span><b>NextCrown</b> Ã—</span><img class="team-credit-d7" src="assets/brand/digit7.webp" alt="" width="30" height="30"><span>Digit7 Jam 2026</span></div>
+    <div class="team-credit"><img src="assets/brand/nextcrown.webp" alt="" width="30" height="30"><span><b>NextCrown</b> ×</span><img class="team-credit-d7" src="assets/brand/digit7.webp" alt="" width="30" height="30"><span>Digit7 Jam 2026</span></div>
   </div>
 </div>
 
@@ -49,10 +83,10 @@
   <button class="tbtn" id="bPurr" aria-label="Purr" hidden>Purr</button>
   <button class="tbtn" id="bEyes" aria-label="Night eyes">Eyes</button>
   <button class="tbtn" id="bScratch" aria-label="Scratch nearby hiding spot" hidden>Scratch</button>
-  <div id="hint">Hold Shift or left mouse to sneak Â· quick left-click or X to pounce Â· S to scratch</div>
+  <div id="hint">Hold Shift or left mouse to sneak · quick left-click or X to pounce · S to scratch</div>
 </div>
 
-<button class="go-home-btn" id="goHomeBtn" type="button" hidden aria-label="Go home: end the night now">ðŸ  Go home <kbd>H</kbd></button>
+<button class="go-home-btn" id="goHomeBtn" type="button" hidden aria-label="Go home: end the night now">🏠 Go home <kbd>H</kbd></button>
 <button class="game-pause-btn" id="pauseBtn" type="button" aria-label="Pause" title="Pause game (Escape or P)" hidden>
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
 </button>
@@ -76,7 +110,7 @@
   <section class="panel reset-panel">
     <p class="eyebrow">LEAVING SO SOON?</p>
     <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M12 24 10 9l14 9c5-3 11-3 16 0l14-9-2 15c4 8 4 18-1 25-5 7-12 10-19 10-7 0-14-3-19-10-5-7-5-17-1-25Z" fill="var(--gold)" stroke="var(--line)" stroke-width="2"/><path d="M19 33q4-3 8 0m10 0q4-3 8 0" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/><path d="m29 39 3 2 3-2" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 47q6-7 12 0" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/><path d="M47 37c0-3 4-3 4 0 0 2-2 4-2 4s-2-2-2-4Z" fill="var(--blue)"/></svg>
-    <h2 id="leaveNightTitle">Leave this night?</h2>
+    <h2 id="leaveNightTitle">Leave this level?</h2>
     <p class="muted" id="leaveNightText">Shwe hasn't brought these lights home yet. If you leave now, this run's rewards will be lost.</p>
     <div class="actions">
       <button class="btn" id="leaveNightStay" type="button" data-sfx="back">Stay and keep playing</button>
@@ -89,13 +123,13 @@
     <img class="shwe-teacher" id="shweTeacher" alt="" aria-hidden="true">
     <div class="tip-coach-copy"><span class="tip-coach-kicker" id="tipCoachKicker"></span><strong id="tipCoachTitle"></strong><p id="tipCoachText"></p><div class="tip-coach-control" id="tipCoachControl" aria-label="Suggested control"></div></div>
     <button class="btn ghost tip-coach-skip" id="tutorialSkipBtn" type="button" data-sfx="back" hidden>Skip tutorial</button>
-    <button class="tip-coach-close" id="tipCoachClose" type="button" data-sfx="back" aria-label="Dismiss this tip" hidden>Ã—</button>
+    <button class="tip-coach-close" id="tipCoachClose" type="button" data-sfx="back" aria-label="Dismiss this tip" hidden>×</button>
   </div>
 </div>
 <div class="overlay" id="resetScreen" hidden role="dialog" aria-modal="true" aria-labelledby="resetTitle" aria-describedby="resetText">
   <div class="panel reset-panel">
     <h2 id="resetTitle">Start over?</h2>
-    <p id="resetText" class="muted">This deletes everything saved on this device: unlocked nights, Glow, upgrades, Mood Book, missions, best scores, and your names and cat. It canâ€™t be undone.</p>
+    <p id="resetText" class="muted">This deletes everything saved on this device: unlocked nights, Glow, upgrades, Mood Book, missions, best scores, and your names and cat. It can’t be undone.</p>
     <div class="actions">
       <button class="btn ghost" id="resetCancel" type="button">Cancel</button>
       <button class="btn danger" id="resetConfirm" type="button">Yes, reset everything</button>
@@ -111,15 +145,15 @@
     <div class="cs-fx" id="introFx" aria-hidden="true"></div>
     <div class="cs-vignette" aria-hidden="true"></div>
   </div>
-  <button class="intro-skip" id="introSkipBtn" type="button">Skip intro â†’</button>
+  <button class="intro-skip" id="introSkipBtn" type="button">Skip intro →</button>
   <div class="cs-dots" id="introDots" aria-hidden="true"></div>
   <div class="cs-box" id="introBox">
     <div class="cs-speaker" id="introSpeaker" hidden></div>
     <p class="cs-line" id="introSubtitle" aria-hidden="true"></p>
     <p class="sr-only" id="introLive" aria-live="polite"></p>
     <div class="cs-foot">
-      <span class="cs-hint" id="introHint">Tap or press Space âœ¦</span>
-      <button class="btn" id="introContinueBtn" type="button" hidden>Begin the night â†’</button>
+      <span class="cs-hint" id="introHint">Tap or press Space ✦</span>
+      <button class="btn" id="introContinueBtn" type="button" hidden>Begin the night →</button>
     </div>
   </div>
 </div>
@@ -127,19 +161,19 @@
 <div class="overlay welcome-screen" id="welcomeScreen" hidden aria-labelledby="welcomeTitle">
   <div class="welcome-backdrop" aria-hidden="true"><span class="welcome-moon"></span><span class="welcome-tide"></span><span class="welcome-tide welcome-tide-back"></span></div>
   <section class="welcome-panel" aria-describedby="welcomeDescription">
-    <p class="eyebrow welcome-eyebrow">Her sketchbook Â· please donâ€™t peek</p>
+    <p class="eyebrow welcome-eyebrow">Her sketchbook · please don’t peek</p>
     <div class="welcome-mascot"><span class="welcome-orb welcome-orb-one"></span><span class="welcome-orb welcome-orb-two"></span><img id="welcomeCat" src="assets/cats/ginger-toon.png" alt="" decoding="async"><span class="welcome-cat-name" id="welcomeCatName">Shwe</span></div>
     <img class="welcome-logo" src="assets/brand/tidecatcher-logo.webp" alt="" width="900" height="506" decoding="async">
     <h1 id="welcomeTitle" class="welcome-title sr-only">TideCatcher</h1>
     <p id="welcomeDescription" class="welcome-description">When a girl falls asleep with a heavy heart, her cat follows her little feelings into the Night Side.</p>
     <div class="welcome-loading" id="welcomeLoading" role="status" aria-live="polite">
-      <div class="welcome-loading-copy"><span id="welcomeLoadStatus">Gathering the moonlightâ€¦</span><span class="sr-only" id="welcomeLoadCount">0 / 8</span></div>
-      <div id="loadingStars" class="loading-stars" aria-hidden="true"><span>â˜…</span><span>â˜…</span><span>â˜…</span><span>â˜…</span><span>â˜…</span><span>â˜…</span><span>â˜…</span><span>â˜…</span></div>
+      <div class="welcome-loading-copy"><span id="welcomeLoadStatus">Gathering the moonlight…</span><span class="sr-only" id="welcomeLoadCount">0 / 8</span></div>
+      <div id="loadingStars" class="loading-stars" aria-hidden="true"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
       <div class="welcome-progress" id="welcomeProgressBar" role="progressbar" aria-label="Preparing story scenes" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0"><span id="welcomeProgress"></span></div>
     </div>
-    <button class="btn welcome-begin" id="welcomeBeginBtn" type="button" disabled>Begin the story â†’</button>
+    <button class="btn welcome-begin" id="welcomeBeginBtn" type="button" disabled>Begin the story →</button>
     <p class="welcome-note">One quiet night. Seven hours. Every colour back home.</p>
-    <div class="team-credit"><img src="assets/brand/nextcrown.webp" alt="" width="30" height="30"><span><b>NextCrown</b> Ã—</span><img class="team-credit-d7" src="assets/brand/digit7.webp" alt="" width="30" height="30"><span>Digit7 Jam 2026</span></div>
+    <div class="team-credit"><img src="assets/brand/nextcrown.webp" alt="" width="30" height="30"><span><b>NextCrown</b> ×</span><img class="team-credit-d7" src="assets/brand/digit7.webp" alt="" width="30" height="30"><span>Digit7 Jam 2026</span></div>
   </section>
 </div>
 <div class="overlay welcome-cards-screen" id="welcomeCardsScreen" hidden role="dialog" aria-modal="true" aria-labelledby="welcomeCardsTitle">
@@ -148,9 +182,9 @@
     <h2 id="welcomeCardsTitle">A little light to bring home</h2>
     <div class="welcome-carousel" id="welcomeCarousel" tabindex="0" role="group" aria-label="Welcome story cards">
       <div class="welcome-card-track" id="welcomeCardTrack">
-        <article class="welcome-card" data-welcome-slide="0" aria-roledescription="slide" aria-label="1 of 3"><span class="welcome-card-mark" aria-hidden="true">â˜¾</span><h3></h3><p></p></article>
-        <article class="welcome-card" data-welcome-slide="1" aria-roledescription="slide" aria-label="2 of 3"><span class="welcome-card-mark" aria-hidden="true">âœ¦</span><h3></h3><p></p></article>
-        <article class="welcome-card" data-welcome-slide="2" aria-roledescription="slide" aria-label="3 of 3"><span class="welcome-card-mark" aria-hidden="true">â˜€</span><h3></h3><p></p></article>
+        <article class="welcome-card" data-welcome-slide="0" aria-roledescription="slide" aria-label="1 of 3"><span class="welcome-card-mark" aria-hidden="true">☾</span><h3></h3><p></p></article>
+        <article class="welcome-card" data-welcome-slide="1" aria-roledescription="slide" aria-label="2 of 3"><span class="welcome-card-mark" aria-hidden="true">✦</span><h3></h3><p></p></article>
+        <article class="welcome-card" data-welcome-slide="2" aria-roledescription="slide" aria-label="3 of 3"><span class="welcome-card-mark" aria-hidden="true">☀</span><h3></h3><p></p></article>
       </div>
     </div>
     <div class="welcome-dots" id="welcomeDots" role="tablist" aria-label="Welcome card pages">
@@ -173,8 +207,8 @@
         <div class="setup-tag" id="setupCatTag">Your cat</div>
       </div>
       <div class="setup-fields">
-        <label class="field"><span class="setup-step">01 Â· Who are you?</span>ðŸ¾ Her name<input type="text" id="girlNameInput" maxlength="12" autocomplete="off" spellcheck="false" placeholder="e.g. Thiri"></label>
-        <label class="field"><span class="setup-step">02 Â· Whoâ€™s your cat?</span>ðŸ¾ Her catâ€™s name<input type="text" id="catNameInput" maxlength="12" autocomplete="off" spellcheck="false" placeholder="e.g. Shwe"></label>
+        <label class="field"><span class="setup-step">01 · Who are you?</span>🐾 Her name<input type="text" id="girlNameInput" maxlength="12" autocomplete="off" spellcheck="false" placeholder="e.g. Thiri"></label>
+        <label class="field"><span class="setup-step">02 · Who’s your cat?</span>🐾 Her cat’s name<input type="text" id="catNameInput" maxlength="12" autocomplete="off" spellcheck="false" placeholder="e.g. Shwe"></label>
         <fieldset class="coat-pick">
           <legend>Choose your cat</legend>
           <div class="coat-options" id="breedOptions"></div>
@@ -183,7 +217,7 @@
         <div class="setup-error" id="setupError" aria-live="polite"></div>
       </div>
     </div>
-    <div class="prologue-actions"><span class="muted" id="setupNote">You can change these later from the menu.</span><button class="btn ghost setup-back" id="setupBackBtn" type="button" hidden>Back</button><button class="btn ghost" id="setupPrevious" type="button" hidden>â† Your name</button><button class="btn" id="setupNext" type="button">Meet your cat â†’</button><button class="btn" id="setupGo" type="submit">Begin the story â†’</button></div>
+    <div class="prologue-actions"><span class="muted" id="setupNote">You can change these later from the menu.</span><button class="btn ghost setup-back" id="setupBackBtn" type="button" hidden>Back</button><button class="btn ghost" id="setupPrevious" type="button" hidden>← Your name</button><button class="btn" id="setupNext" type="button">Meet your cat →</button><button class="btn" id="setupGo" type="submit">Begin the story →</button></div>
   </form>
 </div>
 
@@ -217,14 +251,14 @@
       <button class="rh-spot" id="freeBtn" type="button" style="--x:85.95%;--y:5.48%;--w:11.70%;--h:33.72%;--tx:50.0%;--ty:84%" aria-label="Free Play: wander the places you have found"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Free Play</b><i>A moonlit wander</i></span></button>
       <button class="rh-spot rh-obj" id="bookBtn" type="button" style="--x:34.50%;--y:46.09%;--w:10.75%;--h:9.92%;--tx:49.8%;--ty:5.9%" aria-label="Mood Book: every feeling brought home"><span class="rh-glow" aria-hidden="true"></span><svg class="rh-art rh-book" viewBox="0 0 120 60" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs><radialGradient id="rhBookGlow" cx=".5" cy=".6" r=".6"><stop offset="0" stop-color="#fff1b8" stop-opacity=".85"/><stop offset="1" stop-color="#fff1b8" stop-opacity="0"/></radialGradient></defs><ellipse cx="60" cy="38" rx="66" ry="30" fill="url(#rhBookGlow)" class="rh-book-halo"/><ellipse cx="60" cy="57" rx="50" ry="3.5" fill="#000" opacity=".35"/><path d="M10 52 14 26q22-6 46 2 24-8 46-2l4 26q-26-6-50 2-24-8-50-2Z" fill="#8a6ad8" stroke="#3b2c4f" stroke-width="1.6" stroke-linejoin="round"/><path d="M15 48 18 24q20-5 42 3v26q-22-7-45-5Z" fill="#fffaf0" stroke="#3b2c4f" stroke-width="1.2" stroke-linejoin="round"/><path d="M105 48 102 24q-20-5-42 3v26q22-7 45-5Z" fill="#fff5e4" stroke="#3b2c4f" stroke-width="1.2" stroke-linejoin="round"/><path d="M60 27v26" stroke="#c9b6a0" stroke-width="1.2"/><g class="rh-book-doodles"><path d="M31 31l3 6 6 .8-4.4 4.2 1 6-5.6-3-5.6 3 1-6-4.4-4.2 6-.8Z" fill="#ff727d"/><circle cx="29" cy="38" r=".9" fill="#30234c"/><circle cx="33" cy="38" r=".9" fill="#30234c"/><path d="M46 32c3 4 7 7 7 10a7 6 0 0 1-14 0c0-3 4-6 7-10Z" fill="#79c7ff"/><circle cx="44" cy="41" r=".9" fill="#30234c"/><circle cx="48" cy="41" r=".9" fill="#30234c"/><circle cx="76" cy="38" r="6" fill="#b59aff"/><circle cx="74" cy="37.5" r=".9" fill="#30234c"/><circle cx="78" cy="37.5" r=".9" fill="#30234c"/><path d="M84 32h12M84 36h10M84 40h12M84 44h8" stroke="#b9aecf" stroke-width="1.4" stroke-linecap="round"/></g><path d="M66 27v30l3-3 3 3V27" fill="#ff8fb1" stroke="#3b2c4f" stroke-width="1"/><g class="rh-book-sparks" fill="#fff3b0"><path d="M24 12l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5Z"/><path d="M98 8l1.2 3 3 1.2-3 1.2-1.2 3-1.2-3-3-1.2 3-1.2Z"/><circle cx="60" cy="10" r="1.6"/></g></svg><span class="rh-tag"><b>Mood Book</b><i><span id="bookBtnValue">0 / 17 found</span></i></span></button>
       <button class="rh-spot" id="shopBtn" type="button" style="--x:82.40%;--y:48.31%;--w:10.55%;--h:22.87%;--tx:50.2%;--ty:13.3%" aria-label="Shop: treats and upgrades"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>Treat box</b><i><span id="shopBtnValue">0 Glow</span></i></span></button>
-      <button class="rh-spot" id="roomShelfBtn" type="button" style="--x:6.75%;--y:25.09%;--w:10.50%;--h:9.92%;--tx:50.0%;--ty:12.9%" aria-label="Thiri's shelf: the keepsakes you have found"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b><span class="sb-girl">Thiri</span>â€™s shelf</b><i id="shelfCount">0 / 0 keepsakes</i></span></button>
+      <button class="rh-spot" id="roomShelfBtn" type="button" style="--x:6.75%;--y:25.09%;--w:10.50%;--h:9.92%;--tx:50.0%;--ty:12.9%" aria-label="Thiri's shelf: the keepsakes you have found"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b><span class="sb-girl">Thiri</span>’s shelf</b><i id="shelfCount">0 / 0 keepsakes</i></span></button>
       <button class="rh-spot" id="roomHelpBtn" type="button" style="--x:44.00%;--y:29.17%;--w:10.70%;--h:14.59%;--tx:50.0%;--ty:9.6%" aria-label="How to play"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b>How to play</b><i>Notes on the corkboard</i></span></button>
       <button class="rh-spot rh-obj" id="roomHeartBtn" type="button" style="--x:62.40%;--y:33.60%;--w:5.20%;--h:15.20%;--tx:50%;--ty:-6%" aria-label="Heart Workshop: mix feelings into new ones"><span class="rh-glow" aria-hidden="true"></span><svg class="rh-art rh-jar" viewBox="0 0 60 80" aria-hidden="true"><defs><radialGradient id="rhJarGlow" cx=".5" cy=".6" r=".6"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".95"/><stop offset="1" stop-color="#ff9fc3" stop-opacity="0"/></radialGradient></defs><ellipse cx="30" cy="48" rx="34" ry="32" fill="url(#rhJarGlow)" class="rh-jar-halo"/><ellipse cx="30" cy="77" rx="20" ry="3" fill="#000" opacity=".35"/><rect x="15" y="10" width="30" height="9" rx="2.5" fill="#c98a5a"/><rect x="15" y="13" width="30" height="2" fill="#a86c42"/><path d="M14 18h32c4 0 6 3 6 8v40c0 7-4 10-11 10H19c-7 0-11-3-11-10V26c0-5 2-8 6-8Z" fill="#d9f2ff" fill-opacity=".28" stroke="#e8f6ff" stroke-width="2"/><g class="rh-jar-lights"><circle cx="22" cy="62" r="5" fill="#ff727d"/><circle cx="36" cy="64" r="5" fill="#79c7ff"/><circle cx="29" cy="52" r="5" fill="#ffdc68"/><circle cx="40" cy="48" r="4" fill="#b59aff"/><circle cx="19" cy="45" r="4" fill="#83deb0"/><path d="M30 41c-4-3-6-5-6-7.5 0-2 1.5-3.5 3.2-3.5 1.3 0 2.2.8 2.8 1.8.6-1 1.5-1.8 2.8-1.8 1.7 0 3.2 1.5 3.2 3.5 0 2.5-2 4.5-6 7.5Z" fill="#ff8fb1"/></g><path d="M14 26v34" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".55"/><rect x="34" y="20" width="14" height="9" rx="1" fill="#fff6e0" transform="rotate(12 41 24)"/><path d="M36 24h9" stroke="#c98a5a" stroke-width="1" transform="rotate(12 41 24)"/></svg><span class="rh-tag"><b>Heart Workshop</b><i>Mix feelings</i></span></button>
       <button class="rh-spot rh-obj" id="roomTownBtn" type="button" style="--x:67.60%;--y:43.20%;--w:7.40%;--h:12.00%;--tx:50%;--ty:215%" aria-label="Lantern Town: light up places with the feelings you made"><span class="rh-glow" aria-hidden="true"></span><svg class="rh-art rh-town" viewBox="0 0 100 64" aria-hidden="true"><defs><radialGradient id="rhTownGlow" cx=".5" cy=".7" r=".6"><stop offset="0" stop-color="#ffd98a" stop-opacity=".8"/><stop offset="1" stop-color="#ffd98a" stop-opacity="0"/></radialGradient></defs><ellipse cx="50" cy="44" rx="56" ry="30" fill="url(#rhTownGlow)" class="rh-town-halo"/><ellipse cx="50" cy="61" rx="44" ry="3.5" fill="#000" opacity=".35"/><rect x="8" y="54" width="84" height="7" rx="2" fill="#8a5a3c"/><g stroke="#3b2c4f" stroke-width="1.2" stroke-linejoin="round"><path d="M14 54V36l9-9 9 9v18Z" fill="#f3e2c4"/><path d="M34 54V30l10-10 10 10v24Z" fill="#fff0d6"/><path d="M56 54V38l8-8 8 8v16Z" fill="#f0dcc0"/><path d="M74 54V34l8-8 8 8v20Z" fill="#f6e6ca"/></g><g fill="#c96a5a"><path d="M12 37 23 26l11 11-2 1-9-9-9 9Z"/><path d="M32 31 44 19l12 12-2 1-10-10-10 10Z"/><path d="M54 39l10-10 10 10-2 1-8-8-8 8Z"/><path d="M72 35l10-10 10 10-2 1-8-8-8 8Z"/></g><g class="rh-town-windows" fill="#ffd25e"><rect x="20" y="40" width="6" height="6" rx="1"/><rect x="41" y="34" width="6" height="7" rx="1"/><rect x="41" y="45" width="6" height="9" rx="1" fill="#b98a5a"/><rect x="61" y="42" width="6" height="6" rx="1"/><rect x="79" y="38" width="6" height="6" rx="1"/></g><path d="M4 22Q27 32 50 16T96 22" fill="none" stroke="#3b2c4f" stroke-width="1"/><g class="rh-town-lanterns"><rect x="14" y="24" width="5" height="7" rx="2" fill="#ff8f6b"/><rect x="31" y="22" width="5" height="7" rx="2" fill="#ffd25e"/><rect x="62" y="17" width="5" height="7" rx="2" fill="#ff9fc3"/><rect x="82" y="19" width="5" height="7" rx="2" fill="#8fd8ff"/></g></svg><span class="rh-tag"><b>Lantern Town</b><i><span id="roomTownValue">0 / 10 lit</span></i></span></button>
       <button class="rh-spot" id="roomBedBtn" type="button" style="--x:4.75%;--y:44.92%;--w:22.25%;--h:29.17%;--tx:37.5%;--ty:7.6%" aria-label="Change names or cat"><span class="rh-glow" aria-hidden="true"></span><span class="rh-tag"><b><span class="sb-girl">Thiri</span></b><i>Asleep</i></span></button>
      </div>
     </div>
-    <div class="hub-content-heading rh-caption"><span>WHILE <b class="sb-girl">THIRI</b> SLEEPSâ€¦</span><h1>Where will <span class="sb-cat">Shwe</span> go tonight?</h1></div>
+    <div class="hub-content-heading rh-caption"><span>WHILE <b class="sb-girl">THIRI</b> SLEEPS…</span><h1>Where will <span class="sb-cat">Shwe</span> go tonight?</h1></div>
   </main>
   <section class="story-map-screen" id="storyMapScreen" hidden aria-labelledby="storyMapTitle">
     <div class="panel story-map-panel">
@@ -232,25 +266,25 @@
       <p class="level-map-hint">Your journey unfolds left to right. Swipe or use the arrows to explore.</p>
       <div class="map-guide" id="mapGuide" hidden role="region" aria-labelledby="mapGuideName"><img class="map-guide-cat" id="mapGuideCat" src="assets/cats/ginger-toon.png" alt="" aria-hidden="true" decoding="async"><div class="map-guide-copy"><strong id="mapGuideName">Shwe</strong><p id="mapGuideText">Follow the glowing path to the next feeling.</p></div><button class="btn ghost map-guide-dismiss" id="mapGuideDismiss" type="button">Got it</button></div>
       <div class="level-map-window" id="levelMapViewport" role="region" aria-label="Chapter map. Use left and right arrow keys to explore." tabindex="0"><div class="level-map-track" id="levelMapTrack"><svg class="level-map-path" id="levelMapSvg" viewBox="0 0 100 4600" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="mapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><g id="mapScenery"></g><path class="path-route" id="levelMapRoute"></path><path class="path-halo"></path><path class="path-line" id="levelMapPath"></path></svg></div></div>
-      <nav class="map-navigation" aria-label="Explore chapters"><button class="btn ghost" id="mapPrevious" type="button" aria-label="Previous chapters">â†</button><button class="btn ghost" id="mapCurrent" type="button">Current chapter</button><button class="btn ghost" id="mapNext" type="button" aria-label="Next chapters">â†’</button></nav>
+      <nav class="map-navigation" aria-label="Explore chapters"><button class="btn ghost" id="mapPrevious" type="button" aria-label="Previous chapters">←</button><button class="btn ghost" id="mapCurrent" type="button">Current chapter</button><button class="btn ghost" id="mapNext" type="button" aria-label="Next chapters">→</button></nav>
       <div class="level-map-key" aria-label="Level status"><span><i class="key-open"></i>Playable now</span><span><i class="key-locked"></i>Locked</span></div>
     </div>
   </section>
   <svg class="story-map-backdrop level-map-path" id="storyMapBackdrop" viewBox="0 0 100 360" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="storyMapNightFill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111a2a"/><stop offset=".34" stop-color="#1c2d43"/><stop offset=".68" stop-color="#162438"/><stop offset="1" stop-color="#101522"/></linearGradient><radialGradient id="storyMapMist"><stop stop-color="#b3c8c9" stop-opacity=".34"/><stop offset="1" stop-color="#9db5c2" stop-opacity="0"/></radialGradient></defs><rect id="storyMapBackdropFill" x="0" y="0" width="100" height="360" fill="url(#storyMapNightFill)"/><g id="storyMapBackdropScenery"></g></svg>
-  <button class="btn ghost map-hub-back" id="mapHubBackBtn" type="button" aria-label="Back to home">â† Home</button>
+  <button class="btn ghost map-hub-back" id="mapHubBackBtn" type="button" aria-label="Back to home">← Home</button>
 </div>
 
 <div class="overlay hub-settings-screen" id="hubSettingsScreen" hidden role="dialog" aria-modal="true" aria-labelledby="hubSettingsTitle">
-  <section class="panel hub-settings-panel"><p class="eyebrow">SETTINGS</p><h2 id="hubSettingsTitle">Settings &amp; daily missions</h2><p class="muted">Check todayâ€™s goals, claim Glow, or review the ways to guide Shwe.</p>
-    <section class="missions hub-missions" aria-labelledby="mTitle"><div class="mhead"><b id="mTitle">Todayâ€™s missions</b><span class="muted" id="mReset"></span></div><div id="mList"></div></section>
+  <section class="panel hub-settings-panel"><p class="eyebrow">SETTINGS</p><h2 id="hubSettingsTitle">Settings &amp; daily missions</h2><p class="muted">Check today’s goals, claim Glow, or review the ways to guide Shwe.</p>
+    <section class="missions hub-missions" aria-labelledby="mTitle"><div class="mhead"><b id="mTitle">Today’s missions</b><span class="muted" id="mReset"></span></div><div id="mList"></div></section>
     <fieldset class="audio-settings" aria-describedby="audioNote"><legend>Sounds of the night</legend><p class="muted" id="audioNote">Music, sound effects, map ambience and Mute are adjustable here.</p><label>Music<input type="range" min="0" max="100" value="70" data-audio="music" data-sfx="toggle"></label><label>Sound effects<input type="range" min="0" max="100" value="80" data-audio="effects" data-sfx="toggle"></label><label>Ambience<input type="range" min="0" max="100" value="60" data-audio="ambience" data-sfx="toggle"></label><label>Mute all<input class="cozy-toggle" type="checkbox" role="switch" data-audio="mute" data-sfx="toggle"></label></fieldset>
-    <p class="muted">Use your deviceâ€™s reduced-motion preference for gentler movement. Open the guide anytime for controls and feelings.</p>
+    <p class="muted">Use your device’s reduced-motion preference for gentler movement. Open the guide anytime for controls and feelings.</p>
     <div class="guidance-settings">
       <label class="guidance-toggle"><span>Show tips</span><input class="cozy-toggle" id="showTipsToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
-      <label class="guidance-toggle"><span>Notes during play Â· paper messages and tips (press N)</span><input class="cozy-toggle" id="showNotesToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
+      <label class="guidance-toggle"><span>Notes during play · paper messages and tips (press N)</span><input class="cozy-toggle" id="showNotesToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
       <label class="guidance-toggle"><span>Show items found (top right)</span><input class="cozy-toggle" id="showItemsToggle" type="checkbox" role="switch" checked data-sfx="toggle"></label>
-      <label class="guidance-toggle"><span>Gentle mode Â· no life lost on falls</span><input class="cozy-toggle" id="gentleModeToggle" type="checkbox" role="switch" data-sfx="toggle"></label>
-      <div class="guidance-language"><span>Tip language</span><button class="language-picker-trigger" id="languagePickerBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="languagePickerScreen"><span class="language-current-flag" id="languageCurrentFlag" aria-hidden="true">ðŸ‡¬ðŸ‡§</span><span id="languageCurrentLabel">English</span><span class="language-trigger-chevron" aria-hidden="true">âŒ„</span></button></div>
+      <label class="guidance-toggle"><span>Gentle mode · no life lost on falls</span><input class="cozy-toggle" id="gentleModeToggle" type="checkbox" role="switch" data-sfx="toggle"></label>
+      <div class="guidance-language"><span>Tip language</span><button class="language-picker-trigger" id="languagePickerBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="languagePickerScreen"><span class="language-current-flag" id="languageCurrentFlag" aria-hidden="true">🇬🇧</span><span id="languageCurrentLabel">English</span><span class="language-trigger-chevron" aria-hidden="true">⌄</span></button></div>
       <p class="muted guidance-status" id="settingsGuidanceStatus" aria-live="polite"></p>
       <div class="guidance-actions"><button class="btn ghost" id="settingsHelpBtn" type="button" data-sfx="toggle">How to play</button><button class="btn ghost" id="settingsReplayTutorial" type="button" data-sfx="toggle">Replay tutorial</button></div>
     </div>
@@ -259,17 +293,17 @@
 </div>
 <div class="overlay language-picker-screen" id="languagePickerScreen" hidden role="dialog" aria-modal="true" aria-labelledby="languagePickerTitle">
   <section class="panel language-picker-panel">
-    <button class="language-picker-close" id="languagePickerClose" type="button" aria-label="Close language selection">Ã—</button>
+    <button class="language-picker-close" id="languagePickerClose" type="button" aria-label="Close language selection">×</button>
     <h2 id="languagePickerTitle">Language</h2>
     <div class="language-options" role="group" aria-label="Tip language">
-      <button class="language-option" id="languageOptionMy" type="button" data-language="my" aria-pressed="false"><span class="language-flag" aria-hidden="true">ðŸ‡²ðŸ‡²</span><span class="language-option-name" lang="my">á€™á€¼á€”á€ºá€™á€¬</span><span class="language-check" aria-hidden="true">âœ“</span></button>
-      <button class="language-option" id="languageOptionEn" type="button" data-language="en" aria-pressed="false"><span class="language-flag" aria-hidden="true">ðŸ‡¬ðŸ‡§</span><span class="language-option-name">English</span><span class="language-check" aria-hidden="true">âœ“</span></button>
+      <button class="language-option" id="languageOptionMy" type="button" data-language="my" aria-pressed="false"><span class="language-flag" aria-hidden="true">🇲🇲</span><span class="language-option-name" lang="my">မြန်မာ</span><span class="language-check" aria-hidden="true">✓</span></button>
+      <button class="language-option" id="languageOptionEn" type="button" data-language="en" aria-pressed="false"><span class="language-flag" aria-hidden="true">🇬🇧</span><span class="language-option-name">English</span><span class="language-check" aria-hidden="true">✓</span></button>
     </div>
   </section>
 </div>
 <div class="overlay help-screen" id="helpScreen" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <section class="panel help-panel" id="helpPanel">
-    <header class="help-heading"><div><p class="eyebrow" id="helpSubtitle">A small guide for the Night Side.</p><h2 id="helpTitle">How to play</h2></div><button class="btn ghost help-close" id="helpCloseBtn" type="button" aria-label="Close Help">Ã—</button></header>
+    <header class="help-heading"><div><p class="eyebrow" id="helpSubtitle">A small guide for the Night Side.</p><h2 id="helpTitle">How to play</h2></div><button class="btn ghost help-close" id="helpCloseBtn" type="button" aria-label="Close Help">×</button></header>
     <section class="help-section" aria-labelledby="helpControlsTitle"><h3 id="helpControlsTitle">Controls</h3><div class="help-controls" id="helpControls"></div></section>
     <section class="help-section" aria-labelledby="helpMoodsTitle"><h3 id="helpMoodsTitle">How to catch each Moodling</h3><p class="muted" id="helpMoodsNote">Meet a new Moodling to unlock its catch guide. Shwe also shares a tip when it first appears.</p><div class="help-moods" id="helpMoods" role="list"></div></section>
     <div class="help-extras"><section class="help-section"><h3 id="helpGlowTitle">Glow &amp; upgrades</h3><p id="helpGlowText"></p></section><section class="help-section"><h3 id="helpCombosTitle">Combos</h3><p id="helpComboText"></p></section></div>
@@ -277,49 +311,49 @@
   </section>
   <section class="catch-clip-view" id="catchClipView" hidden role="dialog" aria-modal="true" aria-labelledby="catchClipTitle" aria-describedby="catchClipCaption">
     <div class="catch-clip-panel">
-      <header class="catch-clip-heading"><div><p class="eyebrow" id="catchClipKicker">A little catch lesson</p><h2 id="catchClipTitle">How to catch</h2></div><button class="btn ghost help-close" id="catchClipClose" type="button" aria-label="Close clip">Ã—</button></header>
+      <header class="catch-clip-heading"><div><p class="eyebrow" id="catchClipKicker">A little catch lesson</p><h2 id="catchClipTitle">How to catch</h2></div><button class="btn ghost help-close" id="catchClipClose" type="button" aria-label="Close clip">×</button></header>
       <div class="catch-clip-stage" id="catchClipStage">
         <div class="catch-clip-cards" id="catchClipCards"></div>
-        <p class="catch-clip-tag" id="catchClipTag" aria-hidden="true">1 Â· Notice</p>
+        <p class="catch-clip-tag" id="catchClipTag" aria-hidden="true">1 · Notice</p>
       </div>
       <p class="catch-clip-caption sr-only" id="catchClipCaption" aria-live="polite"></p>
-      <div class="catch-clip-mobile-nav"><button class="btn ghost" id="catchClipPrev" type="button" aria-label="Previous picture">â—€</button><div class="catch-clip-dots" id="catchClipDots" aria-label="Guide pictures"></div><button class="btn ghost" id="catchClipNext" type="button" aria-label="Next picture">â–¶</button></div>
+      <div class="catch-clip-mobile-nav"><button class="btn ghost" id="catchClipPrev" type="button" aria-label="Previous picture">◀</button><div class="catch-clip-dots" id="catchClipDots" aria-label="Guide pictures"></div><button class="btn ghost" id="catchClipNext" type="button" aria-label="Next picture">▶</button></div>
     </div>
   </section>
 </div>
 <div class="overlay level-briefing-screen" id="levelBriefingScreen" hidden role="dialog" aria-modal="true" aria-labelledby="levelBriefingTitle" aria-describedby="levelBriefingSub">
   <section class="panel level-briefing-panel">
-    <p class="eyebrow" id="levelBriefingEyebrow">11 PM Â· THE NIGHT SIDE</p>
+    <p class="eyebrow" id="levelBriefingEyebrow">11 PM · THE NIGHT SIDE</p>
     <h2 id="levelBriefingTitle">First Night</h2>
     <p class="muted" id="levelBriefingSub">Learn to dodge Frustrated.</p>
-    <div class="briefing-objective"><span class="briefing-symbol" aria-hidden="true">âœ¦</span><div><strong>Feelings to bring home</strong><p id="levelBriefingGoal">3 Frustrated</p></div></div>
-    <div class="briefing-tip"><strong>Shweâ€™s clue</strong><p id="levelBriefingTip">Dodge the charge, then pounce while Frustrated is dizzy.</p></div>
-    <p class="briefing-paper-stars" id="levelBriefingPaperStars">âœ¦ Paper stars Â· 0 / 3</p>
+    <div class="briefing-objective"><span class="briefing-symbol" aria-hidden="true">✦</span><div><strong>Feelings to bring home</strong><p id="levelBriefingGoal">3 Frustrated</p></div></div>
+    <div class="briefing-tip"><strong>Shwe’s clue</strong><p id="levelBriefingTip">Dodge the charge, then pounce while Frustrated is dizzy.</p></div>
+    <p class="briefing-paper-stars" id="levelBriefingPaperStars">✦ Paper stars · 0 / 3</p>
     <p class="briefing-time" id="levelBriefingTime">2:00 before sunrise</p>
-    <div class="actions briefing-actions"><button class="btn ghost" id="levelBriefingBack" type="button">Back to the map</button><button class="btn" id="levelBriefingStart" type="button">Begin the night â†’</button></div>
+    <div class="actions briefing-actions"><button class="btn ghost" id="levelBriefingBack" type="button">Back to the map</button><button class="btn" id="levelBriefingStart" type="button">Begin the night →</button></div>
   </section>
 </div>
 
 <div class="overlay night-ready" id="nightReadyScreen" hidden role="status" aria-live="assertive" aria-atomic="true">
   <div class="ready-lights" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="ready-wash" aria-hidden="true"></div>
-  <div class="ready-copy"><p class="eyebrow" id="readyNightEyebrow">11 PM Â· THE NIGHT SIDE</p><h1 id="nightReadyWord">Ready?</h1><p id="nightReadyCaption">Bring every little light home.</p></div>
+  <div class="ready-copy"><p class="eyebrow" id="readyNightEyebrow">11 PM · THE NIGHT SIDE</p><h1 id="nightReadyWord">Ready?</h1><p id="nightReadyCaption">Bring every little light home.</p></div>
 </div>
 
 <div class="overlay boss-intro-screen" id="bossIntroScreen" hidden role="dialog" aria-modal="true" aria-labelledby="bossIntroTitle" aria-describedby="bossIntroText">
   <section class="panel boss-intro-panel">
-    <div class="boss-intro-art" aria-hidden="true"><span>âœ¦</span><strong>â˜</strong><span>âœ¦</span></div>
+    <div class="boss-intro-art" aria-hidden="true"><span>✦</span><strong>☁</strong><span>✦</span></div>
     <p class="eyebrow">A BIG FEELING</p>
     <h1 id="bossIntroTitle">Storm Frustrated</h1>
     <p id="bossIntroText">Dodge each charge. When the storm gets dizzy, pounce. Three good pounces open the moon door.</p>
-    <div class="boss-intro-controls" aria-label="How to dodge and pounce"><span id="bossIntroDodge">â†” Dodge or jump</span><span id="bossIntroPounce">âœ¦ Pounce when dizzy</span></div>
+    <div class="boss-intro-controls" aria-label="How to dodge and pounce"><span id="bossIntroDodge">↔ Dodge or jump</span><span id="bossIntroPounce">✦ Pounce when dizzy</span></div>
     <button class="btn" id="bossIntroReady" type="button">Face the storm</button>
   </section>
 </div>
 
 <div class="overlay" id="endScreen" hidden>
   <div class="panel">
-    <p class="eyebrow" id="endEyebrow">Night 1 complete</p>
+    <p class="eyebrow" id="endEyebrow">Level 1 complete</p>
     <h1 id="endTitle">Thiri's curtains open a little</h1>
     <div class="stars" id="endStars" aria-label="Stars"></div>
     <div class="night-storyline" id="nightStoryline" hidden>
@@ -327,11 +361,11 @@
       <div class="night-story-copy"><strong id="endUnlockBadge" hidden></strong><p id="endDiaryLine"></p><span id="endStageLine"></span></div>
     </div>
     <p id="endMsg"></p>
-    <span id="newBestSticker" class="new-best" hidden>âœ¦ NEW BEST!</span>
+    <span id="newBestSticker" class="new-best" hidden>✦ NEW BEST!</span>
     <div class="stats">
       <div class="stat"><span>Score</span><strong id="sScore">0</strong></div>
       <div class="stat secondary-result"><span>Best</span><strong id="sBest">0</strong></div>
-      <div class="stat secondary-result"><span>Biggest combo</span><strong id="sCombo">Ã—1</strong></div>
+      <div class="stat secondary-result"><span>Biggest combo</span><strong id="sCombo">×1</strong></div>
       <div class="stat"><span>Brought home</span><strong id="sHome">0/10</strong></div>
       <div class="stat"><span>Glow earned</span><strong id="sGlow" class="gold">+0</strong></div>
     </div>
@@ -351,7 +385,7 @@
     <p class="eyebrow" id="nightWakeEyebrow">AFTER 11 PM</p><h1 id="nightWakeTitle">She stirs in her sleep.</h1>
     <div class="wake-art"><canvas id="nightWakeCanvas" width="680" height="250" aria-label="Thiri's room becoming brighter"></canvas></div>
     <div class="wake-copy"><strong id="nightWakeDiary"></strong><em id="nightWakeLine"></em></div>
-    <button class="btn" id="nightWakeContinue" type="button">Continue â†’</button>
+    <button class="btn" id="nightWakeContinue" type="button">Continue →</button>
   </div>
 </div>
 
@@ -361,7 +395,7 @@
     <p class="eyebrow">The last night gives way to morning</p>
     <h1 id="awakeningTitle">A New Morning</h1>
     <div class="awakening-art" id="awakeningArt" data-anim="sunrise">
-      <svg viewBox="0 0 800 350" role="img" aria-label="Thiri wakes in her brightening room beside Shwe, with her restored drawing and Hninâ€™s message">
+      <svg viewBox="0 0 800 350" role="img" aria-label="Thiri wakes in her brightening room beside Shwe, with her restored drawing and Hnin’s message">
         <defs><linearGradient id="awakeRoom" x2="0" y2="1"><stop stop-color="#7a8eaa"/><stop offset="1" stop-color="#f6c88b"/></linearGradient><linearGradient id="awakeSunGlow" x2="0" y2="1"><stop stop-color="#fff6c9" stop-opacity=".95"/><stop offset="1" stop-color="#ffc66f" stop-opacity="0"/></linearGradient></defs>
         <rect width="800" height="350" rx="18" fill="url(#awakeRoom)"/><rect x="36" y="35" width="210" height="205" rx="9" fill="#617d9f" stroke="#f4e5c2" stroke-width="8"/><path d="M141 38v199M39 136h204" stroke="#dae7ea" stroke-width="5"/>
         <circle id="awakeSun" cx="185" cy="98" r="95" fill="url(#awakeSunGlow)"/><circle cx="190" cy="107" r="30" fill="#fff0b2"/>
@@ -375,7 +409,7 @@
         <text x="76" y="319" fill="#fff5dc" font-family="Trebuchet MS,sans-serif" font-size="16" font-weight="700">A NEW MORNING</text>
       </svg>
     </div>
-    <div class="awakening-subtitle" id="awakeningSubtitle" aria-live="polite">Sunrise light spills across the roomâ€¦</div>
+    <div class="awakening-subtitle" id="awakeningSubtitle" aria-live="polite">Sunrise light spills across the room…</div>
     <p class="muted" id="awakeningCompleteLine" hidden>The seven nights are complete. <span class="gold">Morning has come.</span></p>
     <div class="actions" id="awakeningActions" hidden><button class="btn" id="awakeningReplayBtn" type="button">Play again</button><button class="btn ghost" id="awakeningBookBtn" type="button">View Mood Book</button><button class="btn alt" id="awakeningFreeBtn" type="button">Free Mode</button></div>
   </div>
@@ -383,7 +417,7 @@
 
 <div class="overlay" id="shopScreen" hidden>
   <div class="panel">
-    <p class="eyebrow"><span class="sb-cat">Shwe</span>â€™s treat tin</p>
+    <p class="eyebrow"><span class="sb-cat">Shwe</span>’s treat tin</p>
     <h1>Glow treats</h1>
     <p>You earn Glow for every feeling you catch, in both modes. Bigger combos earn more. You have <span class="glowpill" id="glowAmt">0</span> Glow.</p>
     <div class="shop" id="shopList"></div>
@@ -393,9 +427,9 @@
 
 <div class="overlay" id="shelfScreen" hidden role="dialog" aria-modal="true" aria-labelledby="shelfTitle">
   <div class="panel wide">
-    <p class="eyebrow"><span class="sb-girl">Thiri</span>â€™s shelf</p>
+    <p class="eyebrow"><span class="sb-girl">Thiri</span>’s shelf</p>
     <h1 id="shelfTitle">Keepsakes</h1>
-    <p>Every keepsake <span class="sb-cat">Shwe</span> finds on the Night Side goes back on her shelf. Find a whole hourâ€™s set for a bonus.</p>
+    <p>Every keepsake <span class="sb-cat">Shwe</span> finds on the Night Side goes back on her shelf. Find a whole hour’s set for a bonus.</p>
     <div class="shop shelf-list" id="shelfList"></div>
     <button class="btn ghost" id="shelfBack">Back</button>
   </div>
@@ -403,7 +437,7 @@
 
 <div class="overlay" id="bookScreen" hidden>
   <div class="panel wide">
-    <p class="eyebrow"><span class="sb-girl">Thiri</span>â€™s feelings</p>
+    <p class="eyebrow"><span class="sb-girl">Thiri</span>’s feelings</p>
     <h1>Mood Book</h1>
     <p>Every feeling <span class="sb-cat">Shwe</span> brings home gets a page in her sketchbook. Rare ones sparkle, so look closely. <b class="gold" id="bookCount">0 / 15 found</b></p>
     <div class="book" id="bookList"></div>
@@ -425,19 +459,19 @@
 <script src="js/test-mode.js?v=20261030-test1"></script>
 <script src="js/customization.js?v=20261030-sharpcat"></script>
 <script src="js/controls.js?v=20261029-layout"></script>
-<script src="js/tips.js?v=20261031-v7"></script>
-<script src="js/levels.js?v=20261031-v7"></script>
+<script src="js/tips.js?v=20261031-v13"></script>
+<script src="js/levels.js?v=20261031-v16"></script>
 <script src="js/visual-chapters.js?v=20261026-nolamps"></script>
 <script src="js/school-hallways.js?v=20261024-school-outdoors"></script>
-<script src="js/tc-sfx.js?v=20261031-v7"></script>
-<script src="js/tc-game-audio.js?v=20261031-v7"></script>
+<script src="js/tc-sfx.js?v=20261031-v10"></script>
+<script src="js/tc-game-audio.js?v=20261031-v10"></script>
 <script src="js/moodling-art.js?v=20261026-art"></script>
 <script src="js/catch-clips.js?v=20261028-hd-clips"></script>
-<script src="js/endless-film.js?v=20261028-canvas"></script>
-<script src="js/endless.js?v=20261029-night-train"></script>
+<script src="js/endless-film.js?v=20261031-v12"></script>
+<script src="js/endless.js?v=20261031-v15"></script>
 <script src="js/endless-fx.js?v=20261028-vivid"></script>
 <script src="js/endless-places.js?v=20261029-night-train"></script>
-<script src="js/drawings.js?v=20261028-en1"></script>
+<script src="js/drawings.js?v=20261031-v12"></script>
 <script src="js/heart-data.js?v=20261027-cost"></script>
 <script src="js/test-all-content.js?v=1"></script>
 <script src="js/lantern-town.js?v=20261027-v3"></script>
@@ -445,11 +479,10 @@
 <script src="js/jump-upgrade.js?v=20261028-second-leap"></script>
 <script src="js/paper-stars.js?v=20261028-paper-stars"></script>
 <script src="js/parallax-layers.js?v=20261030-map-depth"></script>
-<script src="js/mood-tide.js?v=20261031-v7"></script>
-<script src="js/game.js?v=20261031-v7"></script>
-<script src="js/cozy-ui.js?v=20261027-chill"></script>
+<script src="js/game.js?v=20261031-v19"></script>
+<script src="js/cozy-ui.js?v=20261031-v13"></script>
 <script src="js/sketchbook.js?v=sb5"></script>
-<script src="js/afterstory.js?v=as2"></script>
-<script src="js/button-tour.js?v=20261031-v7"></script>
+<script src="js/afterstory.js?v=20261031-v12"></script>
+<script src="js/button-tour.js?v=20261031-v13"></script>
 </body>
 </html>

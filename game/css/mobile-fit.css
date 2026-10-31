@@ -164,3 +164,39 @@ img.micon { object-fit: contain; }
   .daily-tasks-panel .micon { width: 28px; height: 28px; }
   .daily-tasks-panel .daily-actions .btn { min-height: 44px; padding-block: 6px; }
 }
+
+/* ---- hint notes on touch screens: a small note near the top middle, never over the joystick or the action buttons ---- */
+@media (hover: none), (pointer: coarse) {
+  .tip-coach { top: calc(env(safe-area-inset-top, 0px) + 58px) !important; bottom: auto !important; left: 50% !important; right: auto !important;
+    transform: translateX(-50%) !important; width: min(320px, 34vw) !important; }
+  .tip-coach-card { padding: 6px 8px !important; gap: 6px !important; }
+  .tip-coach-card p { font-size: 12px !important; line-height: 1.25 !important; }
+  .tip-coach-card strong { font-size: 14px !important; }
+  .shwe-teacher { display: none !important; }
+}
+body:has(#touch:not([hidden])) .tip-coach { top: calc(env(safe-area-inset-top, 0px) + 58px) !important; bottom: auto !important; left: 50% !important; right: auto !important; transform: translateX(-50%) !important; width: min(320px, 34vw) !important; }
+@media (hover: none), (pointer: coarse) {
+  #tipCoach .tip-coach-kicker { display: none !important; }
+  #tipCoach #tipCoachTitle { font-size: 14px !important; line-height: 1.1 !important; }
+  #tipCoach #tipCoachText { font-size: 11.5px !important; line-height: 1.25 !important; margin: 0 !important; }
+  #tipCoach .tip-coach-close { width: 36px !important; height: 36px !important; min-width: 36px !important; min-height: 36px !important; }
+  #tipCoach .tip-coach-card { max-width: none !important; }
+}
+
+/* ---- "Next for you" goals on the level-end screen ---- */
+.end-next { margin: 6px 0 10px; padding: 10px 12px; border-radius: 14px; background: rgba(138, 92, 246, .1); border: 2px dashed rgba(138, 92, 246, .45); text-align: left; }
+.end-next[hidden] { display: none; }
+.end-next h3 { margin: 0 0 6px; font: 700 18px/1.1 "Gaegu", "Fredoka", system-ui, sans-serif; color: #6a4ab8; letter-spacing: .02em; }
+.end-next ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.end-next li { display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: start; }
+.end-next .en-icon { font-size: 22px; line-height: 1.1; text-align: center; }
+.end-next .en-copy { display: grid; gap: 2px; min-width: 0; }
+.end-next strong { font-size: 14px; line-height: 1.2; }
+.end-next small { font-size: 12px; line-height: 1.25; opacity: .8; }
+.en-bar { display: block; height: 6px; border-radius: 99px; background: rgba(60, 40, 90, .14); overflow: hidden; margin-top: 2px; }
+.en-bar b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #f6c453, #ff8fc3); }
+@media (max-height: 520px) { .end-next { padding: 6px 8px; margin: 4px 0 6px; } .end-next ul { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px 10px; } .end-next small { font-size: 11px; } .end-next h3 { font-size: 15px; } }
+
+/* ---- the cat sits on the rug, away from the Story Mode window, so a tap on one never hits the other ---- */
+#hubHeroCat.rh-cat { left: 42% !important; top: 62.5% !important; }
+#hubCatName.rh-cattag { left: 44.6% !important; top: 77.6% !important; }

@@ -4,7 +4,7 @@ Each run loads one `LEVELS` record from `game/js/levels.js`. The existing place 
 
 Legend: `=` walkable ground, `/` or `\\` slope/step, `v` lethal pit, `P` roost route, `~` water, `H` hide spot, `B` burial spot, `*` destination light. Shwe has three lives per story night; Gentle mode removes the life cost. Free Play falls cost five seconds. Sketches are schematic (not to scale); coordinates and authoritative geometry are in the data file.
 
-Story nights only have roosts on every fifth level. Nights 1-4 also have optional `solidTops`: desks, shelves, chairs, the slide, a bench and stall roofs that Shwe can stand on. They are one-way scenery tops, not platforms, so they do not change the roost rule; each is reachable with one jump from the ground (or from the top below it) and hides a keepsake. Night 6 has a tide-pool keepsake by the jetty that only shows once the Mood Tide is low.
+Story nights only have roosts on every fifth level. Nights 1-4 also have optional `solidTops`: desks, shelves, chairs, the slide, a bench and stall roofs that Shwe can stand on. They are one-way scenery tops, not platforms, so they do not change the roost rule; each is reachable with one jump from the ground (or from the top below it) and hides a keepsake.
 
 Story nights only have roosts on every fifth level. Levels 5, 10, 15, and so on contain pits that are wider than Shwe's unaided jump; each pit has exactly one moving roost bridge. All other story levels have continuous ground and no roost platforms.
 

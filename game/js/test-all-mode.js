@@ -53,7 +53,7 @@
   catch (error) { console.error('TideCatcher test profile could not isolate browser storage.', error); return; }
 
   window.TC_TEST_ALL_UNLOCKED = true;
-  const book = Object.fromEntries(['F0','F1','F2','N0','N1','N2','L0','L1','L2','B0','B1','B2','E0','S0','J0','C0','C1','G0'].map(key => [key, 1]));
+  const book = Object.fromEntries(['F0','F1','F2','F3','N0','N1','N2','N3','L0','L1','L2','L3','B0','B1','B2','E0','S0','J0','C0','C1','G0'].map(key => [key, 1]));
   const seed = {
     'mk-progress': '50', 'mk-thiri': '7', 'mk-awakening-seen': '1',
     'mk-profile': JSON.stringify({ girl: 'Thiri', cat: 'Shwe', coat: 'ginger', welcomeSeen: true, tutorialDone: true, tipsSeen: [], showTips: true, tipLanguage: 'en' }),
@@ -73,6 +73,7 @@
     'mk-lights': JSON.stringify({ F: 99, N: 99, L: 99, S: 99, E: 99, J: 99, B: 99, C: 99, G: 99 }),
     'mk-mixes': JSON.stringify({}), 'mk-mix-hints': JSON.stringify({}),
     'mk-free-map': 'classic', 'mk-missions': 'null', 'mk-gentle-mode': '0', 'mk-map-guide-seen': '1',
+    'mk-endless-v1': JSON.stringify({ seen: [], pieces: Object.fromEntries(['school','park','festival','hill','lake'].map(place => [place, [0,1,2,3,4,5]])), chests: [], badge: false, best: {} }),
     'mk-skyTutorial': JSON.stringify({ A: true, B: true, C: true })
   };
   Object.entries(seed).forEach(([key, value]) => { if (storage.getItem(key) === null) storage.setItem(key, value); });

@@ -2,7 +2,7 @@
    Every Moodling Shwe brings home becomes one "light" of that feeling (game.js sends tc:light).
    Heart Workshop: mix two lights to discover a new feeling; a mix uses one of each and makes one of the new feeling.
    Lantern Town: spend lights and mixed feelings to light ten places; each place plays a small memory.
-   Levels 8–50 on the story map are the Endless Nights, where more lights are caught.
+   Levels 8–50 on the story map are the Endless Levels, where more lights are caught.
    Both places are open from the start. Saved in localStorage. */
 (function () {
   'use strict';
@@ -145,7 +145,7 @@
       <p class="eyebrow">After sunrise</p><h2>Heart Workshop</h2>
       <p class="muted">Mix two feelings to discover a new one. A mix uses one light of each and gives you one of the new feeling. Discoveries are kept forever.</p>
       <div class="as-workshop">
-        <div class="as-col"><h3>Your feeling lights</h3><div class="as-jars">${jars}</div><p class="muted as-small">Out of a feeling? Catch more in the Endless Nights (levels 8 and up on the story map).</p></div>
+        <div class="as-col"><h3>Your feeling lights</h3><div class="as-jars">${jars}</div><p class="muted as-small">Out of a feeling? Catch more in the Endless Levels (levels 8 and up on the story map).</p></div>
         <div class="as-col">
           <div class="as-pot" aria-live="polite">${slot(ws.a)}<span class="as-op">+</span>${slot(ws.b)}<span class="as-op">=</span>
             <span class="as-slot result${r ? ' full' : ''}">${r ? face(r.id, 72) + `<b>${esc(r.n)}</b>` : '✦'}</span></div>

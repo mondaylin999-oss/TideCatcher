@@ -1,5 +1,5 @@
 /* Endless Nights (levels 8–50): every level is built from its number.
-   Before each level the player picks 1 of 3 night cards (a place, its version, the Moodlings it needs and
+   Before each level the player picks 1 of 3 level cards (a place, its version, the Moodlings it needs and
    whether a torn drawing piece is hidden there), and may add optional challenges for a bigger reward.
    Pure data + rules: game.js asks for cards and a plan, then plays it. Progress lives in localStorage. */
 (function (root) {
@@ -112,7 +112,7 @@
       const need = split(types, d.count, r);
       const drawing = DRAWING_PLACES.includes(place) ? place : null;
       const done = drawing ? piecesOf(drawing).length >= PIECES : true;
-      const piece = drawing && !done && (forced?.place === place || r() < .6) ? drawing : null;
+      const piece = drawing && !done && (forced?.place === place || r() < .35) ? drawing : null;
       return { k, place, variant, need, piece, pieceDone: !!drawing && done, newMap: (!!variant || !!PLACES[place].from) && !S.seen.includes(place + ':' + variant), name: mapName(place, variant), icon: mapIcon(place, variant) };
     });
   }

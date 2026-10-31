@@ -4,14 +4,13 @@
 
 TideCatcher is a static browser Canvas game by **NextCrown** for Digit7 Jam 2026. Vercel uses the repository root as its project root; Cloudflare Workers serves the `game/` static assets.
 
-## What's new: the Mood Tide
+## What's new
 
-The game is called TideCatcher because feelings come and go like tides. While Moodlings are loose the **Mood Tide** is high: rain falls, the night turns cool and the edges darken. Every feeling Shwe brings home lowers it, until the sky warms and fireflies come out. A small gauge under the FOUND box shows the tide, coloured by the feeling most still out tonight.
-
-- **Tide pool (Night 6):** a keepsake under the jetty only shows once the tide is low, so the order you calm the night matters. In Gentle mode it is always open.
-- **Festival lanterns:** on festival nights every catch sends a paper lantern into the sky, so by the end the sky is full of the lights you brought home.
-- **Heights on Nights 1-4:** desks, shelves, the slide, a bench and the stall roofs can now be stood on, each hiding a new keepsake (3 per night).
-- **Nights 8-50:** shorter (4,500-6,000 wide), gently rolling ground, a hazard that fits each map on every night, and hide/dig spots that no longer repeat.
+- **Heights on Levels 1-4:** desks, shelves, the slide, a bench and the stall roofs can be stood on, each hiding a keepsake (3 per level).
+- **Levels 8-50:** shorter (4,500-6,000 wide), gently rolling ground, a hazard that fits each map in every level, and hide/dig spots that no longer repeat.
+- **Upper levels:** tougher Moodlings from Level 15 (helmeted Frustrated, Nervous that slip away once, Lonely that need company twice), favourite hiding places for each feeling, and heights to climb in every level.
+- **Fair rewards:** lights reach the Heart Workshop only when a level is beaten for the first time; torn drawing pieces are kept only if the level is beaten.
+- **Catch clips:** every Moodling has a short "how to catch" clip in How to Play, and a level with a new Moodling plays its clip first.
 
 ## Project structure
 
@@ -19,7 +18,7 @@ The game is called TideCatcher because feelings come and go like tides. While Mo
 game/                       Static game site
   index.html                Game markup and metadata
   css/                      Game and interface styles
-  js/                       Game, levels, UI and customization (mood-tide.js: the Mood Tide)
+  js/                       Game, levels, UI and customization
   assets/                   Cat art, scenes, fonts and audio
 docs/                       Level notes, design briefs and art proof
 tests/                      Game integrity and level layout checks

@@ -97,7 +97,7 @@ assert.equal(layouts().length, 53, '50 story levels plus three Free Play trails'
 for (const level of layouts()) check(level);
 for (let night = 1; night <= 50; night++) {
   const level = LEVELS[night];
-  if (night % 5 !== 0) {
+  if (night % 5 !== 0 || night <= 7) {
     assert.equal(level.pits.length, 0, `Night ${night} has no pit`);
     assert.equal(level.platforms.length, 0, `Night ${night} has no roost platforms`);
     continue;
@@ -109,9 +109,8 @@ for (let night = 1; night <= 50; night++) {
   assert.ok(level.platforms.every(p => p[2] * 5 <= level.pits[level.platforms.indexOf(p)][1] - level.pits[level.platforms.indexOf(p)][0]), `Night ${night} gaps are at least five roost-widths`);
 }
 const wallRouteNights = [12, 23, 34, 45, 50];
-assert.deepEqual([...Array(50)].map((_, i) => i + 1).filter(night => LEVELS[night].wallJumps?.length), wallRouteNights,
-  'Wall-jump routes are limited to selected later nights');
-assert.ok(wallRouteNights.every(night => LEVELS[night].wallJumps.length === 2), 'Each selected route has two climbable walls');
+// The wall-jump towers were removed (they blocked the start of a few levels and led nowhere).
+assert.ok([...Array(50)].every((_, i) => !(LEVELS[i + 1].wallJumps || []).length), 'No level is blocked by wall-jump towers');
 assert.equal(LEVELS[5].pitToBridgeRatio, 5, 'Night 5 gaps use the five-to-one bridge ratio');
 assert.ok(LEVELS.free.variants.every(level => level.pits?.length), 'Every Free Play trail includes a fall-risk crossing');
 assert.deepEqual(LEVELS.free.variants.map(level => level.pitToBridgeRatio), [5,5,5], 'Free Play pits also require moving roost crossings');

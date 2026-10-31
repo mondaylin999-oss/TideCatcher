@@ -34,7 +34,7 @@
     const screen = $('leaveNightScreen'), pauseScreen = $('pauseScreen');
     const stay = $('leaveNightStay'), confirm = $('leaveNightConfirm');
     const opener = document.activeElement, wasInert = pauseScreen.inert;
-    const settings = Object.assign({ title: 'Leave this night?', text: "Shwe hasn't brought these lights home yet. If you leave now, this run's rewards will be lost.", confirmLabel: 'Leave night' }, options);
+    const settings = Object.assign({ title: 'Leave this level?', text: "Shwe hasn't brought these lights home yet. If you leave now, this run's rewards will be lost.", confirmLabel: 'Leave level' }, options);
     $('leaveNightTitle').textContent = settings.title; $('leaveNightText').textContent = settings.text; confirm.textContent = settings.confirmLabel;
     let resolvePromise; const promise = new Promise(resolve => { resolvePromise = resolve; }); activeLeavePromise = promise;
     const focusable = () => Array.from(screen.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')).filter(el => !el.hidden && el.offsetParent !== null);
@@ -69,8 +69,8 @@
     }, true);
   }
   const lostRunText = "Shwe hasn't brought these lights home yet. If you leave now, this run's rewards will be lost.";
-  confirmPauseAction('pauseQuitBtn', { title: 'Leave this night?', text: lostRunText, confirmLabel: 'Leave night' });
-  confirmPauseAction('pauseRestartBtn', { title: 'Restart this night?', text: "Shwe hasn't brought these lights home yet. If you restart now, this run's rewards will be lost.", confirmLabel: 'Restart night' });
+  confirmPauseAction('pauseQuitBtn', { title: 'Leave this level?', text: lostRunText, confirmLabel: 'Leave level' });
+  confirmPauseAction('pauseRestartBtn', { title: 'Restart this level?', text: "Shwe hasn't brought these lights home yet. If you restart now, this run's rewards will be lost.", confirmLabel: 'Restart night' });
   confirmPauseAction('pauseChaptersBtn', () => {
     const toChapters = $('pauseChaptersBtn').textContent.toLowerCase().includes('chapters');
     return { title: toChapters ? 'Back to chapters?' : 'Back to menu?', text: lostRunText, confirmLabel: toChapters ? 'Back to chapters' : 'Back to menu' };
@@ -84,6 +84,17 @@
     button.title = button.textContent.trim();
     screen.prepend(button);
   });
+  // Screens built later (daily tasks, level cards, free play, shelf) get the same top-left back arrow.
+  const LATE_BACKS = ['dailyTasksClose', 'ncBack', 'freeMapBack', 'shelfBack'];
+  const pinLateBacks = () => LATE_BACKS.forEach(id => {
+    const button = document.getElementById(id), screen = button?.closest('.overlay');
+    if (!screen || button.classList.contains('screen-back')) return;
+    button.classList.add('screen-back');
+    button.title = button.textContent.trim();
+    screen.prepend(button);
+  });
+  pinLateBacks();
+  new MutationObserver(pinLateBacks).observe(document.body, { childList: true });
   // Help has one return control; retain the legacy close handler on its hidden button.
   $('helpCloseBtn').hidden = true;
   // Two presentation steps; the original submit handler still validates and saves.

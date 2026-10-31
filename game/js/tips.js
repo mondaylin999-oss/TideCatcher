@@ -6,7 +6,7 @@
       welcome: [
         { title: 'A heavy heart', text: 'A girl fell asleep with a heavy heart. Her feelings ran into the Night Side.' },
         { title: 'Bring them home', text: 'Help her cat bring them home. Catch Moodlings before sunrise; each feeling has its own way to be caught.' },
-        { title: 'Every night grows something', text: 'Earn Glow, upgrade your cat, fill the Mood Book (17 feelings), complete 7 story nights, then take on 43 tougher moonlit routes.' }
+        { title: 'Every level grows something', text: 'Earn Glow, upgrade your cat, fill the Mood Book (17 feelings), complete 7 story levels, then take on 43 tougher Endless Levels.' }
       ],
       tutorial: [
         { title: 'Walk with me', text: 'Meow! Guide me toward the glowing paw circle. Move a few steps along the floor.', action: 'move' },
@@ -33,7 +33,7 @@
       finishWelcome: 'Choose your cat →',
       skipWelcome: 'Skip',
       welcomeLabel: 'Welcome to TideCatcher',
-      tutorialLabel: 'Night 1 · Guided steps',
+      tutorialLabel: 'Level 1 · Guided steps',
       nightPreview: { title: 'Tonight’s route · find the sunrise goal', skip: 'Press any key or tap to skip' },
       controlLabels: {
         move: { keyboard: 'A / D or ← / →', touch: 'Left joystick' },
@@ -108,7 +108,7 @@
         },
         paperStars: {
           label: 'Paper stars', progress: 'Paper stars · {count} / 3', diaryUnlocked: 'bonus diary page unlocked',
-          diaryTitle: 'Paper-star diary', diaryPrompt: 'Find all 3 hidden paper stars in a night to unlock its bonus page.', diaryCount: '{count} / 50 pages', diaryEmpty: 'Your first page is waiting among the stars.',
+          diaryTitle: 'Paper-star diary', diaryPrompt: 'Find all 3 hidden paper stars in a level to unlock its bonus page.', diaryCount: '{count} / 50 pages', diaryEmpty: 'Your first page is waiting among the stars.',
           found: 'Paper star · {count}/3', allFound: 'All 3 paper stars found · bonus diary page unlocked!', pageFound: 'Bonus diary page!',
           pages: {
             1: 'I tucked three little stars away where the classroom moonlight could find them. Shwe waited beside me until my hands stopped shaking.',
@@ -148,12 +148,12 @@
           G: 'Golden Moodlings fly quickly and fade. Jump after one and pounce when you are close.'
         },
         controlNames: { move: 'Move', jump: 'Jump', sneak: 'Sneak', catch: 'Pounce / catch', eyes: 'Night Eyes', scratch: 'Scratch', purr: 'Purr (upgrade)', pause: 'Pause' },
-        nextNight: 'Next night',
+        nextNight: 'Next level',
         bookGoal: 'Mood Book',
         upgradeGoal: 'Next upgrade',
         allUpgrades: 'All upgrades are ready!',
         noAffordable: 'Save Glow for',
-        tutorialReplayMessage: 'Choose Night 1 on the map to replay the guided steps.'
+        tutorialReplayMessage: 'Choose Level 1 on the map to replay the guided steps.'
       }
     },
     my: {

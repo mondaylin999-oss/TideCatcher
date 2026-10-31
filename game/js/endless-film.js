@@ -11,7 +11,7 @@
     { img: 'e2', vo: 'e2', text: 'Across the rooftops, more feelings are lost in the night.', from: [1.06, .32, .5], to: [1.08, .66, .46], tint: '150,170,255', rays: .2 },
     { img: 'e3', vo: 'e3', text: 'In other windows, other little lights have gone dim.', from: [1.0, .5, .5], to: [1.1, .56, .46], tint: '170,150,255', rays: .25 },
     { img: 'e4', vo: 'e4', text: 'So Shwe sits close, and is gentle, until the light glows again.', from: [1.02, .55, .52], to: [1.12, .62, .5], tint: '255,190,110', rays: .8 },
-    { img: 'e5', vo: 'e5', text: 'Endless Nights · as many lights as Shwe can bring home.', from: [1.1, .5, .62], to: [1.0, .5, .48], tint: '255,226,150', rays: .6, last: true }
+    { img: 'e5', vo: 'e5', text: 'Endless Levels · as many lights as Shwe can bring home.', from: [1.1, .5, .62], to: [1.0, .5, .48], tint: '255,226,150', rays: .6, last: true }
   ];
   const FADE = 1.6, MIN_SHOT = 6.2;
   const name = s => s.replace(/Shwe/g, (root.MK_PROFILE && MK_PROFILE.cat) || 'Shwe').replace(/Thiri/g, (root.MK_PROFILE && MK_PROFILE.girl) || 'Thiri');
@@ -21,7 +21,7 @@
 
   function build() {
     el = document.createElement('section'); el.id = 'endlessFilm'; el.hidden = true;
-    el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Endless Nights');
+    el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Endless Levels');
     el.innerHTML = `<canvas class="ef-canvas" aria-hidden="true"></canvas><div class="ef-bars" aria-hidden="true"></div>
       <p class="ef-caption" aria-live="polite"></p>
       <div class="ef-dots" aria-hidden="true">${FRAMES.map(() => '<i></i>').join('')}</div>

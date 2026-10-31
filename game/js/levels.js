@@ -184,7 +184,7 @@
       night, map, width, pits, checkpoints, ground: rollingGround(width, pitNight ? pits : [], rand), platforms,
       restSpots: map === 'rooftop' ? [220, ...checkpoints] : [],
       hideSpots, burySpots, spawnZones, catStart: 150, homeLight: [width - 150, 390], props: [], pitToBridgeRatio: 5,
-      wallJumps: wallRoutes[night] || []
+      wallJumps: []   // the tall brick wall-jump towers blocked the start of Levels 12/23/34/45/50 and led nowhere, so they are gone
     };
   };
   const levels = {
@@ -264,9 +264,8 @@
          solidTops: [{x:560,w:70,h:105,kind:'slide'},{x:2820,w:130,h:70,kind:'bench'}] },
     4: { hazards: [{kind:'lantern',x:1412,w:250},{kind:'lantern',x:3626,w:260}], keepsakes: [[2080,400],[3866,285],[610,350]],
          solidTops: [{x:500,w:150,h:90,kind:'roof'},{x:2420,w:150,h:90,kind:'roof'}] },
-    5: { hazards: [{kind:'wind',a:380,b:800,dir:-1},{kind:'wind',a:1510,b:2350,dir:1},{kind:'wind',a:3510,b:4150,dir:-1}], keepsakes: [[700,385],[2195,385],[3280,252]] },
-    // Night 6's third keepsake is a tide pool under the jetty: it shows once the Mood Tide is low (js/mood-tide.js).
-    6: { hazards: [], keepsakes: [[920,400],[3600,345],[530,440,'tide']] },
+    5: { hazards: [{kind:'wind',a:380,b:800,dir:-1},{kind:'wind',a:1510,b:2350,dir:1},{kind:'wind',a:3510,b:4150,dir:-1}], keepsakes: [[700,385],[2195,385],[3280,330]] },
+    6: { hazards: [], keepsakes: [[920,400],[3600,345]] },
     7: { hazards: [{kind:'wind',a:2900,b:3700,dir:-1},{kind:'lantern',x:4930,w:240}], keepsakes: [[3096,303],[4000,400],[5080,418]] }
   };
   for (const [night, extra] of Object.entries(EXTRAS)) Object.assign(levels[night], extra);
@@ -277,9 +276,10 @@
   // bridge, while non-pit nights use continuous ground and no roost platforms.
   for (let night = 1; night <= 50; night++) {
     const level = levels[night];
-    if (night % 5 !== 0) {
+    if (night % 5 !== 0 || night <= 7) {   // the 7 main story levels have no gaps: every fall would feel unfair
       level.pits = [];
       level.platforms = [];
+      level.checkpoints = [];   // no pits means nothing to fall into, so checkpoint lanterns would only be clutter
       continue;
     }
     level.platforms = (level.pits || []).map(([a, b]) => level.platforms.find(p =>
@@ -332,12 +332,33 @@
   for (let night = 1; night <= 50; night++) addSecretRoom(levels[night]);
   for (let night = 8; night <= 50; night++) seedSpots(levels[night], night);
   for (const variant of levels.free.variants) addSecretRoom(variant);
+  // Heights for Levels 8-50: 3-5 optional scenery tops (same one-way solidTops as Levels 1-4) on safe ground.
+  // Jealous likes to sit up there and torn drawing pieces often hide on them. Never needed to finish a level.
+  const TOP_KIND = { school: 'desk', park: 'bench', festival: 'roof', market: 'roof', hill: 'rock', rooftop: 'roof', lake: 'jetty', garden: 'bench', pagoda: 'shelf', train: 'bench' };
+  const addEndlessTops = (level, night) => {
+    const rand = seeded(night * 7349 + 101), W = level.width, pits = level.pits || [], tops = [];
+    const kind = TOP_KIND[level.map] || 'shelf', count = 3 + Math.min(2, Math.floor((night - 8) / 14));
+    const clear = (a, b) => a > 520 && b < W - 340
+      && pits.every(([pa, pb]) => b < pa - 140 || a > pb + 140)
+      && ![...(level.hideSpots || []), ...(level.burySpots || [])].some(x => x > a - 16 && x < b + 16)
+      && !(level.secretRoom && a < level.secretRoom.x + 110 && b > level.secretRoom.x - 110)
+      && !(level.checkpoints || []).some(c => c > a - 30 && c < b + 30)
+      && !(level.platforms || []).some(p => a < p[0] + p[2] + 30 && b > p[0] - 30)
+      && !(level.hazards || []).some(h => { const ha = h.a ?? (h.x - (h.radius ? 40 : 0)), hb = h.b ?? (h.x + (h.w || (h.radius ? 40 : 30))); return a < hb + 20 && b > ha - 20; })
+      && tops.every(tp => b < tp.x - 260 || a > tp.x + tp.w + 260);
+    for (let tries = 0; tries < 400 && tops.length < count; tries++) {
+      const w = 100 + Math.round(rand() * 50), x = Math.round(560 + rand() * (W - 1000)), h = 70 + Math.round(rand() * 45);
+      if (clear(x, x + w)) tops.push({ x, w, h, kind });
+    }
+    level.solidTops = tops.sort((p, q) => p.x - q.x);
+    return level;
+  };
   const buildEndless = (night, map, twists = []) => {
     const level = makeChallengeLevel(night);
     level.map = map;
     level.endless = true;
     const skin = map === 'festival' ? 'boat' : map === 'lake' ? 'log' : map === 'hill' ? 'stone' : '';
-    if (night % 5 !== 0) { level.pits = []; level.platforms = []; level.spawnZones = [[260, level.width - 200]]; }
+    if (night % 5 !== 0) { level.pits = []; level.platforms = []; level.checkpoints = []; level.spawnZones = [[260, level.width - 200]]; }
     else level.platforms = level.platforms.filter(p => p[3] === 'moving' && p[4]?.path?.length > 1).map(p => { if (skin) p[4].skin = skin; else delete p[4].skin; return p; });
     if (map === 'hill' && !level.pits.length) {
       // rolling hill steps instead of a flat street
@@ -434,7 +455,8 @@
     }
     addSecretRoom(level);
     if (!level.hazards.length) level.hazards = mapHazards(level, night);
-    return seedSpots(level, night, map === 'train');
+    seedSpots(level, night, map === 'train');
+    return addEndlessTops(level, night);
   };
   root.TC_ENDLESS_LEVEL = buildEndless;
   root.TC_LEVELS = levels;

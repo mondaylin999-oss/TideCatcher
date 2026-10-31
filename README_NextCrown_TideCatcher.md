@@ -14,9 +14,8 @@ _TEAM TO FILL: name, email, phone_
 ## 4. Short game description
 When Thiri falls asleep with a heavy heart after losing a drawing contest, her little feelings (Moodlings) run away into the night. You play Shwe, her cat, and bring them home before sunrise. Each feeling is caught in its own way: dodge Frustrated's charge, sneak up on Nervous, sit beside Lonely, freeze when Shy looks back, catch Excited at the top of its bounce, dig up buried feelings with Night Eyes.
 
-- **Story:** 7 nights (11 PM to sunrise), each in a new place: school, park, lighting festival, hilltop, lakeside, sunrise. Thiri's room gets its colour back as you go, and the morning ending plays after Night 7.
-- **The Mood Tide:** while feelings are loose the tide is high (rain, a cool tint, darker edges); as they come home the night calms and fireflies come out. On Night 6 a keepsake by the jetty only appears at low tide.
-- **After the story:** Nights 8–50 (pick one of three night cards), Free Play, the Heart Workshop (mix feelings into new ones), Lantern Town, the Mood Book (59 pages), keepsakes, daily tasks, 8 cat breeds and treats.
+- **Story:** 7 levels (11 PM to sunrise), each in a new place: school, park, lighting festival, hilltop, lakeside, sunrise. Thiri's room gets its colour back as you go, and the morning ending plays after Level 7.
+- **After the story:** Levels 8–50 (pick one of three level cards), Free Play, the Heart Workshop (mix feelings into new ones), Lantern Town, the Mood Book (62 pages), keepsakes, daily tasks, 8 cat breeds and treats.
 
 ## 5. How to open and play the game
 - **Online:** open the playable link: _TEAM TO FILL: Digit7 hosting URL_
@@ -47,13 +46,12 @@ Current versions of Chrome, Edge, Firefox and Safari (desktop and mobile). Teste
 
 Keys can be changed in Settings → Controls. Touch buttons can be moved, resized and made brighter or dimmer.
 
-**Goal of each night:** catch the feelings shown in the counters at the top right before the clock runs out, then walk through the moon door. Hidden keepsakes, paper stars and secret rooms are optional. How to Play (corkboard in Thiri's room) has a short clip for every Moodling, and a button tour explains the home screen and the pause menu.
+**Goal of each level:** catch the feelings shown in the counters at the top right before the clock runs out, then walk through the moon door. Hidden keepsakes, paper stars and secret rooms are optional. How to Play (corkboard in Thiri's room) has a short clip for every Moodling, and a button tour explains the home screen and the pause menu.
 
 ## 9. Known bugs or limitations
 - Phones and tablets are landscape only; in portrait the game pauses and asks you to turn the device.
 - Opened straight from a file (double-click), some browsers limit audio, so music plays through a simpler path. Hosting the folder gives the full audio mix.
 - Myanmar language covers the tips, welcome cards and button tour; some other screens are still in English.
-- On lake and festival maps the painted water level does not change with the Mood Tide (the tide is shown with rain, tint and fireflies).
 - _TEAM TO FILL: anything found in final playtesting._
 
 ## 10. Third-party tools or libraries used
@@ -69,7 +67,7 @@ Keys can be changed in Settings → Controls. Touch buttons can be moved, resize
 - **Cats, Moodlings, intro scenes:** see `CREDITS.md` and `AI-DECLARATION.md`.
 
 ## 12. Special testing instructions
-- `TideCatcher-TEST.html` (or `game/index.html?test=1`) opens a **test mode**: every night unlocked, unlimited Glow, all cats and treats. It does not touch normal saves.
+- `TideCatcher-TEST.html` (or `game/index.html?test=1`) opens a **test mode**: every level unlocked, unlimited Glow, all cats and treats. It does not touch normal saves.
 - Progress is saved in the browser (localStorage). To start fresh, use the reset button in Thiri's room or clear site data.
 - Automated checks: `for f in tests/*.test.js; do node "$f"; done` (Node 18+).
 - Add `?debug=1` on localhost and press F2 for the level geometry overlay.

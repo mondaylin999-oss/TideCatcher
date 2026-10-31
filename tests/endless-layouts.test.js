@@ -16,6 +16,11 @@ for (let night = 8; night <= 50; night++) for (const map of MAPS) {
     for (const [pa, pb] of a.pits) assert.ok(hi <= pa - 110 || lo >= pb + 110, `Night ${night} ${map}: ${h.kind} at least 110 from a pit`);
   }
   for (const x of [...a.hideSpots, ...a.burySpots]) for (const [pa, pb] of a.pits) assert.ok(x <= pa - 110 || x >= pb + 110, `Night ${night} ${map}: spot clear of pits`);
+  for (const tp of a.solidTops || []) {
+    assert.ok(tp.h > 0 && tp.h < 140, `Night ${night} ${map}: height ${tp.h} reachable with one jump`);
+    for (const [pa, pb] of a.pits) assert.ok(tp.x + tp.w < pa - 110 || tp.x > pb + 110, `Night ${night} ${map}: height clear of pits`);
+    assert.ok(![...a.hideSpots, ...a.burySpots].some(x => x > tp.x - 10 && x < tp.x + tp.w + 10), `Night ${night} ${map}: height clear of hide/dig spots`);
+  }
   n++;
 }
 // a twist night keeps its twist hazards

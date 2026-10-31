@@ -6,15 +6,15 @@
   const EN = {
     next: 'Next', back: 'Back', done: 'Got it', skip: 'Skip guide', of: '{n} of {total}',
     hub: [
-      ['storyBtn', 'Story Mode', 'Play the seven nights in order. This is where the story happens.'],
+      ['storyBtn', 'Story Mode', 'Play the seven levels in order. This is where the story happens.'],
       ['freeBtn', 'Free Play', 'Wander any place you have opened, with no clock. Good for practice.'],
       ['bookBtn', 'Mood Book', 'Every Moodling you have caught, with its catch tips.'],
       ['shopBtn', 'Treat box (shop)', 'Spend Glow on upgrades, comfort items, trails and new cats. Sell trinkets here too.'],
-      ['roomShelfBtn', 'Shelf', 'Keepsakes you found in each night. Finish a set to claim bonus Glow.'],
+      ['roomShelfBtn', 'Shelf', 'Keepsakes you found in each level. Finish a set to claim bonus Glow.'],
       ['roomHeartBtn', 'Heart Workshop', 'Mix feelings you caught into new ones.'],
       ['roomTownBtn', 'Lantern Town', 'Use the feelings you made to light up places in town and earn rewards.'],
       ['roomBedBtn', 'Names and cat', 'Change the girl’s name, your cat’s name or your cat.'],
-      ['roomTasksBtn', 'Today’s tasks', 'Three daily tasks. Finish one in any night, then claim its Glow here.'],
+      ['roomTasksBtn', 'Today’s tasks', 'Three daily tasks. Finish one in any level, then claim its Glow here.'],
       ['hubHeroCat', 'Your cat', 'Tap your cat on the window sill to change its name.'],
       ['roomHelpBtn', 'How to play', 'Controls, plus a short clip for catching every Moodling.'],
       ['profileBtn', 'Profile', 'Your names and your chosen cat.'],
@@ -23,12 +23,12 @@
       ['resetBtn', 'Reset', 'Start over from the beginning. Your progress is erased, so it asks first.']
     ],
     pause: [
-      ['pauseContinueBtn', 'Resume', 'Back to the night, right where you stopped.'],
-      ['pauseRestartBtn', 'Restart', 'Start this night again from the beginning.'],
-      ['pauseChaptersBtn', 'Back to chapters', 'Leave this night and pick another one on the map.'],
-      ['pauseHelpBtn', 'How to play', 'Controls and catch clips, without leaving the night.'],
+      ['pauseContinueBtn', 'Resume', 'Back to the level, right where you stopped.'],
+      ['pauseRestartBtn', 'Restart', 'Start this level again from the beginning.'],
+      ['pauseChaptersBtn', 'Back to chapters', 'Leave this level and pick another one on the map.'],
+      ['pauseHelpBtn', 'How to play', 'Controls and catch clips, without leaving the level.'],
       ['pauseNotesBtn', 'Notes', 'Turn the little hint notes over Moodlings on or off.'],
-      ['pauseQuitBtn', 'Quit to menu', 'Go back home. Lights you carried this night are lost.'],
+      ['pauseQuitBtn', 'Quit to menu', 'Go back home. Lights you carried this level are lost.'],
       ['pauseTourBtn', 'Button guide', 'Show this guide again any time.']
     ]
   };
